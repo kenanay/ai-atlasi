@@ -182,15 +182,21 @@ const topics: Topic[] = [
   mleMapEstimationData as unknown as Topic,
 ];
 
-// Kategori bazlı gruplama
-export function getTopicsByCategory(): Map<TopicCategory, Topic[]> {
-  const grouped = new Map<TopicCategory, Topic[]>();
+// Kategori bazlı gruplama (CATEGORY_INFO'dan konsolide grup adını kullanır)
+export function getTopicsByCategory(): Map<string, Topic[]> {
+  const grouped = new Map<string, Topic[]>();
+  
+  // CATEGORY_INFO'yu import et
+  const { CATEGORY_INFO } = require('./utils');
   
   topics.forEach(topic => {
-    if (!grouped.has(topic.category)) {
-      grouped.set(topic.category, []);
+    // Ham kategori kodu yerine CATEGORY_INFO'daki konsolide grup adını kullan
+    const groupName = CATEGORY_INFO[topic.category]?.name || topic.category;
+    
+    if (!grouped.has(groupName)) {
+      grouped.set(groupName, []);
     }
-    grouped.get(topic.category)!.push(topic);
+    grouped.get(groupName)!.push(topic);
   });
   
   return grouped;
