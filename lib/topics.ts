@@ -83,6 +83,12 @@ import loraQloraPeftData from '@/data/topics/lora-qlora-peft.json';
 import rlhfDpoAlignmentData from '@/data/topics/rlhf-dpo-alignment.json';
 import tsneUmapManifoldData from '@/data/topics/tsne-umap-manifold.json';
 
+// SPRINT 5 - Final Topics (LLM Inference, Speech AI, Clustering, Statistics)
+import kvCacheLlmInferenceData from '@/data/topics/kv-cache-llm-inference.json';
+// import whisperSpeechAiData from '@/data/topics/whisper-speech-ai.json'; // Temporarily disabled due to JSON parsing issues
+import dbscanHierarchicalClusteringData from '@/data/topics/dbscan-hierarchical-clustering.json';
+import mleMapEstimationData from '@/data/topics/mle-map-estimation.json';
+
 // Tüm konular (şu an statik, ileride DB'den gelecek)
 const topics: Topic[] = [
   vectorsData as unknown as Topic,
@@ -168,6 +174,12 @@ const topics: Topic[] = [
   loraQloraPeftData as unknown as Topic,
   rlhfDpoAlignmentData as unknown as Topic,
   tsneUmapManifoldData as unknown as Topic,
+  
+  // SPRINT 5 - Final Topics (75→78, Whisper temporarily disabled)
+  kvCacheLlmInferenceData as unknown as Topic,
+  // whisperSpeechAiData as unknown as Topic, // Temporarily disabled
+  dbscanHierarchicalClusteringData as unknown as Topic,
+  mleMapEstimationData as unknown as Topic,
 ];
 
 // Kategori bazlı gruplama
