@@ -25,10 +25,6 @@ export function PCAVisualizer({
   const [showOriginal, setShowOriginal] = useState(true);
   const [data, setData] = useState<any>(null);
 
-  useEffect(() => {
-    generateData();
-  }, [dataPoints]);
-
   const generateData = () => {
     // 3D veri oluştur (korelasyonlu)
     const points: number[][] = [];
@@ -88,6 +84,11 @@ export function PCAVisualizer({
     
     return cov;
   };
+
+  useEffect(() => {
+    generateData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataPoints]);
 
   if (!data) return <div>Loading...</div>;
 

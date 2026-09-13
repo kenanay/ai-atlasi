@@ -35,22 +35,6 @@ export function KMeansAnimator({
   const [history, setHistory] = useState<{ data: Point[], centroids: Point[] }[]>([]);
   const [converged, setConverged] = useState(false);
 
-  useEffect(() => {
-    initializeData();
-  }, [k, numPoints]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isPlaying && !converged) {
-      interval = setInterval(() => {
-        runKMeansStep();
-      }, 800);
-    }
-    
-    return () => clearInterval(interval);
-  }, [isPlaying, data, centroids, converged]);
-
   const initializeData = () => {
     // Generate clustered data
     const points: Point[] = [];
@@ -141,6 +125,24 @@ export function KMeansAnimator({
       setIsPlaying(false);
     }
   };
+
+  useEffect(() => {
+    initializeData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [k, numPoints]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isPlaying && !converged) {
+      interval = setInterval(() => {
+        runKMeansStep();
+      }, 800);
+    }
+    
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, converged]);
 
   const reset = () => {
     initializeData();
