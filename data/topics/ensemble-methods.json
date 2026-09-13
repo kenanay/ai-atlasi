@@ -1,0 +1,258 @@
+{
+  "id": "ensemble-methods",
+  "title": "Ensemble Methods: Boosting & Bagging",
+  "category": "classical-ml",
+  "level": 2,
+  "estimatedTime": 60,
+  "description": "Birden fazla zayıf modeli birleştirerek güçlü tahmin yapan yöntemler. XGBoost, LightGBM, ve CatBoost modern ML'in vazgeçilmezleri.",
+  "prerequisites": ["decision-trees-random-forests", "gradient-descent"],
+  "tags": ["ensemble", "boosting", "bagging", "xgboost", "lightgbm", "kaggle"],
+  "content": {
+    "level0_basic": "5 arkadaşınız bir filmin IMDB puanını tahmin etmeye çalışıyor. Tek başına herkes %60 doğru tahmin ediyor (zayıf tahminler). Ama 5 kişinin tahminlerinin ortalamasını alırsanız, grup %85 doğru tahmin eder! İşte ensemble learning budur: Birçok zayıf modeli birleştirerek güçlü bir model oluşturmak. XGBoost'un Kaggle'da her yarışmayı kazanmasının sırrı da bu!",
+    "level1_beginner": "Ensemble Methods, birden fazla modeli birleştirerek tahmin gücünü artıran tekniklerdir. İki ana yaklaşım var:\n\n**1. Bagging (Bootstrap Aggregating):**\n- **Paralel** modeller: Her model bağımsız eğitilir\n- **Veri sampling:** Her model farklı rastgele veri örneği görür\n- **Voting/Averaging:** Sonuçlar birleştirilir\n- **Örnek:** Random Forest (birçok decision tree)\n- **Amaç:** Variance azaltma, overfitting önleme\n\n**2. Boosting (Sequential Learning):**\n- **Sıralı** modeller: Her model bir öncekinin hatasını düzeltir\n- **Hata odaklı:** Yanlış tahmin edilen örneklere odaklan\n- **Weighted voting:** Her modelin ağırlığı farklı\n- **Örnekler:** AdaBoost, Gradient Boosting, XGBoost, LightGBM\n- **Amaç:** Bias azaltma, accuracy artırma\n\n**Gradient Boosting Temel Fikir:**\n$$F_m(x) = F_{m-1}(x) + \\eta \\cdot h_m(x)$$\n- $F_m$: m. iterasyondaki toplam model\n- $h_m$: m. weak learner (genellikle shallow tree)\n- $\\eta$: learning rate (step size)\n- Her yeni tree, **residual'ı** (hatayı) tahmin eder\n\n**Modern Gradient Boosting:**\n- **XGBoost:** Extreme Gradient Boosting, regularization, parallel processing\n- **LightGBM:** Light Gradient Boosting Machine, histogram-based, çok hızlı\n- **CatBoost:** Categorical Boosting, categorical features için optimize\n\nKaggle yarışmalarının %80'inde bu 3 algoritma kazanır!",
+    "level2_application": "XGBoost ve LightGBM production'da en çok kullanılan ML algoritmalarıdır.\n\n**XGBoost Kullanımı:**\n```python\nimport xgboost as xgb\nfrom sklearn.model_selection import train_test_split\n\n# Data\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)\n\n# XGBoost DMatrix (optimize edilmiş data structure)\ndtrain = xgb.DMatrix(X_train, label=y_train)\ndtest = xgb.DMatrix(X_test, label=y_test)\n\n# Parameters\nparams = {\n    'max_depth': 6,\n    'eta': 0.3,  # learning rate\n    'objective': 'binary:logistic',\n    'eval_metric': 'auc'\n}\n\n# Train\nmodel = xgb.train(params, dtrain, num_boost_round=100)\n\n# Predict\ny_pred = model.predict(dtest)\n```\n\n**Key Hyperparameters:**\n\n1. **n_estimators:** Kaç tree? (100-1000)\n2. **max_depth:** Tree derinliği (3-10, küçük → underfitting)\n3. **learning_rate (eta):** Her tree'nin katkısı (0.01-0.3, küçük → yavaş ama iyi)\n4. **subsample:** Her tree için veri oranı (0.5-1.0, overfitting azaltır)\n5. **colsample_bytree:** Her tree için feature oranı (0.5-1.0)\n6. **min_child_weight:** Leaf'teki minimum örnek (1-10, regularization)\n\n**LightGBM Avantajları:**\n- **Histogram-based:** Continuous features'ı discrete bins'e ayırır → çok hızlı\n- **Leaf-wise growth:** Best leaf'i genişletir (XGBoost level-wise) → daha iyi accuracy\n- **Categorical support:** One-hot encoding gerektirmez\n- **Large data:** Millions of samples'da bile hızlı",
+    "level3_advanced": "Gradient Boosting'in matematiksel temelleri:\n\n**Gradient Boosting Algoritması:**\n\n1. **Initialize:** $F_0(x) = \\arg\\min_\\gamma \\sum_{i=1}^{n} L(y_i, \\gamma)$\n\n2. **For m = 1 to M:**\n   - **Compute pseudo-residuals:**\n     $$r_{im} = -\\left[\\frac{\\partial L(y_i, F(x_i))}{\\partial F(x_i)}\\right]_{F=F_{m-1}}$$\n   \n   - **Fit weak learner:** Train $h_m(x)$ to predict $r_m$\n   \n   - **Find optimal step:**\n     $$\\gamma_m = \\arg\\min_\\gamma \\sum_{i=1}^{n} L(y_i, F_{m-1}(x_i) + \\gamma h_m(x_i))$$\n   \n   - **Update model:**\n     $$F_m(x) = F_{m-1}(x) + \\eta \\gamma_m h_m(x)$$\n\n**XGBoost Objective Function:**\n$$\\text{Obj}^{(t)} = \\sum_{i=1}^{n} l(y_i, \\hat{y}_i^{(t)}) + \\sum_{k=1}^{t} \\Omega(f_k)$$\n\nBurada:\n- $l$: Loss function (MSE, logloss, etc.)\n- $\\Omega(f)$: Regularization (tree complexity penalty)\n\n**Regularization Term:**\n$$\\Omega(f) = \\gamma T + \\frac{1}{2}\\lambda \\sum_{j=1}^{T} w_j^2$$\n- $T$: Leaf sayısı\n- $w_j$: j. leaf'in weight'i\n- $\\gamma$: Leaf penalty (daha az leaf → basit tree)\n- $\\lambda$: L2 regularization on weights\n\n**Second-Order Approximation:**\nXGBoost Taylor expansion kullanır (1. ve 2. türev):\n$$l(y_i, \\hat{y}_i^{(t)}) \\approx l(y_i, \\hat{y}_i^{(t-1)}) + g_i f_t(x_i) + \\frac{1}{2} h_i f_t^2(x_i)$$\n\nBurada:\n- $g_i = \\partial_{\\hat{y}^{(t-1)}} l(y_i, \\hat{y}^{(t-1)})$ (gradient)\n- $h_i = \\partial_{\\hat{y}^{(t-1)}}^2 l(y_i, \\hat{y}^{(t-1)})$ (hessian)\n\n**Optimal Leaf Weight:**\n$$w_j^* = -\\frac{\\sum_{i \\in I_j} g_i}{\\sum_{i \\in I_j} h_i + \\lambda}$$\n\nİkinci türev (Hessian) kullanımı XGBoost'u Newton method gibi yapar, daha hızlı converge eder!",
+    "level4_expert": "Production'da XGBoost/LightGBM optimizasyonu:\n\n**1. Hyperparameter Tuning Strategy:**\n\n```python\n# Bayesian Optimization ile tuning\nfrom skopt import BayesSearchCV\nimport xgboost as xgb\n\nsearch_spaces = {\n    'max_depth': (3, 10),\n    'learning_rate': (0.01, 0.3, 'log-uniform'),\n    'n_estimators': (100, 1000),\n    'min_child_weight': (1, 10),\n    'subsample': (0.5, 1.0),\n    'colsample_bytree': (0.5, 1.0),\n    'gamma': (0, 5),\n    'reg_alpha': (0, 1),  # L1\n    'reg_lambda': (0, 10)  # L2\n}\n\nopt = BayesSearchCV(\n    xgb.XGBClassifier(),\n    search_spaces,\n    n_iter=50,\n    cv=5,\n    n_jobs=-1\n)\n```\n\n**2. Feature Engineering for Boosting:**\n- **Target encoding:** Categorical → numerical (mean target per category)\n- **Interaction features:** x1 * x2, x1 / x2\n- **Binning:** Continuous → discrete bins\n- **Time-based features:** dayofweek, hour, is_weekend\n\n**3. Prevent Overfitting:**\n```python\nparams = {\n    'max_depth': 4,  # Shallow trees\n    'learning_rate': 0.05,  # Small steps\n    'subsample': 0.8,  # Row sampling\n    'colsample_bytree': 0.8,  # Column sampling\n    'reg_alpha': 0.1,  # L1 regularization\n    'reg_lambda': 1.0,  # L2 regularization\n    'early_stopping_rounds': 50  # Stop if no improvement\n}\n```\n\n**4. GPU Acceleration:**\n```python\n# XGBoost GPU\nparams['tree_method'] = 'gpu_hist'\nparams['predictor'] = 'gpu_predictor'\n\n# LightGBM GPU\nparams['device'] = 'gpu'\nparams['gpu_platform_id'] = 0\n```\n\n**5. Large Dataset Optimization:**\n\n**LightGBM Histogram:**\n- Continuous features → 255 bins (default)\n- Memory efficient: O(#bins × #features)\n- Training speed: 10-20x faster than XGBoost\n\n**Distributed Training:**\n```python\n# LightGBM distributed\nimport lightgbm as lgb\n\ntrain_data = lgb.Dataset(X_train, label=y_train)\nparams = {\n    'boosting_type': 'gbdt',\n    'objective': 'binary',\n    'num_machines': 4,  # 4 machines\n    'local_listen_port': 12400\n}\n\nmodel = lgb.train(params, train_data, num_boost_round=100)\n```\n\n**6. Production Deployment:**\n```python\n# Model export\nimport joblib\njoblib.dump(model, 'xgboost_model.pkl')\n\n# ONNX export (cross-platform)\nimport onnxmltools\nfrom skl2onnx.common.data_types import FloatTensorType\n\ninitial_type = [('input', FloatTensorType([None, X.shape[1]]))]\nonnx_model = onnxmltools.convert_xgboost(model, initial_types=initial_type)\n\n# Inference\nimport onnxruntime as rt\nsess = rt.InferenceSession('model.onnx')\ninput_name = sess.get_inputs()[0].name\npred = sess.run(None, {input_name: X_test.astype(np.float32)})\n```\n\n**7. Interpretability:**\n```python\n# Feature importance\nimport shap\n\nexplainer = shap.TreeExplainer(model)\nshap_values = explainer.shap_values(X_test)\nshap.summary_plot(shap_values, X_test)\n```\n\n**Benchmark (1M rows, 100 features):**\n- XGBoost CPU: ~10 min\n- XGBoost GPU: ~2 min\n- LightGBM CPU: ~3 min\n- LightGBM GPU: ~30 sec"
+  },
+  "whatIsIt": "Ensemble methods birden fazla zayıf modeli (weak learners) birleştirerek güçlü tahmin yapan tekniklerdir. Bagging (paralel) ve Boosting (sıralı) olmak üzere iki ana yaklaşım vardır.",
+  "whyNeeded": "Tek bir model yetersiz kalır. Ensemble methods overfitting'i önler, accuracy artırır ve robust tahminler yapar. XGBoost/LightGBM Kaggle'ın kralları, production'da en çok kullanılan algoritmalar.",
+  "realWorldAnalogy": "Tek bir doktor size teşhis koyuyor (accuracy %80). 10 doktorun görüşünü alıp oylama yaparsanız (ensemble), doğruluk %95'e çıkar. Her doktor farklı şeylere dikkat eder, ensemble hepsini birleştirir.",
+  "mathematics": {
+    "formulas": [
+      "F_m(x) = F_{m-1}(x) + \\eta \\cdot h_m(x) \\quad \\text{(Boosting update)}",
+      "r_{im} = -\\frac{\\partial L(y_i, F(x_i))}{\\partial F(x_i)} \\quad \\text{(Pseudo-residual)}",
+      "\\Omega(f) = \\gamma T + \\frac{1}{2}\\lambda \\sum_{j=1}^{T} w_j^2 \\quad \\text{(XGBoost regularization)}",
+      "w_j^* = -\\frac{\\sum_{i \\in I_j} g_i}{\\sum_{i \\in I_j} h_i + \\lambda} \\quad \\text{(Optimal leaf weight)}",
+      "\\text{Gain} = \\frac{1}{2}\\left[\\frac{G_L^2}{H_L+\\lambda} + \\frac{G_R^2}{H_R+\\lambda} - \\frac{(G_L+G_R)^2}{H_L+H_R+\\lambda}\\right] - \\gamma"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize: F₀(x) = initial prediction (örn. mean)",
+      "2. For m = 1 to M (num_boost_round):",
+      "   a. Compute residuals: rᵢ = yᵢ - F_{m-1}(xᵢ)",
+      "   b. Fit weak learner hₘ(x) to residuals (shallow decision tree)",
+      "   c. Update model: F_m(x) = F_{m-1}(x) + η·hₘ(x)",
+      "3. Final prediction: F_M(x) = Σ η·hₘ(x)",
+      "XGBoost extras: Regularization (Ω), 2nd derivative (Hessian), pruning",
+      "LightGBM extras: Histogram binning, leaf-wise growth, GPU acceleration"
+    ],
+    "complexity": "Training: O(M × n × d × max_depth) - M trees, n samples, d features. LightGBM: O(M × n × #bins) - histogram binning ile çok daha hızlı!"
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "XGBoost Temel Kullanım",
+      "code": "import xgboost as xgb\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import accuracy_score, roc_auc_score\n\n# Veri\nX, y = make_classification(n_samples=1000, n_features=20, n_informative=15, random_state=42)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nprint(\"=\"*60)\nprint(\"XGBOOST - TEMEL KULLANIM\")\nprint(\"=\"*60)\n\n# XGBoost Classifier\nmodel = xgb.XGBClassifier(\n    n_estimators=100,\n    max_depth=5,\n    learning_rate=0.1,\n    random_state=42\n)\n\n# Train\nmodel.fit(X_train, y_train)\n\n# Predict\ny_pred = model.predict(X_test)\ny_prob = model.predict_proba(X_test)[:, 1]\n\nprint(f\"\\nAccuracy: {accuracy_score(y_test, y_pred):.4f}\")\nprint(f\"ROC-AUC: {roc_auc_score(y_test, y_prob):.4f}\")\n\n# Feature importance\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nimportances = model.feature_importances_\ntop_features = np.argsort(importances)[-10:]\n\nplt.figure(figsize=(10, 6))\nplt.barh(range(len(top_features)), importances[top_features])\nplt.yticks(range(len(top_features)), [f'Feature {i}' for i in top_features])\nplt.xlabel('Feature Importance')\nplt.title('Top 10 XGBoost Feature Importances')\nplt.tight_layout()\n\nprint(\"\\n✓ XGBoost model trained successfully!\")",
+      "explanation": "XGBoost temel kullanımı. Sklearn API ile kolay! Feature importance ile hangi özelliklerin önemli olduğunu görürsünüz."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "XGBoost vs LightGBM vs CatBoost Karşılaştırma",
+      "code": "import xgboost as xgb\nimport lightgbm as lgb\nfrom catboost import CatBoostClassifier\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import cross_val_score\nimport time\nimport numpy as np\n\n# Veri\nX, y = make_classification(n_samples=10000, n_features=50, n_informative=30, random_state=42)\n\nprint(\"=\"*60)\nprint(\"ENSEMBLE METHODS KARŞILAŞTIRMASI\")\nprint(\"=\"*60)\nprint(f\"\\nDataset: {X.shape[0]} samples, {X.shape[1]} features\")\n\n# 1. XGBoost\nprint(\"\\n1️⃣  XGBoost:\")\nstart = time.time()\nxgb_model = xgb.XGBClassifier(n_estimators=100, max_depth=5, learning_rate=0.1, random_state=42, verbosity=0)\nxgb_scores = cross_val_score(xgb_model, X, y, cv=5, scoring='roc_auc')\nxgb_time = time.time() - start\nprint(f\"   ROC-AUC: {xgb_scores.mean():.4f} (±{xgb_scores.std():.4f})\")\nprint(f\"   Training time: {xgb_time:.2f}s\")\n\n# 2. LightGBM\nprint(\"\\n2️⃣  LightGBM:\")\nstart = time.time()\nlgb_model = lgb.LGBMClassifier(n_estimators=100, max_depth=5, learning_rate=0.1, random_state=42, verbosity=-1)\nlgb_scores = cross_val_score(lgb_model, X, y, cv=5, scoring='roc_auc')\nlgb_time = time.time() - start\nprint(f\"   ROC-AUC: {lgb_scores.mean():.4f} (±{lgb_scores.std():.4f})\")\nprint(f\"   Training time: {lgb_time:.2f}s\")\nprint(f\"   Speedup: {xgb_time/lgb_time:.1f}x faster than XGBoost\")\n\n# 3. CatBoost\nprint(\"\\n3️⃣  CatBoost:\")\nstart = time.time()\ncat_model = CatBoostClassifier(iterations=100, depth=5, learning_rate=0.1, random_state=42, verbose=0)\ncat_scores = cross_val_score(cat_model, X, y, cv=5, scoring='roc_auc')\ncat_time = time.time() - start\nprint(f\"   ROC-AUC: {cat_scores.mean():.4f} (±{cat_scores.std():.4f})\")\nprint(f\"   Training time: {cat_time:.2f}s\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ÖZET\")\nprint(\"=\"*60)\nprint(\"\\n🏆 Performans:\")\nscores = {'XGBoost': xgb_scores.mean(), 'LightGBM': lgb_scores.mean(), 'CatBoost': cat_scores.mean()}\nbest = max(scores, key=scores.get)\nprint(f\"   Winner: {best} ({scores[best]:.4f})\")\n\nprint(\"\\n⚡ Hız:\")\ntimes = {'XGBoost': xgb_time, 'LightGBM': lgb_time, 'CatBoost': cat_time}\nfastest = min(times, key=times.get)\nprint(f\"   Fastest: {fastest} ({times[fastest]:.2f}s)\")\n\nprint(\"\\n💡 Ne Zaman Hangisi?\")\nprint(\"\\n  • XGBoost:\")\nprint(\"      ✓ En popüler, geniş community\")\nprint(\"      ✓ Kaggle competitions\")\nprint(\"      ✓ Production-ready, stable\")\nprint(\"\\n  • LightGBM:\")\nprint(\"      ✓ En hızlı! (10-20x)\")\nprint(\"      ✓ Large datasets (millions of rows)\")\nprint(\"      ✓ Memory efficient (histogram)\")\nprint(\"\\n  • CatBoost:\")\nprint(\"      ✓ Categorical features (no encoding needed)\")\nprint(\"      ✓ Robust hyperparameters (az tuning gerekir)\")\nprint(\"      ✓ Missing values handling\")",
+      "explanation": "3 modern gradient boosting algoritmasının karşılaştırması. Her birinin güçlü yönleri farklı!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Hyperparameter Tuning - Grid Search",
+      "code": "import xgboost as xgb\nfrom sklearn.model_selection import GridSearchCV, train_test_split\nfrom sklearn.datasets import make_classification\nimport numpy as np\n\n# Veri\nX, y = make_classification(n_samples=1000, n_features=20, random_state=42)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nprint(\"=\"*60)\nprint(\"XGBOOST HYPERPARAMETER TUNING\")\nprint(\"=\"*60)\n\n# Parameter grid\nparam_grid = {\n    'max_depth': [3, 5, 7],\n    'learning_rate': [0.01, 0.1, 0.3],\n    'n_estimators': [50, 100, 200],\n    'min_child_weight': [1, 3, 5],\n    'subsample': [0.8, 1.0],\n    'colsample_bytree': [0.8, 1.0]\n}\n\nprint(f\"\\nTotal combinations: {np.prod([len(v) for v in param_grid.values()])}\")\n\n# Grid Search\nxgb_model = xgb.XGBClassifier(random_state=42, verbosity=0)\n\nprint(\"\\nGrid Search starting...\")\ngrid_search = GridSearchCV(\n    xgb_model,\n    param_grid,\n    cv=3,\n    scoring='roc_auc',\n    n_jobs=-1,\n    verbose=1\n)\n\ngrid_search.fit(X_train, y_train)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"BEST PARAMETERS\")\nprint(\"=\"*60)\nfor param, value in grid_search.best_params_.items():\n    print(f\"  {param:20s}: {value}\")\n\nprint(f\"\\nBest CV ROC-AUC: {grid_search.best_score_:.4f}\")\n\n# Test performance\ntest_score = grid_search.score(X_test, y_test)\nprint(f\"Test ROC-AUC: {test_score:.4f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TOP 5 CONFIGURATIONS\")\nprint(\"=\"*60)\n\nresults = grid_search.cv_results_\ntop_indices = np.argsort(results['mean_test_score'])[-5:]\n\nfor i, idx in enumerate(reversed(top_indices), 1):\n    print(f\"\\n{i}. Score: {results['mean_test_score'][idx]:.4f}\")\n    print(f\"   Params: {results['params'][idx]}\")\n\nprint(\"\\n💡 Tuning Tips:\")\nprint(\"  1. max_depth ↓ → underfitting, ↑ → overfitting\")\nprint(\"  2. learning_rate ↓ → yavaş ama iyi, ↑ → hızlı ama kötü\")\nprint(\"  3. n_estimators ↑ → better (ama overfitting riski)\")\nprint(\"  4. subsample < 1.0 → regularization, overfitting ↓\")",
+      "explanation": "XGBoost hyperparameter tuning. Grid search ile optimal parametreler bulunur. Production'da Bayesian optimization daha hızlıdır."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Early Stopping & Custom Evaluation Metric",
+      "code": "import xgboost as xgb\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import f1_score\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Veri\nX, y = make_classification(n_samples=1000, n_features=20, random_state=42)\nX_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)\n\nprint(\"=\"*60)\nprint(\"EARLY STOPPING & CUSTOM METRICS\")\nprint(\"=\"*60)\n\n# Custom evaluation metric\ndef custom_f1(y_pred, dtrain):\n    \"\"\"Custom F1 score metric\"\"\"\n    y_true = dtrain.get_label()\n    y_pred_binary = (y_pred > 0.5).astype(int)\n    score = f1_score(y_true, y_pred_binary)\n    return 'f1', score  # name, value (higher is better)\n\n# DMatrix\ndtrain = xgb.DMatrix(X_train, label=y_train)\ndval = xgb.DMatrix(X_val, label=y_val)\n\n# Parameters\nparams = {\n    'max_depth': 5,\n    'eta': 0.1,\n    'objective': 'binary:logistic',\n    'eval_metric': 'auc'\n}\n\n# Evaluation list\nevals = [(dtrain, 'train'), (dval, 'val')]\n\nprint(\"\\nTraining with early stopping...\")\n\n# Train\nevals_result = {}\nmodel = xgb.train(\n    params,\n    dtrain,\n    num_boost_round=500,\n    evals=evals,\n    early_stopping_rounds=50,  # Stop if no improvement for 50 rounds\n    feval=custom_f1,  # Custom metric\n    maximize=True,  # F1'i maximize et\n    evals_result=evals_result,\n    verbose_eval=50\n)\n\nprint(f\"\\nBest iteration: {model.best_iteration}\")\nprint(f\"Best score: {model.best_score:.4f}\")\n\n# Plot training curves\nplt.figure(figsize=(14, 5))\n\n# AUC\nplt.subplot(1, 2, 1)\nepochs = range(len(evals_result['train']['auc']))\nplt.plot(epochs, evals_result['train']['auc'], label='Train AUC', linewidth=2)\nplt.plot(epochs, evals_result['val']['auc'], label='Val AUC', linewidth=2)\nplt.axvline(model.best_iteration, color='r', linestyle='--', label='Best Iteration')\nplt.xlabel('Boosting Round')\nplt.ylabel('AUC')\nplt.title('Training & Validation AUC')\nplt.legend()\nplt.grid(True, alpha=0.3)\n\n# F1 Score\nplt.subplot(1, 2, 2)\nplt.plot(epochs, evals_result['train']['f1'], label='Train F1', linewidth=2)\nplt.plot(epochs, evals_result['val']['f1'], label='Val F1', linewidth=2)\nplt.axvline(model.best_iteration, color='r', linestyle='--', label='Best Iteration')\nplt.xlabel('Boosting Round')\nplt.ylabel('F1 Score')\nplt.title('Training & Validation F1')\nplt.legend()\nplt.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n💡 Early Stopping:\")\nprint(\"  - Overfitting'i önler\")\nprint(\"  - Training süresini azaltır\")\nprint(\"  - Validation loss artmaya başladığında durur\")\nprint(f\"  - Bu örnekte {model.best_iteration} iterasyonda durdu (500 yerine)\")\nprint(f\"  - {500 - model.best_iteration} gereksiz iterasyon atlandı!\")",
+      "explanation": "Early stopping ile overtraining'i önle. Custom metric (F1) tanımlayarak istediğin metriği optimize edebilirsin. Production'da kritik!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "LightGBM - Large Dataset & Categorical Features",
+      "code": "import lightgbm as lgb\nimport pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import roc_auc_score\nimport time\n\nprint(\"=\"*60)\nprint(\"LIGHTGBM - LARGE DATA & CATEGORICAL FEATURES\")\nprint(\"=\"*60)\n\n# Büyük simulated dataset (100K rows)\nnp.random.seed(42)\nn_samples = 100000\n\ndata = pd.DataFrame({\n    'age': np.random.randint(18, 80, n_samples),\n    'income': np.random.randint(20000, 150000, n_samples),\n    'credit_score': np.random.randint(300, 850, n_samples),\n    'city': np.random.choice(['Istanbul', 'Ankara', 'Izmir', 'Bursa', 'Antalya'], n_samples),\n    'education': np.random.choice(['High School', 'Bachelor', 'Master', 'PhD'], n_samples),\n    'job': np.random.choice(['Engineer', 'Doctor', 'Teacher', 'Business', 'Other'], n_samples)\n})\n\n# Target (loan approval)\ndata['target'] = (\n    (data['credit_score'] > 600).astype(int) * 0.6 +\n    (data['income'] > 70000).astype(int) * 0.3 +\n    np.random.rand(n_samples) * 0.1\n)\ndata['target'] = (data['target'] > 0.5).astype(int)\n\nprint(f\"\\nDataset: {data.shape[0]:,} rows, {data.shape[1]-1} features\")\nprint(f\"Target distribution: {data['target'].value_counts().to_dict()}\")\n\n# Categorical columns\ncat_features = ['city', 'education', 'job']\nprint(f\"\\nCategorical features: {cat_features}\")\n\n# Split\nX = data.drop('target', axis=1)\ny = data['target']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"METHOD 1: LABEL ENCODING (Manual)\")\nprint(\"=\"*60)\n\nfrom sklearn.preprocessing import LabelEncoder\n\nX_train_encoded = X_train.copy()\nX_test_encoded = X_test.copy()\n\nfor col in cat_features:\n    le = LabelEncoder()\n    X_train_encoded[col] = le.fit_transform(X_train[col])\n    X_test_encoded[col] = le.transform(X_test[col])\n\nstart = time.time()\nmodel1 = lgb.LGBMClassifier(n_estimators=100, random_state=42, verbosity=-1)\nmodel1.fit(X_train_encoded, y_train)\ntime1 = time.time() - start\n\ny_pred1 = model1.predict_proba(X_test_encoded)[:, 1]\nauc1 = roc_auc_score(y_test, y_pred1)\n\nprint(f\"AUC: {auc1:.4f}\")\nprint(f\"Training time: {time1:.2f}s\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"METHOD 2: NATIVE CATEGORICAL (LightGBM Feature!)\")\nprint(\"=\"*60)\n\n# LightGBM native categorical support\nfor col in cat_features:\n    X_train[col] = X_train[col].astype('category')\n    X_test[col] = X_test[col].astype('category')\n\nstart = time.time()\nmodel2 = lgb.LGBMClassifier(\n    n_estimators=100,\n    random_state=42,\n    verbosity=-1,\n    categorical_feature=cat_features  # Native categorical!\n)\nmodel2.fit(X_train, y_train)\ntime2 = time.time() - start\n\ny_pred2 = model2.predict_proba(X_test)[:, 1]\nauc2 = roc_auc_score(y_test, y_pred2)\n\nprint(f\"AUC: {auc2:.4f}\")\nprint(f\"Training time: {time2:.2f}s\")\nprint(f\"Speedup: {time1/time2:.2f}x faster\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"LIGHTGBM AVANTAJLARI\")\nprint(\"=\"*60)\nprint(\"\"\"\n💡 LightGBM Native Categorical:\n  ✓ One-hot encoding gerektirmez\n  ✓ Daha hızlı training\n  ✓ Daha az memory\n  ✓ Optimal splits (native support)\n  \n⚡ Histogram-based:\n  ✓ Continuous features → 255 bins\n  ✓ 10-20x hızlı (XGBoost'tan)\n  ✓ Large datasets için ideal\n  \n🌳 Leaf-wise growth:\n  ✓ Best leaf'i genişletir (XGBoost level-wise)\n  ✓ Daha iyi accuracy\n  ✓ Overfitting riski (max_depth ayarla)\n\"\"\")",
+      "explanation": "LightGBM'in süper güçleri: Native categorical support (one-hot encoding yok!), histogram binning (çok hızlı), leaf-wise growth (daha iyi accuracy)."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production Pipeline - SHAP Interpretability",
+      "code": "import xgboost as xgb\nimport shap\nimport numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\n\nprint(\"=\"*60)\nprint(\"PRODUCTION XGBOOST + SHAP INTERPRETABILITY\")\nprint(\"=\"*60)\n\n# Simulated dataset\nnp.random.seed(42)\nn_samples = 1000\n\ndata = pd.DataFrame({\n    'credit_score': np.random.randint(300, 850, n_samples),\n    'income': np.random.randint(20000, 150000, n_samples),\n    'age': np.random.randint(18, 70, n_samples),\n    'debt_ratio': np.random.uniform(0, 1, n_samples),\n    'num_accounts': np.random.randint(1, 20, n_samples)\n})\n\n# Target: loan approval (realistic logic)\ndata['approved'] = (\n    (data['credit_score'] > 650).astype(int) * 0.5 +\n    (data['income'] > 60000).astype(int) * 0.3 +\n    (data['debt_ratio'] < 0.4).astype(int) * 0.2\n) + np.random.randn(n_samples) * 0.1\n\ndata['approved'] = (data['approved'] > 0.5).astype(int)\n\nX = data.drop('approved', axis=1)\ny = data['approved']\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nprint(f\"\\nDataset: {X.shape[0]} samples, {X.shape[1]} features\")\n\n# Train XGBoost\nprint(\"\\nTraining XGBoost...\")\nmodel = xgb.XGBClassifier(\n    n_estimators=100,\n    max_depth=5,\n    learning_rate=0.1,\n    random_state=42\n)\n\nmodel.fit(X_train, y_train)\ntrain_acc = model.score(X_train, y_train)\ntest_acc = model.score(X_test, y_test)\n\nprint(f\"Train accuracy: {train_acc:.4f}\")\nprint(f\"Test accuracy: {test_acc:.4f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SHAP INTERPRETABILITY\")\nprint(\"=\"*60)\n\n# SHAP Explainer\nexplainer = shap.TreeExplainer(model)\nshap_values = explainer.shap_values(X_test)\n\nprint(\"\\n1️⃣  Global Feature Importance (SHAP):\")\nshap_importance = np.abs(shap_values).mean(axis=0)\nfor feat, imp in sorted(zip(X.columns, shap_importance), key=lambda x: x[1], reverse=True):\n    print(f\"   {feat:15s}: {imp:.4f}\")\n\nprint(\"\\n2️⃣  Single Prediction Explanation:\")\nidx = 0  # İlk test örneği\nprediction = model.predict_proba(X_test.iloc[[idx]])[0, 1]\n\nprint(f\"\\n   Sample features:\")\nfor feat, val in X_test.iloc[idx].items():\n    print(f\"     {feat:15s}: {val}\")\n\nprint(f\"\\n   Prediction: {prediction:.2%} approval probability\")\nprint(f\"   Actual: {'Approved' if y_test.iloc[idx] == 1 else 'Rejected'}\")\n\nprint(f\"\\n   SHAP values (contribution to prediction):\")\nfor feat, shap_val in zip(X.columns, shap_values[idx]):\n    direction = '↑' if shap_val > 0 else '↓'\n    print(f\"     {feat:15s}: {shap_val:+.4f} {direction}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"PRODUCTION DEPLOYMENT\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n📦 Model Export:\n   import joblib\n   joblib.dump(model, 'loan_model.pkl')\n   joblib.dump(explainer, 'shap_explainer.pkl')\n\n🚀 FastAPI Endpoint:\n   \n   @app.post('/predict')\n   def predict(features: dict):\n       X = pd.DataFrame([features])\n       prob = model.predict_proba(X)[0, 1]\n       shap_vals = explainer.shap_values(X)[0]\n       \n       return {\n           'approval_probability': float(prob),\n           'decision': 'approved' if prob > 0.5 else 'rejected',\n           'explanation': dict(zip(X.columns, shap_vals))\n       }\n\n💡 SHAP Benefits:\n   ✓ Black-box → Interpretable\n   ✓ Feature contributions\n   ✓ Regulatory compliance (explain decisions)\n   ✓ Trust & transparency\n   ✓ Debug model behavior\n\n🎯 Production Checklist:\n   ✓ Model versioning (MLflow)\n   ✓ Monitoring (prediction drift)\n   ✓ A/B testing\n   ✓ Fallback mechanisms\n   ✓ Latency < 100ms\n\"\"\")\n\nprint(\"\\n✅ Production-ready XGBoost with interpretability!\")",
+      "explanation": "Production-grade XGBoost: SHAP ile interpretability, feature contributions, explainable predictions. Regulatory compliance için kritik!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Bagging ve Boosting arasındaki temel fark nedir?",
+      "options": [
+        "Bagging daha hızlıdır, Boosting daha yavaştır",
+        "Bagging paralel (independent) models, Boosting sequential (dependent) models",
+        "Bagging sadece classification, Boosting sadece regression için",
+        "Bagging supervised, Boosting unsupervised learning"
+      ],
+      "correct": 1,
+      "explanation": "Bagging (Random Forest gibi) paralel bağımsız modeller eğitir ve ortalar. Boosting (XGBoost gibi) sıralı modeller eğitir, her model bir öncekinin hatasını düzeltir."
+    },
+    {
+      "question": "XGBoost'un standart Gradient Boosting'den farkı nedir?",
+      "options": [
+        "Sadece hız optimizasyonu",
+        "Regularization (Ω), 2nd derivative (Hessian), ve parallelization",
+        "Sadece daha fazla tree kullanır",
+        "Sadece categorical features destekler"
+      ],
+      "correct": 1,
+      "explanation": "XGBoost: 1) Regularization term (tree complexity penalty), 2) 2nd derivative kullanımı (Newton method), 3) Parallel tree construction, 4) Pruning algorithms. Bu yüzden hem hızlı hem accurate!"
+    },
+    {
+      "question": "LightGBM'in en büyük avantajı nedir?",
+      "options": [
+        "En iyi accuracy",
+        "Histogram-based splitting ile 10-20x daha hızlı",
+        "En az memory kullanır",
+        "Hiç hyperparameter tuning gerektirmez"
+      ],
+      "correct": 1,
+      "explanation": "LightGBM continuous features'ı discrete bins'e ayırır (histogram). Bu sayede split finding çok hızlıdır. XGBoost'tan 10-20x daha hızlı, large datasets için ideal!"
+    },
+    {
+      "question": "learning_rate (eta) ne işe yarar ve nasıl seçilir?",
+      "options": [
+        "Tree derinliğini kontrol eder",
+        "Her tree'nin contribution'ını scale eder. Küçük → yavaş ama iyi, büyük → hızlı ama kötü",
+        "Feature sampling oranını belirler",
+        "Regularization strength'ini ayarlar"
+      ],
+      "correct": 1,
+      "explanation": "learning_rate (η) her tree'nin model'e katkısını scale eder: F_m = F_{m-1} + η·h_m. η küçük (0.01) → çok tree gerekir ama iyi generalize. η büyük (0.3) → az tree yeter ama overfitting riski."
+    },
+    {
+      "question": "Early stopping ne işe yarar?",
+      "options": [
+        "Training'i hızlandırır",
+        "Validation loss artmaya başladığında durarak overfitting'i önler",
+        "Automatically hyperparameter tuning yapar",
+        "Model accuracy'sini artırır"
+      ],
+      "correct": 1,
+      "explanation": "Early stopping validation metric'i izler. Metric X iterasyon boyunca iyileşmezse (örn. 50) durur. Overfitting'i önler ve training süresini azaltır. Production'da şart!"
+    },
+    {
+      "question": "CatBoost'un özel özelliği nedir?",
+      "options": [
+        "En hızlı gradient boosting",
+        "Categorical features için native support (encoding gerektirmez)",
+        "GPU-only training",
+        "En iyi accuracy her zaman"
+      ],
+      "correct": 1,
+      "explanation": "CatBoost categorical features'ı native olarak handle eder. Label/One-hot encoding gerektirmez. Ayrıca ordered boosting ile target leakage'ı önler. Cat-heavy datasets için ideal!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "learning_rate'i çok büyük seçmek (örn. 0.3+)",
+      "why": "Her tree çok fazla katkı yapar, model hızlı ama kaba öğrenir. Overfitting ve kötü generalization.",
+      "fix": "learning_rate = 0.01-0.1 kullan. Küçük η + fazla n_estimators = daha iyi sonuç. Early stopping ile combine et.",
+      "example": "# YANLIŞ\nmodel = xgb.XGBClassifier(learning_rate=0.5, n_estimators=50)\n\n# DOĞRU\nmodel = xgb.XGBClassifier(learning_rate=0.05, n_estimators=500, early_stopping_rounds=50)"
+    },
+    {
+      "mistake": "Early stopping kullanmamak",
+      "why": "Model gereksiz yere çok iterasyon yapar, overfit olur. Training süresi uzar, validation accuracy düşer.",
+      "fix": "early_stopping_rounds=50 kullan. Validation set gerekli! Overfitting'i otomatik önler.",
+      "example": "model.fit(\n    X_train, y_train,\n    eval_set=[(X_val, y_val)],\n    early_stopping_rounds=50,\n    verbose=False\n)"
+    },
+    {
+      "mistake": "max_depth'i çok büyük yapmak (10+)",
+      "why": "Çok derin tree'ler overfit olur. Boosting zaten many trees kullanır, shallow trees yeterli (3-7).",
+      "fix": "max_depth=3-6 kullan. Shallow trees + many boosting rounds = daha iyi generalization.",
+      "example": "# YANLIŞ\nmodel = xgb.XGBClassifier(max_depth=15)  # Çok derin!\n\n# DOĞRU\nmodel = xgb.XGBClassifier(max_depth=5, n_estimators=200)"
+    },
+    {
+      "mistake": "Categorical features'ı encode etmeden XGBoost'a vermek",
+      "why": "XGBoost sadece numerical input alır. Categorical ('red', 'blue') doğrudan işleyemez. Hata verir veya meaning kaybolur.",
+      "fix": "LabelEncoder veya One-Hot Encoding kullan. Ya da LightGBM/CatBoost tercih et (native categorical).",
+      "example": "from sklearn.preprocessing import LabelEncoder\n\nle = LabelEncoder()\nX['category_encoded'] = le.fit_transform(X['category'])\n\n# Ya da LightGBM ile native\nmodel = lgb.LGBMClassifier(categorical_feature=['category'])"
+    },
+    {
+      "mistake": "Imbalanced data'da class_weight kullanmamak",
+      "why": "Çoğunluk sınıfı dominant olur (%99 negative, %1 positive gibi). Minority class hiç tahmin edilemez.",
+      "fix": "scale_pos_weight parametresi kullan veya SMOTE ile balance et.",
+      "example": "# İmbalanced data için\nscale_pos_weight = (y == 0).sum() / (y == 1).sum()\nmodel = xgb.XGBClassifier(scale_pos_weight=scale_pos_weight)"
+    },
+    {
+      "mistake": "Regularization parametrelerini (reg_alpha, reg_lambda) hiç kullanmamak",
+      "why": "Overfitting riski artar, özellikle küçük datasets'de. Model training'e çok fit olur, test'te kötü.",
+      "fix": "reg_alpha (L1) ve reg_lambda (L2) kullan. Genellikle reg_lambda=1, reg_alpha=0 başlangıç için iyi.",
+      "example": "model = xgb.XGBClassifier(\n    reg_alpha=0.1,  # L1 regularization\n    reg_lambda=1.0,  # L2 regularization\n    gamma=0.1  # Min split loss\n)"
+    },
+    {
+      "mistake": "Feature importance'a körü körüne güvenmek",
+      "why": "XGBoost feature importance misleading olabilir (split count based). Correlated features'da bias var.",
+      "fix": "SHAP values kullan! Daha güvenilir feature importance ve individual prediction explanations.",
+      "example": "import shap\n\nexplainer = shap.TreeExplainer(model)\nshap_values = explainer.shap_values(X_test)\nshap.summary_plot(shap_values, X_test)  # Gerçek importance!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Bagging vs Boosting farkı nedir?",
+      "back": "Bagging: Paralel bağımsız modeller, variance azaltır (Random Forest). Boosting: Sıralı modeller, her biri öncekinin hatasını düzeltir, bias azaltır (XGBoost)."
+    },
+    {
+      "front": "Gradient Boosting temel update kuralı?",
+      "back": "F_m(x) = F_{m-1}(x) + η·h_m(x). Her yeni tree (h_m) residual'ı tahmin eder, η (learning rate) ile scale edilir."
+    },
+    {
+      "front": "XGBoost'un 3 ana avantajı?",
+      "back": "1) Regularization (Ω term, tree complexity penalty). 2) 2nd derivative (Hessian, Newton method). 3) Parallelization (fast training)."
+    },
+    {
+      "front": "LightGBM neden 10x hızlı?",
+      "back": "Histogram-based splitting! Continuous features → 255 discrete bins. Split finding çok hızlı. Leaf-wise growth (XGBoost level-wise)."
+    },
+    {
+      "front": "learning_rate (η) nasıl seçilir?",
+      "back": "Küçük η (0.01-0.05) + fazla tree (500-1000) = en iyi sonuç. Büyük η (0.3) hızlı ama kaba. Early stopping ile combine et."
+    },
+    {
+      "front": "Early stopping ne işe yarar?",
+      "back": "Validation loss X iterasyon iyileşmezse durur (örn. 50). Overfitting önler, training süresini azaltır. Production'da şart!"
+    },
+    {
+      "front": "CatBoost'un özel özelliği?",
+      "back": "Native categorical support! Encoding gerektirmez. Ordered boosting ile target leakage önler. Cat-heavy datasets için ideal."
+    },
+    {
+      "front": "XGBoost regularization parametreleri?",
+      "back": "gamma: Min split loss. reg_alpha: L1 regularization. reg_lambda: L2 regularization. Overfitting'i önler, daha smooth model."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "animation",
+      "title": "Gradient Boosting: Sequential Learning",
+      "description": "Her tree'nin residual'ı nasıl tahmin ettiğini adım adım görün. İlk tree → residual hesapla → ikinci tree residual'ı fit et → combine.",
+      "component": "GradientBoostingAnimation"
+    },
+    {
+      "type": "interactive",
+      "title": "Hyperparameter Effects: max_depth & learning_rate",
+      "description": "max_depth ve learning_rate değiştirerek model davranışını interaktif keşfedin. Overfitting vs underfitting.",
+      "component": "HyperparameterExplorer"
+    },
+    {
+      "type": "plot",
+      "title": "XGBoost vs LightGBM vs CatBoost Performance",
+      "description": "Üç algoritmanın accuracy, speed, memory kullanımı karşılaştırması. Hangi durumda hangisi?",
+      "component": "EnsembleComparison"
+    },
+    {
+      "type": "interactive",
+      "title": "SHAP Feature Importance",
+      "description": "SHAP values ile gerçek feature importance. Her feature'ın prediction'a contribution'ını görselleştir.",
+      "component": "SHAPVisualizer"
+    }
+  ]
+}

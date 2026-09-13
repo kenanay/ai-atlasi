@@ -1,0 +1,326 @@
+{
+  "id": "batch-normalization",
+  "title": "Batch Normalization & Layer Normalization",
+  "category": "optimization",
+  "level": 2,
+  "estimatedTime": 55,
+  "description": "Batch Normalization ve Layer Normalization: Training stabilize eder, hızlandırır, higher learning rates! Internal covariate shift problemi çözüldü. Modern networks'ün olmazsa olmazı.",
+  "content": {
+    "level0_basic": "Batch Normalization (BatchNorm, BN) her layer'daki activations'ı normalize eder: mean=0, std=1. Problem: Derin network'lerde her layer'ın input distribution'ı değişiyor (internal covariate shift), training zorlaşıyor. BatchNorm çözüyor: (1) Her mini-batch için mean/std hesapla, (2) Normalize et: (x - mean) / std, (3) Scale & shift: γx + β (learnable). Benefits: (1) Training 2-3x hızlanır, (2) Higher learning rates kullanabilirsin, (3) Regularization effect (dropout gibi), (4) Weight initialization'a덜 hassas. Inference'da: Training'deki running mean/std kullan (batch stats değil). Layer Normalization (LayerNorm): Batch yerine feature dimension'da normalize et. Transformers'ta standard! BatchNorm: CNN'lerde, LayerNorm: RNN/Transformers'ta.",
+    "level1_beginner": "**Internal Covariate Shift Problemi:**\n\n```\nDeep network (5 layers):\n  Layer 1 → Activations: mean=0, std=1\n  Layer 2 → Activations: mean=2.5, std=5.3\n  Layer 3 → Activations: mean=-1.2, std=8.7\n  Layer 4 → Activations: mean=15.3, std=20.1\n  Layer 5 → Activations: mean=100, std=500!\n\nProblem:\n  • Distribution her layer'da değişiyor\n  • Gradient flow bozuluyor\n  • Learning rate çok küçük olmalı\n  • Training çok yavaş!\n```\n\n**Batch Normalization Çözümü:**\n\n```\n1. Mini-batch statistics:\n   μ = (1/m) Σ xᵢ  (batch mean)\n   σ² = (1/m) Σ (xᵢ - μ)²  (batch variance)\n\n2. Normalize:\n   x̂ = (x - μ) / √(σ² + ε)\n   → mean=0, std=1\n\n3. Scale & Shift (learnable!):\n   y = γx̂ + β\n   \n   γ, β: Learnable parameters\n   Network isterse normalization'ı undo edebilir!\n```\n\n**Training vs Inference:**\n\n**Training:**\n- Her batch için yeni μ, σ² hesapla\n- Batch içindeki örnekler birbirine bağlı\n- Running mean/std track et:\n  ```\n  running_mean = 0.9 × running_mean + 0.1 × batch_mean\n  running_std = 0.9 × running_std + 0.1 × batch_std\n  ```\n\n**Inference:**\n- Batch stats yok! (tek örnek olabilir)\n- Running mean/std kullan\n- Deterministic (aynı input → aynı output)\n\n**BatchNorm Benefits:**\n\n1. **Higher Learning Rates:**\n   - Without BN: lr=0.001\n   - With BN: lr=0.01-0.1 (10-100x!)\n\n2. **Faster Convergence:**\n   - Without BN: 100 epoch\n   - With BN: 30-40 epoch\n\n3. **Regularization:**\n   - Batch noise → dropout-like effect\n   - Can reduce/remove dropout\n\n4. **Less Sensitive to Initialization:**\n   - Bad init → BN normalizes anyway\n\n5. **Smooth Loss Landscape:**\n   - Gradients more predictable\n   - Optimization easier\n\n**Layer Normalization:**\n\nBatchNorm: Normalize across batch dimension\nLayerNorm: Normalize across feature dimension\n\n```\nBatchNorm:\n  Input: [Batch, Features]\n  Normalize: Along batch axis\n  → Each feature normalized across batch\n\nLayerNorm:\n  Input: [Batch, Features]\n  Normalize: Along feature axis\n  → Each example normalized independently\n```\n\n**When to Use:**\n- **BatchNorm:** CNNs, large batch sizes (>32)\n- **LayerNorm:** RNNs, Transformers, small batches\n- **InstanceNorm:** Style transfer, GANs\n- **GroupNorm:** Small batches, distributed training",
+    "level2_application": "**PyTorch BatchNorm:**\n\n```python\nimport torch\nimport torch.nn as nn\n\n# 1D BatchNorm (for FC layers, RNN)\nbn1d = nn.BatchNorm1d(num_features=128)\n# Input: (N, 128) or (N, 128, L)\n\n# 2D BatchNorm (for CNNs)\nbn2d = nn.BatchNorm2d(num_channels=64)\n# Input: (N, 64, H, W)\n\n# Example CNN with BatchNorm\nclass ConvNetWithBN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)\n        self.bn1 = nn.BatchNorm2d(64)\n        \n        self.conv2 = nn.Conv2d(64, 128, 3, padding=1)\n        self.bn2 = nn.BatchNorm2d(128)\n        \n        self.fc = nn.Linear(128 * 8 * 8, 10)\n    \n    def forward(self, x):\n        # Conv → BN → Activation (order!)\n        x = self.conv1(x)\n        x = self.bn1(x)\n        x = torch.relu(x)\n        x = torch.max_pool2d(x, 2)\n        \n        x = self.conv2(x)\n        x = self.bn2(x)\n        x = torch.relu(x)\n        x = torch.max_pool2d(x, 2)\n        \n        x = x.view(x.size(0), -1)\n        x = self.fc(x)\n        return x\n\n# Training\nmodel = ConvNetWithBN()\nmodel.train()  # BatchNorm uses batch stats\n\n# Inference\nmodel.eval()  # BatchNorm uses running stats\nwith torch.no_grad():\n    output = model(x)\n```\n\n**Layer Normalization:**\n\n```python\n# LayerNorm (for Transformers, RNNs)\nln = nn.LayerNorm(normalized_shape=512)\n# Input: (N, 512) or (N, L, 512)\n\n# Transformer block with LayerNorm\nclass TransformerBlockWithLN(nn.Module):\n    def __init__(self, d_model=512):\n        super().__init__()\n        self.attention = nn.MultiheadAttention(d_model, num_heads=8)\n        self.ln1 = nn.LayerNorm(d_model)\n        \n        self.ffn = nn.Sequential(\n            nn.Linear(d_model, 2048),\n            nn.ReLU(),\n            nn.Linear(2048, d_model)\n        )\n        self.ln2 = nn.LayerNorm(d_model)\n    \n    def forward(self, x):\n        # Pre-LN (modern style)\n        x = x + self.attention(self.ln1(x), self.ln1(x), self.ln1(x))[0]\n        x = x + self.ffn(self.ln2(x))\n        return x\n```\n\n**Common Patterns:**\n\n```python\n# Pattern 1: Conv → BN → ReLU (ResNet)\nx = conv(x)\nx = bn(x)\nx = relu(x)\n\n# Pattern 2: Conv → ReLU → BN (less common)\nx = conv(x)\nx = relu(x)\nx = bn(x)\n\n# Pattern 3: Pre-activation (ResNet v2)\nx = bn(x)\nx = relu(x)\nx = conv(x)\n\n# Modern consensus: Conv → BN → ReLU\n```\n\n**BatchNorm Hyperparameters:**\n\n```python\nbn = nn.BatchNorm2d(\n    num_features=64,\n    eps=1e-5,           # Numerical stability\n    momentum=0.1,       # Running stats update rate\n    affine=True,        # Learn γ, β\n    track_running_stats=True  # Keep running mean/std\n)\n```\n\n**Debugging BatchNorm:**\n\n```python\n# Check if BN is working\nprint(\"Batch mean:\", x.mean())\nprint(\"Batch std:\", x.std())\n\nx_bn = bn(x)\nprint(\"After BN mean:\", x_bn.mean())  # Should be ≈ 0\nprint(\"After BN std:\", x_bn.std())    # Should be ≈ 1\n\n# Check running stats\nprint(\"Running mean:\", bn.running_mean)\nprint(\"Running var:\", bn.running_var)\n\n# Check learnable params\nprint(\"γ (weight):\", bn.weight)\nprint(\"β (bias):\", bn.bias)\n```",
+    "level3_advanced": "**BatchNorm Mathematics:**\n\nForward Pass:\n$$\\mu_B = \\frac{1}{m} \\sum_{i=1}^{m} x_i$$\n$$\\sigma_B^2 = \\frac{1}{m} \\sum_{i=1}^{m} (x_i - \\mu_B)^2$$\n$$\\hat{x}_i = \\frac{x_i - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}}$$\n$$y_i = \\gamma \\hat{x}_i + \\beta$$\n\nBackward Pass (gradients):\n$$\\frac{\\partial L}{\\partial \\gamma} = \\sum_{i=1}^{m} \\frac{\\partial L}{\\partial y_i} \\hat{x}_i$$\n$$\\frac{\\partial L}{\\partial \\beta} = \\sum_{i=1}^{m} \\frac{\\partial L}{\\partial y_i}$$\n$$\\frac{\\partial L}{\\partial x_i} = \\frac{\\gamma}{\\sqrt{\\sigma_B^2 + \\epsilon}} \\left( \\frac{\\partial L}{\\partial y_i} - \\frac{1}{m}\\sum_{j=1}^{m}\\frac{\\partial L}{\\partial y_j} - \\hat{x}_i \\frac{1}{m}\\sum_{j=1}^{m}\\frac{\\partial L}{\\partial y_j}\\hat{x}_j \\right)$$\n\n**Layer Normalization:**\n$$\\mu = \\frac{1}{H} \\sum_{i=1}^{H} x_i$$\n$$\\sigma^2 = \\frac{1}{H} \\sum_{i=1}^{H} (x_i - \\mu)^2$$\n$$\\hat{x}_i = \\frac{x_i - \\mu}{\\sqrt{\\sigma^2 + \\epsilon}}$$\n$$y_i = \\gamma \\hat{x}_i + \\beta$$\n\nDifference: Normalization over features (H), not batch (m)!\n\n**Group Normalization:**\n\nDivide channels into groups, normalize within groups:\n$$GN(x) = \\gamma \\frac{x - \\mu_G}{\\sqrt{\\sigma_G^2 + \\epsilon}} + \\beta$$\n\nGroups typically 32.\n\n**Instance Normalization:**\n\nNormalize each channel independently:\n$$IN(x) = \\gamma \\frac{x - \\mu_C}{\\sqrt{\\sigma_C^2 + \\epsilon}} + \\beta$$\n\nUsed in style transfer!\n\n**Comparison:**\n\n```\nInput: (N, C, H, W)\n  N: Batch size\n  C: Channels\n  H, W: Height, Width\n\nBatchNorm: Normalize over (N, H, W) for each C\n  → Channel-wise, across batch\n  → Requires large batch size\n\nLayerNorm: Normalize over (C, H, W) for each N\n  → Example-wise\n  → Batch size independent\n\nInstanceNorm: Normalize over (H, W) for each N, C\n  → Per-channel, per-example\n  → Style transfer\n\nGroupNorm: Normalize over (C/G, H, W) for each N, G\n  → Compromise\n  → Batch size independent\n```\n\n**Why BatchNorm Works? (Theories)**\n\n**Theory 1: Reduces Internal Covariate Shift**\n- Original paper's claim\n- Stabilizes layer input distributions\n\n**Theory 2: Smooths Loss Landscape**\n- More recent finding\n- Gradients more predictive\n- Allows higher learning rates\n\n**Theory 3: Implicit Regularization**\n- Batch noise acts like dropout\n- Prevents overfitting\n\n**BatchNorm Issues:**\n\n1. **Small Batch Size:**\n   - Batch statistics unreliable\n   - Use GroupNorm or LayerNorm\n\n2. **Distributed Training:**\n   - Batch split across GPUs\n   - Use SyncBatchNorm\n\n3. **RNNs:**\n   - Variable sequence lengths\n   - Use LayerNorm instead\n\n4. **GANs:**\n   - Batch dependencies problematic\n   - Use InstanceNorm or no norm",
+    "level4_expert": "**Advanced BatchNorm Techniques:**\n\n**1. SyncBatchNorm (Distributed Training):**\n\n```python\nimport torch.nn as nn\nimport torch.distributed as dist\n\n# Convert BatchNorm to SyncBatchNorm\nmodel = nn.SyncBatchNorm.convert_sync_batchnorm(model)\n\n# Now statistics computed across all GPUs\n# Requires DDP (DistributedDataParallel)\n```\n\n**2. Custom BatchNorm Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass CustomBatchNorm1d(nn.Module):\n    def __init__(self, num_features, eps=1e-5, momentum=0.1):\n        super().__init__()\n        self.num_features = num_features\n        self.eps = eps\n        self.momentum = momentum\n        \n        # Learnable parameters\n        self.weight = nn.Parameter(torch.ones(num_features))\n        self.bias = nn.Parameter(torch.zeros(num_features))\n        \n        # Running statistics (not learned)\n        self.register_buffer('running_mean', torch.zeros(num_features))\n        self.register_buffer('running_var', torch.ones(num_features))\n        self.register_buffer('num_batches_tracked', torch.tensor(0, dtype=torch.long))\n    \n    def forward(self, x):\n        # x: (N, C) or (N, C, L)\n        \n        if self.training:\n            # Training mode: use batch statistics\n            if x.dim() == 2:\n                # (N, C)\n                mean = x.mean(0)\n                var = x.var(0, unbiased=False)\n            else:\n                # (N, C, L)\n                mean = x.mean([0, 2])\n                var = x.var([0, 2], unbiased=False)\n            \n            # Update running statistics\n            with torch.no_grad():\n                self.running_mean = (1 - self.momentum) * self.running_mean + \\\n                                   self.momentum * mean\n                self.running_var = (1 - self.momentum) * self.running_var + \\\n                                  self.momentum * var\n                self.num_batches_tracked += 1\n        else:\n            # Eval mode: use running statistics\n            mean = self.running_mean\n            var = self.running_var\n        \n        # Normalize\n        x_norm = (x - mean.view(1, -1, 1 if x.dim() == 3 else None)) / \\\n                 torch.sqrt(var.view(1, -1, 1 if x.dim() == 3 else None) + self.eps)\n        \n        # Scale and shift\n        x_out = self.weight.view(1, -1, 1 if x.dim() == 3 else None) * x_norm + \\\n                self.bias.view(1, -1, 1 if x.dim() == 3 else None)\n        \n        return x_out\n```\n\n**3. Batch Renormalization:**\n\nImproves small batch performance:\n\n```python\n# Standard BN\ny = γ * (x - μ_B) / σ_B + β\n\n# Batch Renorm\nr = clip(σ_B / σ_running, 1/r_max, r_max)\nd = clip((μ_B - μ_running) / σ_running, -d_max, d_max)\ny = γ * ((x - μ_B) / σ_B * r + d) + β\n```\n\n**4. Switchable Normalization:**\n\nLearn which normalization to use:\n\n```python\nSN(x) = w_bn * BN(x) + w_ln * LN(x) + w_in * IN(x)\n```\n\nWeights (w_bn, w_ln, w_in) learned via softmax!\n\n**5. Weight Normalization:**\n\nAlternative to BatchNorm:\n\n$$w = g \\frac{v}{||v||}$$\n\n```python\nimport torch.nn.utils.weight_norm as weight_norm\n\nlayer = weight_norm(nn.Linear(20, 40))\n```\n\n**6. Spectral Normalization (GANs):**\n\n```python\nfrom torch.nn.utils import spectral_norm\n\nlayer = spectral_norm(nn.Conv2d(3, 64, 3))\n```\n\n**7. EvoNorm (Evolution of Normalization):**\n\nCombines normalization + activation:\n\n```python\n# EvoNorm-S0\ndef evonorm_s0(x, gamma, beta, v, eps=1e-5):\n    var = x.var(dim=[2, 3], keepdim=True, unbiased=False)\n    std = torch.sqrt(var + eps)\n    \n    num = x * torch.sigmoid(v * x)\n    return num / std * gamma + beta\n```\n\n**Production Best Practices:**\n\n```python\nclass ProductionCNN(nn.Module):\n    def __init__(self, num_classes=1000):\n        super().__init__()\n        \n        # Modern pattern: Conv → BN → ReLU\n        self.features = nn.Sequential(\n            # Block 1\n            nn.Conv2d(3, 64, 7, stride=2, padding=3, bias=False),\n            nn.BatchNorm2d(64),  # bias=False in Conv when using BN!\n            nn.ReLU(inplace=True),\n            nn.MaxPool2d(3, stride=2, padding=1),\n            \n            # Block 2\n            nn.Conv2d(64, 128, 3, padding=1, bias=False),\n            nn.BatchNorm2d(128),\n            nn.ReLU(inplace=True),\n            \n            # More blocks...\n        )\n        \n        self.classifier = nn.Linear(128, num_classes)\n    \n    def forward(self, x):\n        x = self.features(x)\n        x = torch.adaptive_avg_pool2d(x, (1, 1))\n        x = x.view(x.size(0), -1)\n        x = self.classifier(x)\n        return x\n\n# Training tips\nmodel = ProductionCNN()\n\n# 1. Use higher learning rate with BN\noptimizer = torch.optim.SGD(\n    model.parameters(),\n    lr=0.1,  # 10-100x higher than without BN\n    momentum=0.9,\n    weight_decay=1e-4\n)\n\n# 2. Use cosine annealing\nscheduler = torch.optim.lr_scheduler.CosineAnnealingLR(\n    optimizer, T_max=200\n)\n\n# 3. Warmup for first few epochs\n# (gradually increase lr from 0 to 0.1)\n\n# 4. Remember model.eval() for inference!\nmodel.eval()\nwith torch.no_grad():\n    pred = model(x)\n```\n\n**Debugging BatchNorm Issues:**\n\n```python\n# Issue 1: BN layer not updating during training\n# Check: model.train() called?\nprint(\"Training mode:\", model.training)\n\n# Issue 2: Different train/eval outputs\n# Expected! BN behaves differently\n# Solution: Always use model.eval() for inference\n\n# Issue 3: Poor performance with small batch\n# Solution: Use GroupNorm or LayerNorm\nbn = nn.GroupNorm(32, 64)  # 32 groups, 64 channels\n\n# Issue 4: NaN losses\n# Check BN eps parameter\nbn = nn.BatchNorm2d(64, eps=1e-3)  # Increase if needed\n\n# Issue 5: Distributed training sync issues\n# Use SyncBatchNorm\nmodel = nn.SyncBatchNorm.convert_sync_batchnorm(model)\n```\n\n**Performance Considerations:**\n\n```python\n# BatchNorm overhead: ~5-10% training time\n# But enables:\n#   • 2-3x faster convergence\n#   • Higher learning rates\n#   • Better final accuracy\n# → Net benefit: Significant!\n\n# Memory: Extra buffers for running stats\n# Negligible compared to activations\n\n# Inference: Negligible overhead\n# Just affine transform after folding\n```"
+  },
+  "whatIsIt": "Batch Normalization her layer'daki activations'ı normalize eder (mean=0, std=1), sonra learnable γ, β ile scale eder. Problem: Deep networks'te layer input distributions değişiyor (internal covariate shift), training zorlaşıyor. BatchNorm stabilize eder! Training'de batch statistics kullanır, inference'da running statistics. Layer Normalization feature dimension'da normalize eder (batch-independent), Transformers/RNNs'te kullanılır. Benefits: 2-3x hızlı training, higher learning rates, regularization effect, smooth loss landscape. Modern deep learning'in core component'i!",
+  "whyNeeded": "Derin networks train etmek çok zor! Her layer'ın input distribution'ı değişiyor, gradient flow bozuluyor, learning rate çok küçük olmalı, convergence yavaş. BatchNorm tüm bunları çözüyor: (1) Distributions stabilize oluyor, (2) Gradient flow smooth, (3) Learning rate 10-100x artırabilirsin, (4) Training 2-3x hızlanıyor, (5) Weight init'e덜 sensitive. ResNet, modern CNNs, Transformers hepsi normalization kullanıyor - onsuz impossible! Pre-normalization era: Training 200 epoch. Post-BN: 50-70 epoch yeterli.",
+  "realWorldAnalogy": "BatchNorm assembly line'da quality control gibidir. Her iş istasyonu (layer) output üretiyor. Normalization olmadan: İstasyon 1 küçük parçalar (mean=0), istasyon 5 devasa parçalar (mean=100) üretiyor - sistem dengesiz! BatchNorm = Her istasyonda QC: Gelen parçaları standard size'a normalize et (mean=0, std=1), sonra istasyonun istediği scale'e ayarla (γ, β). Sonuç: Tüm pipeline smooth çalışıyor, her istasyon ne beklediğini biliyor, üretim (training) hızlanıyor, kalite (accuracy) artıyor!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Batch mean: } \\mu_B = \\frac{1}{m} \\sum_{i=1}^{m} x_i",
+      "\\text{Batch variance: } \\sigma_B^2 = \\frac{1}{m} \\sum_{i=1}^{m} (x_i - \\mu_B)^2",
+      "\\text{Normalize: } \\hat{x}_i = \\frac{x_i - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}}",
+      "\\text{Scale \\& Shift: } y_i = \\gamma \\hat{x}_i + \\beta",
+      "\\text{Running stats: } \\mu_{run} = (1-\\alpha)\\mu_{run} + \\alpha\\mu_B",
+      "\\text{LayerNorm: } \\mu = \\frac{1}{H} \\sum_{i=1}^{H} x_i, \\text{ normalize over features}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Forward Pass (Training):",
+      "   a. Compute batch mean: μ = (1/m)Σxᵢ",
+      "   b. Compute batch variance: σ² = (1/m)Σ(xᵢ-μ)²",
+      "   c. Normalize: x̂ = (x-μ)/√(σ²+ε)",
+      "   d. Scale & shift: y = γx̂ + β",
+      "   e. Update running stats: μ_run ← 0.9μ_run + 0.1μ",
+      "2. Forward Pass (Inference):",
+      "   a. Use running mean/var (not batch stats)",
+      "   b. Normalize & scale",
+      "3. Backward Pass:",
+      "   a. Gradients through γ, β (learnable)",
+      "   b. Gradients through normalization",
+      "   c. Chain rule to compute ∂L/∂x"
+    ],
+    "complexity": "Forward: O(m×n), Backward: O(m×n). m: batch size, n: features. Negligible overhead (~5%) vs huge benefits!"
+  },
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "residual-networks",
+    "advanced-architectures",
+    "transformer-architectures"
+  ],
+  "relatedTopics": [
+    "regularization",
+    "optimizers",
+    "weight-initialization"
+  ],
+  "tags": [
+    "batch-normalization",
+    "layer-normalization",
+    "normalization",
+    "training-optimization",
+    "internal-covariate-shift",
+    "deep-learning",
+    "pytorch",
+    "modern-architectures"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "BatchNorm Etkisi: Before vs After",
+      "code": "DEEP NETWORK (5 Layers) - WITHOUT BATCHNORM:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nLayer    Mean     Std      Problem\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  1      0.0      1.0      ✓ Good start\n  2      2.5      5.3      ⚠ Distribution shifting\n  3     -1.2      8.7      ❌ Getting worse\n  4     15.3     20.1      ❌ Exploding!\n  5    100.0    500.0      ❌ Disaster!\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nProblems:\n  • Activations exploding/vanishing\n  • Gradients unstable\n  • Must use tiny learning rate (0.001)\n  • Training: 200 epochs\n  • Convergence: Slow & painful\n\nDEEP NETWORK (5 Layers) - WITH BATCHNORM:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nLayer    Mean     Std      Status\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  1      0.0      1.0      ✓ Normalized\n  2      0.0      1.0      ✓ Normalized\n  3      0.0      1.0      ✓ Normalized\n  4      0.0      1.0      ✓ Normalized\n  5      0.0      1.0      ✓ Normalized\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nBenefits:\n  ✓ All layers stable (mean≈0, std≈1)\n  ✓ Gradients smooth\n  ✓ Can use high learning rate (0.1)\n  ✓ Training: 50-70 epochs (3x faster!)\n  ✓ Convergence: Fast & stable\n\nBATCHNORM MAGIC:\n  Input → Normalize → Scale & Shift → Output\n          (mean=0,      (learnable γ, β)\n           std=1)\n\nResult: 2-3x faster training + better accuracy!",
+      "explanation": "BatchNorm her layer'ı normalize eder (mean=0, std=1). Distribution stabilize olur, training hızlanır, higher learning rates!"
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Basit BatchNorm Örneği",
+      "code": "import torch\nimport torch.nn as nn\n\nprint(\"BATCHNORM BASIC EXAMPLE\")\nprint(\"=\"*70)\n\n# Sample data: batch of 8, 4 features\nx = torch.randn(8, 4) * 10 + 5  # Random data (not normalized)\n\nprint(\"\\n1. ORIGINAL DATA:\")\nprint(\"-\"*70)\nprint(f\"Shape: {x.shape}\")\nprint(f\"Mean: {x.mean(0)}\")\nprint(f\"Std:  {x.std(0)}\")\nprint(f\"\\nData preview:\\n{x[:3]}\")\n\nprint(\"\\n→ Data NOT normalized! Mean ≠ 0, Std ≠ 1\")\n\n# Create BatchNorm layer\nbn = nn.BatchNorm1d(num_features=4)\n\nprint(\"\\n2. APPLY BATCHNORM (Training mode):\")\nprint(\"-\"*70)\nbn.train()  # Training mode\nx_bn = bn(x)\n\nprint(f\"After BN Mean: {x_bn.mean(0)}\")\nprint(f\"After BN Std:  {x_bn.std(0, unbiased=False)}\")\nprint(f\"\\nData preview:\\n{x_bn[:3]}\")\n\nprint(\"\\n→ Data normalized! Mean ≈ 0, Std ≈ 1 ✓\")\n\nprint(\"\\n3. BATCHNORM PARAMETERS:\")\nprint(\"-\"*70)\nprint(f\"γ (weight, scale): {bn.weight}\")\nprint(f\"β (bias, shift):   {bn.bias}\")\nprint(f\"Running mean:      {bn.running_mean}\")\nprint(f\"Running var:       {bn.running_var}\")\n\nprint(\"\\n→ γ, β are LEARNABLE (updated by optimizer)\")\nprint(\"→ Running stats updated during training\")\n\n# Demonstrate training vs eval\nprint(\"\\n4. TRAINING vs EVAL MODE:\")\nprint(\"-\"*70)\n\nx_new = torch.randn(1, 4) * 20  # Single example\n\nprint(\"New input (single example):\")\nprint(f\"  Mean: {x_new.mean():.4f}, Std: {x_new.std():.4f}\")\n\nbn.train()\nx_train = bn(x_new)\nprint(f\"\\nTraining mode output mean: {x_train.mean():.4f}\")\n\nbn.eval()\nx_eval = bn(x_new)\nprint(f\"Eval mode output mean:     {x_eval.mean():.4f}\")\n\nprint(\"\\n→ Training: Uses batch stats (unreliable for single example)\")\nprint(\"→ Eval: Uses running stats (stable!)\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"KEY TAKEAWAYS:\")\nprint(\"=\"*70)\nprint(\"\"\"\n✓ BatchNorm normalizes to mean=0, std=1\n✓ Learnable γ, β allow network to undo if needed\n✓ Training: Batch stats, Eval: Running stats\n✓ ALWAYS call model.train() and model.eval()!\n\"\"\")\n\nprint(\"✓ BatchNorm basic example complete!\")",
+      "explanation": "BatchNorm temel kullanım: nn.BatchNorm1d(features). Training'de batch stats, eval'de running stats. mean≈0, std≈1!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "CNN with BatchNorm",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\nclass CNNWithoutBN(nn.Module):\n    \"\"\"Traditional CNN without BatchNorm\"\"\"\n    def __init__(self):\n        super().__init__()\n        self.features = nn.Sequential(\n            nn.Conv2d(3, 64, 3, padding=1),\n            nn.ReLU(),\n            nn.MaxPool2d(2),\n            \n            nn.Conv2d(64, 128, 3, padding=1),\n            nn.ReLU(),\n            nn.MaxPool2d(2),\n        )\n        self.classifier = nn.Linear(128 * 8 * 8, 10)\n    \n    def forward(self, x):\n        x = self.features(x)\n        x = x.view(x.size(0), -1)\n        x = self.classifier(x)\n        return x\n\nclass CNNWithBN(nn.Module):\n    \"\"\"Modern CNN with BatchNorm\"\"\"\n    def __init__(self):\n        super().__init__()\n        self.features = nn.Sequential(\n            # Block 1: Conv → BN → ReLU\n            nn.Conv2d(3, 64, 3, padding=1, bias=False),  # No bias!\n            nn.BatchNorm2d(64),\n            nn.ReLU(),\n            nn.MaxPool2d(2),\n            \n            # Block 2: Conv → BN → ReLU\n            nn.Conv2d(64, 128, 3, padding=1, bias=False),\n            nn.BatchNorm2d(128),\n            nn.ReLU(),\n            nn.MaxPool2d(2),\n        )\n        self.classifier = nn.Linear(128 * 8 * 8, 10)\n    \n    def forward(self, x):\n        x = self.features(x)\n        x = x.view(x.size(0), -1)\n        x = self.classifier(x)\n        return x\n\nprint(\"CNN: WITHOUT BATCHNORM vs WITH BATCHNORM\")\nprint(\"=\"*70)\n\n# Create models\nmodel_no_bn = CNNWithoutBN()\nmodel_with_bn = CNNWithBN()\n\nprint(\"\\nMODEL COMPARISON:\")\nprint(\"-\"*70)\nprint(f\"Without BN parameters: {sum(p.numel() for p in model_no_bn.parameters()):,}\")\nprint(f\"With BN parameters:    {sum(p.numel() for p in model_with_bn.parameters()):,}\")\nprint(\"\\n→ Slight increase (~2%) due to γ, β parameters\")\n\n# Dummy input\nx = torch.randn(4, 3, 32, 32)\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"TRAINING SETUP COMPARISON:\")\nprint(\"=\"*70)\n\nprint(\"\\nWithout BatchNorm:\")\nprint(\"-\"*70)\nprint(\"\"\"optimizer = Adam(lr=0.001)      # Small LR required\nscheduler = StepLR(step=30)     # Careful scheduling\nepochs = 200                     # Many epochs needed\nweight_decay = 0.01              # Need regularization\ndropout = 0.5                    # Need dropout\"\"\")\n\nprint(\"\\nWith BatchNorm:\")\nprint(\"-\"*70)\nprint(\"\"\"optimizer = SGD(lr=0.1, momentum=0.9)  # High LR OK!\nscheduler = CosineAnnealing(T=100)     # Aggressive schedule\nepochs = 60-80                          # Fewer epochs\nweight_decay = 0.0001                   # Less regularization\ndropout = 0.2 or none                   # Less dropout needed\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"ACTIVATION STATISTICS:\")\nprint(\"=\"*70)\n\nmodel_no_bn.eval()\nmodel_with_bn.eval()\n\nwith torch.no_grad():\n    # Check intermediate activations\n    x_no_bn = model_no_bn.features[:3](x)  # After first ReLU\n    x_with_bn = model_with_bn.features[:3](x)  # After first BN+ReLU\n\nprint(\"\\nAfter first block:\")\nprint(\"-\"*70)\nprint(f\"Without BN: mean={x_no_bn.mean():.4f}, std={x_no_bn.std():.4f}\")\nprint(f\"With BN:    mean={x_with_bn.mean():.4f}, std={x_with_bn.std():.4f}\")\nprint(\"\\n→ BatchNorm keeps activations normalized!\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"TYPICAL RESULTS (CIFAR-10):\")\nprint(\"=\"*70)\nprint(\"\"\"\nWithout BatchNorm:\n  • Training: 200 epochs\n  • Final accuracy: 85%\n  • Training time: 5 hours\n  \nWith BatchNorm:\n  • Training: 60-80 epochs\n  • Final accuracy: 92% (+7%!)\n  • Training time: 2 hours (2.5x faster!)\n  \n→ BatchNorm: Faster + Better!\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"BEST PRACTICES:\")\nprint(\"=\"*70)\nprint(\"\"\"\n✓ Order: Conv → BN → ReLU (modern standard)\n✓ No bias in Conv before BN (BN has bias parameter β)\n✓ Use bias=False: nn.Conv2d(..., bias=False)\n✓ Higher learning rates: 10-100x without BN\n✓ model.train() / model.eval() mandatory!\n✓ BatchNorm2d for CNNs, BatchNorm1d for FC layers\n\"\"\")\n\nprint(\"✓ CNN with BatchNorm example complete!\")",
+      "explanation": "CNN'de BatchNorm: Conv→BN→ReLU pattern. bias=False in Conv. Higher LR (0.1 vs 0.001), faster convergence, better accuracy!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "BatchNorm vs LayerNorm",
+      "code": "import torch\nimport torch.nn as nn\n\nprint(\"BATCHNORM vs LAYERNORM\")\nprint(\"=\"*70)\n\n# Sample data\nbatch_size = 4\nfeatures = 6\nseq_len = 3\n\n# 2D case: (Batch, Features)\nx_2d = torch.randn(batch_size, features) * 5 + 10\n\n# 3D case: (Batch, Seq, Features) - for RNNs/Transformers\nx_3d = torch.randn(batch_size, seq_len, features) * 5 + 10\n\nprint(\"\\n1. 2D CASE: (Batch=4, Features=6)\")\nprint(\"=\"*70)\n\nprint(\"\\nOriginal data:\")\nprint(f\"Shape: {x_2d.shape}\")\nprint(f\"Overall mean: {x_2d.mean():.2f}, std: {x_2d.std():.2f}\")\nprint(f\"\\nData:\\n{x_2d}\")\n\n# BatchNorm\nbn = nn.BatchNorm1d(features)\nbn.eval()  # Use eval to avoid running stats update\nwith torch.no_grad():\n    bn.running_mean = x_2d.mean(0)  # Set to current batch\n    bn.running_var = x_2d.var(0, unbiased=False)\n    x_bn = bn(x_2d)\n\nprint(\"\\nAfter BatchNorm1d:\")\nprint(\"  Normalizes ACROSS batch (axis 0) for each feature\")\nprint(f\"  Mean per feature: {x_bn.mean(0)}\")\nprint(f\"  Std per feature:  {x_bn.std(0, unbiased=False)}\")\nprint(\"  → Each FEATURE normalized across batch\")\n\n# LayerNorm\nln = nn.LayerNorm(features)\nwith torch.no_grad():\n    x_ln = ln(x_2d)\n\nprint(\"\\nAfter LayerNorm:\")\nprint(\"  Normalizes ACROSS features (axis 1) for each example\")\nprint(f\"  Mean per example: {x_ln.mean(1)}\")\nprint(f\"  Std per example:  {x_ln.std(1, unbiased=False)}\")\nprint(\"  → Each EXAMPLE normalized across features\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"2. 3D CASE: (Batch=4, Seq=3, Features=6)\")\nprint(\"=\"*70)\n\nprint(\"\\nOriginal data shape:\", x_3d.shape)\n\n# BatchNorm for RNN (normalize across batch and time)\nbn_rnn = nn.BatchNorm1d(features)\nbn_rnn.eval()\nx_3d_for_bn = x_3d.transpose(1, 2)  # (B, F, S) for BatchNorm1d\nwith torch.no_grad():\n    bn_rnn.running_mean = x_3d.mean([0, 1])\n    bn_rnn.running_var = x_3d.var([0, 1], unbiased=False)\n    x_bn_rnn = bn_rnn(x_3d_for_bn).transpose(1, 2)  # Back to (B, S, F)\n\nprint(\"\\nBatchNorm (for RNN):\")\nprint(\"  Normalizes across (Batch, Seq) for each feature\")\nprint(\"  → Feature-wise normalization\")\nprint(\"  ❌ Problem: Batch dependencies!\")\n\n# LayerNorm for RNN/Transformer\nln_rnn = nn.LayerNorm(features)\nwith torch.no_grad():\n    x_ln_rnn = ln_rnn(x_3d)\n\nprint(\"\\nLayerNorm (for RNN/Transformer):\")\nprint(\"  Normalizes across features for each (batch, seq) position\")\nprint(\"  → Independent per example & timestep\")\nprint(\"  ✓ No batch dependencies!\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"VISUALIZATION:\")\nprint(\"=\"*70)\nprint(\"\"\"\nBatchNorm (normalize across batch ↓):\n  ┌─────────────────────────┐\n  │   Feature 1   Feature 2 │\n  ├─────────────────────────┤\n  │ Example 1   │  normalize│\n↓ │ Example 2   │     ↓     │\n  │ Example 3   │  per col  │\n  │ Example 4   │           │\n  └─────────────────────────┘\n\nLayerNorm (normalize across features →):\n  ┌─────────────────────────┐\n  │   Feature 1   Feature 2 │\n  ├─────────────────────────┤\n→ │ Example 1   normalize → │\n  │ Example 2   per row   → │\n  │ Example 3             → │\n  │ Example 4             → │\n  └─────────────────────────┘\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"WHEN TO USE WHICH:\")\nprint(\"=\"*70)\nprint(\"\"\"\nBatchNorm:\n  ✓ CNNs (vision)\n  ✓ Large batch sizes (≥32)\n  ✓ Stable batch composition\n  ✗ Small batches\n  ✗ Variable sequence lengths\n  ✗ Online/single-example inference\n\nLayerNorm:\n  ✓ RNNs, LSTMs, GRUs\n  ✓ Transformers (BERT, GPT, etc.)\n  ✓ Small batch sizes\n  ✓ Variable sequence lengths\n  ✓ Batch-independent normalization\n  ✗ Less common in vision\n\nRule of thumb:\n  • Vision (CNNs): BatchNorm\n  • NLP (Transformers): LayerNorm\n  • Small batches: LayerNorm or GroupNorm\n\"\"\")\n\nprint(\"\\n✓ BatchNorm vs LayerNorm comparison complete!\")",
+      "explanation": "BatchNorm: Batch axis'te normalize (CNN'ler). LayerNorm: Feature axis'te normalize (Transformers). Batch size'a dependency farklı!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Custom BatchNorm Implementation",
+      "code": "import torch\nimport torch.nn as nn\n\nclass CustomBatchNorm1d(nn.Module):\n    \"\"\"\n    Custom BatchNorm1d implementation for educational purposes\n    Matches nn.BatchNorm1d behavior\n    \"\"\"\n    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True):\n        super().__init__()\n        self.num_features = num_features\n        self.eps = eps\n        self.momentum = momentum\n        self.affine = affine\n        \n        # Learnable parameters (if affine=True)\n        if self.affine:\n            self.weight = nn.Parameter(torch.ones(num_features))\n            self.bias = nn.Parameter(torch.zeros(num_features))\n        else:\n            self.register_parameter('weight', None)\n            self.register_parameter('bias', None)\n        \n        # Running statistics (not learned, updated during training)\n        self.register_buffer('running_mean', torch.zeros(num_features))\n        self.register_buffer('running_var', torch.ones(num_features))\n        self.register_buffer('num_batches_tracked', torch.tensor(0, dtype=torch.long))\n    \n    def forward(self, x):\n        # x shape: (N, C) or (N, C, L)\n        \n        if self.training:\n            # TRAINING MODE\n            # ─────────────────────────────────────────\n            \n            # Compute batch statistics\n            if x.dim() == 2:\n                # (N, C) case\n                batch_mean = x.mean(dim=0)\n                batch_var = x.var(dim=0, unbiased=False)\n            elif x.dim() == 3:\n                # (N, C, L) case\n                batch_mean = x.mean(dim=[0, 2])\n                batch_var = x.var(dim=[0, 2], unbiased=False)\n            else:\n                raise ValueError(f\"Expected 2D or 3D input, got {x.dim()}D\")\n            \n            # Update running statistics\n            # Exponential moving average\n            with torch.no_grad():\n                self.running_mean = (1 - self.momentum) * self.running_mean + \\\n                                   self.momentum * batch_mean\n                self.running_var = (1 - self.momentum) * self.running_var + \\\n                                  self.momentum * batch_var\n                self.num_batches_tracked += 1\n            \n            # Use batch statistics for normalization\n            mean = batch_mean\n            var = batch_var\n        else:\n            # EVAL MODE\n            # ─────────────────────────────────────────\n            # Use running statistics\n            mean = self.running_mean\n            var = self.running_var\n        \n        # Normalize\n        # x_normalized = (x - mean) / sqrt(var + eps)\n        if x.dim() == 2:\n            x_normalized = (x - mean) / torch.sqrt(var + self.eps)\n        else:  # 3D\n            mean = mean.view(1, -1, 1)\n            var = var.view(1, -1, 1)\n            x_normalized = (x - mean) / torch.sqrt(var + self.eps)\n        \n        # Scale and shift (if affine=True)\n        if self.affine:\n            if x.dim() == 2:\n                output = self.weight * x_normalized + self.bias\n            else:  # 3D\n                weight = self.weight.view(1, -1, 1)\n                bias = self.bias.view(1, -1, 1)\n                output = weight * x_normalized + bias\n        else:\n            output = x_normalized\n        \n        return output\n    \n    def extra_repr(self):\n        return f'{self.num_features}, eps={self.eps}, momentum={self.momentum}, affine={self.affine}'\n\n# Test custom implementation\nprint(\"CUSTOM BATCHNORM IMPLEMENTATION TEST\")\nprint(\"=\"*70)\n\n# Create both implementations\ncustom_bn = CustomBatchNorm1d(num_features=4)\nofficial_bn = nn.BatchNorm1d(num_features=4)\n\n# Copy parameters\nwith torch.no_grad():\n    official_bn.weight.copy_(custom_bn.weight)\n    official_bn.bias.copy_(custom_bn.bias)\n\n# Test data\nx = torch.randn(8, 4) * 5 + 10\n\nprint(\"\\nInput:\")\nprint(f\"  Shape: {x.shape}\")\nprint(f\"  Mean: {x.mean():.4f}, Std: {x.std():.4f}\")\n\n# Training mode\ncustom_bn.train()\nofficial_bn.train()\n\ncustom_output = custom_bn(x)\nofficial_output = official_bn(x)\n\nprint(\"\\nTraining Mode:\")\nprint(\"-\"*70)\nprint(f\"Custom BN output mean:   {custom_output.mean():.6f}\")\nprint(f\"Official BN output mean: {official_output.mean():.6f}\")\nprint(f\"\\nDifference: {(custom_output - official_output).abs().max():.8f}\")\nprint(\"→ Implementations match! ✓\")\n\n# Eval mode\ncustom_bn.eval()\nofficial_bn.eval()\n\nx_new = torch.randn(1, 4) * 5 + 10\n\ncustom_output_eval = custom_bn(x_new)\nofficial_output_eval = official_bn(x_new)\n\nprint(\"\\nEval Mode:\")\nprint(\"-\"*70)\nprint(f\"Custom BN output:   {custom_output_eval[0]}\")\nprint(f\"Official BN output: {official_output_eval[0]}\")\nprint(f\"\\nDifference: {(custom_output_eval - official_output_eval).abs().max():.8f}\")\nprint(\"→ Implementations match! ✓\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"KEY IMPLEMENTATION DETAILS:\")\nprint(\"=\"*70)\nprint(\"\"\"\n1. Training mode:\n   • Compute batch mean & variance\n   • Normalize using batch stats\n   • Update running stats (EMA with momentum=0.1)\n\n2. Eval mode:\n   • Use running mean & variance\n   • No batch stat computation\n   • Deterministic output\n\n3. Parameters:\n   • weight (γ): Scale parameter (learnable)\n   • bias (β): Shift parameter (learnable)\n   • running_mean: Exponential moving average of batch means\n   • running_var: Exponential moving average of batch variances\n\n4. Formula:\n   Normalize: x̂ = (x - μ) / √(σ² + ε)\n   Scale & Shift: y = γ·x̂ + β\n\n5. epsilon (ε):\n   • Prevents division by zero\n   • Typical value: 1e-5\n\"\"\")\n\nprint(\"\\n✓ Custom BatchNorm implementation complete!\")",
+      "explanation": "BatchNorm implementation detayları: Batch stats compute et, normalize et, γ/β ile scale/shift, running stats track et. Training vs eval farklı!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Advanced: SyncBatchNorm & GroupNorm",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.distributed as dist\n\nprint(\"ADVANCED NORMALIZATION TECHNIQUES\")\nprint(\"=\"*70)\n\nprint(\"\\n1. SYNCBATCHNORM (Multi-GPU Training)\")\nprint(\"=\"*70)\nprint(\"\"\"\nProblem with standard BatchNorm in distributed training:\n  • Each GPU has small local batch (e.g., 8 per GPU)\n  • BatchNorm computed on small local batch\n  • Statistics unreliable!\n  \n  Example: 4 GPUs, total batch=32\n    • Standard BN: Each GPU uses 8 examples\n    • SyncBN: All GPUs sync, use all 32 examples\n\nSolution: SyncBatchNorm\n  • Gather statistics from all GPUs\n  • Compute global mean/var\n  • Broadcast back to all GPUs\n\"\"\")\n\nprint(\"\\nConversion Example:\")\nprint(\"-\"*70)\nprint(\"\"\"\n# Standard BatchNorm model\nmodel = MyModel()\n\n# Convert to SyncBatchNorm\nmodel = nn.SyncBatchNorm.convert_sync_batchnorm(model)\n\n# Wrap with DDP\nmodel = nn.parallel.DistributedDataParallel(model)\n\nPerformance:\n  • Overhead: ~10-15% (communication)\n  • Benefit: Better statistics, better accuracy\n  • Use when: Batch per GPU < 16\n\"\"\")\n\nprint(\"\\n2. GROUPNORM (Batch-Independent)\")\nprint(\"=\"*70)\n\nclass ModelWithGroupNorm(nn.Module):\n    def __init__(self):\n        super().__init__()\n        # GroupNorm: Divide channels into groups\n        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)\n        self.gn1 = nn.GroupNorm(num_groups=32, num_channels=64)\n        \n        self.conv2 = nn.Conv2d(64, 128, 3, padding=1)\n        self.gn2 = nn.GroupNorm(num_groups=32, num_channels=128)\n    \n    def forward(self, x):\n        x = self.conv1(x)\n        x = self.gn1(x)  # GroupNorm\n        x = torch.relu(x)\n        \n        x = self.conv2(x)\n        x = self.gn2(x)\n        x = torch.relu(x)\n        return x\n\nmodel_gn = ModelWithGroupNorm()\n\nprint(\"\\nGroupNorm Concept:\")\nprint(\"-\"*70)\nprint(\"\"\"\nDivide channels into groups, normalize within groups:\n\n  64 channels → 32 groups of 2 channels each\n  \n  Input: (N=4, C=64, H=32, W=32)\n  \n  Group 1: channels [0, 1]     → normalize\n  Group 2: channels [2, 3]     → normalize\n  ...\n  Group 32: channels [62, 63]  → normalize\n  \nBenefits:\n  ✓ Batch size independent\n  ✓ Works with batch=1\n  ✓ No synchronization needed (distributed)\n  ✓ Stable across batch sizes\n  \nDrawbacks:\n  • Slightly lower accuracy than BN (large batches)\n  • Extra hyperparameter (num_groups)\n\"\"\")\n\n# Compare batch size sensitivity\nprint(\"\\n3. BATCH SIZE SENSITIVITY COMPARISON\")\nprint(\"=\"*70)\n\nx_large_batch = torch.randn(32, 64, 32, 32)\nx_small_batch = torch.randn(2, 64, 32, 32)\n\nbn = nn.BatchNorm2d(64)\ngn = nn.GroupNorm(32, 64)\nln = nn.LayerNorm([64, 32, 32])\n\nprint(\"\\nLarge Batch (32):\")\nprint(\"-\"*70)\nbn.train()\nwith torch.no_grad():\n    out_bn_large = bn(x_large_batch)\n    out_gn_large = gn(x_large_batch)\n    out_ln_large = ln(x_large_batch)\n\nprint(f\"BatchNorm output std: {out_bn_large.std():.4f}  ← Good!\")\nprint(f\"GroupNorm output std: {out_gn_large.std():.4f}  ← Good!\")\nprint(f\"LayerNorm output std: {out_ln_large.std():.4f}  ← Good!\")\n\nprint(\"\\nSmall Batch (2):\")\nprint(\"-\"*70)\nwith torch.no_grad():\n    out_bn_small = bn(x_small_batch)\n    out_gn_small = gn(x_small_batch)\n    out_ln_small = ln(x_small_batch)\n\nprint(f\"BatchNorm output std: {out_bn_small.std():.4f}  ← Unreliable!\")\nprint(f\"GroupNorm output std: {out_gn_small.std():.4f}  ← Still good!\")\nprint(f\"LayerNorm output std: {out_ln_small.std():.4f}  ← Still good!\")\n\nprint(\"\\n→ BatchNorm degrades with small batches\")\nprint(\"→ GroupNorm/LayerNorm stable\")\n\nprint(\"\\n4. NORMALIZATION TECHNIQUE SELECTOR\")\nprint(\"=\"*70)\nprint(\"\"\"\n┌────────────────────────────────────────────────────────────┐\n│  Use Case                    │  Best Normalization         │\n├────────────────────────────────────────────────────────────┤\n│  CNN, large batch (≥32)      │  BatchNorm2d                │\n│  CNN, small batch (<16)      │  GroupNorm                  │\n│  CNN, distributed training   │  SyncBatchNorm or GroupNorm │\n│  RNN, LSTM, GRU              │  LayerNorm                  │\n│  Transformer                 │  LayerNorm                  │\n│  GANs                        │  InstanceNorm or no norm    │\n│  Style transfer              │  InstanceNorm               │\n│  Object detection            │  GroupNorm or SyncBN        │\n│  Semantic segmentation       │  SyncBatchNorm              │\n│  Batch size = 1              │  GroupNorm or LayerNorm     │\n└────────────────────────────────────────────────────────────┘\n\"\"\")\n\nprint(\"\\n5. PERFORMANCE COMPARISON\")\nprint(\"=\"*70)\nprint(\"\"\"\nImageNet Training (ResNet-50):\n  \n  Normalization    Batch Size    Top-1 Acc    Training Time\n  ─────────────────────────────────────────────────────────\n  None             256           69.1%        Slow + unstable\n  BatchNorm        256           76.3%        Fast (baseline)\n  BatchNorm        32            75.2%        Fast (↓1.1%)\n  BatchNorm        8             73.1%        Fast (↓3.2%!)\n  GroupNorm        256           75.9%        Fast (↓0.4%)\n  GroupNorm        8             75.5%        Fast (↓0.8%)\n  LayerNorm        256           74.2%        Fast (↓2.1%)\n  SyncBatchNorm    32×8 GPUs     76.4%        Medium (sync overhead)\n  \nConclusions:\n  • BatchNorm best for large batches\n  • GroupNorm best for small batches\n  • SyncBN for distributed training\n  • LayerNorm for transformers/RNNs\n\"\"\")\n\nprint(\"\\n✓ Advanced normalization techniques complete!\")",
+      "explanation": "Advanced: SyncBatchNorm (multi-GPU sync), GroupNorm (batch-independent), batch size sensitivity. Use case'e göre seç!"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Batch Normalization'ın temel amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Model'i küçültmek",
+        "Layer activations'ı normalize ederek training'i stabilize etmek",
+        "Overfitting'i tamamen elimine etmek",
+        "Inference'ı hızlandırmak"
+      ],
+      "correctAnswer": 1,
+      "explanation": "BatchNorm her layer'daki activations'ı normalize eder (mean=0, std=1). Internal covariate shift problemi çözülür, training stabilize olur, hızlanır!",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "BatchNorm training ve inference'da nasıl farklı davranır?",
+      "type": "multiple-choice",
+      "options": [
+        "Hiç farklı davranmaz",
+        "Training: Batch stats, Inference: Running stats",
+        "Training: Running stats, Inference: Batch stats",
+        "Sadece training'de aktif, inference'da kapalı"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Training: Her batch için μ, σ² hesapla. Inference: Training'deki running mean/std kullan (batch stats yok!). model.train() ve model.eval() critical!",
+      "difficulty": 2
+    },
+    {
+      "id": "q3",
+      "question": "BatchNorm'da γ (gamma) ve β (beta) parametrelerinin rolü nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Batch mean ve variance",
+        "Learnable scale (γ) ve shift (β) parametreleri",
+        "Learning rate ve momentum",
+        "Running statistics"
+      ],
+      "correctAnswer": 1,
+      "explanation": "γ (weight): Scale parameter, β (bias): Shift parameter. Learnable! Network isterse normalization'ı undo edebilir: y = γx̂ + β",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "LayerNorm ve BatchNorm arasındaki temel fark nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "LayerNorm daha hızlı",
+        "BatchNorm batch axis'te, LayerNorm feature axis'te normalize eder",
+        "LayerNorm sadece CNN'lerde kullanılır",
+        "Hiç fark yok"
+      ],
+      "correctAnswer": 1,
+      "explanation": "BatchNorm: Batch dimension'da normalize (her feature için). LayerNorm: Feature dimension'da normalize (her example için). Transformers LayerNorm kullanır!",
+      "difficulty": 2
+    },
+    {
+      "id": "q5",
+      "question": "BatchNorm'un benefits'leri nelerdir?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece training hızını artırır",
+        "Higher LR + Faster training + Regularization effect + Smooth loss",
+        "Sadece overfitting'i önler",
+        "Model size'ı küçültür"
+      ],
+      "correctAnswer": 1,
+      "explanation": "BatchNorm: (1) Higher learning rates (10-100x), (2) 2-3x faster convergence, (3) Regularization (dropout-like), (4) Smooth loss landscape, (5) Less sensitive to init!",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Küçük batch size'larda (<8) hangi normalization kullanılmalı?",
+      "type": "multiple-choice",
+      "options": [
+        "BatchNorm (her zaman en iyisi)",
+        "GroupNorm veya LayerNorm",
+        "Hiç normalization kullanma",
+        "InstanceNorm"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Small batches'te BatchNorm statistics unreliable! GroupNorm (batch-independent) veya LayerNorm kullan. GroupNorm: Channels'ları gruplara böl, normalize et.",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "BatchNorm formülü?",
+      "back": "1. Batch stats:\nμ = (1/m)Σxᵢ\nσ² = (1/m)Σ(xᵢ-μ)²\n\n2. Normalize:\nx̂ = (x-μ)/√(σ²+ε)\n\n3. Scale & Shift:\ny = γx̂ + β\n\nγ, β learnable!\nRunning stats: EMA\nTraining: batch stats\nInference: running stats"
+    },
+    {
+      "id": "fc2",
+      "front": "BatchNorm benefits?",
+      "back": "1. Higher LR:\n   0.001 → 0.1 (100x!)\n\n2. Faster training:\n   200 epoch → 60 epoch\n\n3. Regularization:\n   Batch noise effect\n\n4. Smooth loss:\n   Gradients predictable\n\n5. Init robust:\n   덜 sensitive\n\nModern DL standard!"
+    },
+    {
+      "id": "fc3",
+      "front": "Training vs Inference?",
+      "back": "Training:\n• Batch mean/var\n• Different each batch\n• Update running stats\n• model.train()\n\nInference:\n• Running mean/var\n• Deterministic\n• No batch dependency\n• model.eval()\n\nCRITICAL:\nmodel.train() / eval()\nher zaman call et!"
+    },
+    {
+      "id": "fc4",
+      "front": "BatchNorm vs LayerNorm?",
+      "back": "BatchNorm:\n• Across batch axis\n• Per feature\n• CNN'lerde standard\n• Batch size ≥32 gerekli\n\nLayerNorm:\n• Across feature axis\n• Per example\n• Transformers'ta standard\n• Batch independent\n\nCNN → BN\nRNN/Transformer → LN"
+    },
+    {
+      "id": "fc5",
+      "front": "Conv → BN → ReLU pattern?",
+      "back": "Modern standard:\n\nx = conv(x)\nx = bn(x)\nx = relu(x)\n\nIMPORTANT:\nConv bias=False!\n(BN has β parameter)\n\nnn.Conv2d(..., bias=False)\nnn.BatchNorm2d(channels)\nnn.ReLU()\n\nResNet, modern CNNs"
+    },
+    {
+      "id": "fc6",
+      "front": "GroupNorm?",
+      "back": "Batch-independent norm:\n\nDivide channels → groups\nNormalize within groups\n\nnn.GroupNorm(\n  num_groups=32,\n  num_channels=64\n)\n\nBenefits:\n✓ Small batch OK\n✓ Batch size independent\n✓ No sync needed\n\nUse: batch<16, distributed"
+    },
+    {
+      "id": "fc7",
+      "front": "Internal Covariate Shift?",
+      "back": "Problem:\nHer layer'ın input\ndistribution değişiyor!\n\nLayer 1: mean=0\nLayer 3: mean=10\nLayer 5: mean=100!\n\n→ Training unstable\n→ Small LR needed\n→ Slow convergence\n\nBatchNorm çözüyor:\nHer layer: mean≈0, std≈1\n→ Stable!\n→ Fast training!"
+    },
+    {
+      "id": "fc8",
+      "front": "SyncBatchNorm?",
+      "back": "Multi-GPU training için:\n\nProblem:\nBatchNorm per-GPU\nSmall local batch!\n\nSolution:\nSync across GPUs\nGlobal statistics\n\nmodel = nn.SyncBatchNorm\n  .convert_sync_batchnorm(\n    model\n  )\n\nOverhead: ~10-15%\nBenefit: Better accuracy\nUse: batch per GPU <16"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "model.eval() yapmayı unutmak",
+      "why": "Training mode'da BN batch statistics kullanır. Inference'da single example varsa statistics unreliable, output non-deterministic!",
+      "fix": "Inference öncesi MUTLAKA model.eval() call et! with torch.no_grad(): output = model(x). Training'e dön: model.train()"
+    },
+    {
+      "mistake": "Conv layer'da bias=True kullanmak (BN ile)",
+      "why": "BN'de β (bias) parameter var. Conv bias redundant, gereksiz parameters! Conv bias → BN normalize eder → silinir.",
+      "fix": "nn.Conv2d(..., bias=False) kullan! BN'nin β parametresi bias görevi görür. Modern practice: Conv(bias=False) → BN → ReLU"
+    },
+    {
+      "mistake": "Küçük batch size'da (<8) BatchNorm kullanmak",
+      "why": "Batch statistics 4-8 örnekle unreliable! Mean/variance noisy, training unstable, accuracy düşük.",
+      "fix": "Small batches: GroupNorm veya LayerNorm kullan. nn.GroupNorm(32, channels) batch-independent, stable!"
+    },
+    {
+      "mistake": "BatchNorm'u activation'dan önce koymak (eski style)",
+      "why": "Eski papers BN → ReLU → Conv kullanıyordu. Modern research: Conv → BN → ReLU daha iyi! Pre-activation kompleks.",
+      "fix": "Modern pattern: x = conv(x); x = bn(x); x = relu(x). ResNet v1+ bu pattern'i kullanıyor."
+    },
+    {
+      "mistake": "Running statistics'i reset etmemek (transfer learning)",
+      "why": "Pretrained model'in running stats ImageNet için. Farklı dataset: stats mismatch, performance düşer!",
+      "fix": "New dataset: bn.reset_running_stats() call et, birkaç epoch train et (stats adapt olsun), sonra eval."
+    },
+    {
+      "mistake": "Distributed training'de standard BN kullanmak (küçük local batch)",
+      "why": "4 GPU, batch=32 → Her GPU 8 örnek görüyor. BN 8 örneğe göre normalize ediyor, unreliable!",
+      "fix": "SyncBatchNorm kullan: model = nn.SyncBatchNorm.convert_sync_batchnorm(model). Tüm GPUs'ler sync olur."
+    },
+    {
+      "mistake": "BN'yi RNN/LSTM'de BatchNorm olarak kullanmak",
+      "why": "RNN'de sequence lengths variable, batch dependencies problematic. BatchNorm temporal axis'te zorlaşıyor.",
+      "fix": "RNN/LSTM/Transformer: LayerNorm kullan! nn.LayerNorm(hidden_size). Batch-independent, sequence-friendly."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "batchnorm-effect",
+      "type": "interactive",
+      "title": "BatchNorm Effect on Training",
+      "description": "Loss curves: With/without BatchNorm. 2-3x faster convergence, smooth gradients!"
+    },
+    {
+      "id": "normalization-comparison",
+      "type": "diagram",
+      "title": "BatchNorm vs LayerNorm vs GroupNorm",
+      "description": "Visualization: Hangi axis'te normalize edildiğini görün"
+    },
+    {
+      "id": "activation-distribution",
+      "type": "animation",
+      "title": "Activation Distribution Evolution",
+      "description": "Deep network'te her layer'ın distribution'ı nasıl shift ediyor (with/without BN)"
+    }
+  ],
+  "references": [
+    {
+      "title": "Batch Normalization: Accelerating Deep Network Training",
+      "url": "https://arxiv.org/abs/1502.03167",
+      "type": "paper",
+      "author": "Ioffe & Szegedy, 2015"
+    },
+    {
+      "title": "Layer Normalization",
+      "url": "https://arxiv.org/abs/1607.06450",
+      "type": "paper",
+      "author": "Ba et al., 2016"
+    },
+    {
+      "title": "Group Normalization",
+      "url": "https://arxiv.org/abs/1803.08494",
+      "type": "paper",
+      "author": "Wu & He, 2018"
+    },
+    {
+      "title": "How Does Batch Normalization Help Optimization?",
+      "url": "https://arxiv.org/abs/1805.11604",
+      "type": "paper",
+      "author": "Santurkar et al., 2018"
+    }
+  ]
+}

@@ -1,0 +1,346 @@
+{
+  "id": "optimizers",
+  "title": "Optimizers (SGD, Momentum, Adam)",
+  "category": "optimization",
+  "level": 2,
+  "estimatedTime": 55,
+  "description": "Training'in motoru: SGD, Momentum, RMSprop, Adam. Learning rate scheduling, adaptive learning rates, weight decay. Model nasıl öğreniyor?",
+  "content": {
+    "level0_basic": "Optimizer, neural network'ü nasıl train edeceğini belirler. Gradient descent dersi hatırla: Loss'u minimize etmek için weights'i güncelliyorduk. Optimizer bu güncellemeyi NASIL yapacağını söyler. Basit SGD: w = w - lr × gradient (yavaş, zigzag yapabilir). Momentum: Bir top gibi yuvarlan, hızlan! (daha hızlı converge). RMSprop: Her parametreye farklı learning rate (adaptive). Adam: Momentum + RMSprop'un birleşimi, en popüler optimizer! Learning rate çok önemli: Çok büyük → diverge, çok küçük → çok yavaş. Learning rate scheduling: Başta büyük, sonra küçült. Modern training: Adam + warmup + cosine decay = Best practice!",
+    "level1_beginner": "**Optimizer Nedir?**\n\nGradient descent'in farklı versiyonları. Hepsi aynı amacı hedefler: Loss'u minimize et!\n\n**1. SGD (Stochastic Gradient Descent):**\n```\nw = w - learning_rate × gradient\n```\nBasit ama yavaş. Ravine'lerde (vadilerde) zigzag yapar, oscillation!\n\n**2. Momentum:**\n```\nv = β × v + gradient  # Velocity (hız)\nw = w - learning_rate × v\n```\nGeçmiş gradients'leri hatırla, momentum kazan! Daha hızlı converge, oscillation azalır.\nβ (beta): Tipik 0.9 (geçmişin %90'ını tut)\n\n**3. RMSprop (Root Mean Square Propagation):**\n```\ns = β × s + (1-β) × gradient²  # Squared gradients\nw = w - learning_rate × gradient / √(s + ε)\n```\nAdaptive learning rate! Büyük gradient'lerde küçük step, küçük gradient'lerde büyük step.\n\n**4. Adam (Adaptive Moment Estimation):**\n```\nm = β₁ × m + (1-β₁) × gradient      # Momentum (1st moment)\nv = β₂ × v + (1-β₂) × gradient²     # RMSprop (2nd moment)\nw = w - lr × m / (√v + ε)\n```\nMomentum + RMSprop! Best of both worlds. Default choice for most tasks.\n\nβ₁=0.9, β₂=0.999, ε=1e-8 (tipik values)\n\n**Learning Rate Scheduling:**\n\nSabit LR yerine değiştir:\n\n1. **Step Decay:** Her N epoch'ta LR × 0.1\n2. **Exponential Decay:** lr = lr₀ × e^(-kt)\n3. **Cosine Annealing:** Sinüs eğrisi ile azalt\n4. **Warmup:** İlk N step'te 0'dan artır, sonra decay\n\n**Hangisini Kullan?**\n\n- **Adam:** Default choice, çoğu problem için iyi\n- **SGD + Momentum:** Computer vision'da bazen daha iyi generalization\n- **AdamW:** Adam + weight decay (decoupled), modern best practice\n- **Learning rate:** En önemli hyperparameter! Grid search yap.",
+    "level2_application": "**PyTorch Optimizers:**\n\n```python\nimport torch.optim as optim\n\n# SGD\noptimizer = optim.SGD(model.parameters(), lr=0.01)\n\n# SGD with Momentum\noptimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)\n\n# RMSprop\noptimizer = optim.RMSprop(model.parameters(), lr=0.001)\n\n# Adam (most popular)\noptimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))\n\n# AdamW (Adam with weight decay)\noptimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)\n```\n\n**Training Loop:**\n\n```python\nfor epoch in range(num_epochs):\n    for batch in dataloader:\n        # Forward\n        outputs = model(batch.x)\n        loss = criterion(outputs, batch.y)\n        \n        # Backward\n        optimizer.zero_grad()  # Clear old gradients!\n        loss.backward()\n        \n        # Update\n        optimizer.step()\n```\n\n**Learning Rate Schedulers:**\n\n```python\nfrom torch.optim.lr_scheduler import *\n\n# 1. Step LR\nscheduler = StepLR(optimizer, step_size=30, gamma=0.1)\n# Her 30 epoch'ta lr × 0.1\n\n# 2. Exponential LR\nscheduler = ExponentialLR(optimizer, gamma=0.95)\n# Her epoch: lr × 0.95\n\n# 3. Cosine Annealing\nscheduler = CosineAnnealingLR(optimizer, T_max=100)\n# 100 epoch'ta cosine curve ile 0'a\n\n# 4. Reduce on Plateau\nscheduler = ReduceLROnPlateau(optimizer, mode='min', patience=10)\n# Validation loss plateau'ya ulaşınca azalt\n\n# Training loop with scheduler\nfor epoch in range(num_epochs):\n    train()\n    val_loss = validate()\n    scheduler.step()  # StepLR, Cosine için\n    # scheduler.step(val_loss)  # ReduceLROnPlateau için\n```\n\n**Weight Decay (L2 Regularization):**\n\n```python\n# Optimizer içinde\noptimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)\n\n# Veya manual\nloss = criterion(output, target)\nloss += 0.01 * sum(p.pow(2).sum() for p in model.parameters())\n```",
+    "level3_advanced": "**Optimizer Matematiksel Formülasyonu:**\n\n**SGD with Momentum:**\n$$v_t = \\beta v_{t-1} + \\nabla_{\\theta} J(\\theta)$$\n$$\\theta_t = \\theta_{t-1} - \\alpha v_t$$\n\n**Nesterov Accelerated Gradient (NAG):**\n$$v_t = \\beta v_{t-1} + \\nabla_{\\theta} J(\\theta - \\alpha \\beta v_{t-1})$$\n$$\\theta_t = \\theta_{t-1} - \\alpha v_t$$\n\n\"Look ahead\" gradient hesaplar, daha akıllı!\n\n**AdaGrad (Adaptive Gradient):**\n$$s_t = s_{t-1} + (\\nabla_{\\theta} J(\\theta))^2$$\n$$\\theta_t = \\theta_{t-1} - \\frac{\\alpha}{\\sqrt{s_t + \\epsilon}} \\nabla_{\\theta} J(\\theta)$$\n\nProblem: s_t sürekli büyür, learning rate sürekli küçülür → training durur!\n\n**RMSprop (Fixes AdaGrad):**\n$$s_t = \\beta s_{t-1} + (1-\\beta)(\\nabla_{\\theta} J(\\theta))^2$$\n$$\\theta_t = \\theta_{t-1} - \\frac{\\alpha}{\\sqrt{s_t + \\epsilon}} \\nabla_{\\theta} J(\\theta)$$\n\nExponential moving average → s_t sınırlı kalır!\n\n**Adam (Adaptive Moment Estimation):**\n\n$$m_t = \\beta_1 m_{t-1} + (1-\\beta_1) \\nabla_{\\theta} J(\\theta)$$\n$$v_t = \\beta_2 v_{t-1} + (1-\\beta_2) (\\nabla_{\\theta} J(\\theta))^2$$\n\nBias correction:\n$$\\hat{m}_t = \\frac{m_t}{1 - \\beta_1^t}, \\quad \\hat{v}_t = \\frac{v_t}{1 - \\beta_2^t}$$\n\nUpdate:\n$$\\theta_t = \\theta_{t-1} - \\frac{\\alpha}{\\sqrt{\\hat{v}_t} + \\epsilon} \\hat{m}_t$$\n\n**AdamW (Weight Decay Decoupled):**\n\nOrijinal Adam:\n$$\\theta_t = \\theta_{t-1} - \\alpha (\\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon} + \\lambda \\theta_{t-1})$$\n\nAdamW (decoupled):\n$$\\theta_t = \\theta_{t-1} - \\alpha \\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon} - \\alpha \\lambda \\theta_{t-1}$$\n\nWeight decay adaptive learning rate'ten bağımsız!\n\n**Learning Rate Warmup:**\n\n$$\\text{lr}(t) = \\begin{cases}\n\\frac{t}{T_{warmup}} \\cdot \\text{lr}_{max} & t < T_{warmup} \\\\\n\\text{lr}_{max} & t \\geq T_{warmup}\n\\end{cases}$$\n\n**Cosine Annealing:**\n\n$$\\text{lr}(t) = \\text{lr}_{min} + \\frac{1}{2}(\\text{lr}_{max} - \\text{lr}_{min})(1 + \\cos(\\frac{t \\pi}{T_{max}}))$$",
+    "level4_expert": "**Advanced Optimizers:**\n\n**1. AdamW Implementation:**\n\n```python\nclass AdamW(torch.optim.Optimizer):\n    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), \n                 eps=1e-8, weight_decay=0.01):\n        defaults = dict(lr=lr, betas=betas, eps=eps, \n                       weight_decay=weight_decay)\n        super().__init__(params, defaults)\n    \n    def step(self):\n        for group in self.param_groups:\n            for p in group['params']:\n                if p.grad is None:\n                    continue\n                \n                grad = p.grad.data\n                state = self.state[p]\n                \n                # State initialization\n                if len(state) == 0:\n                    state['step'] = 0\n                    state['exp_avg'] = torch.zeros_like(p.data)\n                    state['exp_avg_sq'] = torch.zeros_like(p.data)\n                \n                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']\n                beta1, beta2 = group['betas']\n                state['step'] += 1\n                \n                # Momentum\n                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)\n                # RMSprop\n                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)\n                \n                # Bias correction\n                bias_correction1 = 1 - beta1 ** state['step']\n                bias_correction2 = 1 - beta2 ** state['step']\n                \n                # Step size with bias correction\n                step_size = group['lr'] / bias_correction1\n                \n                # Denominator\n                denom = (exp_avg_sq.sqrt() / math.sqrt(bias_correction2)).add_(group['eps'])\n                \n                # Update (Adam part)\n                p.data.addcdiv_(exp_avg, denom, value=-step_size)\n                \n                # Weight decay (decoupled!)\n                p.data.add_(p.data, alpha=-group['lr'] * group['weight_decay'])\n```\n\n**2. LAMB (Layer-wise Adaptive Moments for Batch training):**\n\nBatch size çok büyükken (8K+) kullanılan optimizer:\n\n```python\nclass LAMB(torch.optim.Optimizer):\n    def step(self):\n        for group in self.param_groups:\n            for p in group['params']:\n                # ... (Adam updates)\n                \n                # Layer-wise adaptation\n                weight_norm = torch.norm(p.data)\n                adam_step_norm = torch.norm(adam_step)\n                \n                if weight_norm > 0 and adam_step_norm > 0:\n                    trust_ratio = weight_norm / adam_step_norm\n                    p.data.add_(adam_step, alpha=-group['lr'] * trust_ratio)\n```\n\n**3. Lookahead Optimizer:**\n\nSlow weights + fast weights:\n\n```python\nclass Lookahead(torch.optim.Optimizer):\n    def __init__(self, optimizer, k=5, alpha=0.5):\n        self.optimizer = optimizer\n        self.k = k\n        self.alpha = alpha\n        self.param_groups = self.optimizer.param_groups\n        self.state = defaultdict(dict)\n        \n        # Initialize slow weights\n        for group in self.param_groups:\n            for p in group['params']:\n                param_state = self.state[p]\n                param_state['slow_params'] = p.data.clone()\n    \n    def step(self):\n        # Fast weights step\n        self.optimizer.step()\n        \n        # Synchronize every k steps\n        if self.k_counter % self.k == 0:\n            for group in self.param_groups:\n                for p in group['params']:\n                    param_state = self.state[p]\n                    slow = param_state['slow_params']\n                    # Slow weights move towards fast weights\n                    slow.add_(p.data - slow, alpha=self.alpha)\n                    p.data.copy_(slow)\n```\n\n**4. Learning Rate Finder:**\n\n```python\ndef find_lr(model, train_loader, optimizer, criterion, \n            init_lr=1e-8, final_lr=10, beta=0.98):\n    num_batches = len(train_loader)\n    mult = (final_lr / init_lr) ** (1 / num_batches)\n    lr = init_lr\n    optimizer.param_groups[0]['lr'] = lr\n    \n    avg_loss = 0\n    best_loss = 0\n    losses = []\n    lrs = []\n    \n    for batch_idx, (data, target) in enumerate(train_loader):\n        optimizer.zero_grad()\n        output = model(data)\n        loss = criterion(output, target)\n        \n        # Smooth loss\n        avg_loss = beta * avg_loss + (1 - beta) * loss.item()\n        smoothed_loss = avg_loss / (1 - beta ** (batch_idx + 1))\n        \n        # Stop if loss explodes\n        if batch_idx > 0 and smoothed_loss > 4 * best_loss:\n            return lrs, losses\n        \n        if smoothed_loss < best_loss or batch_idx == 0:\n            best_loss = smoothed_loss\n        \n        losses.append(smoothed_loss)\n        lrs.append(lr)\n        \n        # Backward\n        loss.backward()\n        optimizer.step()\n        \n        # Update LR\n        lr *= mult\n        optimizer.param_groups[0]['lr'] = lr\n    \n    return lrs, losses\n```\n\n**5. One Cycle Policy:**\n\n```python\nfrom torch.optim.lr_scheduler import OneCycleLR\n\nscheduler = OneCycleLR(\n    optimizer,\n    max_lr=0.1,\n    total_steps=len(train_loader) * num_epochs,\n    pct_start=0.3,  # Warmup phase\n    anneal_strategy='cos'\n)\n\n# Update every batch!\nfor epoch in range(num_epochs):\n    for batch in train_loader:\n        train_step()\n        scheduler.step()\n```\n\n**6. Gradient Accumulation (Simulate Large Batch):**\n\n```python\naccumulation_steps = 4\noptimizer.zero_grad()\n\nfor i, batch in enumerate(train_loader):\n    output = model(batch.x)\n    loss = criterion(output, batch.y)\n    loss = loss / accumulation_steps  # Normalize\n    loss.backward()\n    \n    if (i + 1) % accumulation_steps == 0:\n        optimizer.step()\n        optimizer.zero_grad()\n```"
+  },
+  "whatIsIt": "Optimizer, neural network weights'lerini nasıl güncelleyeceğini belirleyen algoritmadır. Gradient descent'in farklı varyantları: SGD (basit), Momentum (hızlandırılmış), RMSprop (adaptive learning rate), Adam (momentum + adaptive). Her optimizer gradient'leri alır, weights'leri günceller: w = w - update. Learning rate scheduling ile LR'yi dinamik değiştir. Modern training: AdamW + warmup + cosine annealing. Optimizer seçimi ve hyperparameter tuning model performansını çok etkiler!",
+  "whyNeeded": "Vanilla gradient descent çok yavaş ve zayıf! Ravine'lerde (vadilerde) zigzag yapar, oscillation. Saddle point'lerde takılır. Learning rate hassas, çok büyük diverge eder, çok küçük asla converge etmez. Momentum bu problemleri çözer: Momentum kazan, daha hızlı git, oscillation azalır. Adaptive optimizers (RMSprop, Adam) her parametreye farklı learning rate verir - bazı weights hızlı, bazı yavaş öğrenebilir. Adam = momentum + adaptive, best of both worlds! Modern deep learning adam optimizer olmadan mümkün değildi.",
+  "realWorldAnalogy": "Optimizer bir arabayı süren şoför gibidir. SGD: Sabit hız, dönüşlerde yavaş (momentum yok). Momentum: Araba hızlanıyor, virajları daha iyi alıyor (geçmiş hızı hatırlıyor). RMSprop: Yolun durumuna göre gaza/frene basıyor (adaptive). Adam: Hem hızlanabiliyor hem yol şartlarına uyum sağlıyor (momentum + adaptive). Learning rate scheduling: Başta hızlı git (öğrenmeyi hızlandır), hedefe yaklaştıkça yavaşla (fine-tune). One cycle: Önce hızlan, sonra yavaşla, en etkili rota!",
+  "mathematics": {
+    "formulas": [
+      "\\text{SGD: } \\theta_t = \\theta_{t-1} - \\alpha \\nabla J(\\theta)",
+      "\\text{Momentum: } v_t = \\beta v_{t-1} + \\nabla J(\\theta), \\quad \\theta_t = \\theta_{t-1} - \\alpha v_t",
+      "\\text{RMSprop: } s_t = \\beta s_{t-1} + (1-\\beta)(\\nabla J)^2, \\quad \\theta_t = \\theta_{t-1} - \\frac{\\alpha}{\\sqrt{s_t+\\epsilon}} \\nabla J",
+      "\\text{Adam: } m_t = \\beta_1 m_{t-1} + (1-\\beta_1)\\nabla J, \\quad v_t = \\beta_2 v_{t-1} + (1-\\beta_2)(\\nabla J)^2",
+      "\\hat{m}_t = \\frac{m_t}{1-\\beta_1^t}, \\quad \\hat{v}_t = \\frac{v_t}{1-\\beta_2^t}",
+      "\\theta_t = \\theta_{t-1} - \\frac{\\alpha}{\\sqrt{\\hat{v}_t}+\\epsilon} \\hat{m}_t"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize: θ (weights), optimizer state (m=0, v=0 for Adam)",
+      "2. Loop over epochs:",
+      "   a. Forward pass: Compute output, loss",
+      "   b. Backward pass: Compute gradients (∇L)",
+      "   c. Optimizer step:",
+      "      - Update momentum: m = β₁×m + (1-β₁)×∇L",
+      "      - Update RMSprop: v = β₂×v + (1-β₂)×(∇L)²",
+      "      - Bias correction: m̂, v̂",
+      "      - Update weights: θ = θ - lr × m̂/(√v̂ + ε)",
+      "   d. Learning rate scheduling: Adjust LR if needed",
+      "3. Repeat until convergence",
+      "Hyperparameters: lr=0.001, β₁=0.9, β₂=0.999, ε=1e-8"
+    ],
+    "complexity": "O(P) per step - P: number of parameters. Momentum/Adam: Extra O(P) memory for state. Computational overhead minimal compared to forward/backward pass."
+  },
+  "prerequisites": [
+    "gradient-descent",
+    "backpropagation",
+    "neural-networks"
+  ],
+  "nextTopics": [
+    "learning-rate-scheduling",
+    "regularization-techniques",
+    "hyperparameter-tuning",
+    "batch-normalization"
+  ],
+  "relatedTopics": [
+    "gradient-descent",
+    "weight-initialization",
+    "loss-functions"
+  ],
+  "tags": [
+    "optimizers",
+    "adam",
+    "sgd",
+    "momentum",
+    "rmsprop",
+    "adamw",
+    "learning-rate",
+    "scheduling",
+    "training",
+    "pytorch"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Optimizer Comparison (Visual)",
+      "code": "Loss landscape (yukarıdan bakış):\n\n          Global Minimum\n               ↓\n    ╱╲    ╱╲    *    ╱╲\n   ╱  ╲  ╱  ╲  ╱╲  ╱  ╲\n  ╱    ╲╱    ╲╱  ╲╱    ╲\n\nSGD (no momentum):\n  ↘  ↙  ↘  ↙  ↘  ↙  (zigzag, yavaş)\n\nSGD + Momentum:\n  ↘    ↘    ↘    →  (hızlı, momentum kazanıyor)\n\nAdam (adaptive):\n  ↘  ⤵  ⤵  ⤵  *  (hızlı + akıllı, direkt hedefe)\n\n\nLearning Rate Effect:\n\nÇok Küçük (0.0001):\n  • → • → • → • (çok yavaş, asla varmaz)\n\nİdeal (0.001):\n  • ⟶ • ⟶ • ⟶ * (smooth, converge eder)\n\nÇok Büyük (0.1):\n  • ⟿ • ⟿ • ⟿ ! (diverge, NaN loss)\n\n\nOptimizer Seçimi:\n✓ Adam: Default, çoğu problem için en iyi\n✓ SGD+Momentum: Computer vision'da bazen daha iyi\n✓ AdamW: Modern choice, weight decay ile",
+      "explanation": "Optimizer seçimi ve learning rate çok önemli! Adam genelde en iyi starting point. LR too high diverge eder, too low çok yavaş."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "SGD vs Momentum Comparison",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Simple 2D optimization problem\ndef rosenbrock(x, y):\n    \"\"\"Rosenbrock function (valley shape, hard to optimize)\"\"\"\n    return (1 - x)**2 + 100 * (y - x**2)**2\n\ndef optimize_sgd(lr=0.001, num_steps=200):\n    \"\"\"SGD without momentum\"\"\"\n    x = torch.tensor([-1.0, 2.0], requires_grad=True)\n    optimizer = optim.SGD([x], lr=lr)\n    \n    trajectory = [x.detach().clone().numpy()]\n    \n    for _ in range(num_steps):\n        optimizer.zero_grad()\n        loss = rosenbrock(x[0], x[1])\n        loss.backward()\n        optimizer.step()\n        trajectory.append(x.detach().clone().numpy())\n    \n    return np.array(trajectory)\n\ndef optimize_momentum(lr=0.001, momentum=0.9, num_steps=200):\n    \"\"\"SGD with momentum\"\"\"\n    x = torch.tensor([-1.0, 2.0], requires_grad=True)\n    optimizer = optim.SGD([x], lr=lr, momentum=momentum)\n    \n    trajectory = [x.detach().clone().numpy()]\n    \n    for _ in range(num_steps):\n        optimizer.zero_grad()\n        loss = rosenbrock(x[0], x[1])\n        loss.backward()\n        optimizer.step()\n        trajectory.append(x.detach().clone().numpy())\n    \n    return np.array(trajectory)\n\n# Compare\nprint(\"Optimizing Rosenbrock function:\")\nprint(\"Optimal point: (1, 1)\")\nprint(\"Starting point: (-1, 2)\\n\")\n\ntraj_sgd = optimize_sgd(lr=0.001)\ntraj_momentum = optimize_momentum(lr=0.001, momentum=0.9)\n\nprint(f\"SGD final position: {traj_sgd[-1]}\")\nprint(f\"Momentum final position: {traj_momentum[-1]}\")\nprint(f\"\\nSGD steps to near-optimal: {len(traj_sgd)}\")\nprint(f\"Momentum steps: {len(traj_momentum)}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"MOMENTUM BENEFITS:\")\nprint(\"=\"*60)\nprint(\"✓ Faster convergence (accumulates velocity)\")\nprint(\"✓ Less oscillation in valleys\")\nprint(\"✓ Can escape shallow local minima\")\nprint(\"✓ Smooths out noisy gradients\")\nprint(\"\\nTypical momentum value: 0.9 (keep 90% of past velocity)\")\nprint(\"Higher momentum (0.99): More smoothing, slower adaptation\")\nprint(\"Lower momentum (0.5): Less smoothing, faster adaptation\")\n\nprint(\"\\n✓ Optimizer comparison complete!\")",
+      "explanation": "SGD vs Momentum karşılaştırması. Momentum valley'lerde çok daha hızlı! Geçmiş gradient'leri accumulate ederek hız kazanır."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "All Major Optimizers Comparison",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\n# Simple model\nmodel = nn.Sequential(\n    nn.Linear(10, 50),\n    nn.ReLU(),\n    nn.Linear(50, 1)\n)\n\n# Create different optimizers\noptimizers_dict = {\n    'SGD': optim.SGD(model.parameters(), lr=0.01),\n    'SGD+Momentum': optim.SGD(model.parameters(), lr=0.01, momentum=0.9),\n    'RMSprop': optim.RMSprop(model.parameters(), lr=0.001),\n    'Adam': optim.Adam(model.parameters(), lr=0.001),\n    'AdamW': optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01),\n}\n\nprint(\"OPTIMIZER COMPARISON\")\nprint(\"=\"*70)\nprint(f\"{'Optimizer':<15} {'Learning Rate':<15} {'Parameters':<20}\")\nprint(\"-\"*70)\n\nfor name, opt in optimizers_dict.items():\n    lr = opt.param_groups[0]['lr']\n    params = opt.param_groups[0]\n    \n    param_str = \"\"\n    if 'momentum' in params:\n        param_str += f\"momentum={params['momentum']}\"\n    if 'betas' in params:\n        param_str += f\"betas={params['betas']}\"\n    if 'weight_decay' in params and params['weight_decay'] > 0:\n        param_str += f\", wd={params['weight_decay']}\"\n    \n    print(f\"{name:<15} {lr:<15.4f} {param_str:<20}\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"WHEN TO USE WHICH?\")\nprint(\"=\"*70)\n\nprint(\"\\n1. SGD (Plain):\")\nprint(\"   ✗ Rarely used alone (too slow, oscillates)\")\nprint(\"   Use: Only for educational purposes\")\n\nprint(\"\\n2. SGD + Momentum:\")\nprint(\"   ✓ Computer vision tasks (ResNet training)\")\nprint(\"   ✓ When you want better generalization\")\nprint(\"   ✓ Large batch sizes\")\nprint(\"   Typical: lr=0.1, momentum=0.9\")\n\nprint(\"\\n3. RMSprop:\")\nprint(\"   ✓ RNNs (before Adam)\")\nprint(\"   ✓ Non-stationary problems\")\nprint(\"   Less popular now (Adam preferred)\")\n\nprint(\"\\n4. Adam:\")\nprint(\"   ✓ DEFAULT CHOICE for most tasks!\")\nprint(\"   ✓ NLP, general deep learning\")\nprint(\"   ✓ Works well out-of-box\")\nprint(\"   Typical: lr=0.001, betas=(0.9, 0.999)\")\n\nprint(\"\\n5. AdamW:\")\nprint(\"   ✓ MODERN BEST PRACTICE\")\nprint(\"   ✓ Better weight decay than Adam\")\nprint(\"   ✓ Transformers, large models\")\nprint(\"   Typical: lr=0.001, weight_decay=0.01\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"PRACTICAL TIPS:\")\nprint(\"=\"*70)\nprint(\"• Start with Adam/AdamW\")\nprint(\"• If overfitting: Add weight decay or switch to SGD+Momentum\")\nprint(\"• If underfitting: Increase learning rate or use Adam\")\nprint(\"• Computer vision: Try both Adam and SGD+Momentum\")\nprint(\"• NLP/Transformers: AdamW is king!\")\n\nprint(\"\\n✓ Optimizer comparison complete!\")",
+      "explanation": "Tüm major optimizer'ların karşılaştırması. Adam/AdamW default choice, SGD+Momentum CV'de iyi. Her optimizer'ın use case'i var!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Learning Rate Scheduling",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.optim.lr_scheduler import *\nimport matplotlib.pyplot as plt\n\nmodel = nn.Linear(10, 1)\noptimizer = optim.Adam(model.parameters(), lr=0.1)\n\n# Different schedulers\nschedulers = {\n    'StepLR': StepLR(optimizer, step_size=30, gamma=0.1),\n    'ExponentialLR': ExponentialLR(optimizer, gamma=0.95),\n    'CosineAnnealingLR': CosineAnnealingLR(optimizer, T_max=100),\n}\n\ndef simulate_training(scheduler, num_epochs=100):\n    \"\"\"Simulate training and track LR\"\"\"\n    lrs = []\n    for epoch in range(num_epochs):\n        lrs.append(optimizer.param_groups[0]['lr'])\n        # Simulated training step\n        scheduler.step()\n    return lrs\n\nprint(\"LEARNING RATE SCHEDULERS\")\nprint(\"=\"*70)\n\nfor name, scheduler in schedulers.items():\n    # Reset optimizer\n    for param_group in optimizer.param_groups:\n        param_group['lr'] = 0.1\n    \n    lrs = simulate_training(scheduler)\n    \n    print(f\"\\n{name}:\")\n    print(f\"  Start LR: {lrs[0]:.6f}\")\n    print(f\"  End LR:   {lrs[-1]:.6f}\")\n    print(f\"  Epoch 50: {lrs[49]:.6f}\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"SCHEDULER DESCRIPTIONS:\")\nprint(\"=\"*70)\n\nprint(\"\\n1. StepLR:\")\nprint(\"   lr = lr * gamma  every step_size epochs\")\nprint(\"   Example: lr=0.1, step_size=30, gamma=0.1\")\nprint(\"   → Epochs 0-29: 0.1, 30-59: 0.01, 60-89: 0.001\")\nprint(\"   Use: Simple, interpretable\")\n\nprint(\"\\n2. ExponentialLR:\")\nprint(\"   lr = lr * gamma  every epoch\")\nprint(\"   Example: lr=0.1, gamma=0.95\")\nprint(\"   → Smooth exponential decay\")\nprint(\"   Use: Gradual decay needed\")\n\nprint(\"\\n3. CosineAnnealingLR:\")\nprint(\"   lr = lr_min + 0.5 * (lr_max - lr_min) * (1 + cos(π * t / T))\")\nprint(\"   → Smooth cosine curve, reaches lr_min at T_max\")\nprint(\"   Use: Popular in modern training (SGDR)\")\n\nprint(\"\\n4. ReduceLROnPlateau:\")\nprint(\"   Reduces LR when validation loss plateaus\")\nprint(\"   Example: patience=10, factor=0.1\")\nprint(\"   → If val_loss doesn't improve for 10 epochs, lr *= 0.1\")\nprint(\"   Use: Adaptive, based on actual performance\")\n\nprint(\"\\n5. OneCycleLR:\")\nprint(\"   Increases LR, then decreases (one cycle)\")\nprint(\"   → Fast convergence, good generalization\")\nprint(\"   Use: When training time is limited\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"BEST PRACTICES:\")\nprint(\"=\"*70)\nprint(\"• Start with CosineAnnealingLR (modern default)\")\nprint(\"• Add warmup for first few epochs (especially for Adam)\")\nprint(\"• ReduceLROnPlateau: Good when you don't know optimal schedule\")\nprint(\"• OneCycleLR: Fast training, good results\")\nprint(\"• Monitor validation loss, adjust if needed\")\n\nprint(\"\\n✓ Learning rate scheduling complete!\")",
+      "explanation": "Learning rate scheduling çok önemli! Başta büyük LR (fast learning), sonra küçük (fine-tuning). CosineAnnealing modern default."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Adam Implementation from Scratch",
+      "code": "import torch\nimport math\n\nclass Adam:\n    \"\"\"\n    Adam optimizer implementation from scratch\n    Combines Momentum + RMSprop\n    \"\"\"\n    def __init__(self, params, lr=0.001, betas=(0.9, 0.999), eps=1e-8):\n        self.params = list(params)\n        self.lr = lr\n        self.beta1, self.beta2 = betas\n        self.eps = eps\n        \n        # Initialize state\n        self.m = [torch.zeros_like(p) for p in self.params]  # 1st moment\n        self.v = [torch.zeros_like(p) for p in self.params]  # 2nd moment\n        self.t = 0  # Timestep\n    \n    def step(self):\n        self.t += 1\n        \n        for i, param in enumerate(self.params):\n            if param.grad is None:\n                continue\n            \n            grad = param.grad.data\n            \n            # Update biased first moment estimate (momentum)\n            self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad\n            \n            # Update biased second moment estimate (RMSprop)\n            self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * grad.pow(2)\n            \n            # Bias correction\n            m_hat = self.m[i] / (1 - self.beta1 ** self.t)\n            v_hat = self.v[i] / (1 - self.beta2 ** self.t)\n            \n            # Update parameters\n            param.data -= self.lr * m_hat / (v_hat.sqrt() + self.eps)\n    \n    def zero_grad(self):\n        for param in self.params:\n            if param.grad is not None:\n                param.grad.zero_()\n\n# Test\nprint(\"ADAM OPTIMIZER FROM SCRATCH\")\nprint(\"=\"*70)\n\n# Simple optimization problem\nx = torch.tensor([2.0, 3.0], requires_grad=True)\n\ndef loss_fn(x):\n    return (x[0] - 1)**2 + (x[1] + 2)**2\n\noptimizer = Adam([x], lr=0.1)\n\nprint(f\"Starting point: {x.data.numpy()}\")\nprint(f\"Optimal point: [1, -2]\\n\")\n\nfor step in range(50):\n    optimizer.zero_grad()\n    loss = loss_fn(x)\n    loss.backward()\n    optimizer.step()\n    \n    if (step + 1) % 10 == 0:\n        print(f\"Step {step+1}: x = {x.data.numpy()}, loss = {loss.item():.6f}\")\n\nprint(f\"\\nFinal point: {x.data.numpy()}\")\nprint(f\"Distance from optimal: {torch.norm(x - torch.tensor([1.0, -2.0])).item():.6f}\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"ADAM COMPONENTS:\")\nprint(\"=\"*70)\nprint(\"\\n1. Momentum (m_t): Exponential moving average of gradients\")\nprint(\"   → Smooths gradient direction\")\nprint(\"   → β₁ = 0.9 (typical)\")\n\nprint(\"\\n2. RMSprop (v_t): Exponential moving average of squared gradients\")\nprint(\"   → Adaptive learning rate per parameter\")\nprint(\"   → β₂ = 0.999 (typical)\")\n\nprint(\"\\n3. Bias Correction: m_hat = m / (1 - β₁^t)\")\nprint(\"   → Corrects initialization bias (m starts at 0)\")\nprint(\"   → Important for early steps!\")\n\nprint(\"\\n4. Update Rule: θ = θ - lr * m_hat / (√v_hat + ε)\")\nprint(\"   → Combines momentum direction with adaptive LR\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"WHY ADAM WORKS:\")\nprint(\"=\"*70)\nprint(\"✓ Adaptive learning rate (like RMSprop)\")\nprint(\"✓ Momentum for faster convergence\")\nprint(\"✓ Bias correction for stability\")\nprint(\"✓ Works well out-of-box (robust hyperparameters)\")\nprint(\"✓ Effective for sparse gradients (NLP)\")\n\nprint(\"\\n✓ Adam implementation complete!\")",
+      "explanation": "Adam'ın sıfırdan implementasyonu. Momentum + RMSprop + bias correction. Her component'in rolü açık, matematik-kod bağlantısı net!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Learning Rate Finder (Cyclical LR)",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nclass LRFinder:\n    \"\"\"\n    Learning Rate Finder\n    Gradually increases LR and plots loss\n    Optimal LR is where loss decreases fastest\n    \"\"\"\n    def __init__(self, model, optimizer, criterion, device='cpu'):\n        self.model = model\n        self.optimizer = optimizer\n        self.criterion = criterion\n        self.device = device\n        \n        # Save initial state\n        self.model_state = model.state_dict()\n        self.optimizer_state = optimizer.state_dict()\n    \n    def range_test(self, train_loader, start_lr=1e-7, end_lr=10, \n                   num_iter=100, smooth_f=0.05):\n        \"\"\"\n        Perform LR range test\n        \"\"\"\n        # Reset to initial state\n        self.model.load_state_dict(self.model_state)\n        self.optimizer.load_state_dict(self.optimizer_state)\n        \n        # Calculate LR multiplier\n        lr_mult = (end_lr / start_lr) ** (1 / num_iter)\n        \n        # Initialize\n        lr = start_lr\n        self.optimizer.param_groups[0]['lr'] = lr\n        \n        lrs = []\n        losses = []\n        best_loss = float('inf')\n        \n        for iteration, (data, target) in enumerate(train_loader):\n            if iteration >= num_iter:\n                break\n            \n            data, target = data.to(self.device), target.to(self.device)\n            \n            # Forward\n            self.optimizer.zero_grad()\n            output = self.model(data)\n            loss = self.criterion(output, target)\n            \n            # Smooth loss\n            if iteration == 0:\n                smoothed_loss = loss.item()\n            else:\n                smoothed_loss = smooth_f * loss.item() + (1 - smooth_f) * smoothed_loss\n            \n            # Stop if loss explodes\n            if smoothed_loss > 4 * best_loss or torch.isnan(loss):\n                break\n            \n            if smoothed_loss < best_loss:\n                best_loss = smoothed_loss\n            \n            # Store\n            lrs.append(lr)\n            losses.append(smoothed_loss)\n            \n            # Backward\n            loss.backward()\n            self.optimizer.step()\n            \n            # Update LR\n            lr *= lr_mult\n            self.optimizer.param_groups[0]['lr'] = lr\n        \n        return lrs, losses\n    \n    def plot(self, lrs, losses, skip_start=10, skip_end=5):\n        \"\"\"Plot LR vs Loss\"\"\"\n        if skip_start >= len(lrs):\n            skip_start = 0\n        \n        lrs = lrs[skip_start:-skip_end if skip_end > 0 else None]\n        losses = losses[skip_start:-skip_end if skip_end > 0 else None]\n        \n        # Find steepest decrease\n        gradients = np.gradient(losses)\n        min_grad_idx = np.argmin(gradients)\n        suggested_lr = lrs[min_grad_idx]\n        \n        print(f\"Suggested LR: {suggested_lr:.2e}\")\n        print(f\"  (Point of steepest descent)\")\n        \n        # Would plot here in actual use\n        print(f\"\\nLR range tested: {lrs[0]:.2e} to {lrs[-1]:.2e}\")\n        print(f\"Min loss at LR: {lrs[np.argmin(losses)]:.2e}\")\n        \n        return suggested_lr\n\n# Example usage\nprint(\"LEARNING RATE FINDER\")\nprint(\"=\"*70)\nprint(\"\\nConcept: Gradually increase LR, plot loss\")\nprint(\"Optimal LR: Where loss decreases fastest (steepest gradient)\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"HOW TO USE:\")\nprint(\"=\"*70)\nprint(\"\"\"\n1. Create LRFinder with your model\n2. Run range_test() with your training data\n3. Plot the results (LR vs Loss)\n4. Choose LR where loss decreases fastest\n5. Use that LR (or slightly lower) for training\n\nExample plot interpretation:\n\nLoss |\n     |     ╲\n     |      ╲           Optimal LR\n     |       ╲___          ↓\n     |           ╲___    /\n     |               ╲__/\n     |                  ╲____\n     |________________________ LR\n    1e-6              1e-3   1e-1\n\nChoose: ~1e-3 (steepest descent point)\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"BEST PRACTICES:\")\nprint(\"=\"*70)\nprint(\"• Use before training to find good starting LR\")\nprint(\"• Suggested LR is upper bound, use 10x smaller for safety\")\nprint(\"• Combine with scheduler (e.g., OneCycleLR)\")\nprint(\"• Re-run when changing architecture or dataset\")\nprint(\"• Skip very beginning (noisy) and end (exploding loss)\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"EXAMPLE RESULTS:\")\nprint(\"=\"*70)\n# Simulate\nlrs_sim = np.logspace(-6, 0, 100)\nlosses_sim = 2.5 - 1.5 * np.log10(lrs_sim + 1e-6) + 0.3 * (np.log10(lrs_sim + 1e-6))**2\nlosses_sim = np.clip(losses_sim, 0.1, 10)\n\nmin_idx = np.argmin(np.gradient(losses_sim))\nprint(f\"\\nOptimal LR found: {lrs_sim[min_idx]:.2e}\")\nprint(f\"Recommended for training: {lrs_sim[min_idx]/10:.2e} (10x smaller for safety)\")\n\nprint(\"\\n✓ Learning Rate Finder complete!\")\nprint(\"This technique is used by fastai and many practitioners!\")",
+      "explanation": "LR Finder: LR'yi yavaşça artır, loss'u plot et. En steep descent point optimal LR! Modern training'in key tool'u. Fast.ai popularize etti."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Advanced: Lookahead + RAdam",
+      "code": "import torch\nimport torch.optim as optim\nfrom collections import defaultdict\nimport math\n\nclass Lookahead(optim.Optimizer):\n    \"\"\"\n    Lookahead Optimizer: Wraps another optimizer\n    Maintains slow and fast weights\n    \n    Paper: \"Lookahead Optimizer: k steps forward, 1 step back\"\n    \"\"\"\n    def __init__(self, optimizer, k=5, alpha=0.5):\n        self.optimizer = optimizer\n        self.k = k\n        self.alpha = alpha\n        self.param_groups = self.optimizer.param_groups\n        self.state = defaultdict(dict)\n        \n        # Initialize slow weights\n        for group in self.param_groups:\n            for p in group['params']:\n                param_state = self.state[p]\n                param_state['slow_params'] = p.data.clone()\n        \n        self.k_counter = 0\n    \n    def step(self, closure=None):\n        loss = self.optimizer.step(closure)\n        self.k_counter += 1\n        \n        # Synchronize slow and fast weights every k steps\n        if self.k_counter >= self.k:\n            for group in self.param_groups:\n                for p in group['params']:\n                    if p.grad is None:\n                        continue\n                    param_state = self.state[p]\n                    slow = param_state['slow_params']\n                    # Update slow weights\n                    slow.add_(p.data - slow, alpha=self.alpha)\n                    # Copy slow weights to fast weights\n                    p.data.copy_(slow)\n            \n            self.k_counter = 0\n        \n        return loss\n    \n    def zero_grad(self):\n        self.optimizer.zero_grad()\n\nclass RAdam(optim.Optimizer):\n    \"\"\"\n    Rectified Adam (RAdam)\n    More robust than Adam, especially early in training\n    \n    Paper: \"On the Variance of the Adaptive Learning Rate and Beyond\"\n    \"\"\"\n    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, \n                 weight_decay=0):\n        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)\n        super(RAdam, self).__init__(params, defaults)\n    \n    def step(self, closure=None):\n        loss = None\n        if closure is not None:\n            loss = closure()\n        \n        for group in self.param_groups:\n            for p in group['params']:\n                if p.grad is None:\n                    continue\n                \n                grad = p.grad.data\n                if grad.is_sparse:\n                    raise RuntimeError('RAdam does not support sparse gradients')\n                \n                state = self.state[p]\n                \n                # State initialization\n                if len(state) == 0:\n                    state['step'] = 0\n                    state['exp_avg'] = torch.zeros_like(p.data)\n                    state['exp_avg_sq'] = torch.zeros_like(p.data)\n                \n                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']\n                beta1, beta2 = group['betas']\n                state['step'] += 1\n                \n                # Decay the first and second moment running average coefficient\n                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)\n                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)\n                \n                # Compute bias correction\n                bias_correction1 = 1 - beta1 ** state['step']\n                bias_correction2 = 1 - beta2 ** state['step']\n                \n                # Compute length of the approximated SMA (Simple Moving Average)\n                rho_inf = 2 / (1 - beta2) - 1\n                rho_t = rho_inf - 2 * state['step'] * (beta2 ** state['step']) / bias_correction2\n                \n                # Adaptive update\n                if rho_t > 4:\n                    # Variance is tractable\n                    rt = math.sqrt(\n                        (rho_t - 4) * (rho_t - 2) * rho_inf / \n                        ((rho_inf - 4) * (rho_inf - 2) * rho_t)\n                    )\n                    step_size = group['lr'] * rt / bias_correction1\n                    denom = exp_avg_sq.sqrt().add_(group['eps'])\n                    p.data.addcdiv_(exp_avg, denom, value=-step_size)\n                else:\n                    # Use bias-corrected first moment only\n                    step_size = group['lr'] / bias_correction1\n                    p.data.add_(exp_avg, alpha=-step_size)\n                \n                # Weight decay\n                if group['weight_decay'] != 0:\n                    p.data.add_(p.data, alpha=-group['weight_decay'] * group['lr'])\n        \n        return loss\n\n# Example: Combine Lookahead + RAdam\nprint(\"ADVANCED OPTIMIZERS\")\nprint(\"=\"*70)\n\nmodel = torch.nn.Linear(10, 1)\n\n# RAdam (more stable than Adam)\nradam = RAdam(model.parameters(), lr=0.001)\nprint(\"\\n1. RAdam (Rectified Adam):\")\nprint(\"   • More robust than Adam, especially early in training\")\nprint(\"   • Fixes variance issue in Adam\")\nprint(\"   • No warmup needed!\")\nprint(\"   • Use when training is unstable\")\n\n# Lookahead wrapper\nlookahead_adam = Lookahead(optim.Adam(model.parameters(), lr=0.001), k=5, alpha=0.5)\nprint(\"\\n2. Lookahead (wraps another optimizer):\")\nprint(\"   • Maintains slow + fast weights\")\nprint(\"   • Fast weights: Explore (Adam steps)\")\nprint(\"   • Slow weights: Exploit (average every k steps)\")\nprint(\"   • Better generalization!\")\nprint(\"   • k=5, alpha=0.5 typical\")\n\n# Combination: Lookahead + RAdam = Ranger\nranger = Lookahead(RAdam(model.parameters(), lr=0.001), k=6, alpha=0.5)\nprint(\"\\n3. Ranger (Lookahead + RAdam):\")\nprint(\"   • Best of both worlds\")\nprint(\"   • Very robust, good generalization\")\nprint(\"   • Popular in Kaggle competitions\")\nprint(\"   • Recommended for difficult problems\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"WHEN TO USE ADVANCED OPTIMIZERS:\")\nprint(\"=\"*70)\nprint(\"\\nStandard tasks: Adam/AdamW sufficient\")\nprint(\"\\nUnstable training: RAdam (no warmup needed)\")\nprint(\"\\nNeed better generalization: Lookahead + your optimizer\")\nprint(\"\\nKaggle/competitions: Ranger (Lookahead + RAdam)\")\nprint(\"\\nVery large models: LAMB (layer-wise adaptation)\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"PRACTICAL TIP:\")\nprint(\"=\"*70)\nprint(\"Start with AdamW. If issues:\")\nprint(\"  1. Training unstable → Try RAdam\")\nprint(\"  2. Overfitting → Add Lookahead wrapper\")\nprint(\"  3. Both → Use Ranger\")\n\nprint(\"\\n✓ Advanced optimizers complete!\")\nprint(\"These give marginal gains but can help in edge cases!\")",
+      "explanation": "Advanced optimizers: RAdam (stable Adam), Lookahead (slow+fast weights), Ranger (combo). Edge case'ler için. Standard task'larda AdamW yeterli!"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Momentum'un gradient descent'e eklediği ana özellik nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Daha fazla memory kullanır",
+        "Geçmiş gradients'leri accumulate eder, hız kazanır",
+        "Learning rate'i otomatik ayarlar",
+        "Sadece convergence'ı yavaşlatır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Momentum geçmiş gradients'leri accumulate eder (velocity). Valley'lerde hızlanır, oscillation azalır. Top yuvarlanması gibi: Momentum kazanır, daha hızlı converge eder!",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "Adam optimizer hangi iki tekniği birleştirir?",
+      "type": "multiple-choice",
+      "options": [
+        "SGD + Learning rate decay",
+        "Momentum + RMSprop (adaptive learning rate)",
+        "Gradient clipping + Weight decay",
+        "Batch normalization + Dropout"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Adam = Momentum (1st moment) + RMSprop (2nd moment, adaptive LR). Best of both worlds! m_t için momentum, v_t için squared gradients. Bias correction ile stable!",
+      "difficulty": 2
+    },
+    {
+      "id": "q3",
+      "question": "Learning rate çok büyük olursa ne olur?",
+      "type": "multiple-choice",
+      "options": [
+        "Training çok yavaş olur",
+        "Loss diverge eder, NaN olabilir",
+        "Overfitting artar",
+        "Hiçbir etkisi olmaz"
+      ],
+      "correctAnswer": 1,
+      "explanation": "LR çok büyük: Optimal point'i overshoot eder, oscillate eder, diverge edebilir, loss NaN! LR çok küçük: Çok yavaş, asla converge etmez. Balance gerekli!",
+      "difficulty": 1
+    },
+    {
+      "id": "q4",
+      "question": "AdamW'nun Adam'dan farkı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Daha hızlı çalışır",
+        "Weight decay'i adaptive learning rate'ten decoupled eder",
+        "Daha az memory kullanır",
+        "Sadece CNN'ler için optimize edilmiş"
+      ],
+      "correctAnswer": 1,
+      "explanation": "AdamW weight decay'i decoupled eder. Adam'da weight decay adaptive LR'den etkilenir, AdamW'da bağımsız. Daha iyi regularization, modern best practice!",
+      "difficulty": 3
+    },
+    {
+      "id": "q5",
+      "question": "Learning rate warmup neden kullanılır?",
+      "type": "multiple-choice",
+      "options": [
+        "Training'i yavaşlatmak için",
+        "İlk epoch'larda instability önlemek, LR'yi yavaşça artırmak",
+        "Memory tasarrufu için",
+        "Sadece büyük batch size'larda gerekli"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Warmup: İlk N step'te LR'yi 0'dan yavaşça artır. Başlangıçta büyük LR instability yaratabilir (özellikle Adam'da). Warmup smooth start sağlar, sonra normal training!",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Cosine Annealing scheduler ne yapar?",
+      "type": "multiple-choice",
+      "options": [
+        "LR'yi linear olarak azaltır",
+        "LR'yi cosine eğrisi ile smooth azaltır",
+        "LR'yi random değiştirir",
+        "Sadece validation loss'a göre ayarlar"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Cosine Annealing: LR'yi cosine curve ile smooth azaltır. lr = lr_min + 0.5*(lr_max - lr_min)*(1 + cos(πt/T)). Modern training'de popular, SGDR'da kullanılır!",
+      "difficulty": 2
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "SGD vs Momentum?",
+      "back": "SGD:\nw = w - lr × ∇L\n- Basit, yavaş\n- Oscillates in valleys\n\nMomentum:\nv = β×v + ∇L\nw = w - lr × v\n- Accumulates velocity\n- Faster, less oscillation\n- β=0.9 typical\n\nTop yuvarlanması gibi: Hız kazanır!"
+    },
+    {
+      "id": "fc2",
+      "front": "Adam optimizer formülü?",
+      "back": "Momentum + RMSprop:\n\nm_t = β₁×m + (1-β₁)×∇L  (momentum)\nv_t = β₂×v + (1-β₂)×(∇L)² (RMSprop)\n\nBias correction:\nm̂ = m/(1-β₁^t)\nv̂ = v/(1-β₂^t)\n\nUpdate:\nw = w - lr × m̂/(√v̂ + ε)\n\nDefaults: β₁=0.9, β₂=0.999, ε=1e-8"
+    },
+    {
+      "id": "fc3",
+      "front": "Learning rate etkisi?",
+      "back": "Too Small (0.0001):\n• → • → • (çok yavaş)\n\nOptimal (0.001):\n• ⟶ * (smooth converge)\n\nToo Large (0.1):\n• ⟿ ! (diverge, NaN)\n\nRule: Start small, use LR finder\nSchedule: Başta büyük, sonra küçült"
+    },
+    {
+      "id": "fc4",
+      "front": "AdamW vs Adam?",
+      "back": "Adam:\nWeight decay adaptive LR'ye bağlı\n  → Incorrect regularization!\n\nAdamW (decoupled):\nw = w - lr×m̂/√v̂ - lr×λ×w\nWeight decay bağımsız!\n\nModern best practice:\n✓ Better regularization\n✓ Transformers'da standard\n✓ weight_decay=0.01 typical"
+    },
+    {
+      "id": "fc5",
+      "front": "Learning Rate Scheduling?",
+      "back": "Static LR suboptimal!\n\nScheduling types:\n1. StepLR: Her N epoch lr×0.1\n2. Exponential: lr×0.95 her epoch\n3. Cosine: Smooth cosine curve\n4. ReduceLROnPlateau: Val loss'a göre\n5. OneCycle: Up then down\n\nModern: Cosine + Warmup"
+    },
+    {
+      "id": "fc6",
+      "front": "Warmup neden?",
+      "back": "Problem: İlk epoch'larda instability\n  Large LR + bad init = diverge!\n\nWarmup: LR'yi yavaşça artır\n  lr(t) = (t/T_warmup) × lr_max\n\n0 → lr_max (first N steps)\nSonra normal training/scheduling\n\nÖzellikle Adam için önemli!\nTransformers: 4000 step warmup"
+    },
+    {
+      "id": "fc7",
+      "front": "Optimizer seçimi?",
+      "back": "Default: Adam/AdamW\n✓ Most tasks\n✓ Out-of-box good\n✓ lr=0.001\n\nComputer Vision: SGD+Momentum\n✓ Better generalization\n✓ lr=0.1, momentum=0.9\n\nTransformers: AdamW\n✓ With weight decay\n✓ Standard choice\n\nUnstable: RAdam\n✓ No warmup needed"
+    },
+    {
+      "id": "fc8",
+      "front": "RMSprop ne yapar?",
+      "back": "Adaptive learning rate:\n\ns_t = β×s + (1-β)×(∇L)²\nw = w - lr×∇L/√(s+ε)\n\nBüyük gradient → Küçük step\nKüçük gradient → Büyük step\n\nHer parameter farklı LR!\n\nProblem: Momentum yok\nÇözüm: Adam = RMSprop + Momentum"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "optimizer.zero_grad() yapmayı unutmak",
+      "why": "PyTorch gradient'leri accumulate eder! Unutursan gradients toplanır, yanlış update.",
+      "fix": "Her iteration başında optimizer.zero_grad() çağır. loss.backward()'dan ÖNCE! Pattern: zero_grad() → forward() → loss.backward() → optimizer.step()"
+    },
+    {
+      "mistake": "Learning rate'i tune etmemek",
+      "why": "LR en önemli hyperparameter! Default değerler (0.001) her zaman optimal değil. Çok büyük diverge eder, çok küçük çok yavaş.",
+      "fix": "LR Finder kullan veya grid search yap. 0.0001, 0.001, 0.01, 0.1 dene. Validation loss'a bak, en iyi LR'yi seç. Scheduling ekle (cosine annealing)."
+    },
+    {
+      "mistake": "Learning rate scheduling kullanmamak",
+      "why": "Sabit LR suboptimal! Başta hızlı öğrenebilirsin (büyük LR), fine-tuning için küçük LR gerekir.",
+      "fix": "CosineAnnealingLR ekle (modern default). Ya da ReduceLROnPlateau (val loss plateau'da azalt). Warmup + scheduling = best practice!"
+    },
+    {
+      "mistake": "Adam ile weight decay'i yanlış kullanmak",
+      "why": "optimizer = optim.Adam(..., weight_decay=0.01) → Yanlış! Adam'da weight decay adaptive LR'ye bağlanır, incorrect regularization.",
+      "fix": "AdamW kullan: optim.AdamW(..., weight_decay=0.01). Weight decay decoupled, doğru regularization. Modern best practice!"
+    },
+    {
+      "mistake": "Tüm parametrelere aynı learning rate vermek",
+      "why": "Bazı layer'lar hızlı öğrenmeli (yeni layers), bazıları yavaş (pretrained layers). Tek LR suboptimal!",
+      "fix": "Parameter groups kullan: optimizer = optim.Adam([{'params': model.base.parameters(), 'lr': 0.0001}, {'params': model.classifier.parameters(), 'lr': 0.001}])"
+    },
+    {
+      "mistake": "Warmup yapmadan büyük learning rate kullanmak",
+      "why": "İlk epoch'larda weights rastgele, büyük LR instability yaratır. Adam especially sensitive!",
+      "fix": "Warmup ekle: İlk N step'te LR'yi 0'dan yavaşça artır. Transformers: 4000-10000 step warmup. Linear warmup + cosine decay popular!"
+    },
+    {
+      "mistake": "Scheduler'ı yanlış zamanda call etmek",
+      "why": "scheduler.step() epoch sonunda mı, batch sonunda mı? Scheduler'a göre değişir! Yanlış kullanım LR'yi망치다.",
+      "fix": "StepLR/CosineAnnealing: epoch sonunda. OneCycleLR: her batch sonunda! ReduceLROnPlateau: validation loss ile. Documentation oku!"
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "optimizer-paths",
+      "type": "animation",
+      "title": "Optimizer Paths Comparison",
+      "description": "SGD, Momentum, RMSprop, Adam'ın loss landscape'de nasıl farklı yollar izlediğini görün"
+    },
+    {
+      "id": "lr-scheduling",
+      "type": "plot",
+      "title": "Learning Rate Schedules",
+      "description": "StepLR, ExponentialLR, CosineAnnealing, OneCycleLR'nin LR değişimini plot edin"
+    },
+    {
+      "id": "momentum-effect",
+      "type": "interactive",
+      "title": "Momentum Parameter Effect",
+      "description": "Momentum β değerini değiştirin (0-0.99), convergence hızını gözlemleyin"
+    },
+    {
+      "id": "lr-finder-plot",
+      "type": "plot",
+      "title": "LR Finder Results",
+      "description": "Learning rate vs loss plot'u, optimal LR seçimi"
+    }
+  ],
+  "references": [
+    {
+      "title": "Adam: A Method for Stochastic Optimization",
+      "url": "https://arxiv.org/abs/1412.6980",
+      "type": "paper",
+      "author": "Kingma & Ba, 2014"
+    },
+    {
+      "title": "Decoupled Weight Decay Regularization (AdamW)",
+      "url": "https://arxiv.org/abs/1711.05101",
+      "type": "paper",
+      "author": "Loshchilov & Hutter, 2017"
+    },
+    {
+      "title": "On the importance of initialization and momentum",
+      "url": "http://www.cs.toronto.edu/~hinton/absps/momentum.pdf",
+      "type": "paper",
+      "author": "Sutskever et al., 2013"
+    },
+    {
+      "title": "Cyclical Learning Rates for Training Neural Networks",
+      "url": "https://arxiv.org/abs/1506.01186",
+      "type": "paper",
+      "author": "Smith, 2017"
+    },
+    {
+      "title": "PyTorch Optimizers Documentation",
+      "url": "https://pytorch.org/docs/stable/optim.html",
+      "type": "documentation"
+    }
+  ]
+}

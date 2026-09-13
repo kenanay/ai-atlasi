@@ -1,0 +1,312 @@
+{
+  "id": "model-deployment-production",
+  "title": "Model Deployment & Production ML",
+  "category": "mlops",
+  "level": 3,
+  "estimatedTime": 80,
+  "description": "Model Deployment: Research → Production! ONNX (model interchange format, cross-framework), TorchScript (PyTorch production), Quantization (INT8, model compression), Model Serving (FastAPI, TorchServe, TensorFlow Serving), Containerization (Docker, Kubernetes), Monitoring (metrics, drift detection), A/B Testing, CI/CD pipelines. Performance optimization: Batch inference, GPU utilization, caching. Challenges: Latency requirements, scalability, model updates, version control. MLOps: Data versioning (DVC), experiment tracking (MLflow, Weights & Biases), model registry. Production considerations: Error handling, logging, security, API design. Real-world: AWS SageMaker, Google AI Platform, Azure ML.",
+  "content": {
+    "level0_basic": "Model Deployment: Training done → Production! Challenge: Jupyter notebook ≠ production system. Requirements: (1) Speed: Milliseconds per prediction (research: minutes OK). (2) Scale: Handle 1000s requests/sec. (3) Reliability: 99.9% uptime. (4) Monitoring: Track performance, detect issues. Steps: (1) Export Model: Save weights, architecture. PyTorch: .pth, ONNX (universal format). (2) Optimize: Quantization (FP32→INT8, 4× smaller, faster!), Pruning (remove weights). (3) Serve: REST API (FastAPI, Flask). Input→Model→Output JSON. (4) Container: Docker (package everything: model, dependencies, code). (5) Deploy: Cloud (AWS, GCP, Azure) or edge (mobile, IoT). (6) Monitor: Track accuracy, latency, errors. Detect drift (data changes over time). Tools: TorchServe (PyTorch), TensorFlow Serving, FastAPI (custom API), Docker (containers), Kubernetes (orchestration), MLflow (tracking). Real example: Image classification API: Upload photo → 50ms → Return 'cat' (95% confidence). Production != training!",
+    "level1_beginner": "**Deployment Pipeline:**\n\n```\n1. Training (Research)\n   - Jupyter notebook\n   - Experiments, tuning\n   - Accuracy focus\n   \n2. Export\n   - Save model: .pth, .onnx\n   - Freeze weights\n   - Document: input/output format\n   \n3. Optimize\n   - Quantization: FP32 → INT8\n   - Pruning: Remove unnecessary weights\n   - Batch inference: Process multiple at once\n   \n4. Serve\n   - REST API: POST /predict\n   - Input validation\n   - Error handling\n   \n5. Containerize\n   - Docker: Package everything\n   - Reproducible environment\n   - Easy deployment\n   \n6. Deploy\n   - Cloud: AWS, GCP, Azure\n   - Edge: Mobile, embedded\n   - Scale: Load balancer, multiple instances\n   \n7. Monitor\n   - Latency: How fast?\n   - Throughput: How many/sec?\n   - Accuracy: Still good?\n   - Drift: Data changed?\n```\n\n**ONNX (Open Neural Network Exchange):**\n\n```\nProblem:\n  PyTorch model → Can't run in TensorFlow\n  Framework lock-in!\n  \nSolution: ONNX\n  Universal format\n  PyTorch → ONNX → TensorFlow/TensorRT/CoreML\n  \nExport:\n  torch.onnx.export(model, dummy_input, 'model.onnx')\n  \nBenefits:\n  - Cross-framework\n  - Optimized inference\n  - Hardware acceleration\n```\n\n**Model Serving API:**\n\n```python\nfrom fastapi import FastAPI\nimport torch\n\napp = FastAPI()\nmodel = torch.load('model.pth')\nmodel.eval()\n\n@app.post('/predict')\ndef predict(image: UploadFile):\n    # Preprocess\n    img_tensor = preprocess(image)\n    \n    # Predict\n    with torch.no_grad():\n        output = model(img_tensor)\n        pred = output.argmax().item()\n    \n    return {'prediction': pred, 'confidence': float(output.max())}\n\n# Run: uvicorn main:app\n# API ready at http://localhost:8000/predict\n```\n\n**Docker Container:**\n\n```dockerfile\nFROM python:3.9\n\nWORKDIR /app\n\n# Install dependencies\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\n\n# Copy model and code\nCOPY model.pth .\nCOPY app.py .\n\n# Run\nCMD [\"uvicorn\", \"app:app\", \"--host\", \"0.0.0.0\"]\n```\n\n**Monitoring Metrics:**\n\n```\nPerformance:\n  - Latency: p50, p95, p99 (milliseconds)\n  - Throughput: Requests per second\n  - Error rate: Failed predictions %\n  \nModel Quality:\n  - Accuracy: On recent data\n  - Precision/Recall: Class-specific\n  - Drift: Input distribution changed?\n  \nSystem:\n  - CPU/GPU utilization\n  - Memory usage\n  - Disk I/O\n  \nAlerts:\n  - Latency > 100ms → Scale up\n  - Accuracy drop > 5% → Retrain\n  - Error rate > 1% → Investigation\n```",
+    "level2_application": "**Complete FastAPI Model Server:**\n\n```python\nfrom fastapi import FastAPI, UploadFile, HTTPException\nimport torch\nimport torchvision.transforms as transforms\nfrom PIL import Image\nimport io\nimport time\nimport logging\n\napp = FastAPI(title='Image Classifier API')\n\n# Setup logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger(__name__)\n\n# Load model (singleton)\nclass ModelServer:\n    def __init__(self):\n        self.model = torch.load('model.pth', map_location='cpu')\n        self.model.eval()\n        self.transform = transforms.Compose([\n            transforms.Resize(224),\n            transforms.ToTensor(),\n            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])\n        ])\n        logger.info('Model loaded successfully')\n    \n    def predict(self, image_bytes):\n        try:\n            # Preprocess\n            image = Image.open(io.BytesIO(image_bytes))\n            image_tensor = self.transform(image).unsqueeze(0)\n            \n            # Inference\n            start_time = time.time()\n            with torch.no_grad():\n                output = self.model(image_tensor)\n                probs = torch.softmax(output, dim=1)\n                pred_class = probs.argmax().item()\n                confidence = probs.max().item()\n            \n            latency = (time.time() - start_time) * 1000  # ms\n            \n            logger.info(f'Prediction: class={pred_class}, confidence={confidence:.3f}, latency={latency:.1f}ms')\n            \n            return {\n                'class': pred_class,\n                'confidence': float(confidence),\n                'latency_ms': latency\n            }\n        except Exception as e:\n            logger.error(f'Prediction error: {str(e)}')\n            raise HTTPException(status_code=500, detail=str(e))\n\nserver = ModelServer()\n\n@app.post('/predict')\nasync def predict(file: UploadFile):\n    if not file.content_type.startswith('image/'):\n        raise HTTPException(status_code=400, detail='File must be an image')\n    \n    image_bytes = await file.read()\n    result = server.predict(image_bytes)\n    return result\n\n@app.get('/health')\ndef health():\n    return {'status': 'healthy', 'model_loaded': True}\n\nif __name__ == '__main__':\n    import uvicorn\n    uvicorn.run(app, host='0.0.0.0', port=8000)\n```\n\n**Model Quantization:**\n\n```python\nimport torch\nfrom torch.quantization import quantize_dynamic, quantize_qconfig\n\n# Load FP32 model\nmodel = torch.load('model_fp32.pth')\nmodel.eval()\n\n# Dynamic Quantization (easiest)\nquantized_model = quantize_dynamic(\n    model,\n    {torch.nn.Linear},  # Layers to quantize\n    dtype=torch.qint8\n)\n\n# Save\ntorch.save(quantized_model.state_dict(), 'model_int8.pth')\n\n# Compare sizes\nimport os\nfp32_size = os.path.getsize('model_fp32.pth') / 1024 / 1024\nint8_size = os.path.getsize('model_int8.pth') / 1024 / 1024\n\nprint(f'FP32: {fp32_size:.2f} MB')\nprint(f'INT8: {int8_size:.2f} MB')\nprint(f'Compression: {fp32_size/int8_size:.1f}x smaller!')\n\n# Benchmark\nimport time\nx = torch.randn(1, 3, 224, 224)\n\nstart = time.time()\nfor _ in range(100):\n    _ = model(x)\nfp32_time = (time.time() - start) / 100\n\nstart = time.time()\nfor _ in range(100):\n    _ = quantized_model(x)\nint8_time = (time.time() - start) / 100\n\nprint(f'\\nFP32: {fp32_time*1000:.2f}ms')\nprint(f'INT8: {int8_time*1000:.2f}ms')\nprint(f'Speedup: {fp32_time/int8_time:.1f}x faster!')\n```",
+    "level3_advanced": "**TorchScript Export:**\n\n```python\nimport torch\n\n# Load model\nmodel = MyModel()\nmodel.load_state_dict(torch.load('model.pth'))\nmodel.eval()\n\n# Method 1: Tracing (for simple models)\nexample_input = torch.randn(1, 3, 224, 224)\ntraced_model = torch.jit.trace(model, example_input)\ntraced_model.save('model_traced.pt')\n\n# Method 2: Scripting (for complex control flow)\nscripted_model = torch.jit.script(model)\nscripted_model.save('model_scripted.pt')\n\n# Load and use (no Python dependency!)\nloaded_model = torch.jit.load('model_traced.pt')\noutput = loaded_model(example_input)\n\nprint('TorchScript model ready for C++ deployment!')\n```\n\n**ONNX Export & Inference:**\n\n```python\nimport torch\nimport onnx\nimport onnxruntime as ort\nimport numpy as np\n\n# Export to ONNX\nmodel = torch.load('model.pth')\nmodel.eval()\n\ndummy_input = torch.randn(1, 3, 224, 224)\ntorch.onnx.export(\n    model,\n    dummy_input,\n    'model.onnx',\n    input_names=['input'],\n    output_names=['output'],\n    dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}\n)\n\n# Verify\nonnx_model = onnx.load('model.onnx')\nonnx.checker.check_model(onnx_model)\nprint('ONNX model valid!')\n\n# Inference with ONNX Runtime (faster!)\nsession = ort.InferenceSession('model.onnx')\ninput_name = session.get_inputs()[0].name\n\nx = np.random.randn(1, 3, 224, 224).astype(np.float32)\noutput = session.run(None, {input_name: x})\n\nprint(f'ONNX output shape: {output[0].shape}')\n```",
+    "level4_expert": "**Complete MLOps Pipeline:**\n\n```python\n# 1. Experiment Tracking (MLflow)\nimport mlflow\n\nwith mlflow.start_run():\n    # Training\n    model = train_model()\n    \n    # Log parameters\n    mlflow.log_param('learning_rate', 0.001)\n    mlflow.log_param('batch_size', 32)\n    \n    # Log metrics\n    mlflow.log_metric('accuracy', 0.95)\n    mlflow.log_metric('loss', 0.12)\n    \n    # Log model\n    mlflow.pytorch.log_model(model, 'model')\n\n# 2. Model Registry\nfrom mlflow.tracking import MlflowClient\n\nclient = MlflowClient()\nmodel_uri = 'runs:/<run_id>/model'\nresult = mlflow.register_model(model_uri, 'ImageClassifier')\n\n# Promote to production\nclient.transition_model_version_stage(\n    name='ImageClassifier',\n    version=1,\n    stage='Production'\n)\n\n# 3. CI/CD Pipeline (GitHub Actions)\n# .github/workflows/deploy.yml\n'''\nname: Deploy Model\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v2\n      - name: Build Docker image\n        run: docker build -t model-server .\n      - name: Push to registry\n        run: docker push model-server:latest\n      - name: Deploy to Kubernetes\n        run: kubectl apply -f deployment.yaml\n'''\n\n# 4. Monitoring & Alerting\nimport prometheus_client as prom\n\n# Metrics\nlatency_histogram = prom.Histogram('prediction_latency_seconds', 'Prediction latency')\naccuracy_gauge = prom.Gauge('model_accuracy', 'Current model accuracy')\nerror_counter = prom.Counter('prediction_errors_total', 'Total prediction errors')\n\n@app.post('/predict')\n@latency_histogram.time()\ndef predict(data):\n    try:\n        result = model.predict(data)\n        return result\n    except Exception as e:\n        error_counter.inc()\n        raise\n\n# 5. A/B Testing\nimport random\n\nclass ABTestServer:\n    def __init__(self):\n        self.model_a = load_model('model_v1')\n        self.model_b = load_model('model_v2')\n        self.metrics = {'a': [], 'b': []}\n    \n    def predict(self, x, user_id):\n        # Consistent assignment\n        variant = 'a' if hash(user_id) % 2 == 0 else 'b'\n        model = self.model_a if variant == 'a' else self.model_b\n        \n        result = model.predict(x)\n        self.metrics[variant].append(result)\n        \n        return {'prediction': result, 'variant': variant}\n```"
+  },
+  "whatIsIt": "Model Deployment: Moving trained model from research to production! Components: (1) Model Export: Save weights, architecture (ONNX, TorchScript). (2) Optimization: Quantization (FP32→INT8, 4× smaller), pruning, optimization. (3) Serving: REST API (FastAPI, TorchServe), handle requests. (4) Containerization: Docker (package dependencies), Kubernetes (orchestration). (5) Monitoring: Track latency, accuracy, errors, drift detection. (6) CI/CD: Automated testing, deployment pipeline. MLOps: Data versioning (DVC), experiment tracking (MLflow), model registry, A/B testing. Production requirements: Low latency (<100ms), high throughput (1000s req/sec), reliability (99.9%), scalability, monitoring. Challenges: Framework differences, hardware optimization, version control, model updates, data drift.",
+  "whyNeeded": "Jupyter notebook ≠ Production! Requirements differ: (1) Speed: Research (minutes/hours OK), Production (milliseconds required!). User waiting! (2) Scale: Research (single prediction), Production (thousands/sec). Multiple users! (3) Reliability: Research (crashes OK), Production (99.9% uptime!). Real users affected. (4) Monitoring: Research (manual check), Production (automatic drift detection). Data changes over time! Real examples: (1) E-commerce: Product recommendations (latency <50ms, millions of users). (2) Healthcare: Medical image analysis (accuracy critical, regulatory compliance). (3) Finance: Fraud detection (real-time, high accuracy, explainability). (4) Autonomous Vehicles: Object detection (millisecond latency, safety critical). Why MLOps? Model is not enough! Need: Data pipeline, training automation, deployment, monitoring, retraining triggers, version control. Complete system, not just model. Production is different world!",
+  "realWorldAnalogy": "Model Deployment restaurant gibi! Research = Chef testing recipe at home: Experiments, tries variations, no time pressure. Production = Restaurant service: (1) Speed: Customer can't wait 1 hour (latency!).(2) Scale: 100 customers simultaneously (throughput!). (3) Consistency: Every dish same quality (reliability). (4) Monitoring: Food quality checks, customer feedback (metrics). Docker = Recipe standardization: Exact ingredients, steps, tools. Anyone can reproduce! Kubernetes = Kitchen management: Multiple chefs (instances), load balancing (orders distributed), auto-scaling (busy times → more chefs). MLOps = Restaurant management system: Ingredient tracking (data versioning), recipe updates (model versioning), quality control (monitoring), customer preferences (A/B testing). Not just cooking, entire operation!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Latency: } t = t_{\\text{preprocess}} + t_{\\text{inference}} + t_{\\text{postprocess}}",
+      "\\text{Throughput: } T = \\frac{\\text{batch\\_size}}{\\text{latency}}",
+      "\\text{Quantization: } x_{\\text{int8}} = \\text{round}\\left(\\frac{x_{\\text{fp32}} - \\text{zero\\_point}}{\\text{scale}}\\right)",
+      "\\text{Model Size: } S = \\sum (\\text{weights} \\times \\text{bytes\\_per\\_weight})",
+      "\\text{GPU Utilization: } U = \\frac{\\text{compute\\_time}}{\\text{total\\_time}} \\times 100\\%"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Deployment Pipeline:",
+      "1. Export Model: Save trained model (checkpoint, ONNX, TorchScript)",
+      "2. Optimize: Quantization (INT8), pruning, compile optimization",
+      "3. Create API: FastAPI/Flask endpoint, input validation, error handling",
+      "4. Test Locally: Unit tests, integration tests, load testing",
+      "5. Containerize: Dockerfile, package dependencies, build image",
+      "6. Deploy: Cloud (AWS/GCP/Azure) or on-premise, scale horizontally",
+      "7. Monitor: Latency, throughput, accuracy, error rate, resource usage",
+      "8. Set Alerts: Latency spikes, accuracy drops, system errors",
+      "9. A/B Test: Compare model versions, gradual rollout",
+      "10. Retrain Pipeline: Detect drift, trigger retraining, update production"
+    ],
+    "complexity": "Inference: O(model_size), typically 10-100ms. Batch inference: Amortize preprocessing. Quantized models: 2-4× faster. Optimization: One-time cost (hours) for deployment setup. Monitoring: Constant overhead (~1-5% latency increase)."
+  },
+  "prerequisites": [
+    "neural-networks",
+    "convolutional-neural-networks",
+    "deep-learning-frameworks"
+  ],
+  "nextTopics": [
+    "kubernetes-ml",
+    "edge-deployment",
+    "model-monitoring"
+  ],
+  "relatedTopics": [
+    "transfer-learning",
+    "model-compression",
+    "distributed-training"
+  ],
+  "tags": [
+    "deployment",
+    "mlops",
+    "onnx",
+    "torchscript",
+    "quantization",
+    "model-serving",
+    "docker",
+    "fastapi",
+    "monitoring",
+    "production-ml"
+  ],
+  "codeExamples": [
+    {
+      "title": "Simple FastAPI Model Server",
+      "language": "python",
+      "code": "from fastapi import FastAPI\nimport torch\n\napp = FastAPI()\nmodel = torch.load('model.pth')\nmodel.eval()\n\n@app.post('/predict')\ndef predict(data: dict):\n    x = torch.tensor(data['input'])\n    with torch.no_grad():\n        output = model(x)\n    return {'prediction': output.tolist()}\n\n# Run: uvicorn main:app --reload",
+      "level": 0,
+      "explanation": "Simple FastAPI Model Server code"
+    },
+    {
+      "title": "ONNX Export",
+      "language": "python",
+      "code": "import torch\n\nmodel = torch.load('model.pth')\nmodel.eval()\n\ndummy_input = torch.randn(1, 3, 224, 224)\ntorch.onnx.export(\n    model, dummy_input, 'model.onnx',\n    input_names=['input'], output_names=['output']\n)\nprint('ONNX model exported!')",
+      "level": 1,
+      "explanation": "ONNX Export code"
+    },
+    {
+      "title": "Model Quantization",
+      "language": "python",
+      "code": "import torch\nfrom torch.quantization import quantize_dynamic\n\nmodel = torch.load('model.pth')\nquantized = quantize_dynamic(\n    model, {torch.nn.Linear}, dtype=torch.qint8\n)\n\nimport os\noriginal_size = os.path.getsize('model.pth')/1024/1024\ntorch.save(quantized.state_dict(), 'quantized.pth')\nquant_size = os.path.getsize('quantized.pth')/1024/1024\n\nprint(f'Original: {original_size:.2f}MB')\nprint(f'Quantized: {quant_size:.2f}MB ({original_size/quant_size:.1f}x smaller)')",
+      "level": 2,
+      "explanation": "Model Quantization code"
+    },
+    {
+      "title": "Docker Deployment",
+      "language": "dockerfile",
+      "code": "FROM python:3.9-slim\n\nWORKDIR /app\n\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\nCOPY model.pth .\nCOPY app.py .\n\nEXPOSE 8000\n\nCMD [\"uvicorn\", \"app:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]\n\n# Build: docker build -t model-server .\n# Run: docker run -p 8000:8000 model-server",
+      "level": 2,
+      "explanation": "Docker Deployment code"
+    },
+    {
+      "title": "Monitoring with Prometheus",
+      "language": "python",
+      "code": "from prometheus_client import Counter, Histogram, Gauge\nimport time\n\nprediction_counter = Counter('predictions_total', 'Total predictions')\nlatency_histogram = Histogram('prediction_latency_seconds', 'Latency')\naccuracy_gauge = Gauge('current_accuracy', 'Current accuracy')\n\n@app.post('/predict')\ndef predict(data):\n    prediction_counter.inc()\n    \n    start = time.time()\n    result = model.predict(data)\n    latency = time.time() - start\n    \n    latency_histogram.observe(latency)\n    return result",
+      "level": 3,
+      "explanation": "Monitoring with Prometheus code"
+    },
+    {
+      "title": "A/B Testing Framework",
+      "language": "python",
+      "code": "import hashlib\n\nclass ABTest:\n    def __init__(self):\n        self.model_a = load_model('v1')\n        self.model_b = load_model('v2')\n        self.results = {'a': [], 'b': []}\n    \n    def get_variant(self, user_id):\n        hash_val = int(hashlib.md5(user_id.encode()).hexdigest(), 16)\n        return 'a' if hash_val % 2 == 0 else 'b'\n    \n    def predict(self, data, user_id):\n        variant = self.get_variant(user_id)\n        model = self.model_a if variant == 'a' else self.model_b\n        result = model(data)\n        self.results[variant].append(result)\n        return result, variant\n\nab_test = ABTest()",
+      "level": 4,
+      "explanation": "A/B Testing Framework code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "ONNX'in temel amacı nedir?",
+      "options": [
+        "Training speed artırır",
+        "Universal format: Cross-framework model deployment (PyTorch→TF, etc)",
+        "Sadece PyTorch için",
+        "Accuracy artırır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "ONNX = Open Neural Network Exchange. Universal model format! Train in PyTorch → Export ONNX → Deploy in TensorFlow/TensorRT/CoreML. Benefits: Framework independence, optimized runtimes, hardware acceleration. Without ONNX: Stuck with training framework for deployment. With ONNX: Choose best framework for training, best runtime for deployment!"
+    },
+    {
+      "question": "Quantization (FP32→INT8) neden yapılır?",
+      "options": [
+        "Accuracy artırır",
+        "4× smaller model, 2-4× faster inference, minimal accuracy loss (<1%)",
+        "Training speed artırır",
+        "Sadece mobile için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Quantization: FP32 (32-bit float) → INT8 (8-bit integer). Benefits: (1) 4× smaller model (memory, storage), (2) 2-4× faster inference (integer ops faster), (3) Lower power (mobile, edge). Trade-off: <1% accuracy loss typically. Use cases: Mobile deployment, edge devices, cost reduction. Dynamic vs static quantization: Dynamic (easier), static (better accuracy)."
+    },
+    {
+      "question": "Production'da latency neden critical?",
+      "options": [
+        "Training için gerekli değil",
+        "User experience! >100ms → users notice delay. Real-time apps need <50ms",
+        "Sadece aesthetic reason",
+        "Memory için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Latency = Response time. Research: Minutes/hours OK. Production: Milliseconds critical! Why: (1) User experience: >100ms → noticeable lag. (2) Real-time: Autonomous driving <10ms. (3) Throughput: Lower latency → higher requests/sec. (4) Cost: Faster → fewer instances needed. Optimization: Batch inference, quantization, caching, GPU."
+    },
+    {
+      "question": "Docker container neden kullanılır ML deployment'ta?",
+      "options": [
+        "Training speed için",
+        "Reproducibility: Package model + dependencies + code. Works anywhere!",
+        "Sadece cloud için",
+        "Accuracy için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Docker: Containerization! Benefits: (1) Reproducibility: Works on dev laptop = works in production. (2) Dependency isolation: No version conflicts. (3) Portability: Deploy anywhere (cloud, on-premise, edge). (4) Scalability: Easy horizontal scaling. Without Docker: 'Works on my machine' problem! Dependency hell, deployment headaches. With Docker: Consistent environment."
+    },
+    {
+      "question": "Model monitoring'de drift detection nedir?",
+      "options": [
+        "Model corruption",
+        "Data distribution changes over time → model accuracy degrades",
+        "Network error",
+        "Sadece bugs için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Drift: Data distribution changes! Training data ≠ Production data anymore. Types: (1) Data drift: Input features change. (2) Concept drift: Input-output relationship changes. Example: COVID → shopping patterns changed dramatically. Solution: Monitor: Input statistics, prediction confidence, ground truth (when available). Alert: Significant distribution change. Action: Retrain model on recent data. Critical for long-running deployments!"
+    },
+    {
+      "question": "A/B testing ML models'ta neden yapılır?",
+      "options": [
+        "Training için",
+        "Compare model versions in production: Which performs better with real users?",
+        "Debugging için",
+        "Sadece akademik"
+      ],
+      "correctAnswer": 1,
+      "explanation": "A/B Testing: Deploy 2 model versions simultaneously. Split traffic: 50% model A, 50% model B. Measure: Accuracy, latency, business metrics (clicks, conversions). Decide: Keep better model. Why not just replace? Risk! New model might be worse in production (different data, edge cases). Gradual rollout: Start 5% traffic → if good → 100%. Safe deployment strategy!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Deployment Pipeline",
+      "back": "1. **Export:** Save model\n2. **Optimize:** Quantize, prune\n3. **Serve:** REST API\n4. **Container:** Docker\n5. **Deploy:** Cloud/Edge\n6. **Monitor:** Metrics, drift\n\nResearch → Production! 🚀"
+    },
+    {
+      "front": "ONNX Format",
+      "back": "**Open Neural Network Exchange**\n\nUniversal model format!\n\nPyTorch → ONNX → TensorFlow/TensorRT\n\n**Benefits:**\n- Cross-framework\n- Optimized runtimes\n- Hardware acceleration\n\nFramework independence! 🔄"
+    },
+    {
+      "front": "Model Quantization",
+      "back": "**FP32 → INT8**\n\n**Benefits:**\n- 4× smaller\n- 2-4× faster\n- <1% accuracy loss\n\n**Use Cases:**\n- Mobile deployment\n- Edge devices\n- Cost reduction\n\nSpeed + Size optimization! ⚡"
+    },
+    {
+      "front": "Latency Requirements",
+      "back": "**Research:** Minutes/hours OK\n\n**Production:**\n- Interactive: <100ms\n- Real-time: <50ms\n- Critical: <10ms\n\n**Optimization:**\nBatch, quantize, cache, GPU\n\nSpeed matters! ⏱️"
+    },
+    {
+      "front": "Docker Benefits",
+      "back": "**Containerization:**\n\n✓ Reproducibility\n✓ Dependency isolation\n✓ Portability\n✓ Scalability\n\n'Works on my machine' → Works everywhere!\n\nPackage everything 📦"
+    },
+    {
+      "front": "Model Monitoring",
+      "back": "**Track:**\n- Latency (p50, p95, p99)\n- Throughput (req/sec)\n- Accuracy (drift?)\n- Errors\n\n**Alert:**\n- Latency spikes\n- Accuracy drops\n- System failures\n\nContinuous quality! 📊"
+    },
+    {
+      "front": "Data Drift",
+      "back": "**Problem:** Distribution changes\n\nTraining data ≠ Production data\n\n**Detection:**\n- Monitor input stats\n- Track confidence\n- Compare distributions\n\n**Action:**\nRetrain on recent data\n\nAdapt to change! 🔄"
+    },
+    {
+      "front": "MLOps Components",
+      "back": "**System:**\n1. Experiment tracking\n2. Model registry\n3. CI/CD pipeline\n4. Monitoring\n5. Retraining triggers\n\nComplete ML lifecycle!\n\nNot just model! 🔧"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Not testing at production scale",
+      "why": "Works with 1 request/sec in dev, crashes at 1000 req/sec in production! Resource exhaustion, memory leaks appear under load.",
+      "fix": "Load testing before deployment! Tools: Locust, JMeter, k6. Simulate realistic traffic: Concurrent users, burst patterns, sustained load. Monitor: Latency percentiles (p95, p99), error rates, resource usage. Gradually increase load, find breaking point. Optimize bottlenecks before production!"
+    },
+    {
+      "mistake": "No model versioning",
+      "why": "Model updated, something breaks. Can't rollback! No way to compare old vs new. Debugging nightmare. Lost which version was good.",
+      "fix": "Version everything! Model weights, code, dependencies, config. Use: MLflow model registry, DVC (data version control), Git (code). Tag production models: v1.0, v1.1. Enable rollback: Keep previous version ready. Track: Which version deployed when, performance metrics per version."
+    },
+    {
+      "mistake": "Ignoring latency percentiles (only looking at average)",
+      "why": "Average latency: 50ms (looks good!). But: p99 latency: 5 seconds! 1% of users have terrible experience. Averages hide outliers!",
+      "fix": "Track percentiles: p50 (median), p95, p99. p99 critical: Worst 1% user experience. Optimize for p99, not average! Causes: Cold starts, GC pauses, resource contention. Monitor: All percentiles. SLA based on p95/p99, not average!"
+    },
+    {
+      "mistake": "No input validation",
+      "why": "Unexpected inputs crash model! Wrong dimensions, NaN values, extreme ranges. Production errors, bad user experience. Security risk: Adversarial inputs.",
+      "fix": "Validate everything! Input: Shape, type, range, required fields. Sanitize: Remove NaNs, clip values, normalize. Error handling: Graceful failures, informative errors. Schema validation: Pydantic (FastAPI), JSON Schema. Reject bad inputs early (before model inference). Log validation failures (debug, security)."
+    },
+    {
+      "mistake": "Not monitoring data drift",
+      "why": "Model accuracy silently degrades! Input distribution changed, model assumptions broken. Users see worse results, you don't know why. By the time you notice, damage done.",
+      "fix": "Continuous monitoring! Track: Input feature distributions (mean, std, quantiles). Compare: Training data vs production data. Alerts: Statistical tests (KS-test, chi-squared). Dashboard: Visualize drift over time. Action triggers: Significant drift → automatic retraining pipeline. Ground truth collection: Sample predictions, get labels, measure real accuracy."
+    },
+    {
+      "mistake": "Single instance deployment (no redundancy)",
+      "why": "Instance crashes → entire service down! Hardware failure, OOM, network issues. No fault tolerance. Users see 100% errors.",
+      "fix": "High availability! Multiple instances (3+), load balancer distributes traffic. Health checks: Automatic restart of failed instances. Kubernetes: Auto-scaling, self-healing. Rolling updates: Zero-downtime deployments. Multi-zone: Geographical redundancy. Blue-green deployment: New version alongside old, switch when ready."
+    },
+    {
+      "mistake": "Deploying without CI/CD pipeline",
+      "why": "Manual deployment: Error-prone, slow, not reproducible. No automated testing. Rollback manual (slow, stressful). Inconsistent environments.",
+      "fix": "Automate everything! CI: Run tests on every commit (unit, integration). CD: Automated deployment (staging → production). Pipeline: Build → Test → Deploy. Tools: GitHub Actions, GitLab CI, Jenkins. Benefits: Fast iterations, consistent deployments, easy rollbacks. Test coverage: Unit tests (code), integration tests (API), load tests (performance)."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "ML Deployment Architecture",
+      "description": "Diagram: Training (Jupyter) → Export (ONNX) → Serve (FastAPI) → Container (Docker) → Deploy (Cloud) → Monitor (Prometheus). Full pipeline visualization."
+    },
+    {
+      "type": "comparison",
+      "title": "Latency Percentiles (p50 vs p95 vs p99)",
+      "description": "Graph showing distribution: Average hides outliers! p99 critical for user experience. Interactive slider shows effect of optimization."
+    },
+    {
+      "type": "algorithm",
+      "title": "Quantization Effect (FP32 vs INT8)",
+      "description": "Side-by-side: Model size, inference speed, accuracy comparison. Visual representation of compression and speedup."
+    },
+    {
+      "type": "metric",
+      "title": "Data Drift Detection Over Time",
+      "description": "Time series: Training data distribution vs production data. Shows drift detection, retraining triggers, accuracy recovery."
+    }
+  ],
+  "references": [
+    {
+      "title": "ONNX: Open Neural Network Exchange",
+      "authors": "ONNX Community",
+      "year": 2023,
+      "link": "https://onnx.ai/",
+      "type": "documentation"
+    },
+    {
+      "title": "FastAPI Documentation",
+      "authors": "Sebastián Ramírez",
+      "year": 2023,
+      "link": "https://fastapi.tiangolo.com/",
+      "type": "documentation"
+    },
+    {
+      "title": "MLflow: Open Source Platform for ML Lifecycle",
+      "authors": "Databricks",
+      "year": 2023,
+      "link": "https://mlflow.org/",
+      "type": "tool"
+    },
+    {
+      "title": "Kubernetes for Machine Learning",
+      "authors": "CNCF",
+      "year": 2023,
+      "link": "https://kubernetes.io/",
+      "type": "documentation"
+    },
+    {
+      "title": "Model Serving Patterns",
+      "authors": "Google Cloud",
+      "year": 2023,
+      "link": "https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning",
+      "type": "article"
+    }
+  ]
+}

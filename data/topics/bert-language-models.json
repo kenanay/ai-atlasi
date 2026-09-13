@@ -1,0 +1,316 @@
+{
+  "id": "bert-language-models",
+  "title": "BERT & Pre-trained Language Models",
+  "category": "natural-language-processing",
+  "level": 3,
+  "estimatedTime": 85,
+  "description": "BERT: Bidirectional Encoder Representations from Transformers! Revolution in NLP - pre-train once, fine-tune for any task. Masked Language Modeling (MLM): Predict [MASK] tokens, bidirectional context! Next Sentence Prediction (NSP). Transfer learning: Pre-train on massive corpus (Wikipedia, Books) → fine-tune on specific task. Architecture: Transformer encoder stacks (12-24 layers). Applications: Question answering, sentiment analysis, NER, text classification. Variants: RoBERTa (optimized BERT), ALBERT (parameter efficient), DistilBERT (smaller, faster). GPT comparison: Autoregressive vs bidirectional. Tokenization: WordPiece, [CLS], [SEP] tokens.",
+  "content": {
+    "level0_basic": "BERT = Bidirectional Encoder Representations from Transformers. Breakthrough: Pre-train language model on massive text, then fine-tune for specific tasks! Like ImageNet for NLP. Pre-training: Two objectives. (1) Masked Language Modeling (MLM): 'The [MASK] is cute' → predict 'cat'. Random 15% words masked, model predicts. Bidirectional context! (2) Next Sentence Prediction (NSP): Given two sentences, are they consecutive? Architecture: Transformer encoder (self-attention + feedforward). BERT-base: 12 layers, 768 hidden, 110M parameters. BERT-large: 24 layers, 1024 hidden, 340M parameters. Input: [CLS] + tokens + [SEP]. WordPiece tokenization (30K vocab). Transfer Learning: Pre-train on Wikipedia + BooksCorpus (massive!). Fine-tune: Add task-specific head (classification, QA), train few epochs. Huge performance gains! Applications: Question answering (SQuAD: 93.2 F1!), Sentiment analysis, Named Entity Recognition, Text classification, Sentence similarity. Why works? Captures deep bidirectional context, semantic understanding, transferable representations!",
+    "level1_beginner": "**BERT Training Process:**\n\n```\nPhase 1: Pre-training (expensive, once)\n  Corpus: Wikipedia (2.5B words) + Books (800M)\n  Duration: 4 days on 64 TPUs!\n  Cost: ~$10,000\n  \n  Objective 1 - MLM:\n    Original: 'The cat is very cute'\n    Masked:   'The [MASK] is very [MASK]'\n    Predict:  'cat' and 'cute'\n    \n    Masking: 15% of tokens\n      - 80%: Replace with [MASK]\n      - 10%: Replace with random word\n      - 10%: Keep original (no change)\n  \n  Objective 2 - NSP:\n    Input: Sentence A + Sentence B\n    Label: IsNext (50%) or NotNext (50%)\n    \n    Example (IsNext):\n      A: 'The cat sat on the mat.'\n      B: 'It was very comfortable.'\n      Label: 1 (consecutive sentences)\n    \n    Example (NotNext):\n      A: 'The cat sat on the mat.'\n      B: 'Paris is the capital of France.'\n      Label: 0 (random sentences)\n\nPhase 2: Fine-tuning (cheap, task-specific)\n  Duration: Minutes to hours on single GPU\n  Cost: <$10\n  \n  Examples:\n    - Text Classification: Add linear layer on [CLS]\n    - QA: Add span prediction heads\n    - NER: Add token classification layer\n    - Sentiment: Binary/multi-class classifier\n```\n\n**Input Format:**\n\n```\nSingle Sentence:\n  [CLS] This movie is great [SEP]\n  \nSentence Pair:\n  [CLS] Question: Who wrote Hamlet? [SEP] Shakespeare wrote it [SEP]\n  \nTokens:\n  [CLS]:  Classification token (sentence embedding)\n  [SEP]:  Separator (end of sentence)\n  [MASK]: Masked token (pre-training only)\n  [PAD]:  Padding (batch processing)\n  [UNK]:  Unknown token (OOV words)\n```\n\n**Why Bidirectional Matters:**\n\n```\nUnidirectional (GPT-style):\n  Context: 'The cat' → predict 'sat'\n  Only LEFT context used\n  \n  Problem: 'bank' meaning depends on BOTH sides\n    'river bank' vs 'savings bank'\n\nBidirectional (BERT):\n  Context: 'The [MASK] sat on the mat'\n  LEFT + RIGHT context!\n  \n  Benefit: 'bank' embedding considers:\n    LEFT:  'river'    → bank (geography)\n    RIGHT: 'withdrew' → bank (financial)\n  \n  Better understanding!\n```\n\n**BERT Variants:**\n\n```\nRoBERTa (Robustly Optimized BERT):\n  - Remove NSP (not helpful!)\n  - Larger batches, more data\n  - Dynamic masking (different each epoch)\n  - Better performance!\n\nALBERT (A Lite BERT):\n  - Parameter sharing across layers\n  - Factorized embeddings\n  - 18× fewer parameters, similar performance\n  - Faster, smaller!\n\nDistilBERT:\n  - Knowledge distillation from BERT\n  - 40% smaller, 60% faster\n  - 97% performance retained\n  - Great for production!\n\nELECTRA:\n  - Replaced token detection (not MLM)\n  - More efficient pre-training\n  - Better small models\n```",
+    "level2_application": "**BERT for Text Classification:**\n\n```python\nimport torch\nimport torch.nn as nn\nfrom transformers import BertModel, BertTokenizer\n\nclass BertClassifier(nn.Module):\n    def __init__(self, num_classes=2, dropout=0.1):\n        super().__init__()\n        \n        # Pre-trained BERT\n        self.bert = BertModel.from_pretrained('bert-base-uncased')\n        \n        # Classification head\n        self.dropout = nn.Dropout(dropout)\n        self.classifier = nn.Linear(768, num_classes)  # 768 = BERT hidden size\n    \n    def forward(self, input_ids, attention_mask):\n        # BERT encoding\n        outputs = self.bert(\n            input_ids=input_ids,\n            attention_mask=attention_mask\n        )\n        \n        # [CLS] token representation\n        cls_output = outputs.last_hidden_state[:, 0, :]  # (batch, 768)\n        \n        # Classify\n        cls_output = self.dropout(cls_output)\n        logits = self.classifier(cls_output)  # (batch, num_classes)\n        \n        return logits\n\n# Usage: Sentiment Analysis\ntokenizer = BertTokenizer.from_pretrained('bert-base-uncased')\nmodel = BertClassifier(num_classes=2)  # Positive/Negative\n\n# Prepare input\ntext = \"This movie is absolutely amazing!\"\nencoding = tokenizer(\n    text,\n    add_special_tokens=True,\n    max_length=128,\n    padding='max_length',\n    truncation=True,\n    return_tensors='pt'\n)\n\ninput_ids = encoding['input_ids']\nattention_mask = encoding['attention_mask']\n\n# Forward pass\nwith torch.no_grad():\n    logits = model(input_ids, attention_mask)\n    prediction = torch.argmax(logits, dim=1)\n    \nprint(f\"Sentiment: {'Positive' if prediction==1 else 'Negative'}\")\n```\n\n**Fine-tuning BERT:**\n\n```python\nimport torch\nimport torch.nn as nn\nfrom transformers import BertForSequenceClassification, AdamW\nfrom torch.utils.data import DataLoader\n\n# Load pre-trained BERT with classification head\nmodel = BertForSequenceClassification.from_pretrained(\n    'bert-base-uncased',\n    num_labels=2\n)\n\n# Different learning rates for different layers\noptimizer = AdamW([\n    {'params': model.bert.parameters(), 'lr': 2e-5},  # BERT layers\n    {'params': model.classifier.parameters(), 'lr': 1e-4}  # New head\n])\n\ncriterion = nn.CrossEntropyLoss()\n\n# Training loop\nmodel.train()\nfor epoch in range(3):  # Few epochs for fine-tuning!\n    total_loss = 0\n    \n    for batch in train_dataloader:\n        input_ids = batch['input_ids']\n        attention_mask = batch['attention_mask']\n        labels = batch['labels']\n        \n        # Forward\n        outputs = model(\n            input_ids=input_ids,\n            attention_mask=attention_mask,\n            labels=labels\n        )\n        \n        loss = outputs.loss\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        \n        # Gradient clipping (important!)\n        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)\n        \n        optimizer.step()\n        \n        total_loss += loss.item()\n    \n    avg_loss = total_loss / len(train_dataloader)\n    print(f\"Epoch {epoch}: Loss = {avg_loss:.4f}\")\n\n# Evaluation\nmodel.eval()\ncorrect = 0\ntotal = 0\n\nwith torch.no_grad():\n    for batch in val_dataloader:\n        outputs = model(\n            input_ids=batch['input_ids'],\n            attention_mask=batch['attention_mask']\n        )\n        \n        predictions = torch.argmax(outputs.logits, dim=1)\n        correct += (predictions == batch['labels']).sum().item()\n        total += batch['labels'].size(0)\n\naccuracy = correct / total\nprint(f\"Validation Accuracy: {accuracy:.4f}\")\n```",
+    "level3_advanced": "**BERT for Question Answering:**\n\n```python\nimport torch\nimport torch.nn as nn\nfrom transformers import BertModel\n\nclass BertForQA(nn.Module):\n    '''\n    BERT for Extractive Question Answering\n    Predict start and end positions of answer span\n    '''\n    def __init__(self):\n        super().__init__()\n        \n        self.bert = BertModel.from_pretrained('bert-base-uncased')\n        \n        # Span prediction heads\n        self.qa_outputs = nn.Linear(768, 2)  # Start and end logits\n    \n    def forward(self, input_ids, attention_mask, token_type_ids=None):\n        # BERT encoding\n        outputs = self.bert(\n            input_ids=input_ids,\n            attention_mask=attention_mask,\n            token_type_ids=token_type_ids  # Separate question/context\n        )\n        \n        sequence_output = outputs.last_hidden_state  # (B, seq_len, 768)\n        \n        # Predict start and end\n        logits = self.qa_outputs(sequence_output)  # (B, seq_len, 2)\n        start_logits, end_logits = logits.split(1, dim=-1)\n        \n        start_logits = start_logits.squeeze(-1)  # (B, seq_len)\n        end_logits = end_logits.squeeze(-1)      # (B, seq_len)\n        \n        return start_logits, end_logits\n\ndef extract_answer(text, tokenizer, start_idx, end_idx):\n    '''Extract answer span from text'''\n    tokens = tokenizer.convert_ids_to_tokens(text)\n    answer_tokens = tokens[start_idx:end_idx+1]\n    answer = tokenizer.convert_tokens_to_string(answer_tokens)\n    return answer\n\n# Usage\nquestion = \"Who wrote Hamlet?\"\ncontext = \"William Shakespeare wrote many plays including Hamlet, Macbeth, and Romeo and Juliet.\"\n\n# Tokenize\nencoding = tokenizer(\n    question,\n    context,\n    add_special_tokens=True,\n    max_length=384,\n    padding='max_length',\n    truncation=True,\n    return_tensors='pt'\n)\n\n# Predict\nmodel = BertForQA()\nwith torch.no_grad():\n    start_logits, end_logits = model(\n        input_ids=encoding['input_ids'],\n        attention_mask=encoding['attention_mask'],\n        token_type_ids=encoding['token_type_ids']\n    )\n    \n    # Get best span\n    start_idx = torch.argmax(start_logits)\n    end_idx = torch.argmax(end_logits)\n    \n    answer = extract_answer(\n        encoding['input_ids'][0],\n        tokenizer,\n        start_idx,\n        end_idx\n    )\n    \nprint(f\"Question: {question}\")\nprint(f\"Answer: {answer}\")  # Expected: William Shakespeare\n```\n\n**Masked Language Modeling from Scratch:**\n\n```python\nimport torch\nimport torch.nn as nn\nfrom transformers import BertModel, BertTokenizer\nimport random\n\nclass BertMLM(nn.Module):\n    '''BERT for Masked Language Modeling'''\n    def __init__(self, vocab_size=30522):\n        super().__init__()\n        \n        self.bert = BertModel.from_pretrained('bert-base-uncased')\n        self.mlm_head = nn.Linear(768, vocab_size)\n    \n    def forward(self, input_ids, attention_mask, labels=None):\n        outputs = self.bert(\n            input_ids=input_ids,\n            attention_mask=attention_mask\n        )\n        \n        sequence_output = outputs.last_hidden_state\n        prediction_scores = self.mlm_head(sequence_output)\n        \n        loss = None\n        if labels is not None:\n            loss_fct = nn.CrossEntropyLoss(ignore_index=-100)\n            loss = loss_fct(\n                prediction_scores.view(-1, vocab_size),\n                labels.view(-1)\n            )\n        \n        return loss, prediction_scores\n\ndef mask_tokens(inputs, tokenizer, mlm_probability=0.15):\n    '''\n    Prepare masked inputs for MLM\n    '''\n    labels = inputs.clone()\n    \n    # Create mask\n    probability_matrix = torch.full(labels.shape, mlm_probability)\n    special_tokens_mask = [\n        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True)\n        for val in labels.tolist()\n    ]\n    probability_matrix.masked_fill_(\n        torch.tensor(special_tokens_mask, dtype=torch.bool),\n        value=0.0\n    )\n    \n    masked_indices = torch.bernoulli(probability_matrix).bool()\n    labels[~masked_indices] = -100  # Only compute loss on masked tokens\n    \n    # 80% [MASK], 10% random, 10% original\n    indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices\n    inputs[indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)\n    \n    indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced\n    random_words = torch.randint(len(tokenizer), labels.shape, dtype=torch.long)\n    inputs[indices_random] = random_words[indices_random]\n    \n    return inputs, labels\n\n# Training\nmodel = BertMLM()\noptimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)\n\nfor epoch in range(3):\n    for text in corpus:\n        # Tokenize\n        encoding = tokenizer(\n            text,\n            return_tensors='pt',\n            max_length=128,\n            truncation=True,\n            padding='max_length'\n        )\n        \n        # Mask\n        input_ids, labels = mask_tokens(encoding['input_ids'], tokenizer)\n        \n        # Forward\n        loss, _ = model(\n            input_ids=input_ids,\n            attention_mask=encoding['attention_mask'],\n            labels=labels\n        )\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n```",
+    "level4_expert": "**Custom BERT Architecture:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport math\n\nclass BertEmbeddings(nn.Module):\n    '''BERT embeddings: Token + Position + Segment'''\n    def __init__(self, vocab_size=30522, hidden_size=768, \n                 max_position=512, type_vocab_size=2, dropout=0.1):\n        super().__init__()\n        \n        self.word_embeddings = nn.Embedding(vocab_size, hidden_size)\n        self.position_embeddings = nn.Embedding(max_position, hidden_size)\n        self.token_type_embeddings = nn.Embedding(type_vocab_size, hidden_size)\n        \n        self.LayerNorm = nn.LayerNorm(hidden_size, eps=1e-12)\n        self.dropout = nn.Dropout(dropout)\n        \n        # Position IDs\n        self.register_buffer(\n            \"position_ids\",\n            torch.arange(max_position).expand((1, -1))\n        )\n    \n    def forward(self, input_ids, token_type_ids=None, position_ids=None):\n        seq_length = input_ids.size(1)\n        \n        if position_ids is None:\n            position_ids = self.position_ids[:, :seq_length]\n        \n        if token_type_ids is None:\n            token_type_ids = torch.zeros_like(input_ids)\n        \n        # Sum embeddings\n        word_embeds = self.word_embeddings(input_ids)\n        position_embeds = self.position_embeddings(position_ids)\n        token_type_embeds = self.token_type_embeddings(token_type_ids)\n        \n        embeddings = word_embeds + position_embeds + token_type_embeds\n        embeddings = self.LayerNorm(embeddings)\n        embeddings = self.dropout(embeddings)\n        \n        return embeddings\n\nclass BertSelfAttention(nn.Module):\n    '''Multi-head self-attention'''\n    def __init__(self, hidden_size=768, num_attention_heads=12, dropout=0.1):\n        super().__init__()\n        \n        self.num_attention_heads = num_attention_heads\n        self.attention_head_size = hidden_size // num_attention_heads\n        self.all_head_size = self.num_attention_heads * self.attention_head_size\n        \n        self.query = nn.Linear(hidden_size, self.all_head_size)\n        self.key = nn.Linear(hidden_size, self.all_head_size)\n        self.value = nn.Linear(hidden_size, self.all_head_size)\n        \n        self.dropout = nn.Dropout(dropout)\n    \n    def transpose_for_scores(self, x):\n        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)\n        x = x.view(*new_x_shape)\n        return x.permute(0, 2, 1, 3)\n    \n    def forward(self, hidden_states, attention_mask=None):\n        # Linear projections\n        query_layer = self.transpose_for_scores(self.query(hidden_states))\n        key_layer = self.transpose_for_scores(self.key(hidden_states))\n        value_layer = self.transpose_for_scores(self.value(hidden_states))\n        \n        # Attention scores\n        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))\n        attention_scores = attention_scores / math.sqrt(self.attention_head_size)\n        \n        # Apply mask\n        if attention_mask is not None:\n            attention_scores = attention_scores + attention_mask\n        \n        # Normalize\n        attention_probs = nn.functional.softmax(attention_scores, dim=-1)\n        attention_probs = self.dropout(attention_probs)\n        \n        # Apply attention\n        context_layer = torch.matmul(attention_probs, value_layer)\n        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()\n        \n        new_context_shape = context_layer.size()[:-2] + (self.all_head_size,)\n        context_layer = context_layer.view(*new_context_shape)\n        \n        return context_layer\n\nclass BertLayer(nn.Module):\n    '''Single BERT transformer layer'''\n    def __init__(self, hidden_size=768, num_attention_heads=12, \n                 intermediate_size=3072, dropout=0.1):\n        super().__init__()\n        \n        # Self-attention\n        self.attention = BertSelfAttention(hidden_size, num_attention_heads, dropout)\n        self.attention_output = nn.Linear(hidden_size, hidden_size)\n        self.attention_norm = nn.LayerNorm(hidden_size)\n        self.attention_dropout = nn.Dropout(dropout)\n        \n        # Feedforward\n        self.intermediate = nn.Linear(hidden_size, intermediate_size)\n        self.output = nn.Linear(intermediate_size, hidden_size)\n        self.output_norm = nn.LayerNorm(hidden_size)\n        self.output_dropout = nn.Dropout(dropout)\n    \n    def forward(self, hidden_states, attention_mask=None):\n        # Self-attention with residual\n        attention_output = self.attention(hidden_states, attention_mask)\n        attention_output = self.attention_output(attention_output)\n        attention_output = self.attention_dropout(attention_output)\n        attention_output = self.attention_norm(hidden_states + attention_output)\n        \n        # Feedforward with residual\n        intermediate_output = self.intermediate(attention_output)\n        intermediate_output = nn.functional.gelu(intermediate_output)\n        layer_output = self.output(intermediate_output)\n        layer_output = self.output_dropout(layer_output)\n        layer_output = self.output_norm(attention_output + layer_output)\n        \n        return layer_output\n```\n\n**Knowledge Distillation (DistilBERT approach):**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass DistillationLoss(nn.Module):\n    '''\n    Combine task loss + distillation loss\n    '''\n    def __init__(self, alpha=0.5, temperature=2.0):\n        super().__init__()\n        self.alpha = alpha\n        self.temperature = temperature\n        self.ce_loss = nn.CrossEntropyLoss()\n    \n    def forward(self, student_logits, teacher_logits, labels):\n        # Task loss (student predictions)\n        task_loss = self.ce_loss(student_logits, labels)\n        \n        # Distillation loss (match teacher)\n        distill_loss = F.kl_div(\n            F.log_softmax(student_logits / self.temperature, dim=-1),\n            F.softmax(teacher_logits / self.temperature, dim=-1),\n            reduction='batchmean'\n        ) * (self.temperature ** 2)\n        \n        # Combined loss\n        total_loss = self.alpha * task_loss + (1 - self.alpha) * distill_loss\n        \n        return total_loss\n\n# Training student model\nteacher_model = BertForSequenceClassification.from_pretrained('bert-base-uncased')\nteacher_model.eval()\n\nstudent_model = DistilBertForSequenceClassification()\nstudent_model.train()\n\ncriterion = DistillationLoss(alpha=0.5, temperature=2.0)\noptimizer = torch.optim.AdamW(student_model.parameters(), lr=5e-5)\n\nfor batch in train_dataloader:\n    # Teacher predictions (no grad)\n    with torch.no_grad():\n        teacher_logits = teacher_model(**batch).logits\n    \n    # Student predictions\n    student_logits = student_model(**batch).logits\n    \n    # Distillation loss\n    loss = criterion(student_logits, teacher_logits, batch['labels'])\n    \n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n```"
+  },
+  "whatIsIt": "BERT: Bidirectional Encoder Representations from Transformers. Pre-trained language model - learns from massive text corpus, transfers to any NLP task! Architecture: Transformer encoder (multi-head self-attention + feedforward). Training: Masked Language Modeling (predict [MASK] tokens, bidirectional context!) + Next Sentence Prediction. Input: [CLS] + WordPiece tokens + [SEP]. Transfer learning: Pre-train on Wikipedia/Books → fine-tune on task (classification, QA, NER) with small dataset. BERT-base: 12 layers, 768 hidden, 110M params. Output: Contextual embeddings (same word → different vectors in different contexts!). Revolutionary: State-of-the-art on 11 NLP tasks simultaneously. Foundation for modern NLP!",
+  "whyNeeded": "Traditional NLP: Task-specific architecture, train from scratch, need huge labeled data! BERT breakthrough: Transfer learning for NLP. Benefits: (1) Pre-trained knowledge: Language understanding from billions of words. (2) Small dataset OK: Fine-tune with 100s-1000s examples vs millions! (3) Bidirectional: Context from both directions (vs GPT unidirectional). (4) Universal: Same pre-trained model → multiple tasks. Applications: Search engines (Google uses BERT!), chatbots (intent understanding), content moderation (toxicity detection), medical text (clinical notes analysis). Impact: SQuAD QA: 80% → 93% F1, sentiment analysis: 90% → 96% accuracy. Democratized NLP: No need for massive data/compute per task. Like ImageNet moment for NLP! Foundation for GPT, RoBERTa, ALBERT, T5, modern LLMs.",
+  "realWorldAnalogy": "BERT education system gibi! Traditional approach = Her task için sıfırdan öğren. Sentiment analysis öğren, QA öğren, NER öğren... Each time from scratch! Expensive, slow, needs lots of examples. BERT approach = Universal education first! Elementary + high school + university (pre-training): Learn language, grammar, world knowledge, context understanding. Then specialization (fine-tuning): Doctor, lawyer, engineer training takes MUCH less time! Pre-trained foundation helps. Masked Language Modeling = Fill-in-the-blank tests: 'The [___] is cute' → learn context! Bidirectional = Reading whole sentence before answering (vs left-to-right only). Transfer learning = Master's degree easier after bachelor's! [CLS] token = Summary of whole essay at the beginning.",
+  "mathematics": {
+    "formulas": [
+      "\\text{MLM Loss: } L_{MLM} = -\\sum_{i \\in \\text{masked}} \\log P(w_i | w_{\\text{context}})",
+      "\\text{NSP Loss: } L_{NSP} = -\\log P(\\text{IsNext} | \\text{sent}_A, \\text{sent}_B)",
+      "\\text{Total Pre-training: } L = L_{MLM} + L_{NSP}",
+      "\\text{Self-Attention: } \\text{Attention}(Q,K,V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V",
+      "\\text{BERT Embedding: } E = E_{\\text{token}} + E_{\\text{position}} + E_{\\text{segment}}",
+      "\\text{Fine-tuning: } L_{\\text{task}} = -\\sum_{i} y_i \\log(\\hat{y}_i) \\quad \\text{(task-specific)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Pre-training Phase:",
+      "  a. Collect massive corpus (Wikipedia, Books, web text)",
+      "  b. Tokenize with WordPiece (30K vocab)",
+      "  c. MLM: Randomly mask 15% of tokens, predict them",
+      "  d. NSP: Create sentence pairs (50% consecutive, 50% random)",
+      "  e. Train transformer encoder (12-24 layers)",
+      "  f. Save pre-trained weights (expensive, once!)",
+      "2. Fine-tuning Phase:",
+      "  a. Load pre-trained BERT weights",
+      "  b. Add task-specific head (classification, span prediction, etc)",
+      "  c. Train on task dataset (small, cheap!)",
+      "  d. Lower learning rate (2e-5), few epochs (2-4)",
+      "  e. Gradient clipping, warmup scheduler",
+      "3. Inference: Tokenize → BERT encoding → Task head → Prediction"
+    ],
+    "complexity": "BERT-base forward: O(n²d) where n=sequence length, d=hidden size (self-attention quadratic!). Memory: O(n²) for attention matrices. Pre-training: 4 days on 64 TPUs (~$10K). Fine-tuning: Minutes to hours on single GPU (~$1-10). Inference: 50-200ms per example (batch processing faster)."
+  },
+  "prerequisites": [
+    "transformers-attention",
+    "nlp-fundamentals",
+    "transfer-learning"
+  ],
+  "nextTopics": [
+    "gpt-generative-models",
+    "t5-text-to-text",
+    "prompt-engineering"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "transfer-learning",
+    "nlp-fundamentals"
+  ],
+  "tags": [
+    "bert",
+    "language-models",
+    "pre-training",
+    "fine-tuning",
+    "masked-language-modeling",
+    "transformers",
+    "nlp",
+    "transfer-learning",
+    "bidirectional",
+    "contextual-embeddings"
+  ],
+  "codeExamples": [
+    {
+      "title": "Load Pre-trained BERT",
+      "language": "python",
+      "code": "from transformers import BertModel, BertTokenizer\nimport torch\n\n# Load pre-trained BERT\ntokenizer = BertTokenizer.from_pretrained('bert-base-uncased')\nmodel = BertModel.from_pretrained('bert-base-uncased')\n\n# Example text\ntext = \"BERT is a powerful language model.\"\n\n# Tokenize\nencoding = tokenizer(\n    text,\n    add_special_tokens=True,\n    max_length=128,\n    padding='max_length',\n    truncation=True,\n    return_tensors='pt'\n)\n\nprint(f\"Tokens: {tokenizer.convert_ids_to_tokens(encoding['input_ids'][0])}\")\nprint(f\"Input shape: {encoding['input_ids'].shape}\")\n\n# Forward pass\nmodel.eval()\nwith torch.no_grad():\n    outputs = model(\n        input_ids=encoding['input_ids'],\n        attention_mask=encoding['attention_mask']\n    )\n\n# Get embeddings\nlast_hidden_state = outputs.last_hidden_state  # (1, seq_len, 768)\ncls_embedding = last_hidden_state[:, 0, :]     # [CLS] token\n\nprint(f\"\\nHidden states shape: {last_hidden_state.shape}\")\nprint(f\"[CLS] embedding shape: {cls_embedding.shape}\")\nprint(f\"\\nBERT loaded successfully! ✓\")",
+      "level": 0,
+      "explanation": "Load Pre-trained BERT code"
+    },
+    {
+      "title": "BERT for Sentiment Analysis (Fine-tuning)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nfrom transformers import BertForSequenceClassification, BertTokenizer, AdamW\nfrom torch.utils.data import DataLoader, Dataset\n\n# Dataset\nclass SentimentDataset(Dataset):\n    def __init__(self, texts, labels, tokenizer, max_length=128):\n        self.texts = texts\n        self.labels = labels\n        self.tokenizer = tokenizer\n        self.max_length = max_length\n    \n    def __len__(self):\n        return len(self.texts)\n    \n    def __getitem__(self, idx):\n        encoding = self.tokenizer(\n            self.texts[idx],\n            add_special_tokens=True,\n            max_length=self.max_length,\n            padding='max_length',\n            truncation=True,\n            return_tensors='pt'\n        )\n        \n        return {\n            'input_ids': encoding['input_ids'].flatten(),\n            'attention_mask': encoding['attention_mask'].flatten(),\n            'labels': torch.tensor(self.labels[idx], dtype=torch.long)\n        }\n\n# Data\ntexts = [\n    \"This movie is amazing! I loved it.\",\n    \"Terrible film, waste of time.\",\n    \"Great acting and beautiful cinematography.\",\n    \"Boring and predictable plot.\"\n]\nlabels = [1, 0, 1, 0]  # 1=positive, 0=negative\n\n# Model\ntokenizer = BertTokenizer.from_pretrained('bert-base-uncased')\nmodel = BertForSequenceClassification.from_pretrained(\n    'bert-base-uncased',\n    num_labels=2\n)\n\n# Dataset & DataLoader\ndataset = SentimentDataset(texts, labels, tokenizer)\ndataloader = DataLoader(dataset, batch_size=2, shuffle=True)\n\n# Optimizer (lower learning rate for fine-tuning!)\noptimizer = AdamW(model.parameters(), lr=2e-5)\n\n# Training\nmodel.train()\nfor epoch in range(3):  # Few epochs for fine-tuning\n    total_loss = 0\n    \n    for batch in dataloader:\n        # Forward\n        outputs = model(\n            input_ids=batch['input_ids'],\n            attention_mask=batch['attention_mask'],\n            labels=batch['labels']\n        )\n        \n        loss = outputs.loss\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        \n        # Gradient clipping\n        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)\n        \n        optimizer.step()\n        total_loss += loss.item()\n    \n    print(f\"Epoch {epoch+1}: Loss = {total_loss/len(dataloader):.4f}\")\n\n# Inference\nmodel.eval()\ntest_text = \"This is an excellent movie!\"\nencoding = tokenizer(test_text, return_tensors='pt', padding=True, truncation=True)\n\nwith torch.no_grad():\n    outputs = model(**encoding)\n    prediction = torch.argmax(outputs.logits, dim=1)\n    \nprint(f\"\\nTest: {test_text}\")\nprint(f\"Prediction: {'Positive ✓' if prediction==1 else 'Negative'}\")",
+      "level": 1,
+      "explanation": "BERT for Sentiment Analysis (Fine-tuning) code"
+    },
+    {
+      "title": "BERT for Question Answering (SQuAD-style)",
+      "language": "python",
+      "code": "import torch\nfrom transformers import BertForQuestionAnswering, BertTokenizer\n\n# Load model\nmodel = BertForQuestionAnswering.from_pretrained(\n    'bert-large-uncased-whole-word-masking-finetuned-squad'\n)\ntokenizer = BertTokenizer.from_pretrained(\n    'bert-large-uncased-whole-word-masking-finetuned-squad'\n)\n\ndef answer_question(question, context):\n    '''\n    Extract answer from context using BERT QA\n    '''\n    # Tokenize with special format\n    encoding = tokenizer(\n        question,\n        context,\n        add_special_tokens=True,\n        max_length=384,\n        padding='max_length',\n        truncation=True,\n        return_tensors='pt'\n    )\n    \n    # Predict\n    model.eval()\n    with torch.no_grad():\n        outputs = model(**encoding)\n    \n    # Get start and end positions\n    start_logits = outputs.start_logits\n    end_logits = outputs.end_logits\n    \n    start_idx = torch.argmax(start_logits)\n    end_idx = torch.argmax(end_logits)\n    \n    # Extract answer tokens\n    tokens = tokenizer.convert_ids_to_tokens(encoding['input_ids'][0])\n    answer_tokens = tokens[start_idx:end_idx+1]\n    \n    # Convert to string\n    answer = tokenizer.convert_tokens_to_string(answer_tokens)\n    \n    # Confidence score\n    confidence = torch.max(start_logits) + torch.max(end_logits)\n    \n    return answer, confidence.item()\n\n# Examples\ncontext = \"\"\"\nBERT was created by researchers at Google in 2018. It stands for \n Bidirectional Encoder Representations from Transformers. The model \nwas pre-trained on Wikipedia and BooksCorpus, containing over 3.3 billion \nwords. BERT achieved state-of-the-art results on 11 NLP tasks.\n\"\"\"\n\nquestions = [\n    \"Who created BERT?\",\n    \"When was BERT created?\",\n    \"What does BERT stand for?\",\n    \"What datasets was BERT trained on?\"\n]\n\nfor question in questions:\n    answer, confidence = answer_question(question, context)\n    print(f\"Q: {question}\")\n    print(f\"A: {answer} (confidence: {confidence:.2f})\")\n    print()",
+      "level": 2,
+      "explanation": "BERT for Question Answering (SQuAD-style) code"
+    },
+    {
+      "title": "Masked Language Modeling (MLM) Training",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nfrom transformers import BertForMaskedLM, BertTokenizer\nimport random\n\nclass MLMTrainer:\n    def __init__(self, model_name='bert-base-uncased'):\n        self.tokenizer = BertTokenizer.from_pretrained(model_name)\n        self.model = BertForMaskedLM.from_pretrained(model_name)\n        self.mask_token_id = self.tokenizer.mask_token_id\n    \n    def mask_tokens(self, inputs, mlm_probability=0.15):\n        '''\n        Mask tokens for MLM training\n        80% [MASK], 10% random, 10% unchanged\n        '''\n        labels = inputs.clone()\n        \n        # Probability matrix\n        probability_matrix = torch.full(labels.shape, mlm_probability)\n        \n        # Don't mask special tokens\n        special_tokens_mask = [\n            self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True)\n            for val in labels.tolist()\n        ]\n        probability_matrix.masked_fill_(\n            torch.tensor(special_tokens_mask, dtype=torch.bool),\n            value=0.0\n        )\n        \n        # Select tokens to mask\n        masked_indices = torch.bernoulli(probability_matrix).bool()\n        labels[~masked_indices] = -100  # Only compute loss on masked\n        \n        # 80%: Replace with [MASK]\n        indices_replaced = torch.bernoulli(\n            torch.full(labels.shape, 0.8)\n        ).bool() & masked_indices\n        inputs[indices_replaced] = self.mask_token_id\n        \n        # 10%: Replace with random word\n        indices_random = torch.bernoulli(\n            torch.full(labels.shape, 0.5)\n        ).bool() & masked_indices & ~indices_replaced\n        random_words = torch.randint(\n            len(self.tokenizer), labels.shape, dtype=torch.long\n        )\n        inputs[indices_random] = random_words[indices_random]\n        \n        # 10%: Keep original (already done)\n        \n        return inputs, labels\n    \n    def train_step(self, texts):\n        '''\n        Single training step\n        '''\n        # Tokenize\n        encoding = self.tokenizer(\n            texts,\n            padding=True,\n            truncation=True,\n            max_length=128,\n            return_tensors='pt'\n        )\n        \n        # Mask tokens\n        masked_inputs, labels = self.mask_tokens(encoding['input_ids'])\n        \n        # Forward\n        outputs = self.model(\n            input_ids=masked_inputs,\n            attention_mask=encoding['attention_mask'],\n            labels=labels\n        )\n        \n        return outputs.loss\n\n# Training example\ntrainer = MLMTrainer()\noptimizer = torch.optim.AdamW(trainer.model.parameters(), lr=5e-5)\n\ncorpus = [\n    \"The quick brown fox jumps over the lazy dog.\",\n    \"BERT is a powerful language model for NLP tasks.\",\n    \"Machine learning has revolutionized artificial intelligence.\"\n]\n\nfor epoch in range(5):\n    loss = trainer.train_step(corpus)\n    \n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n    \n    print(f\"Epoch {epoch+1}: MLM Loss = {loss.item():.4f}\")\n\n# Test: Predict masked word\ntest_text = \"The capital of France is [MASK].\"\nencoding = trainer.tokenizer(test_text, return_tensors='pt')\n\nwith torch.no_grad():\n    outputs = trainer.model(**encoding)\n    predictions = outputs.logits\n\n# Get prediction for [MASK]\nmask_token_index = (encoding['input_ids'] == trainer.mask_token_id)[0].nonzero()[0]\npredicted_token_id = predictions[0, mask_token_index].argmax(dim=-1)\npredicted_token = trainer.tokenizer.decode(predicted_token_id)\n\nprint(f\"\\nTest: {test_text}\")\nprint(f\"Prediction: {predicted_token}\")",
+      "level": 3,
+      "explanation": "Masked Language Modeling (MLM) Training code"
+    },
+    {
+      "title": "Feature Extraction (Frozen BERT)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nfrom transformers import BertModel, BertTokenizer\n\nclass BertFeatureExtractor(nn.Module):\n    '''\n    Use BERT as frozen feature extractor\n    Faster training, lower memory\n    '''\n    def __init__(self, num_classes=2):\n        super().__init__()\n        \n        # Frozen BERT\n        self.bert = BertModel.from_pretrained('bert-base-uncased')\n        for param in self.bert.parameters():\n            param.requires_grad = False  # Freeze!\n        \n        # Only train classifier\n        self.classifier = nn.Sequential(\n            nn.Linear(768, 256),\n            nn.ReLU(),\n            nn.Dropout(0.1),\n            nn.Linear(256, num_classes)\n        )\n    \n    def forward(self, input_ids, attention_mask):\n        # Extract features (no gradient)\n        with torch.no_grad():\n            outputs = self.bert(\n                input_ids=input_ids,\n                attention_mask=attention_mask\n            )\n        \n        # [CLS] representation\n        cls_output = outputs.last_hidden_state[:, 0, :]\n        \n        # Classify (with gradient)\n        logits = self.classifier(cls_output)\n        return logits\n\n# Comparison: Feature extraction vs Fine-tuning\ntokenizer = BertTokenizer.from_pretrained('bert-base-uncased')\n\n# Feature extraction (frozen)\nmodel_frozen = BertFeatureExtractor(num_classes=2)\ntotal_params = sum(p.numel() for p in model_frozen.parameters())\ntrainable_params = sum(p.numel() for p in model_frozen.parameters() if p.requires_grad)\n\nprint(\"Feature Extraction (Frozen BERT):\")\nprint(f\"Total parameters: {total_params:,}\")\nprint(f\"Trainable: {trainable_params:,}\")\nprint(f\"Frozen: {total_params - trainable_params:,}\")\nprint(f\"Training: {trainable_params / total_params * 100:.1f}% of model\\n\")\n\n# Fine-tuning (all trainable)\nfrom transformers import BertForSequenceClassification\nmodel_finetune = BertForSequenceClassification.from_pretrained(\n    'bert-base-uncased',\n    num_labels=2\n)\ntotal_params_ft = sum(p.numel() for p in model_finetune.parameters())\ntrainable_params_ft = sum(p.numel() for p in model_finetune.parameters() if p.requires_grad)\n\nprint(\"Fine-tuning (All trainable):\")\nprint(f\"Total parameters: {total_params_ft:,}\")\nprint(f\"Trainable: {trainable_params_ft:,}\")\nprint(f\"Training: 100% of model\\n\")\n\nprint(f\"Speedup: {trainable_params_ft / trainable_params:.1f}x faster training!\")\nprint(f\"Memory: {trainable_params_ft / trainable_params:.1f}x less memory!\")",
+      "level": 3,
+      "explanation": "Feature Extraction (Frozen BERT) code"
+    },
+    {
+      "title": "Multi-task Learning with BERT",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nfrom transformers import BertModel\n\nclass MultiTaskBERT(nn.Module):\n    '''\n    Single BERT for multiple tasks\n    Shared representation learning\n    '''\n    def __init__(self, num_sentiment=2, num_ner=9):\n        super().__init__()\n        \n        # Shared BERT encoder\n        self.bert = BertModel.from_pretrained('bert-base-uncased')\n        \n        # Task-specific heads\n        self.sentiment_head = nn.Linear(768, num_sentiment)\n        self.ner_head = nn.Linear(768, num_ner)\n        \n        self.dropout = nn.Dropout(0.1)\n    \n    def forward(self, input_ids, attention_mask, task='sentiment'):\n        # Shared encoding\n        outputs = self.bert(\n            input_ids=input_ids,\n            attention_mask=attention_mask\n        )\n        \n        sequence_output = outputs.last_hidden_state\n        sequence_output = self.dropout(sequence_output)\n        \n        if task == 'sentiment':\n            # Use [CLS] for sentence classification\n            cls_output = sequence_output[:, 0, :]\n            return self.sentiment_head(cls_output)\n        \n        elif task == 'ner':\n            # Use all tokens for token classification\n            return self.ner_head(sequence_output)\n        \n        else:\n            raise ValueError(f\"Unknown task: {task}\")\n\n# Multi-task training\nmodel = MultiTaskBERT()\noptimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)\n\nsentiment_loss_fn = nn.CrossEntropyLoss()\nner_loss_fn = nn.CrossEntropyLoss(ignore_index=-100)\n\n# Training loop (alternate tasks)\nfor epoch in range(3):\n    # Sentiment task\n    for batch in sentiment_dataloader:\n        logits = model(batch['input_ids'], batch['attention_mask'], task='sentiment')\n        loss = sentiment_loss_fn(logits, batch['labels'])\n        \n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    \n    # NER task\n    for batch in ner_dataloader:\n        logits = model(batch['input_ids'], batch['attention_mask'], task='ner')\n        loss = ner_loss_fn(logits.view(-1, 9), batch['labels'].view(-1))\n        \n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    \n    print(f\"Epoch {epoch+1} completed\")\n\nprint(\"\\nMulti-task model trained!\")\nprint(\"Benefits: Shared representations, better generalization!\")",
+      "level": 4,
+      "explanation": "Multi-task Learning with BERT code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "BERT'in 'Bidirectional' olması neden critical?",
+      "options": [
+        "Training speed'i artırır",
+        "Context'i both directions'tan görür. 'bank' → left+right context → better understanding!",
+        "Sadece English için gereklidir",
+        "Memory kullanımını azaltır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Traditional (GPT-1): Left-to-right only. 'The bank' → only left context. BERT: Bidirectional! 'The bank of the river' → sees 'river' (right) → geography meaning. 'Withdrew from bank' → sees 'withdrew' (left) → financial meaning. Context from BOTH sides → better word sense disambiguation!"
+    },
+    {
+      "question": "Masked Language Modeling (MLM) nasıl çalışır?",
+      "options": [
+        "Tüm words'leri mask eder",
+        "Random 15% tokens mask eder, model predict eder. Bidirectional context learning!",
+        "Sadece rare words mask edilir",
+        "Sentence order'ı predict eder"
+      ],
+      "correctAnswer": 1,
+      "explanation": "MLM: Random 15% of tokens masked. 'The [MASK] is cute' → predict 'cat'. Masking strategy: 80% → [MASK], 10% → random word, 10% → unchanged (prevents overfitting to [MASK]). Forces model to learn from context! Bidirectional because model sees left AND right of [MASK]. Different from autoregressive (GPT) which only predicts next word."
+    },
+    {
+      "question": "Pre-training vs Fine-tuning arasındaki fark nedir?",
+      "options": [
+        "İkisi de aynı şeydir",
+        "Pre-training: Massive unlabeled corpus'ta generic language understanding. Fine-tuning: Small labeled dataset'te task-specific",
+        "Pre-training daha hızlıdır",
+        "Fine-tuning sadece classification için kullanılır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Pre-training: Learn general language on Wikipedia+Books (billions of words). MLM + NSP objectives. Expensive (4 days, 64 TPUs, ~$10K). ONCE! Fine-tuning: Task-specific (sentiment, QA, NER). Small dataset (100s-1000s examples). Cheap (hours, 1 GPU, <$10). MANY times! Transfer learning: Pre-trained knowledge → specific task. Like: University education → job specialization."
+    },
+    {
+      "question": "[CLS] token'ın role'ü nedir?",
+      "options": [
+        "Sadece padding için kullanılır",
+        "Sentence-level representation. Classification tasks için aggregate embedding!",
+        "Her word'ün beginning'ini mark eder",
+        "Masking için reserved token"
+      ],
+      "correctAnswer": 1,
+      "explanation": "[CLS] = Classification token. Always first token. During pre-training: Learns to aggregate whole sentence info. Fine-tuning: [CLS] embedding → classification head. Contains sentence-level representation! For classification tasks: Use [CLS]. For token tasks (NER): Use all token embeddings. [SEP] = Separator (end of sentence). [MASK] = Masking (MLM training)."
+    },
+    {
+      "question": "BERT'in variants'ları (RoBERTa, ALBERT, DistilBERT) neden exist eder?",
+      "options": [
+        "Sadece farklı languages için",
+        "Optimization: Better performance (RoBERTa), smaller size (ALBERT, DistilBERT), efficiency improvements",
+        "Her variant completely different architecture",
+        "Marketing purposes"
+      ],
+      "correctAnswer": 1,
+      "explanation": "RoBERTa: Remove NSP, dynamic masking, more data → better performance! ALBERT: Parameter sharing, factorized embeddings → 18× smaller, similar performance. DistilBERT: Knowledge distillation → 40% smaller, 60% faster, 97% performance. ELECTRA: Replaced token detection → more efficient pre-training. Each solves specific problem: Size, speed, performance, efficiency. Choose based on: Accuracy need vs resource constraints."
+    },
+    {
+      "question": "BERT transfer learning neden powerful?",
+      "options": [
+        "Daha hızlı training sağlar sadece",
+        "Pre-trained language knowledge → small dataset'te SOTA! Billions of words'ten learn → few examples'la adapt",
+        "Sadece English için çalışır",
+        "Memory usage azaltır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Traditional: Train from scratch → need millions of labeled examples! Expensive, slow. BERT: Pre-trained on 3.3B words (unlabeled) → captures language structure, semantics, context. Fine-tune: 100s-1000s labeled examples enough! Huge performance gain. Example: SQuAD QA: 80% → 93% F1 with BERT. Sentiment: 90% → 96% accuracy. Like: PhD with general knowledge → quick specialization vs high school graduate learning everything!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "BERT Core Concept",
+      "back": "**B**idirectional **E**ncoder **R**epresentations from **T**ransformers\n\n**Pre-train once:** Massive corpus (Wikipedia, Books)\n\n**Fine-tune many:** Any NLP task!\n\n**Key:** Bidirectional context (left + right)\n\n**Revolution:** Transfer learning for NLP 🚀"
+    },
+    {
+      "front": "Masked Language Modeling (MLM)",
+      "back": "**Objective:** Predict [MASK] tokens\n\n**Example:** 'The [MASK] is cute' → 'cat'\n\n**Masking:** Random 15% tokens\n- 80% → [MASK]\n- 10% → random word\n- 10% → unchanged\n\n**Benefit:** Learn bidirectional context!\n\n**vs GPT:** Autoregressive (left-to-right only)"
+    },
+    {
+      "front": "BERT Input Format",
+      "back": "**[CLS]** Sentence A **[SEP]** Sentence B **[SEP]**\n\n**Special Tokens:**\n- [CLS]: Classification (sentence embedding)\n- [SEP]: Separator (end)\n- [MASK]: Masked (pre-training)\n- [PAD]: Padding (batching)\n\n**Embeddings:** Token + Position + Segment"
+    },
+    {
+      "front": "Pre-training vs Fine-tuning",
+      "back": "**Pre-training:**\n- Corpus: 3.3B words (Wikipedia + Books)\n- Time: 4 days, 64 TPUs\n- Cost: ~$10,000\n- Objective: MLM + NSP\n\n**Fine-tuning:**\n- Dataset: 100s-1000s examples\n- Time: Minutes to hours, 1 GPU\n- Cost: <$10\n- Objective: Task-specific\n\nExpensive once → cheap many! 💰"
+    },
+    {
+      "front": "BERT Architecture",
+      "back": "**BERT-base:** 12 layers, 768 hidden, 110M params\n\n**BERT-large:** 24 layers, 1024 hidden, 340M params\n\n**Components:**\n- Multi-head self-attention\n- Feedforward networks\n- Layer normalization\n- Residual connections\n\n**Transformer encoder stacks!**"
+    },
+    {
+      "front": "BERT Variants Comparison",
+      "back": "**RoBERTa:** Remove NSP, more data → +2% performance\n\n**ALBERT:** Parameter sharing → 18× smaller\n\n**DistilBERT:** Distillation → 40% smaller, 60% faster\n\n**ELECTRA:** Replaced token detection → efficient\n\nTrade-offs: Size vs Speed vs Accuracy 📊"
+    },
+    {
+      "front": "Why Bidirectional Matters",
+      "back": "**Example:** 'bank'\n\n**Unidirectional (GPT):**\n'The bank...' → only left context\n\n**Bidirectional (BERT):**\n'...river bank...' → geography\n'...savings bank...' → finance\n\n**Both sides matter for meaning!**\n\nWord sense disambiguation 🎯"
+    },
+    {
+      "front": "BERT Applications",
+      "back": "**Text Classification:** Sentiment, intent, toxicity\n\n**Question Answering:** SQuAD (93% F1!)\n\n**NER:** Named entity recognition\n\n**Similarity:** Sentence pairs\n\n**Search:** Google uses BERT!\n\n**Medical:** Clinical notes\n\nUniversal NLP backbone! 🔧"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Fine-tuning with too high learning rate (1e-3, 1e-4)",
+      "why": "Pre-trained weights already good! High LR → catastrophic forgetting, destroys pre-trained knowledge. Model performance collapses!",
+      "fix": "Use LOW learning rate: 2e-5 to 5e-5 typical. Pre-trained layers: Even lower (1e-5). New head: Slightly higher (1e-4). Warmup scheduler: Gradual increase. Gradient clipping: Max norm 1.0. Fine-tuning is gentle adjustment, not retraining!"
+    },
+    {
+      "mistake": "Too many fine-tuning epochs (10+)",
+      "why": "Overfitting! Model memorizes training data, loses generalization. Small datasets especially vulnerable. Pre-trained knowledge overwritten.",
+      "fix": "2-4 epochs typically sufficient! Monitor validation: Early stopping when val loss increases. Large dataset: More epochs OK. Small dataset: 2-3 epochs max. Task-specific: QA may need more, classification fewer. Save best checkpoint, not last!"
+    },
+    {
+      "mistake": "Not using [CLS] token for classification",
+      "why": "Random token doesn't capture sentence-level info! [CLS] specifically trained during pre-training to aggregate sentence representation. Other tokens: word-level.",
+      "fix": "Classification: Always use [CLS] token (position 0). Token tasks (NER, POS): Use all tokens. Don't average all tokens for classification (suboptimal). [CLS] is the designated sentence embedding!"
+    },
+    {
+      "mistake": "Ignoring attention_mask (using padding without mask)",
+      "why": "[PAD] tokens contribute to attention! Model wastes computation on padding, learns from meaningless tokens. Variable length batches: Incorrect attention!",
+      "fix": "Always provide attention_mask! Mask = 1 for real tokens, 0 for [PAD]. Tokenizer creates mask automatically with return_tensors='pt'. Never skip! Especially critical for: Variable length sequences, batch processing."
+    },
+    {
+      "mistake": "Using BERT for generation tasks (text generation)",
+      "why": "BERT is encoder-only, bidirectional! Cannot generate text autoregressively. Trained with MLM (predict masked), not next-token prediction.",
+      "fix": "For generation: Use GPT (decoder, autoregressive), T5 (encoder-decoder), or BART. BERT for: Classification, NER, QA (extractive), similarity. Not for: Text generation, translation (need decoder!). Architecture determines use case!"
+    },
+    {
+      "mistake": "Not freezing BERT layers when dataset very small (<100 examples)",
+      "why": "110M parameters, 100 examples → massive overfitting! Fine-tuning all layers needs sufficient data. Small dataset: Cannot learn 110M parameters meaningfully.",
+      "fix": "Feature extraction approach: Freeze BERT layers (requires_grad=False). Only train classification head (few params). Or: Fine-tune only top layers (last 2-4). Gradual unfreezing: Start top, unfreeze more if needed. Data size determines strategy: <100: Freeze all, 100-1K: Freeze most, 1K+: Fine-tune all."
+    },
+    {
+      "mistake": "Ignoring token_type_ids for sentence pairs",
+      "why": "Model cannot distinguish Sentence A vs Sentence B! Segment embeddings critical for: QA (question vs context), similarity (sentence1 vs sentence2), entailment.",
+      "fix": "Sentence pairs: Always use token_type_ids! Tokenizer handles automatically: tokenizer(text_a, text_b). Segment A: 0, Segment B: 1. Single sentence tasks: token_type_ids=None OK (all zeros). Critical for: QA, NLI, similarity!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "BERT Architecture: Encoder Stacks",
+      "description": "12 transformer encoder layers, multi-head attention, feedforward networks. Input: [CLS] + tokens + [SEP]. Output: Contextualized embeddings"
+    },
+    {
+      "type": "algorithm",
+      "title": "Masked Language Modeling Process",
+      "description": "Interactive: Original sentence → Random masking (15%) → BERT prediction → Compare. Shows bidirectional context usage"
+    },
+    {
+      "type": "comparison",
+      "title": "Pre-training vs Fine-tuning Workflow",
+      "description": "Two-phase process: Phase 1 (pre-training, expensive, once) → Phase 2 (fine-tuning, cheap, many tasks)"
+    },
+    {
+      "type": "metric",
+      "title": "BERT Performance Gains on NLP Tasks",
+      "description": "Before/after comparison: SQuAD, GLUE, sentiment analysis. Shows transfer learning impact"
+    }
+  ],
+  "references": [
+    {
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "authors": "Devlin et al. (Google)",
+      "year": 2018,
+      "link": "https://arxiv.org/abs/1810.04805",
+      "type": "paper"
+    },
+    {
+      "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+      "authors": "Liu et al. (Facebook)",
+      "year": 2019,
+      "link": "https://arxiv.org/abs/1907.11692",
+      "type": "paper"
+    },
+    {
+      "title": "ALBERT: A Lite BERT for Self-supervised Learning of Language Representations",
+      "authors": "Lan et al. (Google)",
+      "year": 2019,
+      "link": "https://arxiv.org/abs/1909.11942",
+      "type": "paper"
+    },
+    {
+      "title": "DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter",
+      "authors": "Sanh et al. (Hugging Face)",
+      "year": 2019,
+      "link": "https://arxiv.org/abs/1910.01108",
+      "type": "paper"
+    },
+    {
+      "title": "Hugging Face Transformers Library",
+      "authors": "Hugging Face",
+      "year": 2023,
+      "link": "https://huggingface.co/transformers/",
+      "type": "library"
+    }
+  ]
+}

@@ -1,0 +1,311 @@
+{
+  "id": "nlp-fundamentals",
+  "title": "NLP Fundamentals (Word Embeddings & Text Processing)",
+  "category": "natural-language-processing",
+  "level": 2,
+  "estimatedTime": 70,
+  "description": "NLP Fundamentals: Text'i numbers'a çevir! Tokenization (words/subwords), vocabulary building. Word Embeddings: Words as vectors! Word2Vec (CBOW, Skip-gram), GloVe (global co-occurrence), FastText (subword). Semantic similarity: king - man + woman ≈ queen! Text representation: Bag of Words, TF-IDF, word embeddings. Applications: Text classification, sentiment analysis, named entity recognition. Pre-processing: Lowercasing, stopword removal, stemming, lemmatization. Sequence models: RNN, LSTM for text.",
+  "content": {
+    "level0_basic": "NLP = Natural Language Processing. Goal: Make computers understand text! Challenge: Text = discrete symbols, ML needs numbers! Solution: Represent words as vectors (embeddings). Tokenization: Split text into tokens (words, subwords, characters). Example: 'I love AI' → ['I', 'love', 'AI']. Vocabulary: All unique tokens (size = 10K-50K typically). Word Embeddings: Each word → dense vector (typically 50-300 dimensions). Similar meaning → similar vectors! Example: vec('king') - vec('man') + vec('woman') ≈ vec('queen'). Word2Vec: Learn embeddings from context. CBOW: Context predicts word. Skip-gram: Word predicts context. GloVe: Global word co-occurrence statistics. Applications: Text classification (spam detection), Sentiment analysis (positive/negative), Named Entity Recognition (names, locations), Machine translation, Question answering. Pre-processing: Lowercasing, punctuation removal, stopword removal ('the', 'a', 'is'), stemming/lemmatization.",
+    "level1_beginner": "**Tokenization Methods:**\n\n```\nWord Tokenization:\n  'I love deep learning!'\n  → ['I', 'love', 'deep', 'learning', '!']\n  \n  Problem: Out-of-vocabulary (OOV) words!\n  'deeplearning' (typo) → Unknown token\n\nSubword Tokenization (BPE, WordPiece):\n  'deeplearning'\n  → ['deep', '##learning']\n  \n  Benefit: Handle OOV, smaller vocab!\n  Rare words → subword pieces\n\nCharacter Tokenization:\n  'AI'\n  → ['A', 'I']\n  \n  Benefit: No OOV, very small vocab\n  Problem: Very long sequences!\n```\n\n**Word Embeddings Intuition:**\n\n```\nOne-Hot Encoding (OLD way):\n  Vocab: ['cat', 'dog', 'king', 'queen']\n  'cat' = [1, 0, 0, 0]\n  'dog' = [0, 1, 0, 0]\n  \n  Problem: \n    - High dimensional (vocab_size)\n    - No semantic similarity!\n    - 'cat' vs 'dog' distance = same as 'cat' vs 'king'\n\nWord Embeddings (NEW way):\n  'cat'   = [0.2, 0.8, 0.1]  (3D example)\n  'dog'   = [0.3, 0.7, 0.2]\n  'king'  = [0.9, 0.1, 0.8]\n  'queen' = [0.8, 0.2, 0.7]\n  \n  Benefits:\n    - Low dimensional (50-300)\n    - Semantic similarity!\n    - cos_sim('cat', 'dog') = 0.95 (similar!)\n    - cos_sim('cat', 'king') = 0.45 (different)\n```\n\n**Word2Vec: Two Approaches:**\n\n```\nCBOW (Continuous Bag of Words):\n  Context → Target\n  \n  Example: 'The cat sits on the mat'\n  \n  Context: ['The', 'cat', 'on', 'the']\n  Target:  'sits'\n  \n  Model learns: Predict word from context\n  Fast training!\n\nSkip-gram:\n  Target → Context\n  \n  Example: 'The cat sits on the mat'\n  \n  Target:  'sits'\n  Context: ['The', 'cat', 'on', 'the']\n  \n  Model learns: Predict context from word\n  Better for rare words!\n```\n\n**Text Representation Methods:**\n\n```\nBag of Words (BoW):\n  Text: 'I love deep learning. I love AI.'\n  Vocab: ['I', 'love', 'deep', 'learning', 'AI']\n  \n  BoW vector: [2, 2, 1, 1, 1]\n  (Count occurrences)\n  \n  Problem: Ignores word order!\n  'Dog bites man' = 'Man bites dog' (same BoW)\n\nTF-IDF (Term Frequency - Inverse Document Frequency):\n  TF: How often word appears in document\n  IDF: How rare word is across all documents\n  \n  TF-IDF = TF × IDF\n  \n  Effect: Common words (like 'the') → low score\n          Rare, informative words → high score\n  \n  Better than raw counts!\n\nWord Embeddings (Best!):\n  Average/sum word vectors\n  Preserves semantic meaning\n  Dense representation\n```",
+    "level2_application": "**Word2Vec Skip-gram Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom collections import Counter\nimport numpy as np\n\nclass SkipGram(nn.Module):\n    def __init__(self, vocab_size, embedding_dim=100):\n        super().__init__()\n        \n        # Word embeddings (target word)\n        self.embeddings = nn.Embedding(vocab_size, embedding_dim)\n        \n        # Context embeddings (output layer)\n        self.linear = nn.Linear(embedding_dim, vocab_size)\n    \n    def forward(self, target_word):\n        # Get word embedding\n        embeds = self.embeddings(target_word)  # (B, emb_dim)\n        \n        # Predict context\n        out = self.linear(embeds)  # (B, vocab_size)\n        \n        return out\n\n# Training data preparation\ndef create_skipgram_data(text, window_size=2):\n    '''\n    Create (target, context) pairs\n    '''\n    words = text.split()\n    data = []\n    \n    for i, target in enumerate(words):\n        # Context window\n        start = max(0, i - window_size)\n        end = min(len(words), i + window_size + 1)\n        \n        for j in range(start, end):\n            if j != i:  # Skip target itself\n                context = words[j]\n                data.append((target, context))\n    \n    return data\n\n# Example\ntext = 'the quick brown fox jumps over the lazy dog'\npairs = create_skipgram_data(text, window_size=2)\nprint(f\"Training pairs: {len(pairs)}\")\nprint(f\"Examples: {pairs[:5]}\")\n\n# Training\nmodel = SkipGram(vocab_size=5000, embedding_dim=100)\noptimizer = optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.CrossEntropyLoss()\n\nfor epoch in range(100):\n    for target, context in pairs:\n        # Forward\n        scores = model(target)\n        loss = criterion(scores, context)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n```\n\n**Text Classification with Embeddings:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass TextClassifier(nn.Module):\n    def __init__(self, vocab_size, embedding_dim=100, num_classes=2):\n        super().__init__()\n        \n        # Word embeddings\n        self.embedding = nn.Embedding(vocab_size, embedding_dim)\n        \n        # Can use pre-trained embeddings\n        # self.embedding.weight.data.copy_(pretrained_embeddings)\n        # self.embedding.weight.requires_grad = False  # Freeze\n        \n        # Classifier\n        self.fc1 = nn.Linear(embedding_dim, 128)\n        self.dropout = nn.Dropout(0.5)\n        self.fc2 = nn.Linear(128, num_classes)\n    \n    def forward(self, text):\n        # text: (B, seq_len)\n        \n        # Embed words\n        embedded = self.embedding(text)  # (B, seq_len, emb_dim)\n        \n        # Average pooling (simple aggregation)\n        pooled = embedded.mean(dim=1)  # (B, emb_dim)\n        \n        # Classify\n        x = torch.relu(self.fc1(pooled))\n        x = self.dropout(x)\n        out = self.fc2(x)  # (B, num_classes)\n        \n        return out\n\n# Usage: Sentiment analysis\nmodel = TextClassifier(vocab_size=10000, num_classes=2)\n\n# Sample: 'This movie is great!'\ntext_ids = torch.LongTensor([[45, 234, 12, 567]])  # Tokenized\noutput = model(text_ids)\nprediction = torch.argmax(output, dim=1)  # 0=negative, 1=positive\nprint(f\"Sentiment: {'Positive' if prediction==1 else 'Negative'}\")\n```\n\n**TF-IDF Implementation:**\n\n```python\nimport numpy as np\nfrom collections import Counter\nimport math\n\nclass TFIDF:\n    def __init__(self):\n        self.vocab = {}\n        self.idf = {}\n    \n    def fit(self, documents):\n        '''\n        Compute IDF from documents\n        '''\n        # Build vocabulary\n        all_words = set()\n        for doc in documents:\n            all_words.update(doc.split())\n        \n        self.vocab = {word: i for i, word in enumerate(all_words)}\n        \n        # Compute IDF\n        num_docs = len(documents)\n        word_doc_count = Counter()\n        \n        for doc in documents:\n            words = set(doc.split())\n            for word in words:\n                word_doc_count[word] += 1\n        \n        for word in self.vocab:\n            # IDF = log(N / df)\n            df = word_doc_count[word]\n            self.idf[word] = math.log(num_docs / (1 + df))\n    \n    def transform(self, document):\n        '''\n        Convert document to TF-IDF vector\n        '''\n        words = document.split()\n        tf = Counter(words)\n        \n        # TF-IDF vector\n        vector = np.zeros(len(self.vocab))\n        \n        for word, count in tf.items():\n            if word in self.vocab:\n                idx = self.vocab[word]\n                # TF-IDF = TF × IDF\n                vector[idx] = count * self.idf[word]\n        \n        return vector\n\n# Usage\ndocs = [\n    'I love machine learning',\n    'Deep learning is amazing',\n    'I love deep learning'\n]\n\ntfidf = TFIDF()\ntfidf.fit(docs)\n\nvec = tfidf.transform('I love deep learning')\nprint(f\"TF-IDF vector shape: {vec.shape}\")\nprint(f\"Non-zero elements: {np.count_nonzero(vec)}\")\n```",
+    "level3_advanced": "**Advanced: Negative Sampling for Word2Vec:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass Word2VecNegativeSampling(nn.Module):\n    '''\n    Word2Vec with negative sampling\n    More efficient than softmax over full vocabulary\n    '''\n    def __init__(self, vocab_size, embedding_dim=100):\n        super().__init__()\n        \n        # Target embeddings\n        self.target_embeddings = nn.Embedding(vocab_size, embedding_dim)\n        \n        # Context embeddings (separate!)\n        self.context_embeddings = nn.Embedding(vocab_size, embedding_dim)\n        \n        # Initialize\n        self.target_embeddings.weight.data.uniform_(-0.5/embedding_dim, 0.5/embedding_dim)\n        self.context_embeddings.weight.data.uniform_(-0.5/embedding_dim, 0.5/embedding_dim)\n    \n    def forward(self, target, context, negative_samples):\n        '''\n        target: (B,)\n        context: (B,)\n        negative_samples: (B, num_neg)\n        '''\n        # Get embeddings\n        target_emb = self.target_embeddings(target)  # (B, emb_dim)\n        context_emb = self.context_embeddings(context)  # (B, emb_dim)\n        neg_emb = self.context_embeddings(negative_samples)  # (B, num_neg, emb_dim)\n        \n        # Positive score\n        pos_score = torch.sum(target_emb * context_emb, dim=1)  # (B,)\n        pos_loss = F.logsigmoid(pos_score)\n        \n        # Negative scores\n        neg_score = torch.bmm(neg_emb, target_emb.unsqueeze(2)).squeeze()  # (B, num_neg)\n        neg_loss = F.logsigmoid(-neg_score).sum(dim=1)  # (B,)\n        \n        # Total loss\n        loss = -(pos_loss + neg_loss).mean()\n        \n        return loss\n\ndef sample_negatives(target_word, vocab_size, num_negatives=5):\n    '''Sample negative examples'''\n    # Sample from unigram distribution^(3/4)\n    negatives = torch.randint(0, vocab_size, (num_negatives,))\n    \n    # Make sure negatives != target\n    while target_word in negatives:\n        negatives = torch.randint(0, vocab_size, (num_negatives,))\n    \n    return negatives\n\n# Training with negative sampling\nmodel = Word2VecNegativeSampling(vocab_size=10000)\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\n\nfor target, context in training_pairs:\n    # Sample negatives\n    negatives = sample_negatives(target, vocab_size=10000, num_negatives=5)\n    \n    # Compute loss\n    loss = model(target, context, negatives)\n    \n    # Update\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n```\n\n**GloVe (Global Vectors) Implementation:**\n\n```python\nimport numpy as np\nfrom collections import defaultdict, Counter\n\nclass GloVe:\n    '''\n    GloVe: Train on co-occurrence statistics\n    '''\n    def __init__(self, embedding_dim=100, x_max=100, alpha=0.75):\n        self.embedding_dim = embedding_dim\n        self.x_max = x_max\n        self.alpha = alpha\n    \n    def build_cooccurrence_matrix(self, corpus, window_size=5):\n        '''\n        Build word co-occurrence matrix\n        '''\n        cooccur = defaultdict(Counter)\n        vocab = set()\n        \n        for sentence in corpus:\n            words = sentence.split()\n            vocab.update(words)\n            \n            for i, target in enumerate(words):\n                # Context window\n                start = max(0, i - window_size)\n                end = min(len(words), i + window_size + 1)\n                \n                for j in range(start, end):\n                    if i != j:\n                        context = words[j]\n                        distance = abs(i - j)\n                        \n                        # Weight by distance\n                        cooccur[target][context] += 1.0 / distance\n        \n        return cooccur, vocab\n    \n    def weighting_function(self, x):\n        '''GloVe weighting function'''\n        if x < self.x_max:\n            return (x / self.x_max) ** self.alpha\n        return 1.0\n    \n    def train(self, corpus, num_epochs=50, learning_rate=0.05):\n        '''Train GloVe embeddings'''\n        # Build co-occurrence matrix\n        cooccur, vocab = self.build_cooccurrence_matrix(corpus)\n        \n        vocab_list = list(vocab)\n        vocab_size = len(vocab_list)\n        word_to_idx = {w: i for i, w in enumerate(vocab_list)}\n        \n        # Initialize embeddings\n        W = np.random.randn(vocab_size, self.embedding_dim) * 0.01\n        W_tilde = np.random.randn(vocab_size, self.embedding_dim) * 0.01\n        b = np.random.randn(vocab_size) * 0.01\n        b_tilde = np.random.randn(vocab_size) * 0.01\n        \n        # Training\n        for epoch in range(num_epochs):\n            total_loss = 0\n            \n            for target_word in cooccur:\n                i = word_to_idx[target_word]\n                \n                for context_word, X_ij in cooccur[target_word].items():\n                    j = word_to_idx[context_word]\n                    \n                    # Prediction\n                    pred = np.dot(W[i], W_tilde[j]) + b[i] + b_tilde[j]\n                    \n                    # Loss\n                    weight = self.weighting_function(X_ij)\n                    diff = pred - np.log(X_ij)\n                    loss = weight * diff ** 2\n                    total_loss += loss\n                    \n                    # Gradients\n                    grad = 2 * weight * diff\n                    \n                    # Update\n                    W[i] -= learning_rate * grad * W_tilde[j]\n                    W_tilde[j] -= learning_rate * grad * W[i]\n                    b[i] -= learning_rate * grad\n                    b_tilde[j] -= learning_rate * grad\n            \n            if epoch % 10 == 0:\n                print(f\"Epoch {epoch}: Loss = {total_loss:.2f}\")\n        \n        # Final embeddings (average both matrices)\n        self.embeddings = (W + W_tilde) / 2\n        self.word_to_idx = word_to_idx\n        \n        return self.embeddings\n```",
+    "level4_expert": "**FastText: Subword Embeddings:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport numpy as np\n\nclass FastText(nn.Module):\n    '''\n    FastText: Character n-gram embeddings\n    Handles OOV words better\n    '''\n    def __init__(self, vocab_size, char_vocab_size, \n                 word_dim=100, char_dim=50, ngram_sizes=[3,4,5]):\n        super().__init__()\n        \n        # Word-level embeddings\n        self.word_embeddings = nn.Embedding(vocab_size, word_dim)\n        \n        # Character n-gram embeddings\n        self.char_embeddings = nn.Embedding(char_vocab_size, char_dim)\n        \n        # Convolutions for different n-gram sizes\n        self.convs = nn.ModuleList([\n            nn.Conv1d(char_dim, word_dim//len(ngram_sizes), n)\n            for n in ngram_sizes\n        ])\n        \n        self.ngram_sizes = ngram_sizes\n    \n    def get_char_ngrams(self, word, n=3):\n        '''Extract character n-grams'''\n        # Add boundary markers\n        word = f'<{word}>'\n        ngrams = []\n        \n        for i in range(len(word) - n + 1):\n            ngrams.append(word[i:i+n])\n        \n        return ngrams\n    \n    def forward(self, word_ids, char_ids):\n        '''\n        word_ids: (B,)\n        char_ids: (B, max_word_len)\n        '''\n        # Word embedding\n        word_emb = self.word_embeddings(word_ids)  # (B, word_dim)\n        \n        # Character embeddings\n        char_emb = self.char_embeddings(char_ids)  # (B, max_len, char_dim)\n        char_emb = char_emb.transpose(1, 2)  # (B, char_dim, max_len)\n        \n        # Convolutional n-gram features\n        conv_outputs = []\n        for conv in self.convs:\n            out = torch.relu(conv(char_emb))  # (B, filters, L)\n            out = torch.max(out, dim=2)[0]  # Max pool: (B, filters)\n            conv_outputs.append(out)\n        \n        # Concatenate n-gram features\n        ngram_emb = torch.cat(conv_outputs, dim=1)  # (B, word_dim)\n        \n        # Combine word + subword embeddings\n        final_emb = word_emb + ngram_emb  # (B, word_dim)\n        \n        return final_emb\n\n# Handle OOV words\ndef embed_word(model, word, word_to_idx, char_to_idx):\n    '''Embed word (even if OOV)'''\n    if word in word_to_idx:\n        word_id = torch.LongTensor([word_to_idx[word]])\n    else:\n        # OOV: Use only character n-grams!\n        word_id = torch.LongTensor([word_to_idx['<UNK>']])\n    \n    # Character ids\n    char_ids = [char_to_idx.get(c, 0) for c in word]\n    char_ids = torch.LongTensor([char_ids])\n    \n    # Get embedding\n    embedding = model(word_id, char_ids)\n    return embedding\n```\n\n**Advanced Text Classification with Attention:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass AttentionTextClassifier(nn.Module):\n    '''\n    Text classifier with self-attention\n    Learns which words are important\n    '''\n    def __init__(self, vocab_size, embedding_dim=128, \n                 hidden_dim=256, num_classes=2):\n        super().__init__()\n        \n        self.embedding = nn.Embedding(vocab_size, embedding_dim)\n        \n        # BiLSTM encoder\n        self.lstm = nn.LSTM(\n            embedding_dim, hidden_dim, \n            bidirectional=True, batch_first=True\n        )\n        \n        # Attention\n        self.attention = nn.Linear(hidden_dim * 2, 1)\n        \n        # Classifier\n        self.fc = nn.Linear(hidden_dim * 2, num_classes)\n        self.dropout = nn.Dropout(0.5)\n    \n    def forward(self, text, lengths):\n        '''\n        text: (B, seq_len)\n        lengths: (B,) actual lengths\n        '''\n        # Embed\n        embedded = self.embedding(text)  # (B, seq_len, emb_dim)\n        \n        # Pack sequence (handle variable lengths)\n        packed = nn.utils.rnn.pack_padded_sequence(\n            embedded, lengths.cpu(), batch_first=True, enforce_sorted=False\n        )\n        \n        # BiLSTM\n        lstm_out, _ = self.lstm(packed)  # (B, seq_len, hidden*2)\n        \n        # Unpack\n        lstm_out, _ = nn.utils.rnn.pad_packed_sequence(\n            lstm_out, batch_first=True\n        )\n        \n        # Attention weights\n        attn_weights = self.attention(lstm_out)  # (B, seq_len, 1)\n        attn_weights = F.softmax(attn_weights, dim=1)\n        \n        # Weighted sum\n        attended = torch.sum(lstm_out * attn_weights, dim=1)  # (B, hidden*2)\n        \n        # Classify\n        attended = self.dropout(attended)\n        out = self.fc(attended)  # (B, num_classes)\n        \n        return out, attn_weights.squeeze(2)\n\n# Usage with attention visualization\nmodel = AttentionTextClassifier(vocab_size=10000)\n\ntext = torch.LongTensor([[1, 45, 234, 12, 567, 89]])  # Tokenized\nlengths = torch.LongTensor([6])\n\noutput, attention_weights = model(text, lengths)\nprint(f\"Prediction: {torch.argmax(output, dim=1)}\")\nprint(f\"Attention weights: {attention_weights[0]}\")\n# Shows which words model focused on!\n```"
+  },
+  "whatIsIt": "NLP Fundamentals: Text'i machine learning'e hazırla! Tokenization: Text → tokens (words/subwords). Vocabulary: Unique tokens set (10K-50K). Word Embeddings: Words as dense vectors (50-300D), semantic similarity preserved. Word2Vec: Context-based learning (CBOW, Skip-gram). GloVe: Global co-occurrence statistics. FastText: Subword embeddings, handles OOV. Text representation: Bag of Words (count), TF-IDF (weighted count), embeddings (semantic). Pre-processing: Lowercase, stopwords, stemming/lemmatization. Applications: Text classification, sentiment analysis, NER. Foundation for modern NLP (BERT, GPT)!",
+  "whyNeeded": "Text = Discrete symbols, ML needs continuous numbers! One-hot encoding: High-dimensional (vocab_size), no semantic meaning. 'cat' vs 'dog' distance = 'cat' vs 'king' distance (wrong!). Word embeddings: Low-dimensional, semantic similarity! Similar words → similar vectors. Applications: (1) Search engines: Query understanding, semantic matching. (2) Sentiment analysis: Product reviews positive/negative? Stock market sentiment! (3) Chatbots: Intent classification, entity extraction. (4) Content moderation: Toxic content detection, spam filtering. (5) Machine translation: Source → target language understanding. (6) Question answering: Document retrieval, answer extraction. Transfer learning: Pre-trained embeddings (Word2Vec, GloVe) → fine-tune! No training from scratch. Foundation for BERT, GPT, modern NLP!",
+  "realWorldAnalogy": "Word embeddings coordinate system gibi! Geography'de: Coordinates her location'ı numbers'la represent eder. Paris = (48.8°N, 2.3°E), London = (51.5°N, 0.1°W). Close coordinates → close locations! Similarly: Word embeddings her word'ü vector'le represent eder. 'cat' = [0.2, 0.8, 0.1], 'dog' = [0.3, 0.7, 0.2]. Similar vectors → similar meaning! Semantic math: Paris - France + Italy ≈ Rome (capital analogy). Word2Vec: king - man + woman ≈ queen! TF-IDF newspaper'da keyword highlighting gibi: Common words ('the', 'a') → low weight (ignore). Rare, informative words ('coronavirus', 'vaccine') → high weight (important!). Focus attention where it matters!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Cosine Similarity: } \\cos(\\theta) = \\frac{\\mathbf{u} \\cdot \\mathbf{v}}{||\\mathbf{u}|| \\, ||\\mathbf{v}||} = \\frac{\\sum u_i v_i}{\\sqrt{\\sum u_i^2} \\sqrt{\\sum v_i^2}}",
+      "\\text{Skip-gram objective: } \\max \\frac{1}{T} \\sum_{t=1}^T \\sum_{-c \\leq j \\leq c, j\\neq 0} \\log p(w_{t+j} | w_t)",
+      "\\text{TF-IDF: } \\text{tfidf}(t,d) = \\text{tf}(t,d) \\times \\text{idf}(t) = \\text{count}(t,d) \\times \\log\\frac{N}{\\text{df}(t)}",
+      "\\text{GloVe objective: } J = \\sum_{i,j=1}^V f(X_{ij})(w_i^T \\tilde{w}_j + b_i + \\tilde{b}_j - \\log X_{ij})^2",
+      "\\text{Negative sampling: } \\log \\sigma(v_{w_O}^T v_{w_I}) + \\sum_{i=1}^k E_{w_i \\sim P_n}[\\log \\sigma(-v_{w_i}^T v_{w_I})]"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Text preprocessing: Lowercase, remove punctuation, tokenize",
+      "2. Build vocabulary: Extract unique tokens, assign IDs",
+      "3. Handle rare words: UNK token for OOV, minimum frequency threshold",
+      "4. Create training data: (context, target) pairs for Word2Vec",
+      "5. Initialize embeddings: Random small values (uniform or normal)",
+      "6. Training loop: Forward pass, compute loss, backprop, update",
+      "7. For Skip-gram: Target word predicts context words",
+      "8. For CBOW: Context words predict target word",
+      "9. Evaluation: Analogies (king-man+woman=?), similarity tasks",
+      "10. Use embeddings: Input to downstream tasks (classification, etc)"
+    ],
+    "complexity": "Training Word2Vec: O(T×D×C) where T=corpus size, D=embedding dim, C=context window. Skip-gram with negative sampling: O(T×D×k) where k=negative samples (typically 5-20). Much faster than full softmax O(T×D×V) where V=vocab size. Inference: O(1) embedding lookup."
+  },
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "optimizers"
+  ],
+  "nextTopics": [
+    "recurrent-neural-networks",
+    "bert-language-models",
+    "sequence-to-sequence"
+  ],
+  "relatedTopics": [
+    "recurrent-neural-networks",
+    "transformers-attention",
+    "transfer-learning"
+  ],
+  "tags": [
+    "nlp",
+    "natural-language-processing",
+    "word-embeddings",
+    "word2vec",
+    "glove",
+    "fasttext",
+    "tokenization",
+    "text-classification",
+    "sentiment-analysis",
+    "text-processing"
+  ],
+  "codeExamples": [
+    {
+      "title": "Basic Tokenization & Vocabulary Building",
+      "language": "python",
+      "code": "from collections import Counter\nimport re\n\nclass SimpleTokenizer:\n    def __init__(self, min_freq=2):\n        self.vocab = {}\n        self.word_to_idx = {}\n        self.idx_to_word = {}\n        self.min_freq = min_freq\n    \n    def tokenize(self, text):\n        '''Split text into tokens'''\n        # Lowercase and split\n        text = text.lower()\n        # Remove punctuation (except apostrophes)\n        text = re.sub(r\"[^a-zA-Z0-9'\\s]\", '', text)\n        tokens = text.split()\n        return tokens\n    \n    def build_vocab(self, texts):\n        '''Build vocabulary from texts'''\n        # Count word frequencies\n        word_freq = Counter()\n        for text in texts:\n            tokens = self.tokenize(text)\n            word_freq.update(tokens)\n        \n        # Filter by minimum frequency\n        self.vocab = {word: freq for word, freq in word_freq.items() \n                     if freq >= self.min_freq}\n        \n        # Add special tokens\n        special_tokens = ['<PAD>', '<UNK>', '<SOS>', '<EOS>']\n        \n        # Create mappings\n        self.word_to_idx = {word: idx for idx, word in \n                           enumerate(special_tokens + list(self.vocab.keys()))}\n        self.idx_to_word = {idx: word for word, idx in self.word_to_idx.items()}\n        \n        print(f\"Vocabulary size: {len(self.word_to_idx)}\")\n        return self.vocab\n    \n    def encode(self, text):\n        '''Convert text to token IDs'''\n        tokens = self.tokenize(text)\n        unk_idx = self.word_to_idx['<UNK>']\n        return [self.word_to_idx.get(token, unk_idx) for token in tokens]\n    \n    def decode(self, ids):\n        '''Convert token IDs to text'''\n        return ' '.join([self.idx_to_word[idx] for idx in ids])\n\n# Usage\ntexts = [\n    \"I love deep learning!\",\n    \"Deep learning is amazing.\",\n    \"I love AI and machine learning.\"\n]\n\ntokenizer = SimpleTokenizer(min_freq=1)\ntokenizer.build_vocab(texts)\n\n# Encode\ntext = \"I love deep learning\"\nids = tokenizer.encode(text)\nprint(f\"Original: {text}\")\nprint(f\"Encoded: {ids}\")\nprint(f\"Decoded: {tokenizer.decode(ids)}\")",
+      "level": 0,
+      "explanation": "Basic Tokenization & Vocabulary Building code"
+    },
+    {
+      "title": "Bag of Words & TF-IDF",
+      "language": "python",
+      "code": "import numpy as np\nfrom collections import Counter\nimport math\n\nclass BagOfWords:\n    def __init__(self):\n        self.vocab = {}\n    \n    def fit(self, documents):\n        '''Build vocabulary'''\n        all_words = set()\n        for doc in documents:\n            all_words.update(doc.split())\n        self.vocab = {word: i for i, word in enumerate(sorted(all_words))}\n    \n    def transform(self, document):\n        '''Convert to BoW vector'''\n        vector = np.zeros(len(self.vocab))\n        for word in document.split():\n            if word in self.vocab:\n                vector[self.vocab[word]] += 1\n        return vector\n\nclass TFIDF:\n    def __init__(self):\n        self.vocab = {}\n        self.idf = {}\n    \n    def fit(self, documents):\n        '''Compute vocabulary and IDF'''\n        # Vocabulary\n        all_words = set()\n        for doc in documents:\n            all_words.update(doc.split())\n        self.vocab = {word: i for i, word in enumerate(sorted(all_words))}\n        \n        # IDF: log(N / df)\n        N = len(documents)\n        word_doc_count = Counter()\n        \n        for doc in documents:\n            unique_words = set(doc.split())\n            for word in unique_words:\n                word_doc_count[word] += 1\n        \n        for word in self.vocab:\n            df = word_doc_count[word]\n            self.idf[word] = math.log(N / (1 + df))\n    \n    def transform(self, document):\n        '''Convert to TF-IDF vector'''\n        # Term frequency\n        tf = Counter(document.split())\n        \n        # TF-IDF\n        vector = np.zeros(len(self.vocab))\n        for word, count in tf.items():\n            if word in self.vocab:\n                idx = self.vocab[word]\n                vector[idx] = count * self.idf[word]\n        \n        return vector\n\n# Example\ndocs = [\n    \"the cat sat on the mat\",\n    \"the dog sat on the log\",\n    \"cats and dogs are enemies\"\n]\n\n# BoW\nbow = BagOfWords()\nbow.fit(docs)\nvec = bow.transform(\"the cat sat\")\nprint(f\"BoW: {vec}\")\n\n# TF-IDF\ntfidf = TFIDF()\ntfidf.fit(docs)\nvec = tfidf.transform(\"the cat sat\")\nprint(f\"TF-IDF: {vec}\")\nprint(f\"Notice: 'the' has lower weight (common word)\")",
+      "level": 1,
+      "explanation": "Bag of Words & TF-IDF code"
+    },
+    {
+      "title": "Word2Vec Skip-gram Training",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom collections import Counter\n\nclass SkipGramModel(nn.Module):\n    def __init__(self, vocab_size, embedding_dim=100):\n        super().__init__()\n        self.embeddings = nn.Embedding(vocab_size, embedding_dim)\n        self.linear = nn.Linear(embedding_dim, vocab_size)\n    \n    def forward(self, target):\n        embeds = self.embeddings(target)\n        out = self.linear(embeds)\n        return out\n\ndef create_skipgram_dataset(text, window_size=2):\n    '''Create (target, context) pairs'''\n    words = text.split()\n    data = []\n    \n    for i, target in enumerate(words):\n        start = max(0, i - window_size)\n        end = min(len(words), i + window_size + 1)\n        \n        for j in range(start, end):\n            if i != j:\n                data.append((target, words[j]))\n    \n    return data\n\n# Sample corpus\ncorpus = \"the quick brown fox jumps over the lazy dog the dog was lazy\"\n\n# Build vocabulary\nwords = corpus.split()\nvocab = {word: i for i, word in enumerate(set(words))}\ninv_vocab = {i: word for word, i in vocab.items()}\nvocab_size = len(vocab)\n\n# Create training data\ndata = create_skipgram_dataset(corpus, window_size=2)\nprint(f\"Training pairs: {len(data)}\")\nprint(f\"Examples: {data[:5]}\")\n\n# Convert to indices\ntrain_data = [(vocab[target], vocab[context]) for target, context in data]\n\n# Model\nmodel = SkipGramModel(vocab_size, embedding_dim=50)\noptimizer = optim.Adam(model.parameters(), lr=0.01)\ncriterion = nn.CrossEntropyLoss()\n\n# Training\nfor epoch in range(100):\n    total_loss = 0\n    for target_idx, context_idx in train_data:\n        target = torch.LongTensor([target_idx])\n        context = torch.LongTensor([context_idx])\n        \n        # Forward\n        scores = model(target)\n        loss = criterion(scores, context)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n        \n        total_loss += loss.item()\n    \n    if epoch % 20 == 0:\n        print(f\"Epoch {epoch}: Loss = {total_loss:.2f}\")\n\n# Get embeddings\nword = 'dog'\nword_idx = vocab[word]\nembedding = model.embeddings.weight[word_idx].detach()\nprint(f\"\\nEmbedding for '{word}': {embedding[:5]}...\")  # First 5 dims",
+      "level": 2,
+      "explanation": "Word2Vec Skip-gram Training code"
+    },
+    {
+      "title": "Text Classification with Pre-trained Embeddings",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass TextClassifier(nn.Module):\n    def __init__(self, vocab_size, embedding_dim=100, \n                 hidden_dim=128, num_classes=2, pretrained_embeddings=None):\n        super().__init__()\n        \n        # Embedding layer\n        self.embedding = nn.Embedding(vocab_size, embedding_dim)\n        \n        # Load pre-trained embeddings if available\n        if pretrained_embeddings is not None:\n            self.embedding.weight.data.copy_(pretrained_embeddings)\n            # Optionally freeze embeddings\n            # self.embedding.weight.requires_grad = False\n        \n        # Classifier\n        self.fc1 = nn.Linear(embedding_dim, hidden_dim)\n        self.dropout = nn.Dropout(0.5)\n        self.fc2 = nn.Linear(hidden_dim, num_classes)\n    \n    def forward(self, text):\n        # text: (batch_size, seq_len)\n        embedded = self.embedding(text)  # (B, seq_len, emb_dim)\n        \n        # Average pooling\n        pooled = embedded.mean(dim=1)  # (B, emb_dim)\n        \n        # Classify\n        hidden = F.relu(self.fc1(pooled))\n        hidden = self.dropout(hidden)\n        output = self.fc2(hidden)\n        \n        return output\n\n# Example: Sentiment analysis\nvocab_size = 10000\nmodel = TextClassifier(vocab_size, num_classes=2)\n\n# Sample data\nsentences = [\n    \"I love this movie it is amazing\",\n    \"This movie is terrible and boring\",\n    \"Great film highly recommended\",\n    \"Waste of time very disappointing\"\n]\nlabels = [1, 0, 1, 0]  # 1=positive, 0=negative\n\n# Training\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.CrossEntropyLoss()\n\n# Dummy: Convert sentences to token IDs (simplified)\nimport random\ntext_ids = [torch.LongTensor([[random.randint(0, vocab_size-1) \n                              for _ in range(10)]]) for _ in sentences]\nlabel_tensors = [torch.LongTensor([label]) for label in labels]\n\nfor epoch in range(50):\n    total_loss = 0\n    for text, label in zip(text_ids, label_tensors):\n        output = model(text)\n        loss = criterion(output, label)\n        \n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n        \n        total_loss += loss.item()\n    \n    if epoch % 10 == 0:\n        print(f\"Epoch {epoch}: Loss = {total_loss:.4f}\")\n\n# Inference\ntest_text = text_ids[0]\nwith torch.no_grad():\n    output = model(test_text)\n    prediction = torch.argmax(output, dim=1)\n    print(f\"\\nPrediction: {'Positive' if prediction==1 else 'Negative'}\")",
+      "level": 2,
+      "explanation": "Text Classification with Pre-trained Embeddings code"
+    },
+    {
+      "title": "Word Similarity & Analogies",
+      "language": "python",
+      "code": "import torch\nimport torch.nn.functional as F\nimport numpy as np\n\ndef cosine_similarity(vec1, vec2):\n    '''Compute cosine similarity between two vectors'''\n    return F.cosine_similarity(vec1, vec2, dim=0).item()\n\ndef find_most_similar(word_embedding, embeddings, vocab, k=5):\n    '''Find k most similar words'''\n    similarities = []\n    \n    for word, idx in vocab.items():\n        emb = embeddings[idx]\n        sim = cosine_similarity(word_embedding, emb)\n        similarities.append((word, sim))\n    \n    # Sort by similarity\n    similarities.sort(key=lambda x: x[1], reverse=True)\n    return similarities[1:k+1]  # Skip first (itself)\n\ndef word_analogy(embeddings, vocab, word_a, word_b, word_c):\n    '''\n    Solve analogy: A is to B as C is to ?\n    Example: king - man + woman = queen\n    '''\n    # Get embeddings\n    emb_a = embeddings[vocab[word_a]]\n    emb_b = embeddings[vocab[word_b]]\n    emb_c = embeddings[vocab[word_c]]\n    \n    # Analogy: emb_b - emb_a + emb_c\n    result_emb = emb_b - emb_a + emb_c\n    \n    # Find most similar word\n    similarities = []\n    for word, idx in vocab.items():\n        if word not in [word_a, word_b, word_c]:\n            emb = embeddings[idx]\n            sim = cosine_similarity(result_emb, emb)\n            similarities.append((word, sim))\n    \n    similarities.sort(key=lambda x: x[1], reverse=True)\n    return similarities[0][0]  # Top result\n\n# Example with dummy embeddings\nvocab = {'king': 0, 'queen': 1, 'man': 2, 'woman': 3, \n         'cat': 4, 'dog': 5, 'puppy': 6}\n\n# Create semantic embeddings (simplified)\nembeddings = torch.FloatTensor([\n    [0.9, 0.1, 0.8],  # king (male, royalty)\n    [0.9, 0.9, 0.8],  # queen (female, royalty)\n    [0.2, 0.1, 0.1],  # man (male, common)\n    [0.2, 0.9, 0.1],  # woman (female, common)\n    [0.1, 0.5, 0.3],  # cat (animal)\n    [0.2, 0.5, 0.4],  # dog (animal)\n    [0.2, 0.5, 0.3],  # puppy (animal, young)\n])\n\n# Similarity\nking_emb = embeddings[vocab['king']]\nsimilar = find_most_similar(king_emb, embeddings, vocab, k=3)\nprint(\"Words similar to 'king':\")\nfor word, sim in similar:\n    print(f\"  {word}: {sim:.3f}\")\n\n# Analogy: king - man + woman = ?\nresult = word_analogy(embeddings, vocab, 'king', 'man', 'woman')\nprint(f\"\\nAnalogy: king - man + woman = {result}\")\n# Expected: queen!",
+      "level": 3,
+      "explanation": "Word Similarity & Analogies code"
+    },
+    {
+      "title": "Advanced: Subword Tokenization (BPE-like)",
+      "language": "python",
+      "code": "from collections import Counter, defaultdict\n\nclass SubwordTokenizer:\n    '''\n    Simple Byte-Pair Encoding (BPE) implementation\n    Learns subword vocabulary\n    '''\n    def __init__(self, num_merges=100):\n        self.num_merges = num_merges\n        self.vocab = set()\n        self.merges = []\n    \n    def get_vocab(self, words):\n        '''Initialize vocabulary with characters'''\n        vocab = defaultdict(int)\n        for word in words:\n            # Add end token\n            word_tokens = ' '.join(list(word)) + ' </w>'\n            vocab[word_tokens] += 1\n        return vocab\n    \n    def get_pairs(self, word):\n        '''Get all adjacent pairs in word'''\n        pairs = set()\n        prev = word[0]\n        for char in word[1:]:\n            pairs.add((prev, char))\n            prev = char\n        return pairs\n    \n    def train(self, words):\n        '''Learn BPE merges'''\n        vocab = self.get_vocab(words)\n        \n        for i in range(self.num_merges):\n            # Count pairs\n            pairs = Counter()\n            for word, freq in vocab.items():\n                word_pairs = self.get_pairs(word.split())\n                for pair in word_pairs:\n                    pairs[pair] += freq\n            \n            if not pairs:\n                break\n            \n            # Most frequent pair\n            best_pair = pairs.most_common(1)[0][0]\n            self.merges.append(best_pair)\n            \n            # Merge in vocabulary\n            new_vocab = {}\n            for word in vocab:\n                new_word = word.replace(\n                    f\"{best_pair[0]} {best_pair[1]}\",\n                    f\"{best_pair[0]}{best_pair[1]}\"\n                )\n                new_vocab[new_word] = vocab[word]\n            vocab = new_vocab\n            \n            if i % 20 == 0:\n                print(f\"Merge {i}: {best_pair[0]} + {best_pair[1]}\")\n        \n        # Extract final vocabulary\n        for word in vocab:\n            self.vocab.update(word.split())\n        \n        print(f\"\\nVocabulary size: {len(self.vocab)}\")\n        return self.merges\n    \n    def tokenize(self, word):\n        '''Tokenize word using learned merges'''\n        word = ' '.join(list(word)) + ' </w>'\n        \n        for pair in self.merges:\n            word = word.replace(\n                f\"{pair[0]} {pair[1]}\",\n                f\"{pair[0]}{pair[1]}\"\n            )\n        \n        return word.split()\n\n# Example\nwords = [\n    'low', 'lower', 'lowest', 'low',\n    'new', 'newer', 'newest',\n    'wide', 'wider', 'widest'\n]\n\ntokenizer = SubwordTokenizer(num_merges=10)\ntokenizer.train(words)\n\n# Tokenize new words\ntest_words = ['lower', 'newer', 'lowest', 'brand']\nprint(\"\\nTokenization:\")\nfor word in test_words:\n    tokens = tokenizer.tokenize(word)\n    print(f\"{word}: {tokens}\")",
+      "level": 4,
+      "explanation": "Advanced: Subword Tokenization (BPE-like) code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Word embeddings, one-hot encoding'e göre neden daha iyi?",
+      "options": [
+        "Daha hızlı training sağlar",
+        "Low-dimensional, semantic similarity capture eder. Similar words → similar vectors!",
+        "Daha az memory kullanır ama semantic meaning yok",
+        "Sadece English için çalışır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "One-hot: High-dimensional (vocab_size), no semantic relationship. 'cat'=[1,0,0,0], 'dog'=[0,1,0,0] → distance same as 'cat' vs 'king'! Word embeddings: Low-dim (50-300), semantic similarity! cos_sim('cat','dog')=0.9 (high), cos_sim('cat','king')=0.3 (low). Learned from context!"
+    },
+    {
+      "question": "Word2Vec'te Skip-gram ve CBOW arasındaki fark nedir?",
+      "options": [
+        "Skip-gram daha hızlı, CBOW daha accurate",
+        "Skip-gram: target → context predicts. CBOW: context → target predicts",
+        "İkisi de aynı şekilde çalışır",
+        "CBOW sadece binary classification için kullanılır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Skip-gram: Given target word, predict context words. 'sits' → ['the', 'cat', 'on', 'mat']. Better for rare words! CBOW (Continuous Bag of Words): Given context, predict target. ['the', 'cat', 'on', 'mat'] → 'sits'. Faster training! Both learn embeddings but different objectives."
+    },
+    {
+      "question": "TF-IDF'de IDF (Inverse Document Frequency) ne işe yarar?",
+      "options": [
+        "Document'taki word frequency'yi count eder",
+        "Rare, informative words'e high weight, common words'e low weight verir",
+        "Word order'ı preserve eder",
+        "Semantic similarity measure eder"
+      ],
+      "correctAnswer": 1,
+      "explanation": "TF (Term Frequency): Word count in document. IDF: log(N/df) where N=total docs, df=docs containing word. Effect: Common words ('the', 'a') → high df → low IDF → low weight. Rare, informative words ('coronavirus') → low df → high IDF → high weight! TF-IDF = TF × IDF. Focus on important words!"
+    },
+    {
+      "question": "Word analogy 'king - man + woman = queen' nasıl çalışır?",
+      "options": [
+        "Random pattern, mathematical trick",
+        "Embeddings semantic relationships capture eder. Vector arithmetic → analogies!",
+        "Sadece gender için çalışır",
+        "Pre-programmed relationships kullanır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Word embeddings semantic space'te meaningful directions learn eder! 'king'-'man' = 'royalty + male' - 'male' = 'royalty'. 'royalty' + 'woman' ≈ 'queen'! Other analogies: Paris - France + Italy ≈ Rome (capitals), walking - walk + swim ≈ swimming (verb forms). Emergent from context-based training!"
+    },
+    {
+      "question": "Subword tokenization (BPE, WordPiece) neden önemli?",
+      "options": [
+        "Training speed'i artırır",
+        "Out-of-vocabulary (OOV) problem'i solve eder, smaller vocabulary",
+        "Sadece sentiment analysis için gerekli",
+        "Word-level'dan daha kötü performance verir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Word-level problem: OOV words → <UNK> token (information loss!). Rare words, typos, new words problem. Subword: 'deeplearning' → ['deep', '##learning']. Benefits: (1) Handle OOV, (2) Smaller vocab (30K vs 100K+), (3) Morphology capture ('walk', 'walking' → 'walk', '##ing'). Modern transformers (BERT, GPT) use subword!"
+    },
+    {
+      "question": "NLP'de pre-processing steps neden critical?",
+      "options": [
+        "Sadece görsel düzen için",
+        "Noise reduction, normalization → better embeddings, smaller vocabulary, improved performance",
+        "Training time'ı artırır",
+        "Sadece English text için gerekli"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Pre-processing: (1) Lowercase: 'The' vs 'the' → same word! (2) Punctuation removal: 'hello!' → 'hello'. (3) Stopword removal: Remove 'the', 'a', 'is' (common, low information). (4) Stemming/Lemmatization: 'running', 'ran', 'runs' → 'run' (same root). Benefits: Smaller vocab, less noise, better generalization. But: Context-dependent! Sometimes punctuation matters ('U.S.A.')."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Tokenization Methods",
+      "back": "**Word-level:** 'I love AI' → ['I', 'love', 'AI']\nProblem: OOV words!\n\n**Subword (BPE, WordPiece):** 'deeplearning' → ['deep', '##learning']\nBenefit: Handle OOV, smaller vocab!\n\n**Character:** 'AI' → ['A', 'I']\nBenefit: No OOV, tiny vocab\nProblem: Very long sequences"
+    },
+    {
+      "front": "Word Embeddings Concept",
+      "back": "**Idea:** Words as dense vectors (50-300D)\n\n**Benefit:** Semantic similarity!\n- 'cat' ≈ 'dog' (both animals)\n- 'king' ≈ 'queen' (both royalty)\n\n**Math:** Cosine similarity\ncos(cat, dog) = 0.9 (similar!)\ncos(cat, king) = 0.3 (different)\n\n**vs One-hot:** High-dim, no semantic meaning ❌"
+    },
+    {
+      "front": "Word2Vec: Skip-gram vs CBOW",
+      "back": "**Skip-gram:** Target → Context\nInput: 'sits'\nOutput: ['the', 'cat', 'on', 'mat']\nBetter for rare words!\n\n**CBOW:** Context → Target\nInput: ['the', 'cat', 'on', 'mat']\nOutput: 'sits'\nFaster training!\n\nBoth learn semantic embeddings from context!"
+    },
+    {
+      "front": "TF-IDF Formula & Intuition",
+      "back": "**Formula:** TF-IDF = TF × IDF\n\n**TF:** Term Frequency (word count in doc)\n\n**IDF:** log(N / df)\nN = total documents\ndf = docs containing word\n\n**Effect:**\n- Common words ('the', 'a') → Low IDF → Low weight\n- Rare words ('vaccine') → High IDF → High weight\n\nFocus on informative words! 🎯"
+    },
+    {
+      "front": "Word Analogies",
+      "back": "**Magic:** king - man + woman ≈ queen\n\n**How:** Semantic directions in embedding space!\n- 'king' - 'man' = [royalty]\n- [royalty] + 'woman' ≈ 'queen'\n\n**More examples:**\n- Paris - France + Italy ≈ Rome\n- walking - walk + swim ≈ swimming\n\nEmergent from training! 🪄"
+    },
+    {
+      "front": "Bag of Words (BoW)",
+      "back": "**Idea:** Count word occurrences\n\nText: 'I love AI. I love ML.'\nVocab: ['I', 'love', 'AI', 'ML']\nBoW: [2, 2, 1, 1]\n\n**Pros:** Simple, fast\n\n**Cons:**\n- Ignores word order!\n- 'Dog bites man' = 'Man bites dog'\n- High-dimensional\n- No semantic meaning"
+    },
+    {
+      "front": "Subword Tokenization (BPE)",
+      "back": "**Problem:** OOV words → <UNK> (information loss!)\n\n**Solution:** Split into subwords!\n\n**Example:**\n'unbelievable' → ['un', '##believable']\n'deeplearning' → ['deep', '##learning']\n\n**Benefits:**\n✓ Handle OOV\n✓ Smaller vocabulary (30K)\n✓ Morphology capture\n\nBERT, GPT use this! 🚀"
+    },
+    {
+      "front": "NLP Pre-processing Steps",
+      "back": "**1. Lowercase:** 'The' → 'the'\n\n**2. Punctuation:** 'hello!' → 'hello'\n\n**3. Stopwords:** Remove 'the', 'a', 'is'\n\n**4. Stemming:** 'running' → 'run'\n\n**5. Lemmatization:** 'better' → 'good'\n\n**Goal:** Reduce noise, normalize, smaller vocab\n\n**Trade-off:** May lose information!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Vocabulary'yi too large tutmak (100K+ words)",
+      "why": "Memory explosion, sparse data, training slow! Rare words (<5 occurrences) → poor embeddings, noise. OOV problem worse with large vocab!",
+      "fix": "Keep vocab 10K-50K (most frequent words). Use <UNK> for rare words OR subword tokenization (BPE, WordPiece). Modern: 30K subword vocab sufficient for most tasks. Pre-processing: Remove very rare words, typos."
+    },
+    {
+      "mistake": "One-hot encoding kullanmak (modern NLP'de)",
+      "why": "Curse of dimensionality! Vocab_size dimensional (10K-100K). No semantic similarity: 'cat' vs 'dog' distance = 'cat' vs 'airplane'. Sparse vectors, memory waste!",
+      "fix": "Word embeddings kullan: Word2Vec, GloVe, FastText. Low-dimensional (50-300D), dense, semantic similarity! Or: Pre-trained embeddings (transfer learning). Modern: Contextual embeddings (BERT, GPT)."
+    },
+    {
+      "mistake": "Word order'ı completely ignore etmek (BoW, TF-IDF)",
+      "why": "'Dog bites man' vs 'Man bites dog' → same BoW representation! Meaning completely different. Context critical in language!",
+      "fix": "Use sequential models: RNN, LSTM, GRU for sequence processing. Or: Transformers with positional encoding. N-grams (bigrams, trigrams) capture some local order. Modern NLP: Always consider context!"
+    },
+    {
+      "mistake": "Pre-processing'i skip etmek veya overdo etmek",
+      "why": "No pre-processing: Noise, 'The' vs 'the' different, large vocab. Too much: Information loss! 'U.S.A.' → 'usa', punctuation critical sometimes.",
+      "fix": "Balance! Standard pipeline: Lowercase, basic punctuation removal, handle contractions ('don't' → 'do not'). DON'T remove: Domain-specific terms, entities, sentiment indicators ('!'). Task-dependent! Sentiment: Keep '!' (emphasis). NER: Keep capitalization (names)."
+    },
+    {
+      "mistake": "OOV (Out-of-Vocabulary) words'ü handle etmemek",
+      "why": "Test time: New words, typos, rare words → <UNK> token. Information completely lost! Model: Blind to those words. Especially bad for: Product names, slang, domain-specific terms.",
+      "fix": "Subword tokenization (BPE, WordPiece, SentencePiece)! Rare word → subword pieces. FastText: Character n-grams, can embed ANY word. Character-level models: No OOV at all. Pre-trained embeddings: Cover wider vocabulary."
+    },
+    {
+      "mistake": "Embeddings'i random initialize edip scratch'ten train etmek",
+      "why": "Small dataset → poor embeddings! Word2Vec needs millions of words to learn good representations. Rare words: Very poor embeddings (few examples).",
+      "fix": "Transfer learning! Use pre-trained embeddings: Word2Vec (Google News), GloVe (Wikipedia), FastText. Fine-tune if needed. Modern: Pre-trained language models (BERT, RoBERTa) → contextual embeddings! Much better performance, especially for small datasets."
+    },
+    {
+      "mistake": "Context'i ignore etmek (static embeddings)",
+      "why": "Word2Vec, GloVe: One embedding per word. 'bank' (river) vs 'bank' (financial) → same embedding! Polysemy problem. Context determines meaning!",
+      "fix": "Contextual embeddings: BERT, ELMo, GPT. Different context → different embedding! 'bank' embedding changes based on sentence. Modern NLP standard: Always contextual! For simple tasks: Static embeddings OK (faster, simpler)."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "comparison",
+      "title": "One-Hot vs Word Embeddings",
+      "description": "Visual comparison: One-hot (sparse, high-dim, no similarity) vs Embeddings (dense, low-dim, semantic similarity). Distance visualization between 'cat', 'dog', 'king'"
+    },
+    {
+      "type": "architecture",
+      "title": "Word2Vec Skip-gram Training",
+      "description": "Interactive: Target word → context prediction. Window sliding over text, embedding space visualization"
+    },
+    {
+      "type": "algorithm",
+      "title": "Word Analogy in Embedding Space",
+      "description": "3D visualization: king - man + woman = queen. Vector arithmetic in semantic space, direction meanings"
+    },
+    {
+      "type": "metric",
+      "title": "TF-IDF Weight Calculation",
+      "description": "Interactive example: Common word ('the') vs rare word ('vaccine'). TF, IDF, final TF-IDF weights comparison"
+    }
+  ],
+  "references": [
+    {
+      "title": "Efficient Estimation of Word Representations in Vector Space (Word2Vec)",
+      "authors": "Mikolov et al.",
+      "year": 2013,
+      "link": "https://arxiv.org/abs/1301.3781",
+      "type": "paper"
+    },
+    {
+      "title": "GloVe: Global Vectors for Word Representation",
+      "authors": "Pennington et al.",
+      "year": 2014,
+      "link": "https://nlp.stanford.edu/pubs/glove.pdf",
+      "type": "paper"
+    },
+    {
+      "title": "Enriching Word Vectors with Subword Information (FastText)",
+      "authors": "Bojanowski et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1607.04606",
+      "type": "paper"
+    },
+    {
+      "title": "Neural Machine Translation of Rare Words with Subword Units (BPE)",
+      "authors": "Sennrich et al.",
+      "year": 2016,
+      "link": "https://arxiv.org/abs/1508.07909",
+      "type": "paper"
+    },
+    {
+      "title": "spaCy: Industrial-Strength NLP",
+      "authors": "Explosion AI",
+      "year": 2023,
+      "link": "https://spacy.io/",
+      "type": "library"
+    }
+  ]
+}

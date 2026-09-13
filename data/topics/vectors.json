@@ -1,0 +1,182 @@
+{
+  "id": "vectors",
+  "title": "Vektörler",
+  "category": "linear-algebra",
+  "level": 1,
+  "estimatedTime": 45,
+  "content": {
+    "level0_basic": "Vektör, büyüklüğü ve yönü olan bir niceliği temsil eder. Günlük hayatta bir yerden başka bir yere gittiğinizde, hem ne kadar yol gittiğiniz (büyüklük) hem de hangi yöne gittiğiniz (yön) önemlidir. İşte vektör tam da bunu ifade eder.",
+    "level1_beginner": "Matematik ve yapay zekada vektör, sayıların sıralı bir listesidir. Örneğin [3, 4] bir 2 boyutlu vektördür. İlk sayı x koordinatını, ikinci sayı y koordinatını gösterir. Vektörler, verileri ve özellikleri temsil etmek için temel yapı taşıdır.",
+    "level2_application": "Python'da vektörler NumPy dizileri olarak temsil edilir. Vektör işlemleri (toplama, çıkarma, skaler çarpım) doğrudan uygulanabilir. Makine öğrenmesinde her veri noktası bir vektör olarak gösterilir.",
+    "level3_advanced": "Vektörler, bir vektör uzayının elemanlarıdır ve lineer kombinasyonlar, baz vektörler ve lineer bağımsızlık kavramlarıyla ilişkilidir. Vektör normu (uzunluğu) ve iç çarpım gibi işlemler, geometrik ve cebirsel özellikleri ortaya çıkarır.",
+    "level4_expert": "Yüksek boyutlu vektör uzayları, embedding'ler ve özellik mühendisliğinde kritik rol oynar. GPU'larda SIMD işlemciler kullanılarak vektör işlemleri paralel olarak optimize edilir. Dil modellerinde her token bir vektör olarak temsil edilir."
+  },
+  "whatIsIt": "Vektör, sayıların sıralı bir dizisidir ve hem büyüklüğü hem de yönü olan bir matematiksel nesnedir.",
+  "whyNeeded": "Yapay zekada her veri noktası, her özellik ve her parametre vektörler olarak temsil edilir. Vektörleri anlamadan makine öğrenmesi yapamazsınız.",
+  "realWorldAnalogy": "Bir haritada 'evden 3 km doğuya, 4 km kuzeye git' demek bir vektördür: [3, 4]. Hem ne kadar yol gideceğinizi (büyüklük: 5 km) hem de hangi yöne gideceğinizi (yön: kuzeydoğu) bilirsiniz.",
+  "commonMistakes": [
+    "Vektörü skaler (tek sayı) ile karıştırmak",
+    "Vektör toplama/çıkarma işlemlerinde boyut uyumsuzluğu",
+    "Vektörün sadece 2D veya 3D olabileceğini düşünmek (milyonlarca boyut olabilir)",
+    "Satır vektör ile sütun vektör farkını göz ardı etmek"
+  ],
+  "mathematics": {
+    "formulas": [
+      "\\vec{v} = \\begin{bmatrix} v_1 \\\\ v_2 \\\\ \\vdots \\\\ v_n \\end{bmatrix}",
+      "\\|\\vec{v}\\| = \\sqrt{v_1^2 + v_2^2 + \\cdots + v_n^2}",
+      "\\vec{u} + \\vec{v} = \\begin{bmatrix} u_1 + v_1 \\\\ u_2 + v_2 \\\\ \\vdots \\\\ u_n + v_n \\end{bmatrix}",
+      "c\\vec{v} = \\begin{bmatrix} cv_1 \\\\ cv_2 \\\\ \\vdots \\\\ cv_n \\end{bmatrix}",
+      "\\vec{u} \\cdot \\vec{v} = u_1v_1 + u_2v_2 + \\cdots + u_nv_n"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Vektör oluşturma: Sayıların bir listesini tanımlayın",
+      "Vektör toplama: Karşılık gelen elemanları toplayın",
+      "Skaler çarpım: Her elemanı aynı sayı ile çarpın",
+      "İç çarpım: Karşılık gelen elemanları çarpıp toplayın",
+      "Norm hesaplama: Elemanların karelerinin toplamının karekökünü alın"
+    ],
+    "complexity": "Vektör işlemleri O(n) zaman karmaşıklığına sahiptir, n vektörün boyutudur."
+  },
+  "codeExamples": [
+    {
+      "language": "python",
+      "code": "# Vektör oluşturma ve temel işlemler\nv = [3, 4]\nu = [1, 2]\n\n# Vektör toplama\ntoplam = [v[i] + u[i] for i in range(len(v))]\nprint(f\"Toplam: {toplam}\")\n\n# Skaler çarpım\nskaler = 2\ncarpim = [skaler * v[i] for i in range(len(v))]\nprint(f\"Skaler çarpım: {carpim}\")\n\n# Vektör uzunluğu (norm)\nimport math\nuzunluk = math.sqrt(sum(x**2 for x in v))\nprint(f\"Uzunluk: {uzunluk}\")",
+      "explanation": "Saf Python ile vektör işlemleri yapma örneği. Gerçek uygulamalarda NumPy kullanılır.",
+      "runnable": true
+    },
+    {
+      "language": "numpy",
+      "code": "import numpy as np\n\n# Vektör oluşturma\nv = np.array([3, 4])\nu = np.array([1, 2])\n\n# Vektör toplama\ntoplam = v + u\nprint(f\"Toplam: {toplam}\")\n\n# Skaler çarpım\ncarpim = 2 * v\nprint(f\"Skaler çarpım: {carpim}\")\n\n# İç çarpım\nic_carpim = np.dot(v, u)\nprint(f\"İç çarpım: {ic_carpim}\")\n\n# Norm (uzunluk)\nnorm = np.linalg.norm(v)\nprint(f\"Norm: {norm}\")\n\n# Birim vektör\nbirim_vektor = v / norm\nprint(f\"Birim vektör: {birim_vektor}\")",
+      "explanation": "NumPy ile vektör işlemleri çok daha hızlı ve kolaydır. Tüm işlemler vektörize edilmiştir.",
+      "runnable": true
+    },
+    {
+      "language": "pytorch",
+      "code": "import torch\n\n# Vektör oluşturma (tensor olarak)\nv = torch.tensor([3.0, 4.0])\nu = torch.tensor([1.0, 2.0])\n\n# Vektör toplama\ntoplam = v + u\nprint(f\"Toplam: {toplam}\")\n\n# Skaler çarpım\ncarpim = 2 * v\nprint(f\"Skaler çarpım: {carpim}\")\n\n# İç çarpım\nic_carpim = torch.dot(v, u)\nprint(f\"İç çarpım: {ic_carpim}\")\n\n# Norm\nnorm = torch.norm(v)\nprint(f\"Norm: {norm}\")\n\n# GPU'ya taşıma (GPU varsa)\nif torch.cuda.is_available():\n    v_gpu = v.cuda()\n    print(f\"GPU'da: {v_gpu}\")",
+      "explanation": "PyTorch'ta vektörler tensor olarak temsil edilir ve GPU'da çalışabilir.",
+      "runnable": true
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "vector-2d",
+      "type": "plot",
+      "title": "2D Vektör Görselleştirmesi",
+      "description": "İki boyutlu uzayda vektörlerin görsel temsili",
+      "component": "VectorPlot"
+    },
+    {
+      "id": "vector-addition",
+      "type": "interactive",
+      "title": "Vektör Toplama",
+      "description": "İki vektörün toplanması ve sonucun görselleştirilmesi",
+      "component": "VectorPlot"
+    }
+  ],
+  "prerequisites": [],
+  "nextTopics": [
+    "matrices-tensors",
+    "derivative"
+  ],
+  "relatedTopics": [
+    "linear-transformations",
+    "basis-vectors"
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Vektör [3, 4] ile [1, 2] toplandığında sonuç nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "[4, 6]",
+        "[3, 8]",
+        "[2, 2]",
+        "[4, 8]"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Vektör toplamada karşılık gelen elemanlar toplanır: [3+1, 4+2] = [4, 6]",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "Vektör [3, 4]'ün uzunluğu (normu) nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "5",
+        "7",
+        "12",
+        "25"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Norm = √(3² + 4²) = √(9 + 16) = √25 = 5. Bu Pisagor teoremidir!",
+      "difficulty": 1
+    },
+    {
+      "id": "q3",
+      "question": "[2, 3] vektörünün 2 ile skaler çarpımı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "[4, 6]",
+        "[2, 5]",
+        "[4, 3]",
+        "[2, 6]"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Skaler çarpımda her eleman aynı sayı ile çarpılır: 2*[2, 3] = [4, 6]",
+      "difficulty": 1
+    },
+    {
+      "id": "q4",
+      "question": "İki vektör ortogonal (dik) ise iç çarpımları kaçtır?",
+      "type": "multiple-choice",
+      "options": [
+        "0",
+        "1",
+        "-1",
+        "∞"
+      ],
+      "correctAnswer": 0,
+      "explanation": "İki vektör birbirine dik ise iç çarpımları 0'dır. Örnek: [1, 0] · [0, 1] = 0",
+      "difficulty": 2
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Vektör nedir?",
+      "back": "Sayıların sıralı bir dizisi. Hem büyüklüğü hem de yönü olan matematiksel bir nesne."
+    },
+    {
+      "front": "Vektör normu (uzunluğu) nasıl hesaplanır?",
+      "back": "Vektörün elemanlarının karelerinin toplamının karekökü: ||v|| = √(v₁² + v₂² + ... + vₙ²)"
+    },
+    {
+      "front": "İki vektörün iç çarpımı ne anlama gelir?",
+      "back": "İki vektörün benzerliğini ölçer. Karşılık gelen elemanların çarpımlarının toplamıdır."
+    },
+    {
+      "front": "Birim vektör nedir?",
+      "back": "Uzunluğu (normu) 1 olan vektör. Herhangi bir vektörü kendi normuna bölerek birim vektör elde edilir."
+    }
+  ],
+  "references": [
+    {
+      "title": "NumPy Vektör İşlemleri Dokümantasyonu",
+      "url": "https://numpy.org/doc/stable/reference/arrays.ndarray.html",
+      "type": "documentation"
+    },
+    {
+      "title": "3Blue1Brown - Lineer Cebir Serisi",
+      "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab",
+      "type": "video"
+    }
+  ],
+  "tags": [
+    "temel",
+    "lineer-cebir",
+    "vektör",
+    "numpy",
+    "matematik"
+  ]
+}

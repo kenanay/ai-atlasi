@@ -1,0 +1,239 @@
+{
+  "id": "cpu-gpu-architecture",
+  "title": "CPU vs GPU Architecture (CUDA, Tensor Cores, Memory)",
+  "category": "fundamentals",
+  "level": 1,
+  "estimatedTime": 35,
+  "description": "CPU ve GPU architecture farkları. Parallelization, CUDA programming, tensor cores, memory hierarchy. GPU utilization optimization, training acceleration.",
+  "prerequisites": ["matrix-operations"],
+  "tags": ["gpu", "cuda", "parallel", "hardware", "optimization", "performance"],
+  "content": {
+    "level0_basic": "CPU: Sequential tasks için optimal, few powerful cores. GPU: Parallel tasks için! Thousands of small cores, matrix ops perfect! AI/ML training GPU'da 10-100× faster. CUDA: NVIDIA GPU programming. Modern GPUs tensor cores var (matrix multiply hardware acceleration). Memory hierarchy: GPU memory fast ama limited. CPU-GPU data transfer bottleneck olabilir!",
+    "level1_beginner": "**CPU vs GPU Architecture**\n\n**CPU (Central Processing Unit):**\n\n**Design:**\n- 4-32 cores (high-end)\n- Each core: Very powerful, complex\n- High clock speed (3-5 GHz)\n- Large cache (MB per core)\n- Optimized for: Sequential tasks, branching, complex logic\n\n**Structure:**\n```\n     CPU\n┌──────────────┐\n│ Core 1 [====]│ ← Powerful\n│ Core 2 [====]│\n│ Core 4 [====]│\n│ ...          │\n│ Core 16 [===]│\n└──────────────┘\n   Few cores\n```\n\n**GPU (Graphics Processing Unit):**\n\n**Design:**\n- 1000s-10000s of cores\n- Each core: Simple, less powerful\n- Lower clock speed (1-2 GHz)\n- Smaller cache\n- Optimized for: Parallel tasks, data processing\n\n**Structure:**\n```\n       GPU\n┌──────────────┐\n│[=][=][=][=]  │ ← Many\n│[=][=][=][=]  │   simple\n│[=][=][=][=]  │   cores\n│... (1000s)   │\n└──────────────┘\n  Massive parallelism\n```\n\n**Why GPU for AI/ML?**\n\n**Matrix multiplication:**\n\nDeep learning = tons of matrix ops!\n\n```python\n# Forward pass\nZ = W @ X  # Matrix multiply!\n```\n\n**CPU approach:**\nSequential, row-by-row.\n\n**GPU approach:**\nAll elements parallel!\n\n**Example:** 1000×1000 matrix multiply\n- CPU: ~1000 operations serially\n- GPU: 1000 operations parallel → ~1000× faster!\n\n**Speedup:**\n```\nTask              | CPU Time | GPU Time | Speedup\n------------------|----------|----------|--------\nMatrix multiply   | 1.0s     | 0.01s    | 100×\nConvolution       | 5.0s     | 0.05s    | 100×\nNeural net train  | 10 hours | 30 min   | 20×\n```\n\n**GPU Memory Hierarchy:**\n\n**1. Global Memory (VRAM):**\n- Size: 8-80 GB\n- Speed: Slow (~1 TB/s)\n- Accessible by all cores\n\n**2. Shared Memory:**\n- Size: KB per block\n- Speed: Fast (~10 TB/s)\n- Shared within thread block\n\n**3. Registers:**\n- Size: Few KB per thread\n- Speed: Very fast\n- Private to thread\n\n**Hierarchy:**\n```\n┌──────────────────┐\n│   Registers      │ ← Fastest, smallest\n├──────────────────┤\n│ Shared Memory    │ ← Fast, KB\n├──────────────────┤\n│ Global Memory    │ ← Slower, GB\n│   (VRAM)         │\n└──────────────────┘\n```\n\n**Key concept:** Minimize global memory access, maximize register/shared memory use!",
+    "level2_application": "**CUDA Programming Basics:**\n\nCUDA = NVIDIA's GPU programming platform.\n\n**Key Concepts:**\n\n**1. Kernel:**\nGPU function, runs on all threads.\n\n```cpp\n__global__ void vectorAdd(float* A, float* B, float* C, int N) {\n    int i = blockIdx.x * blockDim.x + threadIdx.x;\n    if (i < N) {\n        C[i] = A[i] + B[i];  // Each thread: one element\n    }\n}\n```\n\n**2. Thread Hierarchy:**\n\n```\nGrid (entire GPU)\n  └─ Blocks (groups)\n       └─ Threads (workers)\n```\n\n**Example:** 1024 elements\n- Grid: 4 blocks\n- Each block: 256 threads\n- Total: 4 × 256 = 1024 threads\n\n**3. Memory Management:**\n\n```cpp\n// Allocate GPU memory\ncudaMalloc(&d_A, size);\n\n// Copy CPU → GPU\ncudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);\n\n// Launch kernel\nvectorAdd<<<blocks, threads>>>(d_A, d_B, d_C, N);\n\n// Copy GPU → CPU\ncudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);\n\n// Free GPU memory\ncudaFree(d_A);\n```\n\n**PyTorch/TensorFlow:**\n\nCUDA details hidden, automatic!\n\n```python\n# PyTorch\nimport torch\n\n# Move to GPU\ndevice = torch.device('cuda')\ntensor = torch.randn(1000, 1000).to(device)\n\n# Operations on GPU automatically!\nresult = tensor @ tensor.T  # Matrix multiply on GPU\n```\n\n**Tensor Cores:**\n\nModern GPUs (V100, A100, H100): Specialized hardware!\n\n**Purpose:** Accelerate matrix multiply (FP16/BF16).\n\n**Performance:**\n```\nOperation        | CUDA Cores | Tensor Cores | Speedup\n-----------------|------------|--------------|--------\nFP32 matrix mul  | 15 TFLOPS  | -            | -\nFP16 matrix mul  | 30 TFLOPS  | 120 TFLOPS   | 4×\n```\n\n**Mixed Precision Training:**\n\nLeverage tensor cores!\n\n```python\n# PyTorch\nfrom torch.cuda.amp import autocast, GradScaler\n\nscaler = GradScaler()\n\nfor data, target in dataloader:\n    with autocast():  # FP16 forward pass\n        output = model(data)\n        loss = criterion(output, target)\n    \n    scaler.scale(loss).backward()  # FP32 gradients\n    scaler.step(optimizer)\n    scaler.update()\n```\n\n**Benefits:**\n- 2-4× faster training\n- 50% less memory\n- Same accuracy (with gradient scaling)\n\n**CPU-GPU Data Transfer:**\n\n**Bottleneck:** PCIe bandwidth!\n\n```\nCPU ←→ PCIe ←→ GPU\n      ~16 GB/s  ← Bottleneck!\n```\n\n**Optimization:**\n\n**1. Batch processing:**\nTransfer large batches, not single samples.\n\n**2. Pinned memory:**\nFaster CPU-GPU transfer.\n\n```python\n# PyTorch\ndataloader = DataLoader(\n    dataset,\n    batch_size=256,\n    pin_memory=True  # ✓ Faster transfer\n)\n```\n\n**3. Overlap computation + transfer:**\nCUDA streams for async operations.\n\n**4. Keep data on GPU:**\nMinimize transfers!\n\n```python\n# Bad: Transfer every batch\nfor batch in dataloader:\n    batch = batch.to('cuda')  # ❌ Slow\n    ...\n\n# Good: Keep on GPU\ndata = dataset.to('cuda')  # Once!\nfor batch in data:\n    ...  # ✓ No transfer\n```\n\n**GPU Utilization:**\n\n**Monitor:**\n```bash\nnvidia-smi\n```\n\n**Output:**\n```\n+-----------------------------------------------------------------------------+\n| GPU  Name        Temp  GPU-Util  Memory-Usage |\n|=============================================================================|\n|   0  RTX 3090     45C    95%     22000MiB / 24000MiB |\n+-----------------------------------------------------------------------------+\n```\n\n**Goals:**\n- GPU-Util: 90-100% (GPU busy!)\n- Memory: High (but not OOM)\n\n**Low utilization reasons:**\n- Batch size too small\n- CPU bottleneck (data loading)\n- Too many CPU-GPU transfers",
+    "level3_advanced": "**Advanced Memory Management:**\n\n**Unified Memory:**\n\nAutomatic CPU-GPU memory management.\n\n```cpp\n// CUDA\ncudaMallocManaged(&data, size);  // Accessible from CPU & GPU!\n\n// Use on CPU\ndata[0] = 1.0;\n\n// Use on GPU\nkernel<<<blocks, threads>>>(data);\n\n// Automatic transfer!\n```\n\n**PyTorch:**\n```python\n# Check memory\ntorch.cuda.memory_allocated()  # Bytes allocated\ntorch.cuda.memory_reserved()   # Bytes reserved\ntorch.cuda.max_memory_allocated()  # Peak usage\n\n# Clear cache\ntorch.cuda.empty_cache()\n```\n\n**Gradient Checkpointing:**\n\nTrade compute for memory!\n\n**Problem:** Large models → OOM!\n\n**Solution:** Don't store all activations, recompute in backward pass.\n\n```python\n# PyTorch\nfrom torch.utils.checkpoint import checkpoint\n\ndef forward(x):\n    # Without checkpointing: stores activations\n    x = layer1(x)\n    x = layer2(x)  # Memory!\n    x = layer3(x)  # Memory!\n    return x\n\ndef forward_checkpointed(x):\n    # With checkpointing: recompute, save memory\n    x = checkpoint(layer1, x)\n    x = checkpoint(layer2, x)  # ✓ Less memory\n    x = checkpoint(layer3, x)\n    return x\n```\n\n**Result:**\n- Memory: 50-80% reduction\n- Training time: 20-30% slower\n\n**Multi-GPU Training:**\n\n**1. Data Parallelism:**\n\nReplicate model on each GPU, split data.\n\n```python\n# PyTorch\nmodel = nn.DataParallel(model, device_ids=[0, 1, 2, 3])\n\n# Each GPU:\n# - Same model\n# - Different batch\n# - Gradients averaged\n```\n\n**2. Model Parallelism:**\n\nSplit model across GPUs.\n\n```python\n# Layer 1-5 on GPU 0\nself.layers_1_5 = nn.Sequential(...).to('cuda:0')\n\n# Layer 6-10 on GPU 1\nself.layers_6_10 = nn.Sequential(...).to('cuda:1')\n\ndef forward(x):\n    x = self.layers_1_5(x)  # GPU 0\n    x = x.to('cuda:1')      # Transfer\n    x = self.layers_6_10(x) # GPU 1\n    return x\n```\n\n**3. Pipeline Parallelism:**\n\nCombine data + model parallelism.\n\n**CUDA Streams:**\n\nOverlap operations!\n\n```python\n# PyTorch\nstream1 = torch.cuda.Stream()\nstream2 = torch.cuda.Stream()\n\nwith torch.cuda.stream(stream1):\n    output1 = model1(input1)  # Async!\n\nwith torch.cuda.stream(stream2):\n    output2 = model2(input2)  # Parallel!\n\n# Wait for completion\ntorch.cuda.synchronize()\n```\n\n**Kernel Fusion:**\n\nCombine multiple operations → single kernel.\n\n**Example:**\n```python\n# Unfused: 3 kernels\ny = x + 1      # Kernel 1\nz = y * 2      # Kernel 2\nw = z ** 2     # Kernel 3\n\n# Fused: 1 kernel\nw = ((x + 1) * 2) ** 2  # ✓ Single kernel (JIT fusion)\n```\n\n**Benefits:**\n- Fewer memory transfers\n- Better cache utilization\n- Faster!\n\n**PyTorch JIT:**\n```python\n@torch.jit.script\ndef fused_operation(x):\n    return ((x + 1) * 2) ** 2  # Auto-fused!\n```\n\n**NVIDIA GPU Generations:**\n\n| GPU      | Arch    | Tensor Cores | Memory | Use Case        |\n|----------|---------|--------------|--------|----------------|\n| GTX 1080 | Pascal  | No           | 8 GB   | Old, slow      |\n| RTX 2080 | Turing  | Yes (1st)    | 8 GB   | Decent         |\n| RTX 3090 | Ampere  | Yes (3rd)    | 24 GB  | Great          |\n| A100     | Ampere  | Yes (3rd)    | 40-80GB| Production     |\n| H100     | Hopper  | Yes (4th)    | 80 GB  | Cutting-edge   |\n\n**Tensor Core generations:**\n- 1st (V100, T4): FP16\n- 2nd (RTX 20): FP16 + INT8\n- 3rd (A100, RTX 30): FP16 + BF16 + TF32\n- 4th (H100): All above + FP8\n\n**Performance Profiling:**\n\n**PyTorch Profiler:**\n```python\nfrom torch.profiler import profile, ProfilerActivity\n\nwith profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:\n    model(input)\n\nprint(prof.key_averages().table(sort_by=\"cuda_time_total\"))\n```\n\n**Output:**\n```\n---------------------------------  ------------  ------------\nName                               CPU time      CUDA time\n---------------------------------  ------------  ------------\naten::matmul                       1.23ms        45.67ms\naten::conv2d                       0.89ms        32.10ms\n...\n```\n\n**Identify bottlenecks!**",
+    "level4_expert": "**Hardware-Level Optimization:**\n\n**Warp Execution:**\n\nGPU executes threads in groups (warps) of 32.\n\n**Key:** All 32 threads execute same instruction (SIMT).\n\n**Branch divergence:**\n```cpp\nif (threadIdx.x < 16) {\n    // Half warp does this\n} else {\n    // Half warp does this\n}\n// ❌ Divergence! Serialized execution.\n```\n\n**Optimization:** Avoid divergence within warps.\n\n**Memory Coalescing:**\n\nThreads in warp access consecutive memory → coalesced (fast).\n\n**Coalesced (GOOD):**\n```cpp\nint i = threadIdx.x;\nA[i] = B[i];  // ✓ Thread 0 → A[0], Thread 1 → A[1], ...\n```\n\n**Uncoalesced (BAD):**\n```cpp\nint i = threadIdx.x;\nA[i * stride] = B[i];  // ❌ Non-consecutive access\n```\n\n**Bank Conflicts:**\n\nShared memory divided into banks.\n\n**Conflict:** Multiple threads access same bank → serialized.\n\n**Optimization:** Design access patterns to avoid conflicts.\n\n**Custom CUDA Kernels:**\n\nPyTorch C++ extensions:\n\n```cpp\n// kernel.cu\n__global__ void my_kernel(float* out, float* in, int N) {\n    int i = blockIdx.x * blockDim.x + threadIdx.x;\n    if (i < N) {\n        // Custom operation\n        out[i] = in[i] * 2.0f + 1.0f;\n    }\n}\n```\n\n```python\n# Python\nimport torch\nfrom torch.utils.cpp_extension import load\n\n# JIT compile\ncustom_op = load(name=\"custom_op\", sources=[\"kernel.cu\"])\n\n# Use\noutput = custom_op.forward(input)\n```\n\n**When to write custom kernels:**\n- Unique operation not in library\n- Performance critical bottleneck\n- Memory access pattern optimization\n\n**Tensor Core Programming:**\n\n**WMMA (Warp Matrix Multiply-Accumulate):**\n\n```cpp\n#include <mma.h>\nusing namespace nvcuda::wmma;\n\n__global__ void wmma_kernel(...) {\n    // Fragments (register tiles)\n    fragment<matrix_a, 16, 16, 16, half, row_major> a_frag;\n    fragment<matrix_b, 16, 16, 16, half, col_major> b_frag;\n    fragment<accumulator, 16, 16, 16, float> c_frag;\n    \n    // Load\n    load_matrix_sync(a_frag, A, 16);\n    load_matrix_sync(b_frag, B, 16);\n    \n    // Compute (on tensor core!)\n    mma_sync(c_frag, a_frag, b_frag, c_frag);\n    \n    // Store\n    store_matrix_sync(C, c_frag, 16, mem_row_major);\n}\n```\n\n**Result:** 10× faster matrix multiply!\n\n**NVLink vs PCIe:**\n\n**PCIe:** CPU ↔ GPU\n- Bandwidth: 16-32 GB/s\n- Latency: High\n\n**NVLink:** GPU ↔ GPU\n- Bandwidth: 300-600 GB/s\n- Latency: Low\n\n**Multi-GPU with NVLink:**\n```python\n# DGX system: NVLink between GPUs\nmodel = nn.DataParallel(model)  # ✓ Fast GPU-GPU comm\n```\n\n**GPU Direct Storage:**\n\nDirect disk → GPU (bypass CPU!).\n\n**Traditional:**\n```\nDisk → CPU RAM → GPU RAM\n```\n\n**GPU Direct:**\n```\nDisk → GPU RAM  ✓ Faster!\n```\n\n**Production Optimization Checklist:**\n\n1. ✓ Mixed precision (FP16/BF16)\n2. ✓ Batch size: maximize GPU memory\n3. ✓ Pin memory (dataloader)\n4. ✓ Gradient accumulation (simulate large batch)\n5. ✓ Gradient checkpointing (large models)\n6. ✓ JIT compile (@torch.jit.script)\n7. ✓ Profile: identify bottlenecks\n8. ✓ Multi-GPU: data parallelism\n9. ✓ Kernel fusion: combine ops\n10. ✓ Avoid CPU-GPU transfers in loop\n\n**Cost-Performance Trade-offs:**\n\n| GPU     | Price  | Memory | Training Speed | $/TFLOP |\n|---------|--------|--------|----------------|--------|\n| RTX 3060| $400   | 12 GB  | 1×             | $40    |\n| RTX 3090| $1500  | 24 GB  | 2×             | $37    |\n| A100    | $10000 | 80 GB  | 4×             | $25    |\n| H100    | $30000 | 80 GB  | 6×             | $20    |\n\n**Recommendation:**\n- Research: RTX 3090 / 4090\n- Production: A100 (cloud)\n- Cutting-edge: H100",
+    "level5_research": "**Research Topics:**\n\n**1. GPU Compression:**\nOn-the-fly compression for memory bandwidth.\n\n**2. Sparse Tensor Cores:**\nAccelerate sparse matrix operations.\n\n**3. Quantum-GPU Hybrid:**\nQuantum processors + GPU acceleration.\n\n**4. Neuromorphic Hardware:**\nBeyond GPUs, brain-inspired chips.\n\n**5. Optical Computing:**\nLight-based matrix multiply, potentially 1000× faster."
+  },
+  "whatIsIt": "CPU: Few powerful cores, sequential tasks. GPU: Thousands simple cores, massive parallelism! AI/ML training GPU'da 10-100× faster (matrix ops parallel). CUDA programming, tensor cores hardware acceleration!",
+  "whyNeeded": "Deep learning = tons of matrix operations! GPU thousands of operations parallel yapar, CPU sequential. GPU critical for: Training speed, large models, production deployment!",
+  "realWorldAnalogy": "CPU: Bir süper zeki insan, karmaşık problemler çözer (sequential). GPU: Bin işçi, basit tasks parallel yapar (paralel tuğla taşıma). Matrix multiply: GPU wins! Thousands of multiplications parallel.",
+  "mathematics": {
+    "formulas": [
+      "\\text{Speedup} = \\frac{\\text{CPU Time}}{\\text{GPU Time}}",
+      "\\text{GPU Cores} \\gg \\text{CPU Cores} \\quad (1000s \\text{ vs } 10s)",
+      "\\text{Memory Bandwidth: } \\text{GPU} \\approx 10× \\text{CPU}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "PYTORCH GPU USAGE:",
+      "1. Check GPU availability:",
+      "   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')",
+      "2. Move model to GPU:",
+      "   model = model.to(device)",
+      "3. Move data to GPU:",
+      "   data = data.to(device)",
+      "4. Train (operations on GPU automatically!):",
+      "   output = model(data)  # Matrix ops on GPU",
+      "5. Monitor GPU utilization:",
+      "   nvidia-smi"
+    ],
+    "complexity": "Matrix multiply: CPU O(n³) sequential, GPU O(n³/P) parallel (P = cores). Speedup ~100× typical!"
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "CPU vs GPU Speed Comparison",
+      "code": "import torch\nimport numpy as np\nimport time\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"CPU vs GPU PERFORMANCE\")\nprint(\"=\"*60)\n\n# Check CUDA availability\nif torch.cuda.is_available():\n    device_name = torch.cuda.get_device_name(0)\n    print(f\"\\n✓ GPU available: {device_name}\")\n    print(f\"  CUDA version: {torch.version.cuda}\")\n    print(f\"  Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB\")\nelse:\n    print(\"\\n⚠️  No GPU available, using CPU only\")\n    print(\"  (Install CUDA for GPU support)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"MATRIX MULTIPLICATION BENCHMARK\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nDeep learning = lots of matrix operations!\nLet's compare CPU vs GPU speed...\n\"\"\")\n\nsizes = [100, 500, 1000, 2000, 3000]\ncpu_times = []\ngpu_times = []\nspeedups = []\n\nprint(\"\\nSize  | CPU Time | GPU Time | Speedup\")\nprint(\"-\" * 50)\n\nfor size in sizes:\n    # Create random matrices\n    A_cpu = torch.randn(size, size)\n    B_cpu = torch.randn(size, size)\n    \n    # CPU benchmark\n    start = time.time()\n    C_cpu = torch.matmul(A_cpu, B_cpu)\n    cpu_time = time.time() - start\n    cpu_times.append(cpu_time)\n    \n    # GPU benchmark (if available)\n    if torch.cuda.is_available():\n        A_gpu = A_cpu.to('cuda')\n        B_gpu = B_cpu.to('cuda')\n        \n        # Warmup\n        _ = torch.matmul(A_gpu, B_gpu)\n        torch.cuda.synchronize()\n        \n        # Benchmark\n        start = time.time()\n        C_gpu = torch.matmul(A_gpu, B_gpu)\n        torch.cuda.synchronize()  # Wait for GPU to finish\n        gpu_time = time.time() - start\n        gpu_times.append(gpu_time)\n        \n        speedup = cpu_time / gpu_time\n        speedups.append(speedup)\n        \n        print(f\"{size:4d}  | {cpu_time:8.4f}s | {gpu_time:8.4f}s | {speedup:6.1f}x\")\n    else:\n        gpu_times.append(0)\n        speedups.append(0)\n        print(f\"{size:4d}  | {cpu_time:8.4f}s | -        | -\")\n\nif torch.cuda.is_available():\n    print(f\"\\n💡 GPU is {speedups[-1]:.1f}× faster for large matrices!\")\nelse:\n    print(\"\\n💡 Get a GPU for major speedups!\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"MEMORY USAGE\")\nprint(\"=\"*60)\n\nif torch.cuda.is_available():\n    # Create large tensor on GPU\n    size = 5000\n    tensor = torch.randn(size, size).to('cuda')\n    \n    allocated = torch.cuda.memory_allocated() / 1e9\n    reserved = torch.cuda.memory_reserved() / 1e9\n    \n    print(f\"\\nTensor size: {size}×{size}\")\n    print(f\"Memory allocated: {allocated:.2f} GB\")\n    print(f\"Memory reserved: {reserved:.2f} GB\")\n    \n    print(\"\\n💡 Monitor GPU memory:\")\n    print(\"  torch.cuda.memory_allocated()  # Current usage\")\n    print(\"  torch.cuda.memory_reserved()   # Total reserved\")\n    print(\"  torch.cuda.empty_cache()       # Clear cache\")\n    \n    # Clean up\n    del tensor\n    torch.cuda.empty_cache()\nelse:\n    print(\"\\nGPU not available for memory demo.\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"BASIC GPU USAGE PATTERN\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nPyTorch GPU usage (simple!):\n\n```python\n# 1. Define device\ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n\n# 2. Move model to GPU\nmodel = MyModel().to(device)\n\n# 3. Move data to GPU\nfor data, target in dataloader:\n    data = data.to(device)\n    target = target.to(device)\n    \n    # 4. Operations on GPU automatically!\n    output = model(data)\n    loss = criterion(output, target)\n    \n    # 5. Backward & optimize (on GPU)\n    loss.backward()\n    optimizer.step()\n```\n\n✓ That's it! PyTorch handles CUDA details.\n\"\"\")\n\n# Visualize\nif torch.cuda.is_available() and len(speedups) > 0:\n    fig, axes = plt.subplots(1, 2, figsize=(14, 5))\n    \n    # Time comparison\n    ax = axes[0]\n    x = np.arange(len(sizes))\n    width = 0.35\n    \n    ax.bar(x - width/2, cpu_times, width, label='CPU', alpha=0.8)\n    ax.bar(x + width/2, gpu_times, width, label='GPU', alpha=0.8)\n    \n    ax.set_xlabel('Matrix Size', fontsize=12)\n    ax.set_ylabel('Time (seconds)', fontsize=12)\n    ax.set_title('CPU vs GPU: Matrix Multiplication Time', fontsize=14)\n    ax.set_xticks(x)\n    ax.set_xticklabels([f'{s}×{s}' for s in sizes], rotation=45)\n    ax.legend(fontsize=11)\n    ax.grid(True, alpha=0.3, axis='y')\n    \n    # Speedup\n    ax = axes[1]\n    ax.plot(sizes, speedups, marker='o', linewidth=2, markersize=8)\n    ax.set_xlabel('Matrix Size', fontsize=12)\n    ax.set_ylabel('Speedup (CPU time / GPU time)', fontsize=12)\n    ax.set_title('GPU Speedup Factor', fontsize=14)\n    ax.grid(True, alpha=0.3)\n    ax.axhline(1, color='red', linestyle='--', alpha=0.5, label='No speedup')\n    ax.legend(fontsize=11)\n    \n    plt.tight_layout()\n\nprint(\"\\n✓ GPU: Massive parallelism for matrix operations!\")",
+      "explanation": "CPU vs GPU speed benchmark! Matrix multiply comparison, memory usage, basic PyTorch GPU pattern. Speedup visualization. CUDA availability check."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Mixed Precision Training",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.cuda.amp import autocast, GradScaler\nimport time\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"MIXED PRECISION TRAINING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nMixed Precision:\n  • Forward pass: FP16 (faster, less memory)\n  • Gradients: FP32 (numerical stability)\n  • Tensor cores: 2-4× speedup!\n\nRequires: Modern GPU (Volta, Turing, Ampere+)\n\"\"\")\n\nif not torch.cuda.is_available():\n    print(\"\\n⚠️  GPU not available. Mixed precision needs CUDA.\")\n    print(\"\\nExiting demo...\")\nelse:\n    device = torch.device('cuda')\n    \n    # Check GPU capability\n    capability = torch.cuda.get_device_capability()\n    print(f\"\\nGPU: {torch.cuda.get_device_name(0)}\")\n    print(f\"Compute capability: {capability[0]}.{capability[1]}\")\n    \n    if capability[0] < 7:  # Volta = 7.0\n        print(\"⚠️  This GPU doesn't have tensor cores.\")\n        print(\"   (Mixed precision still works but less speedup)\")\n    else:\n        print(\"✓ Tensor cores available!\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"SIMPLE MODEL\")\n    print(\"=\"*60)\n    \n    # Define model\n    class SimpleModel(nn.Module):\n        def __init__(self):\n            super().__init__()\n            self.fc1 = nn.Linear(1024, 2048)\n            self.fc2 = nn.Linear(2048, 2048)\n            self.fc3 = nn.Linear(2048, 1024)\n            self.fc4 = nn.Linear(1024, 10)\n        \n        def forward(self, x):\n            x = torch.relu(self.fc1(x))\n            x = torch.relu(self.fc2(x))\n            x = torch.relu(self.fc3(x))\n            return self.fc4(x)\n    \n    model = SimpleModel().to(device)\n    \n    # Dummy data\n    batch_size = 256\n    input_size = 1024\n    num_batches = 50\n    \n    print(f\"\\nModel: 4-layer MLP\")\n    print(f\"Batch size: {batch_size}\")\n    print(f\"Input size: {input_size}\")\n    print(f\"Training batches: {num_batches}\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"FP32 TRAINING (BASELINE)\")\n    print(\"=\"*60)\n    \n    model_fp32 = SimpleModel().to(device)\n    optimizer_fp32 = optim.Adam(model_fp32.parameters(), lr=0.001)\n    criterion = nn.CrossEntropyLoss()\n    \n    # Warmup\n    for _ in range(5):\n        data = torch.randn(batch_size, input_size).to(device)\n        target = torch.randint(0, 10, (batch_size,)).to(device)\n        output = model_fp32(data)\n        loss = criterion(output, target)\n        loss.backward()\n        optimizer_fp32.step()\n        optimizer_fp32.zero_grad()\n    \n    # Benchmark FP32\n    torch.cuda.synchronize()\n    start = time.time()\n    \n    for i in range(num_batches):\n        data = torch.randn(batch_size, input_size).to(device)\n        target = torch.randint(0, 10, (batch_size,)).to(device)\n        \n        output = model_fp32(data)\n        loss = criterion(output, target)\n        loss.backward()\n        optimizer_fp32.step()\n        optimizer_fp32.zero_grad()\n    \n    torch.cuda.synchronize()\n    fp32_time = time.time() - start\n    fp32_memory = torch.cuda.max_memory_allocated() / 1e9\n    \n    print(f\"\\nFP32 Training:\")\n    print(f\"  Time: {fp32_time:.2f}s\")\n    print(f\"  Memory: {fp32_memory:.2f} GB\")\n    \n    # Reset memory\n    torch.cuda.reset_peak_memory_stats()\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"MIXED PRECISION TRAINING\")\n    print(\"=\"*60)\n    \n    model_amp = SimpleModel().to(device)\n    optimizer_amp = optim.Adam(model_amp.parameters(), lr=0.001)\n    scaler = GradScaler()  # Gradient scaling!\n    \n    print(\"\"\"\n    Key components:\n      • autocast(): FP16 forward pass\n      • GradScaler: Scale gradients (prevent underflow)\n    \"\"\")\n    \n    # Warmup\n    for _ in range(5):\n        data = torch.randn(batch_size, input_size).to(device)\n        target = torch.randint(0, 10, (batch_size,)).to(device)\n        \n        with autocast():\n            output = model_amp(data)\n            loss = criterion(output, target)\n        \n        scaler.scale(loss).backward()\n        scaler.step(optimizer_amp)\n        scaler.update()\n        optimizer_amp.zero_grad()\n    \n    # Benchmark Mixed Precision\n    torch.cuda.synchronize()\n    start = time.time()\n    \n    for i in range(num_batches):\n        data = torch.randn(batch_size, input_size).to(device)\n        target = torch.randint(0, 10, (batch_size,)).to(device)\n        \n        with autocast():  # FP16 forward\n            output = model_amp(data)\n            loss = criterion(output, target)\n        \n        scaler.scale(loss).backward()  # Scaled FP32 backward\n        scaler.step(optimizer_amp)\n        scaler.update()\n        optimizer_amp.zero_grad()\n    \n    torch.cuda.synchronize()\n    amp_time = time.time() - start\n    amp_memory = torch.cuda.max_memory_allocated() / 1e9\n    \n    print(f\"\\nMixed Precision Training:\")\n    print(f\"  Time: {amp_time:.2f}s\")\n    print(f\"  Memory: {amp_memory:.2f} GB\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"COMPARISON\")\n    print(\"=\"*60)\n    \n    speedup = fp32_time / amp_time\n    memory_reduction = (1 - amp_memory / fp32_memory) * 100\n    \n    print(f\"\\nSpeedup: {speedup:.2f}×\")\n    print(f\"Memory reduction: {memory_reduction:.1f}%\")\n    \n    print(\"\"\"\n    \\n💡 Benefits:\n      ✓ 2-4× faster (tensor cores!)\n      ✓ 30-50% less memory\n      ✓ Same accuracy (with gradient scaling)\n    \n    📝 Best Practice:\n      ALWAYS use mixed precision on modern GPUs!\n    \"\"\")\n    \n    # Visualize\n    fig, axes = plt.subplots(1, 2, figsize=(14, 5))\n    \n    # Time comparison\n    ax = axes[0]\n    methods = ['FP32\\n(Baseline)', 'Mixed Precision\\n(FP16+FP32)']\n    times = [fp32_time, amp_time]\n    colors = ['lightcoral', 'lightgreen']\n    \n    bars = ax.bar(methods, times, color=colors, edgecolor='black', linewidth=2)\n    ax.set_ylabel('Training Time (seconds)', fontsize=12)\n    ax.set_title('Training Speed Comparison', fontsize=14)\n    ax.grid(True, alpha=0.3, axis='y')\n    \n    # Annotate\n    for bar, t in zip(bars, times):\n        height = bar.get_height()\n        ax.text(bar.get_x() + bar.get_width()/2., height,\n               f'{t:.2f}s',\n               ha='center', va='bottom', fontsize=11)\n    \n    # Speedup annotation\n    ax.text(0.5, max(times)*0.9, f'{speedup:.2f}× Speedup!',\n           ha='center', fontsize=14, weight='bold',\n           bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7))\n    \n    # Memory comparison\n    ax = axes[1]\n    memories = [fp32_memory, amp_memory]\n    \n    bars = ax.bar(methods, memories, color=colors, edgecolor='black', linewidth=2)\n    ax.set_ylabel('Peak Memory Usage (GB)', fontsize=12)\n    ax.set_title('Memory Usage Comparison', fontsize=14)\n    ax.grid(True, alpha=0.3, axis='y')\n    \n    # Annotate\n    for bar, m in zip(bars, memories):\n        height = bar.get_height()\n        ax.text(bar.get_x() + bar.get_width()/2., height,\n               f'{m:.2f}GB',\n               ha='center', va='bottom', fontsize=11)\n    \n    plt.tight_layout()\n    \n    print(\"\\n✓ Mixed precision: Essential for modern deep learning!\")",
+      "explanation": "Mixed precision training! FP16 forward + FP32 gradients. autocast + GradScaler. Speed & memory comparison. Tensor cores utilization. Production best practice!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "GPU Memory Optimization",
+      "code": "import torch\nimport torch.nn as nn\nimport matplotlib.pyplot as plt\nfrom torch.utils.checkpoint import checkpoint\n\nprint(\"=\"*60)\nprint(\"GPU MEMORY OPTIMIZATION\")\nprint(\"=\"*60)\n\nif not torch.cuda.is_available():\n    print(\"\\n⚠️  GPU not available.\")\n    print(\"\\nMemory optimization demo needs CUDA.\")\nelse:\n    device = torch.device('cuda')\n    \n    print(f\"\\nGPU: {torch.cuda.get_device_name(0)}\")\n    total_memory = torch.cuda.get_device_properties(0).total_memory / 1e9\n    print(f\"Total memory: {total_memory:.1f} GB\")\n    \n    print(\"\"\"\n    \\nMemory bottlenecks in deep learning:\n      • Large batch size → OOM!\n      • Deep models → activations stored\n      • Long sequences (transformers)\n    \n    Solutions:\n      1. Gradient checkpointing\n      2. Smaller batch size\n      3. Gradient accumulation\n      4. Mixed precision\n    \"\"\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"GRADIENT CHECKPOINTING\")\n    print(\"=\"*60)\n    \n    print(\"\"\"\n    Problem: Forward pass stores ALL activations for backward.\n    Solution: Don't store, RECOMPUTE in backward!\n    \n    Trade-off:\n      • Memory: 50-80% reduction ✓\n      • Time: 20-30% slower ❌\n    \"\"\")\n    \n    # Deep model\n    class DeepLayer(nn.Module):\n        def __init__(self, size):\n            super().__init__()\n            self.layers = nn.Sequential(\n                nn.Linear(size, size),\n                nn.ReLU(),\n                nn.Linear(size, size),\n                nn.ReLU()\n            )\n        \n        def forward(self, x):\n            return self.layers(x)\n    \n    class DeepModel(nn.Module):\n        def __init__(self, n_layers, size):\n            super().__init__()\n            self.layers = nn.ModuleList([DeepLayer(size) for _ in range(n_layers)])\n        \n        def forward(self, x, use_checkpoint=False):\n            for layer in self.layers:\n                if use_checkpoint:\n                    x = checkpoint(layer, x)  # ✓ Checkpointing\n                else:\n                    x = layer(x)  # ❌ Store all activations\n            return x\n    \n    n_layers = 50\n    size = 1024\n    batch_size = 32\n    \n    print(f\"\\nModel: {n_layers} deep layers\")\n    print(f\"Hidden size: {size}\")\n    print(f\"Batch size: {batch_size}\")\n    \n    model = DeepModel(n_layers, size).to(device)\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"WITHOUT CHECKPOINTING\")\n    print(\"=\"*60)\n    \n    # Reset memory stats\n    torch.cuda.reset_peak_memory_stats()\n    \n    x = torch.randn(batch_size, size).to(device)\n    \n    # Forward\n    output = model(x, use_checkpoint=False)\n    loss = output.sum()\n    \n    # Backward\n    loss.backward()\n    \n    memory_no_checkpoint = torch.cuda.max_memory_allocated() / 1e9\n    print(f\"\\nPeak memory: {memory_no_checkpoint:.2f} GB\")\n    \n    # Clear\n    del output, loss, x\n    torch.cuda.empty_cache()\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"WITH CHECKPOINTING\")\n    print(\"=\"*60)\n    \n    # Reset memory stats\n    torch.cuda.reset_peak_memory_stats()\n    \n    x = torch.randn(batch_size, size).to(device)\n    \n    # Forward (with checkpointing)\n    output = model(x, use_checkpoint=True)\n    loss = output.sum()\n    \n    # Backward (recomputes!)\n    loss.backward()\n    \n    memory_checkpoint = torch.cuda.max_memory_allocated() / 1e9\n    print(f\"\\nPeak memory: {memory_checkpoint:.2f} GB\")\n    \n    memory_saved = (1 - memory_checkpoint / memory_no_checkpoint) * 100\n    print(f\"\\nMemory saved: {memory_saved:.1f}%\")\n    \n    print(\"\"\"\n    \\n💡 Gradient checkpointing:\n      ✓ Enables training larger models\n      ✓ Or larger batch sizes\n      ❌ 20-30% slower (recomputation)\n    \n    Use when: Memory-constrained!\n    \"\"\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"GRADIENT ACCUMULATION\")\n    print(\"=\"*60)\n    \n    print(\"\"\"\n    Problem: Want large batch but OOM!\n    Solution: Accumulate gradients over small batches.\n    \n    Example:\n      Want batch=256, but only fit batch=64\n      → Accumulate over 4 batches (64×4 = 256)\n    \"\"\")\n    \n    print(\"\"\"\n    \\n```python\n    accumulation_steps = 4\n    optimizer.zero_grad()\n    \n    for i, (data, target) in enumerate(dataloader):\n        output = model(data)\n        loss = criterion(output, target)\n        \n        # Scale loss\n        loss = loss / accumulation_steps\n        loss.backward()  # Accumulate gradients\n        \n        if (i + 1) % accumulation_steps == 0:\n            optimizer.step()  # Update after 4 batches\n            optimizer.zero_grad()\n    ```\n    \n    Result: Effective batch = 256, memory = 64!\n    \"\"\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"MEMORY MONITORING\")\n    print(\"=\"*60)\n    \n    print(\"\"\"\n    PyTorch memory functions:\n    \n    ```python\n    # Current allocation\n    torch.cuda.memory_allocated()  # Bytes\n    \n    # Reserved (cached)\n    torch.cuda.memory_reserved()\n    \n    # Peak usage\n    torch.cuda.max_memory_allocated()\n    \n    # Reset peak counter\n    torch.cuda.reset_peak_memory_stats()\n    \n    # Clear cache\n    torch.cuda.empty_cache()\n    \n    # Memory summary\n    print(torch.cuda.memory_summary())\n    ```\n    \"\"\")\n    \n    # Current stats\n    allocated = torch.cuda.memory_allocated() / 1e9\n    reserved = torch.cuda.memory_reserved() / 1e9\n    \n    print(f\"\\nCurrent GPU memory:\")\n    print(f\"  Allocated: {allocated:.2f} GB\")\n    print(f\"  Reserved: {reserved:.2f} GB\")\n    print(f\"  Free: {total_memory - reserved:.2f} GB\")\n    \n    # Visualize\n    fig, ax = plt.subplots(1, 1, figsize=(10, 6))\n    \n    methods = ['Without\\nCheckpointing', 'With\\nCheckpointing']\n    memories = [memory_no_checkpoint, memory_checkpoint]\n    colors = ['lightcoral', 'lightgreen']\n    \n    bars = ax.bar(methods, memories, color=colors, edgecolor='black', linewidth=2)\n    ax.set_ylabel('Peak Memory (GB)', fontsize=12)\n    ax.set_title(f'Gradient Checkpointing Memory Savings ({n_layers} layers)', fontsize=14)\n    ax.grid(True, alpha=0.3, axis='y')\n    \n    # Annotate\n    for bar, m in zip(bars, memories):\n        height = bar.get_height()\n        ax.text(bar.get_x() + bar.get_width()/2., height,\n               f'{m:.2f} GB',\n               ha='center', va='bottom', fontsize=11)\n    \n    # Savings annotation\n    ax.text(0.5, max(memories)*0.8, f'{memory_saved:.1f}% Memory Saved!',\n           ha='center', fontsize=14, weight='bold',\n           bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7))\n    \n    plt.tight_layout()\n    \n    print(\"\\n✓ Memory optimization: Critical for large models!\")",
+      "explanation": "GPU memory optimization! Gradient checkpointing (trade compute for memory), gradient accumulation (large effective batch), memory monitoring. OOM solutions!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "GPU neden AI/ML için CPU'dan faster?",
+      "options": [
+        "Daha yüksek clock speed",
+        "Thousands of cores → massive parallelism, matrix ops parallel!",
+        "Daha büyük cache",
+        "Daha iyi branching"
+      ],
+      "correct": 1,
+      "explanation": "GPU thousands of simple cores var! Matrix operations (deep learning core) parallel yapar. CPU few powerful cores, sequential. GPU 10-100× faster AI/ML için!"
+    },
+    {
+      "question": "CUDA nedir?",
+      "options": [
+        "AMD GPU platform",
+        "NVIDIA GPU programming platform, kernel yazma, memory management",
+        "CPU optimization tool",
+        "Cloud service"
+      ],
+      "correct": 1,
+      "explanation": "CUDA: NVIDIA GPU programming platform! Custom kernels yaz, GPU parallelism exploit et. PyTorch/TensorFlow CUDA kullanır (automatic, hidden)."
+    },
+    {
+      "question": "Tensor cores ne için?",
+      "options": [
+        "CPU acceleration",
+        "Matrix multiply hardware acceleration (FP16/BF16), 4× speedup!",
+        "Memory compression",
+        "Data transfer"
+      ],
+      "correct": 1,
+      "explanation": "Tensor cores: Specialized hardware modern GPUs'ta! Matrix multiply accelerate eder (FP16/BF16). Mixed precision training ile 2-4× speedup! V100, A100, H100'de var."
+    },
+    {
+      "question": "Mixed precision training neden?",
+      "options": [
+        "Daha yavaş ama accurate",
+        "FP16 forward (fast, tensor cores) + FP32 gradients (stability) → 2-4× faster!",
+        "Sadece small models için",
+        "Gereksiz"
+      ],
+      "correct": 1,
+      "explanation": "Mixed precision: FP16 forward pass (fast, tensor cores!) + FP32 gradients (numerical stability). 2-4× speedup, 50% less memory, same accuracy! Always use!"
+    },
+    {
+      "question": "Gradient checkpointing trade-off?",
+      "options": [
+        "Faster but more memory",
+        "50-80% less memory ama 20-30% slower (recomputation)",
+        "Always better",
+        "Sadece CPU için"
+      ],
+      "correct": 1,
+      "explanation": "Gradient checkpointing: Don't store activations, recompute in backward! 50-80% memory reduction, ama 20-30% slower. Use when memory-constrained (large models)!"
+    },
+    {
+      "question": "CPU-GPU data transfer bottleneck nasıl azaltılır?",
+      "options": [
+        "Her batch transfer et",
+        "Large batches, pinned memory, minimize transfers, keep data on GPU!",
+        "Impossible",
+        "Sadece CPU kullan"
+      ],
+      "correct": 1,
+      "explanation": "CPU-GPU transfer PCIe bottleneck! Solutions: Large batches (not single samples), pinned memory (pin_memory=True), keep data on GPU, avoid loop transfers!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Her iteration data CPU'dan GPU'ya transfer etmek",
+      "why": "PCIe bandwidth bottleneck! Thousands of small transfers slow.",
+      "fix": "Data GPU'da tut, ya da large batches transfer et.",
+      "example": "# YANLIŞ\nfor batch in dataloader:\n    batch = batch.to('cuda')  # ❌ Her iteration!\n\n# DOĞRU\n# Option 1: pin_memory\ndataloader = DataLoader(dataset, pin_memory=True)  # ✓\n\n# Option 2: Keep on GPU\ndata = dataset.to('cuda')  # Once!"
+    },
+    {
+      "mistake": "Mixed precision kullanmamak (modern GPU)",
+      "why": "2-4× speedup kaçırıyorsun! Tensor cores idle.",
+      "fix": "torch.cuda.amp kullan.",
+      "example": "# YANLIŞ: FP32 only\noutput = model(data)  # ❌ Slow\n\n# DOĞRU: Mixed precision\nfrom torch.cuda.amp import autocast, GradScaler\nscaler = GradScaler()\n\nwith autocast():  # ✓ FP16 forward\n    output = model(data)"
+    },
+    {
+      "mistake": "GPU memory full → batch size=1 kullanmak",
+      "why": "Inefficient! GPU underutilized, slow training.",
+      "fix": "Gradient accumulation ya da checkpointing kullan.",
+      "example": "# YANLIŞ\nbatch_size = 1  # ❌ GPU underutilized\n\n# DOĞRU: Gradient accumulation\nbatch_size = 32\naccumulation_steps = 8  # Effective = 256\n# Accumulate gradients  # ✓"
+    },
+    {
+      "mistake": "torch.cuda.synchronize() unutmak (benchmarking)",
+      "why": "GPU async! Time ölçümü yanlış (CPU returns before GPU finishes).",
+      "fix": "synchronize() çağır.",
+      "example": "# YANLIŞ\nstart = time.time()\noutput = model(data)  # ❌ Returns immediately!\nend = time.time()  # Wrong!\n\n# DOĞRU\nstart = time.time()\noutput = model(data)\ntorch.cuda.synchronize()  # ✓ Wait for GPU\nend = time.time()"
+    },
+    {
+      "mistake": "Unused tensors GPU'da bırakmak",
+      "why": "Memory leak! GPU memory dolacak.",
+      "fix": "del + empty_cache().",
+      "example": "# Large temporary tensor\ntemp = torch.randn(10000, 10000).to('cuda')\n# Use it...\n\n# Clean up\ndel temp\ntorch.cuda.empty_cache()  # ✓"
+    },
+    {
+      "mistake": "Multi-GPU'da device belirtmemek",
+      "why": "Default device (cuda:0) kullanılır, diğerleri idle!",
+      "fix": "DataParallel ya da DistributedDataParallel.",
+      "example": "# YANLIŞ: Tek GPU\nmodel.to('cuda')  # ❌ Only GPU 0\n\n# DOĞRU: Multi-GPU\nmodel = nn.DataParallel(model)  # ✓ All GPUs\nmodel.to('cuda')"
+    },
+    {
+      "mistake": "Gradient checkpointing everywhere",
+      "why": "20-30% slower! Sadece memory-constrained durumlarda kullan.",
+      "fix": "Selective checkpointing, sadece gerekli layers.",
+      "example": "# Don't checkpoint everything!\n# Only checkpoint memory-heavy layers\nif memory_constrained:\n    x = checkpoint(heavy_layer, x)  # ✓\nelse:\n    x = heavy_layer(x)  # Faster"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "CPU vs GPU architecture farkı?",
+      "back": "CPU: Few powerful cores (4-32), sequential tasks. GPU: Thousands simple cores, massive parallelism! Matrix ops parallel → 10-100× faster AI/ML için!"
+    },
+    {
+      "front": "CUDA nedir?",
+      "back": "NVIDIA GPU programming platform. Custom kernels, memory management, parallelism. PyTorch/TensorFlow automatic CUDA kullanır!"
+    },
+    {
+      "front": "Tensor cores ne yapar?",
+      "back": "Matrix multiply hardware acceleration! FP16/BF16 ops. Modern GPUs (V100, A100, H100). Mixed precision ile 2-4× speedup!"
+    },
+    {
+      "front": "Mixed precision training?",
+      "back": "FP16 forward pass (fast, tensor cores!) + FP32 gradients (stability). autocast + GradScaler. 2-4× faster, 50% less memory, same accuracy!"
+    },
+    {
+      "front": "Gradient checkpointing trade-off?",
+      "back": "Don't store activations, recompute! 50-80% memory saved, ama 20-30% slower. Use when memory-constrained (large models, batch size)."
+    },
+    {
+      "front": "CPU-GPU transfer bottleneck?",
+      "back": "PCIe bandwidth ~16 GB/s! Solutions: Large batches, pinned memory (pin_memory=True), keep data on GPU, minimize transfers!"
+    },
+    {
+      "front": "GPU memory hierarchy?",
+      "back": "Registers (fastest, KB) → Shared memory (fast, KB per block) → Global/VRAM (slower, GB). Minimize global access!"
+    },
+    {
+      "front": "GPU utilization optimization?",
+      "back": "Target 90-100% util! Solutions: Larger batch size, pin_memory, gradient accumulation, mixed precision, avoid CPU-GPU transfers. nvidia-smi monitor!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "diagram",
+      "title": "CPU vs GPU Architecture",
+      "description": "CPU: Few powerful cores. GPU: Thousands simple cores. Parallelism visualization, cache hierarchy, memory bandwidth comparison.",
+      "component": "CPUvsGPUDiagram"
+    },
+    {
+      "type": "interactive",
+      "title": "Matrix Multiply Parallelization",
+      "description": "Interactive demo: CPU sequential vs GPU parallel matrix multiply. Speedup calculation, core utilization visualization.",
+      "component": "MatrixMultiplyParallel"
+    },
+    {
+      "type": "plot",
+      "title": "Mixed Precision Training",
+      "description": "FP32 vs mixed precision comparison. Speed, memory usage, accuracy. Tensor core utilization diagram.",
+      "component": "MixedPrecisionViz"
+    },
+    {
+      "type": "interactive",
+      "title": "GPU Memory Hierarchy",
+      "description": "Registers, shared memory, global memory. Access patterns, coalescing, bandwidth. Interactive memory access simulation.",
+      "component": "GPUMemoryHierarchy"
+    }
+  ]
+}

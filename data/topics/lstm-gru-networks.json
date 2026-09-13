@@ -1,0 +1,297 @@
+{
+  "id": "lstm-gru-networks",
+  "title": "LSTM & GRU Networks",
+  "category": "neural-networks",
+  "level": 3,
+  "estimatedTime": 70,
+  "description": "LSTM (Long Short-Term Memory) & GRU (Gated Recurrent Unit): Advanced RNN architectures that solve vanishing gradient problem! LSTM: 3 gates (forget, input, output) + cell state. Can remember long-term dependencies (100+ steps). GRU: Simplified (2 gates: reset, update), faster than LSTM. Both: Learn what to remember/forget. Applications: Language modeling, machine translation, speech recognition, time series. LSTM cells: Complex but powerful. GRU: 30% faster, similar performance. Modern choice: Transformers often better, but LSTM/GRU still used for sequential data with hardware constraints.",
+  "content": {
+    "level0_basic": "Problem with vanilla RNN: Forgets long-term! Sentence 'The cat, which ate the fish in the morning, was tired' → By 'was tired', forgot 'cat'! Vanishing gradients. LSTM solution: Memory cell + gates! (1) Forget gate: Decide what to forget from memory. (2) Input gate: Decide what new info to add. (3) Output gate: Decide what to output. Result: Can remember 100+ steps! GRU: Simpler variant (2 gates instead of 3). Reset gate + Update gate. 30% faster, similar performance. Use cases: Translation (remember beginning of sentence), text generation, speech recognition. Modern: Transformers often replace LSTM/GRU, but still useful for streaming data, edge devices.",
+    "level1_beginner": "**LSTM Cell:**\n\n```\nInputs: xₜ (current), hₜ₋₁ (previous hidden), Cₜ₋₁ (previous cell)\n\nGates (all sigmoid, output 0-1):\n  fₜ = σ(Wf·[hₜ₋₁, xₜ] + bf)  # Forget gate\n  iₜ = σ(Wi·[hₜ₋₁, xₜ] + bi)  # Input gate\n  oₜ = σ(Wo·[hₜ₋₁, xₜ] + bo)  # Output gate\n\nCandidate: C̃ₜ = tanh(Wc·[hₜ₋₁, xₜ] + bc)\n\nCell state: Cₜ = fₜ ⊙ Cₜ₋₁ + iₜ ⊙ C̃ₜ\n  (Forget old + Add new)\n\nHidden: hₜ = oₜ ⊙ tanh(Cₜ)\n\nOutputs: hₜ, Cₜ\n```\n\n**GRU Cell (Simpler):**\n\n```\nInputs: xₜ, hₜ₋₁\n\nGates:\n  rₜ = σ(Wr·[hₜ₋₁, xₜ])  # Reset gate\n  zₜ = σ(Wz·[hₜ₋₁, xₜ])  # Update gate\n\nCandidate: h̃ₜ = tanh(W·[rₜ⊙hₜ₋₁, xₜ])\n\nHidden: hₜ = (1-zₜ)⊙hₜ₋₁ + zₜ⊙h̃ₜ\n  (Mix old and new)\n\nNo separate cell state!\n```\n\n**LSTM vs GRU:**\n\n```\nLSTM:\n  + More powerful (separate cell state)\n  + Better for very long sequences\n  - Slower (more parameters)\n  - More memory\n\nGRU:\n  + Faster (30% less computation)\n  + Fewer parameters\n  + Often similar performance\n  - Slightly less powerful\n\nRule: Try GRU first, use LSTM if needed\n```",
+    "level2_application": "**PyTorch LSTM:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass LSTMModel(nn.Module):\n    def __init__(self, vocab_size, embed_dim=128, hidden_dim=256, num_layers=2):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embed_dim)\n        self.lstm = nn.LSTM(embed_dim, hidden_dim, num_layers, batch_first=True, dropout=0.5)\n        self.fc = nn.Linear(hidden_dim, vocab_size)\n    \n    def forward(self, x):\n        # x: (batch, seq_len)\n        embed = self.embedding(x)  # (batch, seq_len, embed_dim)\n        output, (hidden, cell) = self.lstm(embed)\n        # output: (batch, seq_len, hidden_dim)\n        logits = self.fc(output)\n        return logits\n\nmodel = LSTMModel(vocab_size=10000)\nprint(f'Parameters: {sum(p.numel() for p in model.parameters())/1e6:.2f}M')\n```\n\n**GRU Implementation:**\n\n```python\nclass GRUModel(nn.Module):\n    def __init__(self, vocab_size, embed_dim=128, hidden_dim=256, num_layers=2):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embed_dim)\n        self.gru = nn.GRU(embed_dim, hidden_dim, num_layers, batch_first=True, dropout=0.5)\n        self.fc = nn.Linear(hidden_dim, vocab_size)\n    \n    def forward(self, x):\n        embed = self.embedding(x)\n        output, hidden = self.gru(embed)\n        logits = self.fc(output)\n        return logits\n\n# GRU: No cell state, only hidden!\nmodel = GRUModel(vocab_size=10000)\n```",
+    "level3_advanced": "**Bidirectional LSTM:**\n\n```python\nclass BiLSTM(nn.Module):\n    def __init__(self, vocab_size, embed_dim=128, hidden_dim=256):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embed_dim)\n        self.lstm = nn.LSTM(embed_dim, hidden_dim, bidirectional=True, batch_first=True)\n        self.fc = nn.Linear(hidden_dim * 2, vocab_size)  # *2 for bidirectional\n    \n    def forward(self, x):\n        embed = self.embedding(x)\n        output, _ = self.lstm(embed)\n        # output: (batch, seq, hidden*2) - concatenated forward & backward\n        logits = self.fc(output)\n        return logits\n\n# Use when: Can see future context (classification, not generation)\n```",
+    "level4_expert": "**Attention + LSTM (Pre-Transformer):**\n\n```python\nclass AttentionLSTM(nn.Module):\n    def __init__(self, vocab_size, embed_dim=128, hidden_dim=256):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embed_dim)\n        self.lstm = nn.LSTM(embed_dim, hidden_dim, batch_first=True)\n        self.attention = nn.MultiheadAttention(hidden_dim, num_heads=8)\n        self.fc = nn.Linear(hidden_dim, vocab_size)\n    \n    def forward(self, x):\n        embed = self.embedding(x)\n        lstm_out, _ = self.lstm(embed)\n        # Self-attention on LSTM outputs\n        attn_out, _ = self.attention(lstm_out, lstm_out, lstm_out)\n        logits = self.fc(attn_out)\n        return logits\n```"
+  },
+  "whatIsIt": "LSTM: RNN variant with gates to control information flow. Architecture: Forget gate (what to forget), input gate (what to add), output gate (what to output), cell state (long-term memory). Solves vanishing gradient! Can learn dependencies 100+ steps. GRU: Simplified LSTM. 2 gates (reset, update) instead of 3. No separate cell state. 30% faster, fewer parameters. Both: Learn temporal patterns, sequential dependencies. Used: Language models, translation, speech, time series. Modern context: Often replaced by Transformers for NLP, but still useful for streaming/edge applications.",
+  "whyNeeded": "Why not vanilla RNN? Vanishing gradients! Can't learn long dependencies. Example: 'The cat ... was tired' (10 words apart) → RNN forgets 'cat'. LSTM/GRU solution: Gating mechanism. Gradients flow through cell state unchanged. Applications: (1) Translation: Remember entire source sentence. (2) Speech: Long audio context. (3) Time series: Seasonal patterns. (4) Text generation: Coherent long text. Why still used vs Transformers: (1) Sequential processing (streaming data). (2) Lower memory (no attention O(n²)). (3) Better for very long sequences (10k+ steps). (4) Edge devices (less computation). Modern role: Niche but important!",
+  "realWorldAnalogy": "LSTM = Note-taking system! Vanilla RNN = Short-term memory only (forgets quickly). LSTM = Notebook with rules! Forget gate: 'Is this note still relevant? Erase if not.' Input gate: 'Is this new info important? Write down if yes.' Output gate: 'What should I share now from my notes?' Cell state = Notebook (long-term storage). Hidden state = What you're currently thinking about. Example: Reading detective novel. Cell remembers: Suspect names, alibis, clues (long-term). Hidden: Current scene understanding (short-term). Gates decide: Keep old clue? Add new evidence? Mention alibi now? GRU = Simpler system (fewer rules), works well most of the time. Faster to use!",
+  "mathematics": {
+    "formulas": [
+      "\\text{LSTM forget: } f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f)",
+      "\\text{LSTM input: } i_t = \\sigma(W_i \\cdot [h_{t-1}, x_t] + b_i)",
+      "\\text{LSTM cell: } C_t = f_t \\odot C_{t-1} + i_t \\odot \\tanh(W_C \\cdot [h_{t-1}, x_t])",
+      "\\text{GRU update: } z_t = \\sigma(W_z \\cdot [h_{t-1}, x_t])",
+      "\\text{GRU hidden: } h_t = (1-z_t) \\odot h_{t-1} + z_t \\odot \\tilde{h}_t"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "LSTM Forward:",
+      "1. Input: xₜ, hₜ₋₁, Cₜ₋₁",
+      "2. Compute forget gate: fₜ = σ(Wf·[hₜ₋₁,xₜ])",
+      "3. Compute input gate: iₜ = σ(Wi·[hₜ₋₁,xₜ])",
+      "4. Compute candidate: C̃ₜ = tanh(Wc·[hₜ₋₁,xₜ])",
+      "5. Update cell: Cₜ = fₜ⊙Cₜ₋₁ + iₜ⊙C̃ₜ",
+      "6. Compute output gate: oₜ = σ(Wo·[hₜ₋₁,xₜ])",
+      "7. Compute hidden: hₜ = oₜ⊙tanh(Cₜ)",
+      "8. Return: hₜ, Cₜ"
+    ],
+    "complexity": "LSTM: O(4·d²) per timestep (4 weight matrices). GRU: O(3·d²) (30% less). Sequence length n: O(n·d²). Memory: LSTM needs cell state storage. GRU: 25% fewer parameters than LSTM."
+  },
+  "prerequisites": [
+    "recurrent-neural-networks",
+    "gradient-descent",
+    "backpropagation"
+  ],
+  "nextTopics": [
+    "transformers-attention",
+    "seq2seq-models"
+  ],
+  "relatedTopics": [
+    "recurrent-neural-networks",
+    "transformers-attention"
+  ],
+  "tags": [
+    "lstm",
+    "gru",
+    "rnn",
+    "sequence",
+    "time-series",
+    "gates"
+  ],
+  "codeExamples": [
+    {
+      "title": "Basic LSTM",
+      "language": "python",
+      "code": "import torch.nn as nn\n\nlstm = nn.LSTM(input_size=10, hidden_size=20, num_layers=2)\nx = torch.randn(5, 3, 10)  # (seq_len, batch, input_size)\noutput, (h_n, c_n) = lstm(x)\nprint(f'Output: {output.shape}')  # (5, 3, 20)\nprint(f'Hidden: {h_n.shape}, Cell: {c_n.shape}')  # (2, 3, 20)",
+      "level": 1,
+      "explanation": "Basic LSTM code"
+    },
+    {
+      "title": "Text Classification with LSTM",
+      "language": "python",
+      "code": "class TextClassifier(nn.Module):\n    def __init__(self, vocab_size, num_classes):\n        super().__init__()\n        self.embed = nn.Embedding(vocab_size, 128)\n        self.lstm = nn.LSTM(128, 256, batch_first=True)\n        self.fc = nn.Linear(256, num_classes)\n    \n    def forward(self, x):\n        x = self.embed(x)\n        _, (hidden, _) = self.lstm(x)\n        out = self.fc(hidden[-1])  # Last hidden state\n        return out\n\nmodel = TextClassifier(10000, 5)\nlogits = model(torch.randint(0, 10000, (32, 50)))  # batch=32, seq=50\nprint(logits.shape)  # (32, 5)",
+      "level": 2,
+      "explanation": "Text Classification with LSTM code"
+    },
+    {
+      "title": "GRU Text Generation",
+      "language": "python",
+      "code": "class GRUGenerator(nn.Module):\n    def __init__(self, vocab_size):\n        super().__init__()\n        self.embed = nn.Embedding(vocab_size, 128)\n        self.gru = nn.GRU(128, 256, num_layers=2, batch_first=True)\n        self.fc = nn.Linear(256, vocab_size)\n    \n    def forward(self, x, hidden=None):\n        x = self.embed(x)\n        out, hidden = self.gru(x, hidden)\n        logits = self.fc(out)\n        return logits, hidden\n\n@torch.no_grad()\ndef generate(model, start_token, length=50):\n    tokens = [start_token]\n    hidden = None\n    for _ in range(length):\n        x = torch.tensor([[tokens[-1]]])\n        logits, hidden = model(x, hidden)\n        next_token = logits[0, -1].argmax().item()\n        tokens.append(next_token)\n    return tokens",
+      "level": 2,
+      "explanation": "GRU Text Generation code"
+    },
+    {
+      "title": "Bidirectional LSTM",
+      "language": "python",
+      "code": "class BiLSTMClassifier(nn.Module):\n    def __init__(self, vocab_size, num_classes):\n        super().__init__()\n        self.embed = nn.Embedding(vocab_size, 128)\n        self.bilstm = nn.LSTM(128, 256, bidirectional=True, batch_first=True)\n        self.fc = nn.Linear(256*2, num_classes)  # *2 for bidirectional\n    \n    def forward(self, x):\n        x = self.embed(x)\n        out, (h_n, _) = self.bilstm(x)\n        # Concat forward & backward last hidden\n        hidden = torch.cat([h_n[-2], h_n[-1]], dim=1)\n        return self.fc(hidden)\n\nmodel = BiLSTMClassifier(10000, 3)\nout = model(torch.randint(0, 10000, (16, 30)))\nprint(out.shape)  # (16, 3)",
+      "level": 3,
+      "explanation": "Bidirectional LSTM code"
+    },
+    {
+      "title": "Stacked LSTM",
+      "language": "python",
+      "code": "class StackedLSTM(nn.Module):\n    def __init__(self, vocab_size):\n        super().__init__()\n        self.embed = nn.Embedding(vocab_size, 128)\n        self.lstm1 = nn.LSTM(128, 256, batch_first=True)\n        self.dropout = nn.Dropout(0.5)\n        self.lstm2 = nn.LSTM(256, 256, batch_first=True)\n        self.fc = nn.Linear(256, vocab_size)\n    \n    def forward(self, x):\n        x = self.embed(x)\n        x, _ = self.lstm1(x)\n        x = self.dropout(x)\n        x, _ = self.lstm2(x)\n        return self.fc(x)\n\nmodel = StackedLSTM(10000)\nprint(f'Params: {sum(p.numel() for p in model.parameters())/1e6:.1f}M')",
+      "level": 3,
+      "explanation": "Stacked LSTM code"
+    },
+    {
+      "title": "LSTM with Attention",
+      "language": "python",
+      "code": "class LSTMWithAttention(nn.Module):\n    def __init__(self, vocab_size, hidden_dim=256):\n        super().__init__()\n        self.embed = nn.Embedding(vocab_size, 128)\n        self.lstm = nn.LSTM(128, hidden_dim, batch_first=True)\n        # Simple attention\n        self.attention = nn.Linear(hidden_dim, 1)\n        self.fc = nn.Linear(hidden_dim, vocab_size)\n    \n    def forward(self, x):\n        x = self.embed(x)\n        lstm_out, _ = self.lstm(x)  # (batch, seq, hidden)\n        \n        # Compute attention weights\n        attn_weights = torch.softmax(self.attention(lstm_out), dim=1)\n        # Weighted sum\n        context = torch.sum(attn_weights * lstm_out, dim=1)\n        \n        return self.fc(context)\n\nmodel = LSTMWithAttention(10000)\nout = model(torch.randint(0, 10000, (8, 20)))\nprint(out.shape)  # (8, 10000)",
+      "level": 4,
+      "explanation": "LSTM with Attention code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "LSTM'in vanilla RNN'e göre temel avantajı?",
+      "options": [
+        "Daha hızlı",
+        "Solves vanishing gradient: Can learn long-term dependencies (100+ steps)!",
+        "Daha az parametre",
+        "Daha basit"
+      ],
+      "correctAnswer": 1,
+      "explanation": "LSTM: Solves vanishing gradient problem! Vanilla RNN: Gradients vanish exponentially with sequence length. Can't learn dependencies >10 steps. LSTM: Gates + cell state allow gradients to flow unchanged. Result: Learn dependencies 100+ steps! Example: Translation - remember beginning of long sentence. Gates control information flow: Forget irrelevant, keep important. Revolutionary for sequential tasks!"
+    },
+    {
+      "question": "LSTM'de cell state'in rolü nedir?",
+      "options": [
+        "Temporary storage",
+        "Long-term memory: Flows through time with minimal changes!",
+        "Just a parameter",
+        "Output computation"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Cell state: Long-term memory highway! Flows through time with only linear interactions (element-wise operations). Gates control: What to forget (×fₜ), what to add (+iₜ⊙C̃ₜ). Result: Information can flow unchanged through 100+ steps! Contrast: Hidden state (short-term, heavily modified each step). Cell state: Protected by gates, stable. Why important: Enables long-term dependencies. Without it: LSTM = fancy RNN (no benefit)."
+    },
+    {
+      "question": "GRU'nun LSTM'e göre farkı?",
+      "options": [
+        "Sadece isim farkı",
+        "Simpler: 2 gates vs 3, no separate cell state. 30% faster, similar performance!",
+        "Daha güçlü",
+        "Sadece toy datasets için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "GRU: Simplified LSTM! Changes: (1) 2 gates (reset, update) vs LSTM's 3 (forget, input, output). (2) No separate cell state (merges with hidden). (3) Fewer parameters (25% less). Benefits: 30% faster computation, less memory, easier to train. Performance: Often similar to LSTM! When worse: Very long sequences (1000+ steps). Rule: Try GRU first (faster), use LSTM if needed (more powerful)."
+    },
+    {
+      "question": "Bidirectional LSTM ne zaman kullanılır?",
+      "options": [
+        "Hep",
+        "When can see future context: Classification, tagging. NOT for generation!",
+        "Sadece translation",
+        "Daha hızlı olduğu için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Bidirectional: Process sequence forward AND backward, concatenate outputs. When to use: Tasks where future context available! (1) Classification: See full text before deciding. (2) NER: Tag words using left+right context. (3) Sentiment: Full sentence context. When NOT: Generation! Can't see future (that's what we're generating). Also NOT: Real-time streaming (no future context). Cost: 2× computation (two LSTMs)."
+    },
+    {
+      "question": "LSTM gates neden sigmoid kullanır?",
+      "options": [
+        "Tradition",
+        "Output [0,1]: Interpret as 'how much to let through' (gate control)!",
+        "Hızlı computation",
+        "Random choice"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Sigmoid output [0,1]: Perfect for gate! 0 = 'block completely', 1 = 'let through fully', 0.5 = 'partial'. Forget gate: fₜ=0.1 → forget 90% of cell state. Input gate: iₜ=0.9 → add 90% of candidate. Intuitive: Gates control information flow like valve (0-100% open). Alternative (tanh): Outputs [-1,1], not interpretable as 'amount'. Sigmoid: Natural choice for gating!"
+    },
+    {
+      "question": "Modern deep learning'de LSTM'in yeri?",
+      "options": [
+        "Obsolete, never use",
+        "Niche: Edge devices, streaming, very long sequences. Transformers dominate NLP.",
+        "Still the best",
+        "Sadece teaching için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "LSTM role today: Niche but important! Replaced by Transformers: NLP, most sequence tasks (better performance). Still used: (1) Edge devices (less memory than attention). (2) Streaming data (sequential processing, no batching needed). (3) Very long sequences (10k+ steps, attention O(n²) too expensive). (4) Time series forecasting (domain expertise). Not obsolete! Just specialized. New projects: Try Transformer first, LSTM if constraints."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "LSTM Gates",
+      "back": "**Forget:** fₜ = what to forget\n**Input:** iₜ = what to add\n**Output:** oₜ = what to output\n\n**All sigmoid [0,1]:**\nControl information flow!\n\nGates = valves 🚪"
+    },
+    {
+      "front": "Cell State",
+      "back": "**Long-term memory highway**\n\nCₜ = fₜ⊙Cₜ₋₁ + iₜ⊙C̃ₜ\n\n**Properties:**\n- Minimal changes\n- Protected by gates\n- Enables long dependencies\n\nMemory backbone! 🧠"
+    },
+    {
+      "front": "LSTM vs GRU",
+      "back": "**LSTM:**\n3 gates, cell state\nMore powerful\n\n**GRU:**\n2 gates, no cell\n30% faster, simpler\n\n**Rule:**\nTry GRU first!\n\nSpeed vs power ⚖️"
+    },
+    {
+      "front": "Vanishing Gradient",
+      "back": "**Problem:**\nRNN forgets long-term\nGradients → 0\n\n**LSTM Solution:**\nCell state highway\nGates protect gradients\n\n**Result:**\n100+ step dependencies!\n\nSolved! ✅"
+    },
+    {
+      "front": "Bidirectional LSTM",
+      "back": "**Process:**\nForward + Backward\nConcatenate outputs\n\n**Use when:**\nFuture context available\nClassification, tagging\n\n**NOT for:**\nGeneration!\n\nContext from both sides ↔️"
+    },
+    {
+      "front": "When Use LSTM Today",
+      "back": "**Good for:**\n✓ Edge devices\n✓ Streaming data\n✓ Very long sequences\n✓ Time series\n\n**Not for:**\n✗ Most NLP (use Transformers)\n\nNiche but useful! 🎯"
+    },
+    {
+      "front": "LSTM Computation",
+      "back": "**Per timestep:**\n4 weight matrices\nO(4·d²) operations\n\n**Sequence:**\nO(n·d²) total\n\n**Memory:**\nStore cell + hidden\n\nSequential processing ⏱️"
+    },
+    {
+      "front": "Forget Gate Intuition",
+      "back": "**Question:**\n'Should I keep this memory?'\n\n**Output:**\n0 = forget completely\n1 = keep fully\n0.5 = partial\n\n**Learned:**\nWhat's important!\n\nSelective memory 🎯"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Not initializing forget gate bias to 1",
+      "why": "Default init (zeros) → forget gate starts at 0.5. Model forgets half of info initially! Slow learning.",
+      "fix": "Initialize forget gate bias to 1! PyTorch default. Result: forget gate starts open (σ(1)≈0.73), preserves information initially. Faster convergence. Critical trick from original LSTM paper!"
+    },
+    {
+      "mistake": "Using LSTM for very short sequences",
+      "why": "Sequences <10 steps: LSTM overhead unnecessary! Vanilla RNN or even feedforward works. Slower without benefit.",
+      "fix": "LSTM shines for long sequences (30+ steps)! Short sequences: Use simpler model. Also: Consider if sequential structure needed. Sometimes attention or CNN better (parallel processing)."
+    },
+    {
+      "mistake": "Forgetting dropout between layers",
+      "why": "Stacked LSTMs without dropout → overfitting! Deep models need regularization.",
+      "fix": "Add dropout between LSTM layers! PyTorch LSTM: dropout=0.5 parameter (applies between layers). Don't apply to recurrent connections (damages gradients), only between layers. Also: L2 regularization, gradient clipping."
+    },
+    {
+      "mistake": "Not clipping gradients",
+      "why": "RNNs prone to exploding gradients! Loss becomes NaN, model diverges. Even with LSTM.",
+      "fix": "Always clip gradients! torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0). Prevents explosion, stabilizes training. Essential for RNNs! Different from vanishing (LSTM solves that)."
+    },
+    {
+      "mistake": "Using bidirectional LSTM for generation",
+      "why": "Can't see future during generation! Bidirectional assumes full sequence available. Doesn't make sense for autoregressive tasks.",
+      "fix": "Bidirectional: Only for tasks with full sequence! Classification, tagging, encoding. Generation: Unidirectional only. Check: If token-by-token generation → can't be bidirectional!"
+    },
+    {
+      "mistake": "Ignoring hidden state initialization",
+      "why": "Starting with zeros fine for training, but for generation/inference: Want continuity between batches/sequences.",
+      "fix": "For generation: Pass hidden state between iterations! Maintains context across sequence chunks. For training: Zeros OK (learns to initialize). For inference with streaming: Initialize once, keep updating."
+    },
+    {
+      "mistake": "Not using packed sequences for variable length",
+      "why": "Batch with varying lengths: Padding wastes computation! LSTM processes padding unnecessarily.",
+      "fix": "Use pack_padded_sequence / pad_packed_sequence! PyTorch functions. LSTM skips padding positions. Benefits: Faster, correct gradients. Essential for variable-length batches. Small overhead, big savings!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "LSTM Cell Internals",
+      "description": "Diagram: Shows forget, input, output gates. Cell state flow (horizontal line). Hidden state computation. Gates as valves controlling flow."
+    },
+    {
+      "type": "comparison",
+      "title": "Vanilla RNN vs LSTM vs GRU",
+      "description": "Side-by-side architectures. Shows complexity: RNN (simple), GRU (medium), LSTM (complex). Parameters count, computation comparison."
+    },
+    {
+      "type": "animation",
+      "title": "Information Flow Through Time",
+      "description": "Animation: Sequence processing. Shows how cell state preserves long-term info, hidden state changes. Gates opening/closing based on input."
+    },
+    {
+      "type": "metric",
+      "title": "Gradient Flow: RNN vs LSTM",
+      "description": "Graph: Gradient magnitude vs sequence length. RNN: Exponential decay (vanishing). LSTM: Stable (solved!). Shows why LSTM works for long sequences."
+    }
+  ],
+  "references": [
+    {
+      "title": "Long Short-Term Memory",
+      "authors": "Hochreiter & Schmidhuber",
+      "year": 1997,
+      "link": "https://www.bioinf.jku.at/publications/older/2604.pdf",
+      "type": "paper"
+    },
+    {
+      "title": "Learning Phrase Representations using RNN Encoder-Decoder (GRU)",
+      "authors": "Cho et al.",
+      "year": 2014,
+      "link": "https://arxiv.org/abs/1406.1078",
+      "type": "paper"
+    },
+    {
+      "title": "Understanding LSTM Networks",
+      "authors": "Chris Olah",
+      "year": 2015,
+      "link": "https://colah.github.io/posts/2015-08-Understanding-LSTMs/",
+      "type": "blog"
+    },
+    {
+      "title": "PyTorch LSTM Tutorial",
+      "authors": "PyTorch Team",
+      "year": 2023,
+      "link": "https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html",
+      "type": "documentation"
+    }
+  ]
+}

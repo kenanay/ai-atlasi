@@ -1,0 +1,274 @@
+{
+  "id": "k-nearest-neighbors",
+  "title": "K-En Yakın Komşu (K-Nearest Neighbors)",
+  "category": "classical-ml",
+  "level": 1,
+  "estimatedTime": 40,
+  "description": "Sınıflandırma ve regresyon için en basit ve sezgisel makine öğrenmesi algoritması. Bir noktanın sınıfını, en yakın K komşusunun çoğunluk oyuyla belirler.",
+  "prerequisites": ["vectors", "linear-regression"],
+  "tags": ["classification", "regression", "lazy-learning", "instance-based", "supervised"],
+  "content": {
+    "level0_basic": "Yeni taşındığınız bir mahallede politik görüşünüzü tahmin etmek isteyen bir anket düşünün. Anketçi size 'Hangi partiye oyunuz?' diye sormak yerine, size en yakın 5 komşuya bakıyor. 3'ü A partisine, 2'si B partisine oy veriyorsa, muhtemelen sizin de A partisine oy vereceğinizi tahmin eder. KNN tam olarak budur: Bir şeyin ne olduğunu bilmek için etrafındaki en yakın komşularına bak!",
+    "level1_beginner": "K-Nearest Neighbors (KNN), 'tembel öğrenme' (lazy learning) olarak bilinen instance-based bir algoritmadır. Eğitim aşamasında hiçbir şey öğrenmez, sadece veriyi hafızasında tutar. Tahmin yaparken, yeni noktaya en yakın K adet eğitim noktasını bulur ve onların çoğunluk oyuyla karar verir.\n\n**Algoritma Adımları:**\n1. K değerini seç (örn. K=5)\n2. Yeni noktaya tüm eğitim noktalarının uzaklığını hesapla\n3. En yakın K noktayı bul\n4. **Sınıflandırma:** K noktanın çoğunluk sınıfını döndür\n5. **Regresyon:** K noktanın ortalama değerini döndür\n\n**Uzaklık Ölçüleri:**\n- **Euclidean Distance** (en yaygın): $d = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2}$\n- **Manhattan Distance:** $d = \\sum_{i=1}^{n}|x_i - y_i|$\n- **Minkowski Distance:** Euclidean ve Manhattan'ın genelleştirilmişi\n\n**K Seçimi:**\n- K çok küçük (K=1) → Overfitting, gürültüye hassas\n- K çok büyük (K=N) → Underfitting, tüm veri tek sınıfa oy verir\n- Genellikle K=3,5,7 gibi tek sayılar tercih edilir (beraberlik önlenmesi için)",
+    "level2_application": "KNN'in performansı, özellik ölçeklendirmesi (feature scaling) ve doğru K seçimine bağlıdır.\n\n**Feature Scaling Önemi:**\nÖzellikler farklı ölçeklerde olduğunda (örn. yaş: 20-80, gelir: 20000-100000), büyük değerli özellikler uzaklık hesabını domine eder. Bu yüzden **StandardScaler** veya **MinMaxScaler** şarttır.\n\n**Scikit-Learn Kullanımı:**\n```python\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\n\n# Scaling\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\n\n# Model\nknn = KNeighborsClassifier(n_neighbors=5, metric='euclidean')\nknn.fit(X_train_scaled, y_train)\ny_pred = knn.predict(X_test_scaled)\n```\n\n**Hyperparameter Tuning:**\n- `n_neighbors`: K değeri (3-15 arası denenir)\n- `weights`: 'uniform' (tüm komşular eşit) veya 'distance' (yakın komşular daha ağır)\n- `metric`: 'euclidean', 'manhattan', 'minkowski'\n- `p`: Minkowski için parametre (p=1: Manhattan, p=2: Euclidean)",
+    "level3_advanced": "KNN'in matematiksel temelleri ve karmaşıklık analizi:\n\n**Uzaklık Metrikleri:**\n1. **Euclidean (L2 norm):**\n$$d_{euclidean}(\\mathbf{x}, \\mathbf{y}) = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2} = ||\\mathbf{x} - \\mathbf{y}||_2$$\n\n2. **Manhattan (L1 norm):**\n$$d_{manhattan}(\\mathbf{x}, \\mathbf{y}) = \\sum_{i=1}^{n}|x_i - y_i| = ||\\mathbf{x} - \\mathbf{y}||_1$$\n\n3. **Minkowski (Lp norm):**\n$$d_{minkowski}(\\mathbf{x}, \\mathbf{y}) = \\left(\\sum_{i=1}^{n}|x_i - y_i|^p\\right)^{1/p}$$\n\n**Weighted KNN:**\nYakın komşuların oy ağırlığı daha fazladır:\n$$w_i = \\frac{1}{d(\\mathbf{x}, \\mathbf{x}_i)^2}$$\n$$\\hat{y} = \\frac{\\sum_{i=1}^{K} w_i y_i}{\\sum_{i=1}^{K} w_i}$$\n\n**Zaman Karmaşıklığı:**\n- **Eğitim:** O(1) - sadece veriyi sakla\n- **Tahmin:** O(N × D) - tüm noktalarla uzaklık hesapla (N: örnek sayısı, D: özellik sayısı)\n- **Büyük veri için sorun:** Her tahmin için tüm veri taranır!\n\n**Optimizasyon: KD-Tree ve Ball Tree:**\n- **KD-Tree:** D-boyutlu uzayı bölümlere ayırır, arama O(log N)\n- **Ball Tree:** Veri noktalarını kürelere böler, yüksek boyutlarda daha iyi\n- Düşük boyutlu veriler için (D < 20) etkili",
+    "level4_expert": "Production sistemlerinde KNN optimizasyonu ve büyük ölçekli uygulamalar:\n\n**1. Curse of Dimensionality (Boyut Laneti):**\nYüksek boyutlu uzaylarda (D > 50), tüm noktalar birbirine 'eşit uzaklıkta' görünmeye başlar. Euclidean uzaklık anlamsızlaşır.\n$$\\lim_{D \\to \\infty} \\frac{d_{max} - d_{min}}{d_{min}} \\to 0$$\n\n**Çözümler:**\n- PCA ile boyut azaltma\n- Feature selection\n- Locality Sensitive Hashing (LSH)\n\n**2. Approximate Nearest Neighbors (ANN):**\nBüyük veri (N > 1M) için tam KNN çok yavaş. ANN algoritmaları:\n- **FAISS (Facebook):** GPU-accelerated, milyarlarca vektörde arama\n- **Annoy (Spotify):** Random projection trees\n- **HNSW:** Hierarchical navigable small world graphs\n\n**3. Online Learning:**\nKNN temel olarak 'lazy' olduğu için yeni veri eklemek kolay (incremental learning). Ancak:\n- Memory footprint sürekli artar\n- Query time linear büyür\n- Editing techniques: Condensed NN, Edited NN\n\n**4. Production Deployment:**\n```python\n# FAISS ile ölçeklenebilir KNN\nimport faiss\nimport numpy as np\n\n# Index oluştur\nd = 128  # dimension\nindex = faiss.IndexFlatL2(d)\nindex.add(X_train)  # milyonlarca vektör ekle\n\n# Hızlı arama\nD, I = index.search(X_test, k=5)  # 5 en yakın komşu\n```\n\n**5. Kullanım Alanları:**\n- Öneri sistemleri (Netflix, Spotify)\n- Görüntü similarity search\n- Anomaly detection\n- Missing value imputation\n- Text classification"
+  },
+  "whatIsIt": "K-Nearest Neighbors, bir noktanın sınıfını veya değerini, ona en yakın K adet eğitim noktasının çoğunluk oyu veya ortalaması ile belirleyen instance-based öğrenme algoritmasıdır.",
+  "whyNeeded": "Basit, sezgisel ve parametrik olmayan bir yöntemdir. Karmaşık karar sınırlarını modelleyebilir, eğitim gerektirmez ve yeni veri eklemek kolaydır. Baseline model olarak mükemmeldir.",
+  "realWorldAnalogy": "Yeni bir şehre taşındığınızda en iyi restoranı bulmak için: En yakın 5 komşunuza sorun, 4'ü A restoranını öneriyorsa, muhtemelen orası iyidir. Uzaktaki 100 kişinin fikri, yakındaki 5 kişi kadar önemli değildir.",
+  "mathematics": {
+    "formulas": [
+      "d_{euclidean}(\\mathbf{x}, \\mathbf{y}) = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2}",
+      "\\hat{y} = \\text{mode}\\{y_{(1)}, y_{(2)}, ..., y_{(K)}\\} \\quad \\text{(Classification)}",
+      "\\hat{y} = \\frac{1}{K}\\sum_{i=1}^{K} y_{(i)} \\quad \\text{(Regression)}",
+      "w_i = \\frac{1}{d(\\mathbf{x}, \\mathbf{x}_i)} \\quad \\text{(Weighted KNN)}",
+      "d_{minkowski}(\\mathbf{x}, \\mathbf{y}) = \\left(\\sum_{i=1}^{n}|x_i - y_i|^p\\right)^{1/p}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. K değerini seç (örn. K=5, genellikle tek sayı)",
+      "2. Eğitim verisini standardize et (scaling kritik!)",
+      "3. Yeni test noktası x için:",
+      "   a. Tüm eğitim noktalarına uzaklığı hesapla (Euclidean, Manhattan, vb.)",
+      "   b. Uzaklıkları küçükten büyüğe sırala",
+      "   c. En yakın K noktayı seç",
+      "4. Sınıflandırma: K noktanın çoğunluk sınıfını döndür (majority voting)",
+      "5. Regresyon: K noktanın değerlerinin ortalamasını döndür",
+      "6. (Opsiyonel) Weighted KNN: Yakın komşular daha fazla ağırlık alsın"
+    ],
+    "complexity": "Eğitim: O(1) - veriyi sakla. Tahmin: O(N×D) her sorgu için (N: örnek, D: feature). KD-Tree ile O(D×log N) optimize edilebilir."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "KNN Mantığı - Basit Örnek",
+      "code": "Elma mı, Portakal mı?\n\nElinizde meyveler var:\n- Elma: Ağırlık=150g, Çap=7cm → Sınıf: Elma\n- Elma: Ağırlık=160g, Çap=8cm → Sınıf: Elma\n- Portakal: Ağırlık=180g, Çap=9cm → Sınıf: Portakal\n- Portakal: Ağırlık=190g, Çap=10cm → Sınıf: Portakal\n\nYeni meyve: Ağırlık=170g, Çap=8.5cm → ?\n\nEn yakın 3 komşu (K=3):\n1. Elma (160g, 8cm) - Uzaklık: küçük\n2. Portakal (180g, 9cm) - Uzaklık: küçük\n3. Elma (150g, 7cm) - Uzaklık: orta\n\nOylama: 2 Elma, 1 Portakal → Tahmin: ELMA! 🍎",
+      "explanation": "KNN komşularına bakarak karar verir. Çoğunluk ne diyorsa o!"
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "NumPy ile Sıfırdan KNN",
+      "code": "import numpy as np\nfrom collections import Counter\n\nclass KNNClassifier:\n    def __init__(self, k=3):\n        self.k = k\n        self.X_train = None\n        self.y_train = None\n    \n    def fit(self, X, y):\n        \"\"\"Veriyi sakla (lazy learning)\"\"\"\n        self.X_train = X\n        self.y_train = y\n    \n    def euclidean_distance(self, x1, x2):\n        \"\"\"İki nokta arası Euclidean uzaklık\"\"\"\n        return np.sqrt(np.sum((x1 - x2)**2))\n    \n    def predict_single(self, x):\n        \"\"\"Tek bir nokta için tahmin\"\"\"\n        # Tüm eğitim noktalarına uzaklık hesapla\n        distances = [self.euclidean_distance(x, x_train) \n                    for x_train in self.X_train]\n        \n        # En yakın K indeksi bul\n        k_indices = np.argsort(distances)[:self.k]\n        \n        # K komşunun sınıflarını al\n        k_nearest_labels = [self.y_train[i] for i in k_indices]\n        \n        # Çoğunluk oyuyla karar ver\n        most_common = Counter(k_nearest_labels).most_common(1)\n        return most_common[0][0]\n    \n    def predict(self, X):\n        \"\"\"Birden fazla nokta için tahmin\"\"\"\n        return np.array([self.predict_single(x) for x in X])\n\n# Örnek kullanım\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import accuracy_score\n\n# Veri oluştur\nX, y = make_classification(n_samples=100, n_features=2, \n                          n_informative=2, n_redundant=0,\n                          n_clusters_per_class=1, random_state=42)\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Model eğit ve test et\nknn = KNNClassifier(k=5)\nknn.fit(X_train, y_train)\ny_pred = knn.predict(X_test)\n\naccuracy = accuracy_score(y_test, y_pred)\nprint(f\"Accuracy: {accuracy:.2%}\")\nprint(f\"\\nİlk 5 tahmin: {y_pred[:5]}\")\nprint(f\"Gerçek değerler: {y_test[:5]}\")",
+      "explanation": "Sıfırdan KNN implementasyonu. Her tahmin için tüm eğitim verisine uzaklık hesaplar, en yakın K'yi bulur ve çoğunluk oyuyla karar verir."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "KNN ile Karar Sınırı Görselleştirmesi",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_moons\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\n\n# Veri oluştur\nX, y = make_moons(n_samples=200, noise=0.15, random_state=42)\n\n# Scaling (ÖNEMLİ!)\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\n# Farklı K değerleri için modeller\nk_values = [1, 5, 15, 50]\nfig, axes = plt.subplots(2, 2, figsize=(12, 10))\n\nfor idx, k in enumerate(k_values):\n    ax = axes[idx // 2, idx % 2]\n    \n    # Model eğit\n    knn = KNeighborsClassifier(n_neighbors=k)\n    knn.fit(X_scaled, y)\n    \n    # Karar sınırı için mesh grid\n    x_min, x_max = X_scaled[:, 0].min() - 0.5, X_scaled[:, 0].max() + 0.5\n    y_min, y_max = X_scaled[:, 1].min() - 0.5, X_scaled[:, 1].max() + 0.5\n    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),\n                         np.arange(y_min, y_max, 0.02))\n    \n    # Her nokta için tahmin\n    Z = knn.predict(np.c_[xx.ravel(), yy.ravel()])\n    Z = Z.reshape(xx.shape)\n    \n    # Görselleştir\n    ax.contourf(xx, yy, Z, alpha=0.3, cmap='RdYlBu')\n    ax.scatter(X_scaled[:, 0], X_scaled[:, 1], c=y, \n              cmap='RdYlBu', edgecolor='black', s=50)\n    ax.set_title(f'K = {k}')\n    ax.set_xlabel('Feature 1')\n    ax.set_ylabel('Feature 2')\n    \n    # Accuracy hesapla\n    acc = knn.score(X_scaled, y)\n    ax.text(0.02, 0.98, f'Train Acc: {acc:.2%}', \n           transform=ax.transAxes, va='top',\n           bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))\n\nplt.tight_layout()\nprint(\"\\n💡 KNN Karar Sınırları:\")\nprint(\"  K=1  → Overfitting (çok karmaşık sınır)\")\nprint(\"  K=5  → İyi denge\")\nprint(\"  K=15 → İyi generalization\")\nprint(\"  K=50 → Underfitting (çok basit sınır)\")",
+      "explanation": "Farklı K değerlerinin karar sınırlarına etkisi. K küçük → karmaşık sınır (overfitting), K büyük → basit sınır (underfitting)."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Scikit-Learn ile KNN + Hyperparameter Tuning",
+      "code": "from sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.model_selection import GridSearchCV, train_test_split, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.metrics import classification_report, confusion_matrix\nfrom sklearn.datasets import load_iris\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Iris dataset\niris = load_iris()\nX, y = iris.data, iris.target\n\n# Train-test split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42, stratify=y\n)\n\n# Scaling (KNN için kritik!)\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\n\nprint(\"=\"*60)\nprint(\"HYPERPARAMETER TUNING - GRID SEARCH\")\nprint(\"=\"*60)\n\n# Grid Search\nparam_grid = {\n    'n_neighbors': [3, 5, 7, 9, 11, 15],\n    'weights': ['uniform', 'distance'],\n    'metric': ['euclidean', 'manhattan', 'minkowski']\n}\n\ngrid_search = GridSearchCV(\n    KNeighborsClassifier(),\n    param_grid,\n    cv=5,\n    scoring='accuracy',\n    n_jobs=-1,\n    verbose=1\n)\n\ngrid_search.fit(X_train_scaled, y_train)\n\nprint(f\"\\nEn iyi parametreler: {grid_search.best_params_}\")\nprint(f\"En iyi CV score: {grid_search.best_score_:.4f}\")\n\n# En iyi model ile test\nbest_knn = grid_search.best_estimator_\ny_pred = best_knn.predict(X_test_scaled)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TEST PERFORMANSI\")\nprint(\"=\"*60)\nprint(classification_report(y_test, y_pred, \n                          target_names=iris.target_names))\n\nprint(\"\\nConfusion Matrix:\")\nprint(confusion_matrix(y_test, y_pred))\n\n# K değerine göre accuracy grafiği\nk_range = range(1, 31)\nk_scores = []\n\nfor k in k_range:\n    knn = KNeighborsClassifier(n_neighbors=k, weights='distance')\n    scores = cross_val_score(knn, X_train_scaled, y_train, cv=5)\n    k_scores.append(scores.mean())\n\nplt.figure(figsize=(10, 5))\nplt.plot(k_range, k_scores, 'bo-', linewidth=2, markersize=8)\nplt.xlabel('K (Number of Neighbors)', fontsize=12)\nplt.ylabel('Cross-Validation Accuracy', fontsize=12)\nplt.title('KNN: K Değeri vs Accuracy', fontsize=14)\nplt.axvline(grid_search.best_params_['n_neighbors'], \n           color='r', linestyle='--', label='Best K')\nplt.grid(True, alpha=0.3)\nplt.legend()\nplt.tight_layout()\n\nprint(f\"\\n✓ En iyi K değeri: {grid_search.best_params_['n_neighbors']}\")",
+      "explanation": "Production-ready KNN: Grid search ile hyperparameter tuning, cross-validation, scaling, ve detaylı metrikler. Iris dataset üzerinde tam pipeline."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "KNN Regression - Ev Fiyat Tahmini",
+      "code": "from sklearn.neighbors import KNeighborsRegressor\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Sentetik ev fiyat verisi\nnp.random.seed(42)\nn_samples = 200\n\n# Metrekare (ana özellik)\nmetrekare = np.random.uniform(50, 250, n_samples)\n\n# Fiyat (metrekare ile nonlinear ilişki + noise)\nfiyat = (2000 * metrekare + \n        0.5 * metrekare**1.5 + \n        np.random.normal(0, 20000, n_samples))\n\nX = metrekare.reshape(-1, 1)\ny = fiyat\n\n# Split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Scaling\nscaler_X = StandardScaler()\nX_train_scaled = scaler_X.fit_transform(X_train)\nX_test_scaled = scaler_X.transform(X_test)\n\n# Farklı K değerleri dene\nk_values = [1, 3, 5, 10, 20, 50]\nresults = []\n\nfor k in k_values:\n    knn_reg = KNeighborsRegressor(n_neighbors=k, weights='distance')\n    knn_reg.fit(X_train_scaled, y_train)\n    y_pred = knn_reg.predict(X_test_scaled)\n    \n    rmse = np.sqrt(mean_squared_error(y_test, y_pred))\n    r2 = r2_score(y_test, y_pred)\n    mae = mean_absolute_error(y_test, y_pred)\n    \n    results.append({'k': k, 'rmse': rmse, 'r2': r2, 'mae': mae})\n    print(f\"K={k:2d}: RMSE={rmse:8,.0f} TL, R²={r2:.4f}, MAE={mae:8,.0f} TL\")\n\n# En iyi model ile görselleştirme\nbest_k = 5\nknn_best = KNeighborsRegressor(n_neighbors=best_k, weights='distance')\nknn_best.fit(X_train_scaled, y_train)\n\n# Smooth prediction curve için\nX_range = np.linspace(50, 250, 300).reshape(-1, 1)\nX_range_scaled = scaler_X.transform(X_range)\ny_range_pred = knn_best.predict(X_range_scaled)\n\nplt.figure(figsize=(12, 5))\n\n# Sol: Predictions\nplt.subplot(1, 2, 1)\nplt.scatter(X_train, y_train, alpha=0.5, label='Train', s=30)\nplt.scatter(X_test, y_test, alpha=0.7, label='Test', s=50, color='red')\nplt.plot(X_range, y_range_pred, 'g-', linewidth=2, \n        label=f'KNN (K={best_k})')\nplt.xlabel('Metrekare', fontsize=12)\nplt.ylabel('Fiyat (TL)', fontsize=12)\nplt.title('KNN Regression - Ev Fiyat Tahmini', fontsize=14)\nplt.legend()\nplt.grid(True, alpha=0.3)\n\n# Sağ: K vs RMSE\nplt.subplot(1, 2, 2)\nrmse_values = [r['rmse'] for r in results]\nplt.plot([r['k'] for r in results], rmse_values, 'bo-', \n        linewidth=2, markersize=10)\nplt.xlabel('K (Number of Neighbors)', fontsize=12)\nplt.ylabel('RMSE (TL)', fontsize=12)\nplt.title('K Değeri vs Hata', fontsize=14)\nplt.grid(True, alpha=0.3)\n\nplt.tight_layout()\nprint(f\"\\n✓ En iyi K={best_k} ile RMSE: {results[2]['rmse']:,.0f} TL\")",
+      "explanation": "KNN sadece classification değil regression için de kullanılır. K komşunun ortalaması alınır. Nonlinear ilişkileri yakalayabilir."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Weighted KNN - Uzaklık Ağırlıklı Voting",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\n\nclass WeightedKNN:\n    def __init__(self, k=5, distance_metric='euclidean'):\n        self.k = k\n        self.distance_metric = distance_metric\n    \n    def fit(self, X, y):\n        self.X_train = X\n        self.y_train = y\n        self.classes = np.unique(y)\n    \n    def euclidean_distance(self, x1, x2):\n        return np.sqrt(np.sum((x1 - x2)**2))\n    \n    def manhattan_distance(self, x1, x2):\n        return np.sum(np.abs(x1 - x2))\n    \n    def get_distance(self, x1, x2):\n        if self.distance_metric == 'euclidean':\n            return self.euclidean_distance(x1, x2)\n        elif self.distance_metric == 'manhattan':\n            return self.manhattan_distance(x1, x2)\n    \n    def predict_single(self, x):\n        # Uzaklıkları hesapla\n        distances = np.array([\n            self.get_distance(x, x_train) \n            for x_train in self.X_train\n        ])\n        \n        # En yakın K indeksi\n        k_indices = np.argsort(distances)[:self.k]\n        k_distances = distances[k_indices]\n        k_labels = self.y_train[k_indices]\n        \n        # Ağırlıkları hesapla (1/distance)\n        # Epsilon ekle (0'a bölmeyi önle)\n        epsilon = 1e-8\n        weights = 1 / (k_distances + epsilon)\n        \n        # Her sınıf için ağırlıklı oy\n        class_weights = {}\n        for cls in self.classes:\n            mask = k_labels == cls\n            class_weights[cls] = np.sum(weights[mask])\n        \n        # En yüksek ağırlıklı sınıfı döndür\n        return max(class_weights, key=class_weights.get)\n    \n    def predict(self, X):\n        return np.array([self.predict_single(x) for x in X])\n\n# Veri oluştur\nX, y = make_classification(\n    n_samples=200, n_features=2, n_informative=2,\n    n_redundant=0, n_clusters_per_class=1, \n    class_sep=0.8, random_state=42\n)\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Scaling\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\n\n# Karşılaştırma: Uniform vs Weighted\nprint(\"=\"*60)\nprint(\"UNIFORM VS WEIGHTED KNN\")\nprint(\"=\"*60)\n\n# Uniform KNN (sklearn)\nknn_uniform = KNeighborsClassifier(n_neighbors=5, weights='uniform')\nknn_uniform.fit(X_train_scaled, y_train)\nacc_uniform = knn_uniform.score(X_test_scaled, y_test)\n\n# Weighted KNN (sklearn)\nknn_weighted = KNeighborsClassifier(n_neighbors=5, weights='distance')\nknn_weighted.fit(X_train_scaled, y_train)\nacc_weighted = knn_weighted.score(X_test_scaled, y_test)\n\n# Custom Weighted KNN\ncustom_knn = WeightedKNN(k=5)\ncustom_knn.fit(X_train_scaled, y_train)\ny_pred_custom = custom_knn.predict(X_test_scaled)\nacc_custom = np.mean(y_pred_custom == y_test)\n\nprint(f\"\\nUniform KNN Accuracy:  {acc_uniform:.4f}\")\nprint(f\"Weighted KNN Accuracy: {acc_weighted:.4f}\")\nprint(f\"Custom Weighted KNN:   {acc_custom:.4f}\")\n\nprint(\"\\n💡 Weighted KNN:\")\nprint(\"  - Yakın komşular daha fazla ağırlık alır\")\nprint(\"  - Uzak komşuların etkisi azalır\")\nprint(\"  - Genellikle daha iyi generalization\")\nprint(\"  - Weight = 1/distance\")\n\n# Görselleştirme\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\nfor idx, (model, title) in enumerate([\n    (knn_uniform, 'Uniform KNN'),\n    (knn_weighted, 'Weighted KNN')\n]):\n    ax = axes[idx]\n    \n    # Mesh grid\n    x_min, x_max = X_train_scaled[:, 0].min() - 0.5, X_train_scaled[:, 0].max() + 0.5\n    y_min, y_max = X_train_scaled[:, 1].min() - 0.5, X_train_scaled[:, 1].max() + 0.5\n    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),\n                        np.arange(y_min, y_max, 0.02))\n    \n    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])\n    Z = Z.reshape(xx.shape)\n    \n    ax.contourf(xx, yy, Z, alpha=0.3, cmap='RdYlBu')\n    ax.scatter(X_train_scaled[:, 0], X_train_scaled[:, 1], \n              c=y_train, cmap='RdYlBu', edgecolor='black', s=50)\n    ax.scatter(X_test_scaled[:, 0], X_test_scaled[:, 1], \n              c=y_test, cmap='RdYlBu', marker='s', \n              edgecolor='black', s=100, linewidth=2, label='Test')\n    ax.set_title(title)\n    ax.legend()\n\nplt.tight_layout()\nprint(\"\\n✓ Karar sınırları görselleştirildi\")",
+      "explanation": "Weighted KNN yakın komşulara daha fazla ağırlık verir. Uzak komşuların etkisi azalır, boundary'ler daha smooth olur."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "KD-Tree Optimizasyonu - Hızlı Komşu Arama",
+      "code": "from sklearn.neighbors import KNeighborsClassifier, KDTree, BallTree\nfrom sklearn.datasets import make_classification\nimport numpy as np\nimport time\nimport matplotlib.pyplot as plt\n\ndef benchmark_knn(n_samples, n_features, n_queries=100):\n    \"\"\"KNN algoritma türlerinin hız karşılaştırması\"\"\"\n    \n    # Veri oluştur\n    X_train, y_train = make_classification(\n        n_samples=n_samples, n_features=n_features,\n        n_informative=n_features, n_redundant=0,\n        random_state=42\n    )\n    \n    X_test, _ = make_classification(\n        n_samples=n_queries, n_features=n_features,\n        n_informative=n_features, n_redundant=0,\n        random_state=43\n    )\n    \n    results = {}\n    \n    # 1. Brute Force (tüm noktaları tara)\n    print(f\"\\nBrute Force (N={n_samples}, D={n_features})...\")\n    start = time.time()\n    knn_brute = KNeighborsClassifier(n_neighbors=5, algorithm='brute')\n    knn_brute.fit(X_train, y_train)\n    _ = knn_brute.predict(X_test)\n    results['Brute Force'] = time.time() - start\n    \n    # 2. KD-Tree (düşük boyut için optimize)\n    if n_features <= 20:  # KD-tree yüksek boyutta yavaşlar\n        print(f\"KD-Tree (N={n_samples}, D={n_features})...\")\n        start = time.time()\n        knn_kdtree = KNeighborsClassifier(n_neighbors=5, algorithm='kd_tree')\n        knn_kdtree.fit(X_train, y_train)\n        _ = knn_kdtree.predict(X_test)\n        results['KD-Tree'] = time.time() - start\n    \n    # 3. Ball Tree (yüksek boyutta daha iyi)\n    print(f\"Ball Tree (N={n_samples}, D={n_features})...\")\n    start = time.time()\n    knn_ball = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')\n    knn_ball.fit(X_train, y_train)\n    _ = knn_ball.predict(X_test)\n    results['Ball Tree'] = time.time() - start\n    \n    return results\n\nprint(\"=\"*60)\nprint(\"KNN ALGORITHM BENCHMARK\")\nprint(\"=\"*60)\n\n# Test 1: Düşük boyut (KD-Tree avantajlı)\nprint(\"\\n📊 TEST 1: Düşük Boyut (D=5)\")\nresults_low = benchmark_knn(n_samples=10000, n_features=5)\nfor algo, time_taken in results_low.items():\n    print(f\"  {algo:15s}: {time_taken:.4f}s\")\n\n# Test 2: Yüksek boyut (Ball Tree avantajlı)\nprint(\"\\n📊 TEST 2: Yüksek Boyut (D=50)\")\nresults_high = benchmark_knn(n_samples=10000, n_features=50)\nfor algo, time_taken in results_high.items():\n    print(f\"  {algo:15s}: {time_taken:.4f}s\")\n\n# Test 3: Çok büyük veri\nprint(\"\\n📊 TEST 3: Büyük Veri (N=50000, D=10)\")\nresults_large = benchmark_knn(n_samples=50000, n_features=10)\nfor algo, time_taken in results_large.items():\n    print(f\"  {algo:15s}: {time_taken:.4f}s\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SONUÇLAR\")\nprint(\"=\"*60)\nprint(\"\\n💡 Algoritma Seçimi:\")\nprint(\"  • Brute Force: Her zaman çalışır ama yavaş (O(N×D))\")\nprint(\"  • KD-Tree: Düşük boyut (D<20) için harika (O(D log N))\")\nprint(\"  • Ball Tree: Yüksek boyut için daha iyi\")\nprint(\"  • Auto: sklearn otomatik seçer (önerilen)\")\n\nprint(\"\\n🚀 Büyük Veri İçin:\")\nprint(\"  • FAISS (Facebook): GPU-accelerated, milyarlarca vektör\")\nprint(\"  • Annoy (Spotify): Approximate NN, çok hızlı\")\nprint(\"  • HNSW: State-of-the-art approximate NN\")\n\n# KD-Tree visualizasyonu (2D)\nprint(\"\\n📈 KD-Tree Space Partitioning Görselleştirmesi...\")\n\n# 2D veri\nnp.random.seed(42)\nX_2d = np.random.rand(50, 2) * 10\n\n# KD-Tree oluştur\ntree = KDTree(X_2d, leaf_size=10)\n\nplt.figure(figsize=(10, 8))\nplt.scatter(X_2d[:, 0], X_2d[:, 1], s=100, alpha=0.6, edgecolor='black')\nplt.xlabel('X1', fontsize=12)\nplt.ylabel('X2', fontsize=12)\nplt.title('KD-Tree Space Partitioning (Conceptual)', fontsize=14)\nplt.grid(True, alpha=0.3)\n\n# Manuel bölmeler çiz (KD-tree'nin yaptığına benzer)\nfor i in range(5):\n    if i % 2 == 0:  # X ekseninde böl\n        x_split = np.percentile(X_2d[:, 0], (i+1)*15)\n        plt.axvline(x_split, color='red', linestyle='--', alpha=0.5, linewidth=2)\n    else:  # Y ekseninde böl\n        y_split = np.percentile(X_2d[:, 1], (i+1)*15)\n        plt.axhline(y_split, color='blue', linestyle='--', alpha=0.5, linewidth=2)\n\nplt.tight_layout()\n\nprint(\"\\n✓ KD-Tree uzayı recursive olarak böler\")\nprint(\"  Her düğüm bir eksende bölme yapar\")\nprint(\"  Arama O(log N) complexity'ye düşer\")\nprint(\"  Yüksek boyutta (D>20) curse of dimensionality yüzünden yavaşlar\")",
+      "explanation": "KD-Tree ve Ball Tree ile optimize edilmiş KNN. Büyük veri setlerinde brute force'tan 10-100x daha hızlı. Production sistemlerde kritik optimizasyon."
+    }
+  ],
+  "quiz": [
+    {
+      "question": "KNN algoritmasının 'lazy learning' (tembel öğrenme) olarak adlandırılmasının sebebi nedir?",
+      "options": [
+        "Eğitim aşamasında hiçbir model öğrenmez, sadece veriyi saklar",
+        "Algoritma yavaş çalıştığı için",
+        "Sadece küçük veri setlerinde kullanılabilir",
+        "Parametreleri manuel olarak ayarlamak gerekir"
+      ],
+      "correct": 0,
+      "explanation": "KNN 'instance-based learning' yapar. Eğitim aşamasında parametre öğrenmez, veriyi olduğu gibi saklar. Tahmin aşamasında tüm veriyle karşılaştırma yapar."
+    },
+    {
+      "question": "KNN'de K değeri çok küçük seçilirse (örn. K=1) ne olur?",
+      "options": [
+        "Underfitting, model çok basit olur",
+        "Overfitting, model gürültüye çok hassas olur",
+        "Model eğitilemez",
+        "Computational cost azalır"
+      ],
+      "correct": 1,
+      "explanation": "K=1'de sadece en yakın komşuya bakılır. Bu outlier'lara ve noise'a çok hassas hale getirir (overfitting). Karar sınırları çok karmaşık ve kırılgan olur."
+    },
+    {
+      "question": "KNN algoritmasında feature scaling (özellik ölçeklendirme) neden kritik öneme sahiptir?",
+      "options": [
+        "Model daha hızlı eğitilir",
+        "Büyük değerli özellikler uzaklık hesabını domine eder",
+        "Memory kullanımı azalır",
+        "Overfitting önlenir"
+      ],
+      "correct": 1,
+      "explanation": "KNN uzaklık tabanlıdır. Yaş (20-80) ve gelir (20000-100000) gibi farklı ölçeklerde özellikler varsa, gelir uzaklığı tamamen domine eder. StandardScaler veya MinMaxScaler kullanmak şarttır."
+    },
+    {
+      "question": "KNN'in time complexity (zaman karmaşıklığı) nedir? (N: örnek sayısı, D: özellik sayısı)",
+      "options": [
+        "Training: O(N log N), Prediction: O(1)",
+        "Training: O(1), Prediction: O(N × D)",
+        "Training: O(N × D), Prediction: O(log N)",
+        "Training: O(N²), Prediction: O(D)"
+      ],
+      "correct": 1,
+      "explanation": "KNN 'lazy learning' olduğu için training O(1) (veriyi sakla). Prediction O(N×D) çünkü her yeni nokta için TÜM eğitim verisine uzaklık hesaplanır. Büyük veride yavaştır!"
+    },
+    {
+      "question": "Weighted KNN'de 'distance' weighting kullanıldığında ne olur?",
+      "options": [
+        "Tüm komşular eşit ağırlığa sahip olur",
+        "Yakın komşular daha fazla, uzak komşular daha az ağırlık alır",
+        "Sadece en yakın komşu dikkate alınır",
+        "K değeri otomatik olarak ayarlanır"
+      ],
+      "correct": 1,
+      "explanation": "Weighted KNN'de ağırlık = 1/distance. Yakın komşuların oy gücü artar, uzak komşuların etkisi azalır. Bu genellikle daha iyi generalization sağlar."
+    },
+    {
+      "question": "KNN hangi senaryoda UYGUN DEĞİLDİR?",
+      "options": [
+        "Küçük-orta boy veri setleri (N < 10000)",
+        "Düşük boyutlu özellikler (D < 20)",
+        "Çok büyük veri seti (N > 1M) ve real-time tahmin gereksinimi",
+        "Nonlinear karar sınırları olan problemler"
+      ],
+      "correct": 2,
+      "explanation": "KNN her tahmin için TÜM eğitim verisini tarar (O(N×D)). Milyonlarca örnek varsa ve real-time tahmin gerekiyorsa çok yavaştır. Bu durumda Approximate NN (FAISS, Annoy) veya başka algoritmalar tercih edilir."
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Feature scaling yapmadan KNN kullanmak",
+      "why": "Farklı ölçeklerdeki özellikler (yaş: 20-80, gelir: 20K-100K) uzaklık hesabını bozar. Büyük değerli özellikler dominant hale gelir.",
+      "fix": "StandardScaler() veya MinMaxScaler() kullan. MUTLAKA train'de fit_transform, test'te sadece transform!",
+      "example": "# YANLIŞ\nknn.fit(X_train, y_train)\n\n# DOĞRU\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\nknn.fit(X_train_scaled, y_train)"
+    },
+    {
+      "mistake": "K değerini çok küçük (K=1) veya çok büyük (K=N) seçmek",
+      "why": "K=1 overfitting (gürültüye hassas), K=N underfitting (herkes çoğunluk sınıfına ait). Optimal K genellikle 3-15 arasında.",
+      "fix": "Cross-validation ile K'yı tune et. Genellikle K=sqrt(N) veya K=5 başlangıç için iyidir. Tek sayı tercih et (beraberliği önle).",
+      "example": "# Cross-validation ile optimal K bul\nfrom sklearn.model_selection import GridSearchCV\nparam_grid = {'n_neighbors': [3, 5, 7, 9, 11, 15]}\ngrid = GridSearchCV(KNeighborsClassifier(), param_grid, cv=5)\ngrid.fit(X_train, y_train)"
+    },
+    {
+      "mistake": "Büyük veri setinde brute force KNN kullanmak",
+      "why": "Her tahmin O(N×D) complexity. N > 100K olduğunda tahminler çok yavaş. Real-time uygulamalarda kullanılamaz.",
+      "fix": "KD-Tree (D<20 için) veya Ball Tree kullan. Ya da FAISS, Annoy gibi approximate NN kütüphaneleri tercih et.",
+      "example": "# YAVAŞ (brute force)\nknn = KNeighborsClassifier(n_neighbors=5, algorithm='brute')\n\n# HIZLI (KD-Tree)\nknn = KNeighborsClassifier(n_neighbors=5, algorithm='kd_tree')\n\n# EN HIZLI (auto: sklearn seçer)\nknn = KNeighborsClassifier(n_neighbors=5, algorithm='auto')"
+    },
+    {
+      "mistake": "Yüksek boyutlu veri (D > 50) için KNN kullanmak",
+      "why": "Curse of dimensionality: Yüksek boyutta tüm noktalar birbirine 'eşit uzaklıkta' görünür. Euclidean distance anlamsızlaşır.",
+      "fix": "PCA ile boyut azalt veya feature selection yap. D < 20 olana kadar boyutu düşür.",
+      "example": "from sklearn.decomposition import PCA\n\n# D=100 → D=20'ye azalt\npca = PCA(n_components=20)\nX_reduced = pca.fit_transform(X)\n\n# Şimdi KNN kullan\nknn.fit(X_reduced, y)"
+    },
+    {
+      "mistake": "Imbalanced data'da default KNN kullanmak",
+      "why": "Çoğunluk sınıfı her zaman kazanır. Minority class hiç tahmin edilemez (örn. fraud detection'da %99 normal, %1 fraud).",
+      "fix": "Class weights kullan veya SMOTE ile synthetic örnekler oluştur. Ya da weighted KNN tercih et.",
+      "example": "from imblearn.over_sampling import SMOTE\n\n# Minority class'ı oversample et\nsmote = SMOTE(random_state=42)\nX_resampled, y_resampled = smote.fit_resample(X_train, y_train)\n\nknn.fit(X_resampled, y_resampled)"
+    },
+    {
+      "mistake": "Categorical features'ı encode etmeden KNN'e vermek",
+      "why": "KNN numerical uzaklık hesaplar. 'Red', 'Blue', 'Green' gibi kategorik değerler sayısal değil. Distance hesaplanamaz.",
+      "fix": "One-hot encoding veya Label encoding kullan (ordinal değilse one-hot tercih et).",
+      "example": "from sklearn.preprocessing import OneHotEncoder\n\n# Kategorik özellikler için\nencoder = OneHotEncoder(sparse=False)\nX_encoded = encoder.fit_transform(X_categorical)\n\n# Numerical ile birleştir\nX_final = np.hstack([X_numerical, X_encoded])"
+    },
+    {
+      "mistake": "Test verisini scaling'de kullanmak (data leakage)",
+      "why": "Scaler test verisini görürse, test'ten train'e bilgi sızar (data leakage). Model performansı yapay olarak yükselir.",
+      "fix": "Scaler'ı SADECE train'de fit et, test'te transform et. fit_transform test'te ASLA kullanma!",
+      "example": "# YANLIŞ (data leakage!)\nscaler = StandardScaler()\nX_all_scaled = scaler.fit_transform(np.vstack([X_train, X_test]))\n\n# DOĞRU\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)  # Sadece transform!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "KNN'in temel çalışma prensibi nedir?",
+      "back": "Yeni bir noktanın sınıfını/değerini, ona en yakın K komşunun çoğunluk oyu veya ortalaması ile belirler. 'Lazy learning' yapar, eğitim aşamasında model öğrenmez."
+    },
+    {
+      "front": "KNN'de K değeri nasıl seçilir?",
+      "back": "Cross-validation ile optimal K bulunur. K çok küçük → overfitting, K çok büyük → underfitting. Genellikle K=3,5,7,9 gibi tek sayılar tercih edilir. K=sqrt(N) iyi başlangıç."
+    },
+    {
+      "front": "Feature scaling KNN için neden kritik?",
+      "back": "KNN uzaklık tabanlıdır. Farklı ölçeklerdeki özellikler (yaş: 20-80, gelir: 20K-100K) uzaklık hesabını bozar. StandardScaler veya MinMaxScaler şarttır!"
+    },
+    {
+      "front": "Euclidean distance formülü nedir?",
+      "back": "d = √(Σ(xi - yi)²). İki nokta arasındaki düz çizgi mesafesi. KNN'de en yaygın kullanılan uzaklık metriği."
+    },
+    {
+      "front": "KNN'in time complexity'si nedir?",
+      "back": "Training: O(1) - veriyi sakla. Prediction: O(N×D) - her yeni nokta için tüm eğitim verisine uzaklık hesapla. Büyük veride yavaş!"
+    },
+    {
+      "front": "Weighted KNN nedir?",
+      "back": "Yakın komşuların oy ağırlığı daha fazladır (weight = 1/distance). Uzak komşuların etkisi azalır. Genellikle daha iyi generalization sağlar."
+    },
+    {
+      "front": "KD-Tree KNN'i nasıl hızlandırır?",
+      "back": "Uzayı recursive olarak böler (space partitioning). Arama O(N×D)'den O(D log N)'e düşer. Düşük boyutlu veriler (D<20) için çok etkili."
+    },
+    {
+      "front": "Curse of Dimensionality KNN'i nasıl etkiler?",
+      "back": "Yüksek boyutlu uzaylarda (D>50) tüm noktalar birbirine 'eşit uzaklıkta' görünür. Euclidean distance anlamsızlaşır. PCA ile boyut azaltılmalı."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "KNN Karar Sınırları - K Değerinin Etkisi",
+      "description": "Farklı K değerlerinin karar sınırlarına etkisini interaktif olarak görün. K küçük → karmaşık sınır (overfitting), K büyük → basit sınır (underfitting).",
+      "component": "KNNDecisionBoundary",
+      "params": {
+        "k_range": [1, 3, 5, 10, 20, 50],
+        "dataset": "moons"
+      }
+    },
+    {
+      "type": "plot",
+      "title": "Euclidean vs Manhattan Distance",
+      "description": "İki farklı uzaklık metriğinin karşılaştırması. Euclidean düz çizgi, Manhattan grid path (taxi cab) mesafesidir.",
+      "component": "DistanceMetrics",
+      "params": {
+        "point1": [0, 0],
+        "point2": [3, 4]
+      }
+    },
+    {
+      "type": "interactive",
+      "title": "Weighted vs Uniform KNN",
+      "description": "Uniform KNN'de tüm komşular eşit ağırlıktır. Weighted KNN'de yakın komşular daha fazla oy alır.",
+      "component": "WeightedKNNComparison"
+    },
+    {
+      "type": "animation",
+      "title": "KNN Prediction Adım Adım",
+      "description": "Yeni bir nokta için KNN'in nasıl tahmin yaptığını adım adım görselleştirme: 1) Uzaklıkları hesapla, 2) K en yakın bul, 3) Çoğunluk oyuyla karar ver.",
+      "component": "KNNPredictionSteps"
+    }
+  ]
+}

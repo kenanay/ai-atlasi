@@ -1,0 +1,310 @@
+{
+  "id": "vision-transformers",
+  "title": "Vision Transformers (ViT)",
+  "category": "computer-vision",
+  "level": 4,
+  "estimatedTime": 75,
+  "description": "Vision Transformers (ViT): Apply Transformers to images! Revolutionary: No convolutions needed. Architecture: (1) Split image into patches (16×16). (2) Flatten patches → linear projection → embeddings. (3) Add positional embeddings. (4) Standard Transformer encoder (multi-head attention, MLP). (5) Classification head on [CLS] token. Key insight: Image = sequence of patches! Each patch = token (like word in NLP). Self-attention learns spatial relationships. Advantages: (1) Global receptive field (vs CNN's local). (2) Better scaling with data. (3) Transfer learning from large datasets. Challenges: Needs large datasets (ImageNet-21k). Patch size trade-off: Smaller → more tokens → higher compute. Models: ViT-Base, ViT-Large, ViT-Huge. Hybrid: CNN stem + Transformer. Applications: Image classification, object detection (DETR), segmentation. State-of-the-art on ImageNet with sufficient data.",
+  "content": {
+    "level0_basic": "Vision Transformers (ViT): Use Transformer (NLP architecture) for images! How: (1) Cut image into patches (like puzzle pieces). 16×16 pixels each. (2) Each patch = token (like word!). (3) Flatten patch, make embedding. (4) Feed to Transformer! Self-attention between patches. (5) Classification token [CLS] → predict class. Why revolutionary? CNN: Local filters (3×3, 5×5), hierarchical. ViT: Global attention from layer 1! Every patch can attend to every other. Better understanding of relationships. Example: 224×224 image → 14×14 patches (196 tokens). Transformer processes all 196 simultaneously! Challenge: Needs LOTS of data. CNNs work with small datasets, ViT needs millions. Solution: Pre-train on huge dataset (ImageNet-21k), then fine-tune. Results: Beats CNNs when data sufficient! Less inductive bias = more flexible.",
+    "level1_beginner": "**ViT Architecture:**\n\n```\n1. Image (224×224×3)\n   ↓\n2. Split into patches (16×16)\n   → 196 patches (14×14 grid)\n   ↓\n3. Flatten each patch: 16×16×3 = 768\n   ↓\n4. Linear projection: 768 → d_model (768)\n   ↓\n5. Add positional embeddings\n   + Add [CLS] token (classification)\n   ↓\n6. Transformer Encoder (12 layers)\n   - Multi-head self-attention\n   - MLP (feedforward)\n   ↓\n7. Take [CLS] token output\n   ↓\n8. Classification head: MLP → classes\n```\n\n**Patch Embedding:**\n\n```\nImage: H×W×3\nPatch size: P×P\nNumber of patches: N = (H/P) × (W/P)\n\nEach patch: P×P×3 = P²×3 dimensions\nFlatten: Vector of size P²×3\nLinear projection: P²×3 → d_model\n\nResult: N × d_model token embeddings\nAdd: [CLS] token → (N+1) × d_model\n```\n\n**Positional Embeddings:**\n\n```python\n# Learnable positional embeddings\nnum_patches = 196  # 14×14\npos_embed = nn.Parameter(torch.randn(1, num_patches + 1, 768))\n\n# Add to patch embeddings\nx = patch_embeddings + pos_embed\n\n# Why needed? Transformer doesn't know patch positions!\n# Positional embeddings encode: \"This patch is at position (i,j)\"\n```\n\n**Self-Attention in ViT:**\n\n```\nEach patch attends to all other patches!\n\nPatch 1 (top-left): Attends to patch 100 (bottom-right)\n→ Can capture long-range dependencies\n\nCNN: Receptive field grows slowly\n  Layer 1: 3×3 local\n  Layer 10: Still limited\n  \nViT: Global receptive field from Layer 1!\n  Every patch sees every other patch\n  Better for understanding whole image\n```\n\n**ViT vs CNN:**\n\n```\nInductive Bias:\n  CNN: Strong (locality, translation equivariance)\n  ViT: Weak (learns from data)\n  \nData Requirement:\n  CNN: Works with small datasets (10k images)\n  ViT: Needs large datasets (millions)\n  \nPerformance:\n  Small data: CNN wins\n  Large data: ViT wins!\n  \nComputational Cost:\n  CNN: O(H·W·C²·k²) (kernel size k)\n  ViT: O(N²·d) (N patches, attention O(N²))\n```",
+    "level2_application": "**ViT Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass PatchEmbedding(nn.Module):\n    def __init__(self, img_size=224, patch_size=16, in_channels=3, embed_dim=768):\n        super().__init__()\n        self.num_patches = (img_size // patch_size) ** 2\n        \n        # Convolution does patching + projection!\n        self.proj = nn.Conv2d(\n            in_channels, embed_dim,\n            kernel_size=patch_size,\n            stride=patch_size\n        )\n    \n    def forward(self, x):\n        # x: (B, 3, 224, 224)\n        x = self.proj(x)  # (B, 768, 14, 14)\n        x = x.flatten(2)  # (B, 768, 196)\n        x = x.transpose(1, 2)  # (B, 196, 768)\n        return x\n\nclass VisionTransformer(nn.Module):\n    def __init__(self, img_size=224, patch_size=16, num_classes=1000,\n                 embed_dim=768, depth=12, num_heads=12):\n        super().__init__()\n        \n        # Patch embedding\n        self.patch_embed = PatchEmbedding(img_size, patch_size, 3, embed_dim)\n        num_patches = (img_size // patch_size) ** 2\n        \n        # [CLS] token\n        self.cls_token = nn.Parameter(torch.randn(1, 1, embed_dim))\n        \n        # Positional embeddings\n        self.pos_embed = nn.Parameter(torch.randn(1, num_patches + 1, embed_dim))\n        \n        # Transformer encoder\n        encoder_layer = nn.TransformerEncoderLayer(\n            d_model=embed_dim,\n            nhead=num_heads,\n            dim_feedforward=embed_dim * 4,\n            dropout=0.1\n        )\n        self.transformer = nn.TransformerEncoder(encoder_layer, depth)\n        \n        # Classification head\n        self.head = nn.Linear(embed_dim, num_classes)\n    \n    def forward(self, x):\n        B = x.shape[0]\n        \n        # Patch embedding\n        x = self.patch_embed(x)  # (B, 196, 768)\n        \n        # Add [CLS] token\n        cls_tokens = self.cls_token.expand(B, -1, -1)\n        x = torch.cat([cls_tokens, x], dim=1)  # (B, 197, 768)\n        \n        # Add positional embedding\n        x = x + self.pos_embed\n        \n        # Transformer\n        x = self.transformer(x)\n        \n        # Classification: Use [CLS] token\n        cls_output = x[:, 0]\n        logits = self.head(cls_output)\n        \n        return logits\n\n# Create model\nmodel = VisionTransformer(\n    img_size=224,\n    patch_size=16,\n    num_classes=1000,\n    embed_dim=768,\n    depth=12,\n    num_heads=12\n)\n\nprint(f'Parameters: {sum(p.numel() for p in model.parameters())/1e6:.1f}M')\n```",
+    "level3_advanced": "**ViT with Hybrid Architecture:**\n\n```python\nclass HybridViT(nn.Module):\n    \"\"\"CNN stem + Transformer\"\"\"\n    def __init__(self, num_classes=1000):\n        super().__init__()\n        \n        # ResNet stem (initial layers)\n        self.stem = nn.Sequential(\n            nn.Conv2d(3, 64, 7, stride=2, padding=3),\n            nn.BatchNorm2d(64),\n            nn.ReLU(),\n            nn.MaxPool2d(3, stride=2, padding=1),\n            # ResNet blocks...\n        )\n        \n        # Flatten CNN features as patches\n        self.patch_embed = nn.Conv2d(64, 768, kernel_size=1)\n        \n        # Transformer (same as ViT)\n        self.transformer = TransformerEncoder(...)\n        self.head = nn.Linear(768, num_classes)\n    \n    def forward(self, x):\n        # CNN feature extraction\n        x = self.stem(x)  # (B, 64, H', W')\n        \n        # Treat as patches\n        x = self.patch_embed(x)  # (B, 768, H', W')\n        x = x.flatten(2).transpose(1, 2)\n        \n        # Transformer\n        x = self.transformer(x)\n        return self.head(x[:, 0])\n```\n\n**Attention Visualization:**\n\n```python\n@torch.no_grad()\ndef visualize_attention(model, image):\n    \"\"\"Visualize what patches attend to\"\"\"\n    model.eval()\n    \n    # Forward with attention weights\n    attentions = []\n    hooks = []\n    \n    def hook_fn(module, input, output):\n        attentions.append(output[1])  # Attention weights\n    \n    # Register hooks on attention layers\n    for layer in model.transformer.layers:\n        hooks.append(layer.self_attn.register_forward_hook(hook_fn))\n    \n    output = model(image)\n    \n    # Remove hooks\n    for hook in hooks:\n        hook.remove()\n    \n    # Visualize attention from [CLS] to patches\n    cls_attention = attentions[-1][0, :, 0, 1:]  # Last layer, [CLS] to patches\n    \n    # Reshape to image\n    num_patches = int(cls_attention.shape[-1] ** 0.5)\n    attention_map = cls_attention.reshape(num_patches, num_patches)\n    \n    return attention_map\n```",
+    "level4_expert": "**Efficient ViT Training:**\n\n```python\nclass EfficientViT(nn.Module):\n    \"\"\"Optimizations for ViT training\"\"\"\n    def __init__(self, img_size=224, patch_size=16, embed_dim=768):\n        super().__init__()\n        \n        # Patch embedding with overlapping patches\n        self.patch_embed = nn.Conv2d(\n            3, embed_dim,\n            kernel_size=patch_size,\n            stride=patch_size // 2,  # Overlap!\n            padding=patch_size // 4\n        )\n        \n        # Relative positional bias (instead of absolute)\n        self.rel_pos_bias = RelativePositionBias()\n        \n        # Efficient attention (linear complexity)\n        self.transformer = LinformerEncoder(...)\n    \n    def forward(self, x):\n        x = self.patch_embed(x)\n        x = x.flatten(2).transpose(1, 2)\n        \n        # Add relative positional bias\n        bias = self.rel_pos_bias(x.shape[1])\n        x = self.transformer(x, attn_bias=bias)\n        \n        return x\n\n# Mixed precision training\nfrom torch.cuda.amp import autocast, GradScaler\n\nscaler = GradScaler()\n\nfor images, labels in dataloader:\n    with autocast():\n        outputs = model(images)\n        loss = criterion(outputs, labels)\n    \n    scaler.scale(loss).backward()\n    scaler.step(optimizer)\n    scaler.update()\n\n# Data augmentation for ViT\nfrom torchvision import transforms\n\ntrain_transform = transforms.Compose([\n    transforms.RandomResizedCrop(224),\n    transforms.RandAugment(),  # Important for ViT!\n    transforms.ToTensor(),\n    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])\n])\n```\n\n**DETR: Detection Transformer:**\n\n```python\nclass DETR(nn.Module):\n    \"\"\"Object detection with ViT\"\"\"\n    def __init__(self, num_classes=91):\n        super().__init__()\n        \n        # CNN backbone\n        self.backbone = resnet50()\n        \n        # Transformer encoder-decoder\n        self.transformer = nn.Transformer(\n            d_model=256, nhead=8,\n            num_encoder_layers=6,\n            num_decoder_layers=6\n        )\n        \n        # Object queries (learnable)\n        self.query_embed = nn.Embedding(100, 256)  # 100 objects max\n        \n        # Prediction heads\n        self.class_head = nn.Linear(256, num_classes + 1)  # +1 for 'no object'\n        self.bbox_head = nn.Linear(256, 4)  # x, y, w, h\n    \n    def forward(self, x):\n        # Extract features\n        features = self.backbone(x)\n        \n        # Transformer\n        h = self.transformer(\n            features.flatten(2).transpose(1, 2),\n            self.query_embed.weight.unsqueeze(1)\n        )\n        \n        # Predictions\n        classes = self.class_head(h)\n        boxes = self.bbox_head(h).sigmoid()\n        \n        return {'pred_logits': classes, 'pred_boxes': boxes}\n```"
+  },
+  "whatIsIt": "Vision Transformers (ViT): Apply Transformer architecture to computer vision! Key idea: Image = sequence of patches. Architecture: (1) Split image into patches (16×16 pixels). (2) Flatten and linearly project patches → embeddings. (3) Add learnable positional embeddings (encode spatial positions). (4) Prepend [CLS] token for classification. (5) Standard Transformer encoder (multi-head self-attention + MLP). (6) Classification head on [CLS] output. Attention mechanism: Each patch attends to all other patches → global receptive field from layer 1! No convolutions needed. Models: ViT-Base/16 (86M params), ViT-Large/16 (307M), ViT-Huge/14 (632M). Training: Requires large datasets (ImageNet-21k: 14M images). Transfer learning: Pre-train on large dataset, fine-tune on target task.",
+  "whyNeeded": "Why ViT vs CNN? (1) Global Receptive Field: CNNs have local filters, receptive field grows slowly. ViT: Every patch sees every other patch from layer 1 → better understanding of whole image. (2) Scaling: CNNs saturate with more data. ViT: Performance keeps improving with larger datasets! Less inductive bias → learns more from data. (3) Transfer Learning: Pre-train once on huge dataset, transfer to many tasks (classification, detection, segmentation). (4) Unified Architecture: Same Transformer for NLP + Vision → potential for multimodal models (CLIP, GPT-4V). Challenges: (1) Data hungry: Needs millions of images. CNNs work with thousands. (2) Compute intensive: Attention O(N²) in patch count. Solutions: Hybrid models (CNN stem + Transformer), efficient attention variants. State-of-the-art: ViT beats ResNet when data sufficient! Modern era: Transformers everywhere.",
+  "realWorldAnalogy": "ViT = Puzzle solving strategy! CNN approach: Look at pieces locally. Start corner, gradually expand. Local patterns first, big picture later. ViT approach: Look at ALL pieces simultaneously! See entire puzzle at once. Find relationships: 'This piece (patch 1) relates to that distant piece (patch 100) because colors match'. Global understanding from start. Patch = Puzzle piece. Self-attention = 'Which pieces relate to which?' [CLS] token = Final answer: 'It's a cat!' Why better (with enough pieces/data)? Global view helps! CNN might miss long-range relationships. ViT sees everything. Why harder? Need MANY puzzles to learn (data requirement). Without experience (inductive bias), need lots of examples. CNN: Born knowing 'nearby pieces usually connect' (locality bias). ViT: Learns everything from scratch → needs more data but more flexible!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Patches: } N = \\frac{H \\cdot W}{P^2}, \\quad \\text{where } P \\text{ is patch size}",
+      "\\text{Patch embedding: } z_i = \\text{Linear}(\\text{Flatten}(x_i^p)) + E_{pos}[i]",
+      "\\text{Attention: } \\text{Attention}(Q,K,V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V",
+      "\\text{ViT layers: } z'_l = \\text{MSA}(\\text{LN}(z_{l-1})) + z_{l-1}",
+      "\\text{Final: } y = \\text{Linear}(\\text{LN}(z_L^0)), \\quad z_L^0 \\text{ is [CLS] token}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "ViT Forward Pass:",
+      "1. Input: Image (H×W×3)",
+      "2. Split into patches: N = (H/P)×(W/P) patches of size P×P",
+      "3. Flatten each patch: P²×3 dimensional vectors",
+      "4. Linear projection: Map to d_model dimensions",
+      "5. Add learnable positional embeddings",
+      "6. Prepend [CLS] token",
+      "7. For each Transformer layer:",
+      "   a. Multi-head self-attention (patches attend to each other)",
+      "   b. Add & Norm",
+      "   c. MLP (feedforward)",
+      "   d. Add & Norm",
+      "8. Extract [CLS] token from final layer",
+      "9. Classification head: Linear layer → class logits",
+      "10. Softmax → class probabilities"
+    ],
+    "complexity": "Patch embedding: O(H·W·C·d). Transformer: O(L·N²·d + L·N·d²) where L=layers, N=patches, d=dimension. Attention: O(N²·d) per layer (quadratic in patches!). For 224×224 image, 16×16 patches: N=196. ViT-Base (L=12): ~86M parameters. Inference: ~10-30ms on GPU."
+  },
+  "prerequisites": [
+    "transformers-attention",
+    "convolutional-neural-networks"
+  ],
+  "nextTopics": [
+    "detection-transformers-detr",
+    "swin-transformer"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "image-classification",
+    "transfer-learning"
+  ],
+  "tags": [
+    "vision-transformer",
+    "vit",
+    "transformer",
+    "computer-vision",
+    "attention",
+    "image-classification"
+  ],
+  "codeExamples": [
+    {
+      "title": "Patch Embedding",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass PatchEmbed(nn.Module):\n    def __init__(self, img_size=224, patch_size=16, embed_dim=768):\n        super().__init__()\n        self.proj = nn.Conv2d(3, embed_dim, patch_size, stride=patch_size)\n    \n    def forward(self, x):\n        # x: (B, 3, 224, 224)\n        x = self.proj(x)  # (B, 768, 14, 14)\n        x = x.flatten(2).transpose(1, 2)  # (B, 196, 768)\n        return x\n\npatch_embed = PatchEmbed()\nx = torch.randn(1, 3, 224, 224)\npatches = patch_embed(x)\nprint(f'Patches: {patches.shape}')  # (1, 196, 768)",
+      "level": 1,
+      "explanation": "Patch Embedding code"
+    },
+    {
+      "title": "Complete ViT Model",
+      "language": "python",
+      "code": "class VisionTransformer(nn.Module):\n    def __init__(self, img_size=224, patch_size=16, num_classes=1000, embed_dim=768, depth=12, num_heads=12):\n        super().__init__()\n        num_patches = (img_size // patch_size) ** 2\n        \n        self.patch_embed = nn.Conv2d(3, embed_dim, patch_size, stride=patch_size)\n        self.cls_token = nn.Parameter(torch.randn(1, 1, embed_dim))\n        self.pos_embed = nn.Parameter(torch.randn(1, num_patches + 1, embed_dim))\n        \n        encoder_layer = nn.TransformerEncoderLayer(embed_dim, num_heads, embed_dim*4, 0.1)\n        self.transformer = nn.TransformerEncoder(encoder_layer, depth)\n        self.head = nn.Linear(embed_dim, num_classes)\n    \n    def forward(self, x):\n        B = x.shape[0]\n        x = self.patch_embed(x).flatten(2).transpose(1, 2)\n        cls_tokens = self.cls_token.expand(B, -1, -1)\n        x = torch.cat([cls_tokens, x], dim=1)\n        x = x + self.pos_embed\n        x = self.transformer(x)\n        return self.head(x[:, 0])\n\nmodel = VisionTransformer()\nprint(f'{sum(p.numel() for p in model.parameters())/1e6:.1f}M params')",
+      "level": 2,
+      "explanation": "Complete ViT Model code"
+    },
+    {
+      "title": "Using Pre-trained ViT",
+      "language": "python",
+      "code": "import torch\nfrom transformers import ViTForImageClassification, ViTFeatureExtractor\nfrom PIL import Image\n\n# Load pre-trained ViT\nmodel = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')\nfeature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')\n\n# Prepare image\nimage = Image.open('cat.jpg')\ninputs = feature_extractor(images=image, return_tensors='pt')\n\n# Inference\nwith torch.no_grad():\n    outputs = model(**inputs)\n    logits = outputs.logits\n    predicted = logits.argmax(-1)\n\nprint(f'Predicted class: {predicted.item()}')",
+      "level": 2,
+      "explanation": "Using Pre-trained ViT code"
+    },
+    {
+      "title": "Attention Visualization",
+      "language": "python",
+      "code": "@torch.no_grad()\ndef visualize_attention(model, image):\n    import matplotlib.pyplot as plt\n    \n    # Get attention weights\n    attentions = []\n    def hook(module, input, output):\n        attentions.append(output[1])  # Attention weights\n    \n    hook_handle = model.transformer.layers[-1].self_attn.register_forward_hook(hook)\n    _ = model(image)\n    hook_handle.remove()\n    \n    # [CLS] token attention to patches\n    attn = attentions[0][0, :, 0, 1:]  # (num_heads, num_patches)\n    attn = attn.mean(0)  # Average across heads\n    \n    # Reshape to 2D\n    size = int(attn.shape[0] ** 0.5)\n    attn_map = attn.reshape(size, size)\n    \n    plt.imshow(attn_map.cpu(), cmap='viridis')\n    plt.title('Attention from [CLS] token')\n    plt.show()\n\nvisualize_attention(model, image)",
+      "level": 3,
+      "explanation": "Attention Visualization code"
+    },
+    {
+      "title": "Fine-tuning ViT",
+      "language": "python",
+      "code": "from transformers import ViTForImageClassification\nimport torch.nn as nn\n\n# Load pre-trained ViT\nmodel = ViTForImageClassification.from_pretrained(\n    'google/vit-base-patch16-224',\n    num_labels=10,  # Your dataset classes\n    ignore_mismatched_sizes=True\n)\n\n# Freeze backbone, train only classifier\nfor param in model.vit.parameters():\n    param.requires_grad = False\nfor param in model.classifier.parameters():\n    param.requires_grad = True\n\n# Training\noptimizer = torch.optim.Adam(model.classifier.parameters(), lr=1e-3)\n\nfor images, labels in train_loader:\n    outputs = model(images)\n    loss = nn.CrossEntropyLoss()(outputs.logits, labels)\n    loss.backward()\n    optimizer.step()\n    optimizer.zero_grad()\n\nprint('Fine-tuning complete!')",
+      "level": 3,
+      "explanation": "Fine-tuning ViT code"
+    },
+    {
+      "title": "Hybrid CNN + Transformer",
+      "language": "python",
+      "code": "class HybridViT(nn.Module):\n    def __init__(self, num_classes=1000):\n        super().__init__()\n        # CNN stem\n        self.stem = nn.Sequential(\n            nn.Conv2d(3, 64, 7, stride=2, padding=3),\n            nn.BatchNorm2d(64), nn.ReLU(),\n            nn.MaxPool2d(3, stride=2, padding=1),\n        )\n        # Transformer\n        self.transformer = nn.TransformerEncoder(\n            nn.TransformerEncoderLayer(64, 4, 256),\n            num_layers=6\n        )\n        self.head = nn.Linear(64, num_classes)\n    \n    def forward(self, x):\n        x = self.stem(x)  # CNN features\n        B, C, H, W = x.shape\n        x = x.flatten(2).transpose(1, 2)  # (B, H*W, C)\n        x = self.transformer(x)\n        return self.head(x.mean(1))  # Global average pooling\n\nmodel = HybridViT()\nprint('Hybrid: Best of both worlds!')",
+      "level": 4,
+      "explanation": "Hybrid CNN + Transformer code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "ViT'de image patches'e neden dönüştürülür?",
+      "options": [
+        "Memory tasarrufu için",
+        "Transformer sequence of tokens bekler! Image → patches → tokens",
+        "Sadece visualization için",
+        "Training speed için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Transformer architecture sequence of tokens için tasarlandı (NLP: words). ViT: Image → patches → treat as tokens! Each 16×16 patch = one token. Image (224×224) → 196 patches (14×14 grid). Self-attention: Patches attend to each other (like words in sentence). Without patching: Pixel-level attention O(H²W²) → too expensive! Patches reduce sequence length, make feasible."
+    },
+    {
+      "question": "ViT'nin CNN'e göre en büyük avantajı?",
+      "options": [
+        "Daha hızlı training",
+        "Global receptive field from layer 1: Every patch sees all patches!",
+        "Daha az parametre",
+        "Daha az data gerekir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "ViT: Global receptive field immediately! Self-attention: Each patch attends to ALL other patches from first layer. CNN: Local receptive field (3×3, 5×5), grows slowly through layers. Layer 1: 3×3. Layer 10: Still limited. ViT: Better for understanding relationships across image. Example: Object in top-left relates to object in bottom-right → ViT captures easily. Why matters: Long-range dependencies, global context. Trade-off: Needs more data to learn (less inductive bias)."
+    },
+    {
+      "question": "ViT neden büyük dataset gerektirir?",
+      "options": [
+        "Model çok büyük",
+        "Weak inductive bias: Learns spatial structure from data, needs examples!",
+        "GPU memory için",
+        "Sadece benchmark için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Inductive Bias: Prior knowledge built into architecture. CNN: Strong bias (locality, translation equivariance). Knows 'nearby pixels related'. ViT: Weak bias. Doesn't assume spatial structure! Must learn from data. Result: CNN works with 10k images. ViT needs 1M+. With sufficient data: ViT outperforms CNN (more flexible). Small data: CNN wins (built-in knowledge helps). Solution: Pre-train ViT on ImageNet-21k (14M images), then fine-tune!"
+    },
+    {
+      "question": "[CLS] token'ın rolü nedir?",
+      "options": [
+        "Attention hesaplar",
+        "Aggregates information from all patches for classification",
+        "Positional encoding için",
+        "Training stabilization"
+      ],
+      "correctAnswer": 1,
+      "explanation": "[CLS] token: Special token prepended to sequence (from BERT). Purpose: Global representation! Attends to all patches, aggregates information. Final layer: [CLS] output → classification head → class prediction. Alternative: Could use average of all patches. [CLS] advantages: Learned aggregation (better than simple average). During attention: [CLS] attends to important patches, ignores noise. Visualization: [CLS] attention shows which patches are important for classification!"
+    },
+    {
+      "question": "ViT'de positional embeddings neden gerekli?",
+      "options": [
+        "Model accuracy için",
+        "Transformer permutation-invariant! Pos embeddings encode patch positions",
+        "Training speed için",
+        "Sadece initialization"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Transformer: Permutation-invariant! Without positional info: Same output for shuffled input. Problem for images: Spatial structure critical! Top-left ≠ bottom-right. Solution: Positional embeddings! Learnable vectors added to patch embeddings. Encode: 'This patch is at position (i,j)'. Two types: Absolute (learned per position) or relative (distances). ViT: Uses learnable absolute. Result: Model knows spatial relationships!"
+    },
+    {
+      "question": "Hybrid ViT (CNN + Transformer) neden kullanılır?",
+      "options": [
+        "Sadece experiment için",
+        "Best of both: CNN inductive bias + Transformer global attention",
+        "Daha küçük model",
+        "Backward compatibility"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Hybrid: CNN stem (early layers) + Transformer (later layers). Benefits: (1) CNN: Low-level features (edges, textures) with inductive bias. (2) Transformer: High-level relationships with global attention. (3) Smaller dataset requirement than pure ViT. (4) Often better performance/data trade-off. Example: ResNet50 backbone → Transformer on top. CNN extracts feature map → treat as patches → Transformer processes. Popular: Combines strengths of both architectures!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "ViT Core Idea",
+      "back": "**Image = Sequence of Patches**\n\n1. Split image (16×16 patches)\n2. Flatten & embed\n3. Add positional encoding\n4. Transformer encoder\n5. [CLS] → classification\n\nNo convolutions needed! 🔄"
+    },
+    {
+      "front": "Patch Embedding",
+      "back": "**Process:**\n\n224×224 image, 16×16 patches\n→ 14×14 = 196 patches\n\nEach: 16×16×3 = 768 dims\n→ Linear projection\n→ Add to sequence\n\nImage → Tokens! 🧩"
+    },
+    {
+      "front": "ViT vs CNN",
+      "back": "**CNN:**\n- Local receptive field\n- Strong inductive bias\n- Works with small data\n\n**ViT:**\n- Global from layer 1\n- Weak inductive bias\n- Needs large data\n- Better with sufficient data!\n\nData-efficiency trade-off! ⚖️"
+    },
+    {
+      "front": "[CLS] Token",
+      "back": "**Purpose:**\nAggregate patch information\n\n**Process:**\nAttends to all patches\n→ Global representation\n→ Classification head\n→ Class prediction\n\nFrom BERT! 🎯"
+    },
+    {
+      "front": "Positional Embeddings",
+      "back": "**Why:** Transformer permutation-invariant\n\n**Solution:** Add position info\n\n**Method:**\nLearnable vectors per position\n\n**Effect:**\nModel knows patch locations\n\nSpatial structure! 📍"
+    },
+    {
+      "front": "Data Requirements",
+      "back": "**Small Data (<100k):**\nCNN wins\n\n**Large Data (1M+):**\nViT wins!\n\n**Solution:**\nPre-train on ImageNet-21k\n→ Transfer learning\n\nScale matters! 📈"
+    },
+    {
+      "front": "Attention Complexity",
+      "back": "**Self-Attention:**\nO(N²·d)\n\nN = number of patches\n196 patches → 38k interactions\n\n**Trade-off:**\nGlobal view vs compute\n\n**Solutions:**\nLinear attention, hybrid models\n\nQuadratic scaling! ⚡"
+    },
+    {
+      "front": "Hybrid Architecture",
+      "back": "**Combination:**\nCNN stem + Transformer\n\n**Benefits:**\n✓ CNN inductive bias\n✓ Transformer global attention\n✓ Less data needed\n✓ Better trade-offs\n\nBest of both! 🤝"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Using ViT on small datasets without pre-training",
+      "why": "ViT needs millions of images to learn spatial structure! On small datasets (10k images): Severe underfitting, poor performance. CNN will dominate.",
+      "fix": "Always pre-train ViT on large dataset (ImageNet-21k: 14M images), then fine-tune! Or use hybrid CNN+Transformer (better inductive bias). For small datasets: Stick with CNN or use heavy data augmentation with ViT. Rule: <100k images → CNN or pre-trained ViT only."
+    },
+    {
+      "mistake": "Forgetting positional embeddings",
+      "why": "Transformer is permutation-invariant! Without positional embeddings: Model can't distinguish patch locations. Shuffled image → same output. Spatial structure lost!",
+      "fix": "Always add positional embeddings! Either: (1) Learnable absolute positions (standard ViT), or (2) Sinusoidal (like original Transformer), or (3) Relative position bias. Critical for maintaining spatial information. Without it: Model sees patches as unordered set, not grid!"
+    },
+    {
+      "mistake": "Wrong patch size",
+      "why": "Too small patches (4×4): Too many tokens (3136 for 224×224) → O(N²) attention explodes! Too large (32×32): Too few tokens (49) → lose spatial resolution.",
+      "fix": "Standard patch sizes: 16×16 (196 tokens, good balance) or 14×14 (256 tokens, slightly better). For high-res images (384×384): Can use 16×16 (576 tokens). Rule: N=196-1024 patches typical. Balance: Spatial resolution vs computational cost. ViT-Base/16 = 16×16 patches standard."
+    },
+    {
+      "mistake": "Not using strong data augmentation",
+      "why": "ViT has weak inductive bias → prone to overfitting! Without augmentation: Memorizes training set. Poor generalization.",
+      "fix": "Use aggressive augmentation! RandAugment, Mixup, CutMix, random erasing. ViT needs MORE augmentation than CNN! Also: Dropout (0.1), stochastic depth (drop layers randomly). Regularization critical for ViT. Pre-training on large dataset also acts as regularization."
+    },
+    {
+      "mistake": "Ignoring computational cost of attention",
+      "why": "Self-attention: O(N²·d). 196 patches: 38k interactions per layer! 12 layers: Adds up. Larger images/smaller patches: Explodes quickly.",
+      "fix": "Be aware of compute! For high resolution: Use hierarchical approaches (Swin Transformer), efficient attention (linear variants), or hybrid models (CNN reduces spatial size first). Monitor: GPU memory, inference time. Pure ViT: Best for standard resolution (224×224). High-res: Need efficient variants."
+    },
+    {
+      "mistake": "Using wrong learning rate",
+      "why": "ViT training dynamics different from CNN! Wrong LR → divergence or slow convergence. Transformers sensitive to LR.",
+      "fix": "Use proper LR schedule! Warm-up: Start low (1e-7), increase to peak (1e-3) over 10k steps. Then: Cosine decay. For fine-tuning: Lower LR (1e-5 to 1e-4). Optimizer: Adam or AdamW (weight decay important!). ViT needs careful tuning, not same as CNN training!"
+    },
+    {
+      "mistake": "Not freezing layers during fine-tuning",
+      "why": "Fine-tuning all parameters on small dataset → overfitting! ViT is large (86M+ params). Full fine-tuning needs lots of data.",
+      "fix": "Freeze backbone, train only classifier head! Or: Gradual unfreezing (first classifier, then last few layers). For small datasets (<10k): Freeze all except head. Medium datasets (10-100k): Unfreeze last 3-6 layers. Large datasets (100k+): Full fine-tuning OK. Monitor validation loss carefully!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "ViT Architecture Flow",
+      "description": "Diagram: Image → Patches (16×16) → Linear Projection → +Positional Embedding → +[CLS] → Transformer Layers (×12) → [CLS] Output → Classification. Complete pipeline visualization."
+    },
+    {
+      "type": "interactive",
+      "title": "Attention Map Visualization",
+      "description": "Interactive: Upload image, see attention from [CLS] token to patches. Shows which image regions are important for classification. Different layers show different patterns."
+    },
+    {
+      "type": "comparison",
+      "title": "CNN vs ViT Receptive Fields",
+      "description": "Side-by-side: CNN layer 1 (3×3 local) vs ViT layer 1 (global). Shows how receptive field grows in CNN but is global from start in ViT."
+    },
+    {
+      "type": "metric",
+      "title": "Performance vs Dataset Size",
+      "description": "Graph: X=Dataset size, Y=Accuracy. Shows CNN plateaus, ViT keeps improving. Crossover point around 1M images. Demonstrates data-efficiency trade-off."
+    }
+  ],
+  "references": [
+    {
+      "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale",
+      "authors": "Dosovitskiy et al.",
+      "year": 2021,
+      "link": "https://arxiv.org/abs/2010.11929",
+      "type": "paper"
+    },
+    {
+      "title": "Training data-efficient image transformers",
+      "authors": "Touvron et al. (DeiT)",
+      "year": 2021,
+      "link": "https://arxiv.org/abs/2012.12877",
+      "type": "paper"
+    },
+    {
+      "title": "Swin Transformer: Hierarchical Vision Transformer using Shifted Windows",
+      "authors": "Liu et al.",
+      "year": 2021,
+      "link": "https://arxiv.org/abs/2103.14030",
+      "type": "paper"
+    },
+    {
+      "title": "Vision Transformer Tutorial",
+      "authors": "Hugging Face",
+      "year": 2023,
+      "link": "https://huggingface.co/docs/transformers/model_doc/vit",
+      "type": "tutorial"
+    },
+    {
+      "title": "Timm Library: PyTorch Image Models",
+      "authors": "Ross Wightman",
+      "year": 2023,
+      "link": "https://github.com/rwightman/pytorch-image-models",
+      "type": "code"
+    }
+  ]
+}

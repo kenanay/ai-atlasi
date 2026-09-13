@@ -1,0 +1,358 @@
+{
+  "id": "recurrent-neural-networks",
+  "title": "RNN (Recurrent Neural Networks)",
+  "category": "neural-networks",
+  "level": 3,
+  "estimatedTime": 70,
+  "description": "Sequence verisi için tasarlanmış neural network. Memory mechanism ile geçmiş bilgiyi hatırlar. LSTM, GRU ile vanishing gradient çözümü. NLP, time series, video analysis.",
+  "content": {
+    "level0_basic": "RNN (Recurrent Neural Network), zamanla değişen veya sıralı veriyi işler. Normal NN her input'u bağımsız görür, ama RNN 'hafıza' var! Önceki adımları hatırlar. İnsan okurken olduğu gibi: Bu cümleyi okurken önceki kelimeleri hatırlamak zorundasın, yoksa anlam kaybolur. RNN her kelimeyi işlerken önceki kelimelerden gelen 'hidden state' kullanır. Örnek: 'Gökyüzü çok mavi, havada hiç ___' → RNN 'bulut' tahmin eder çünkü gökyüzü ve hava kelimelerini hatırlıyor. Kullanım: Dil modelleri (ChatGPT gibi), çeviri, ses tanıma, hisse tahmin, video analizi - her sequence problem RNN ile çözülebilir!",
+    "level1_beginner": "**RNN vs Normal Neural Network:**\n\nNormal NN:\n```\nInput → [NN] → Output\nHer input bağımsız, geçmiş yok.\n```\n\nRNN:\n```\nInput_t → [RNN] → Output_t\n              ↓         ↑\n         Hidden State\n              ↓         ↑\nInput_t+1 → [RNN] → Output_t+1\n```\nHer adım önceki adımı hatırlar!\n\n**RNN Çalışma Prensibi:**\n\n1. Input alır: x_t (örn: bir kelime)\n2. Önceki hidden state'i alır: h_t-1 (hafıza)\n3. Yeni hidden state üretir: h_t = tanh(W_x × x_t + W_h × h_t-1 + b)\n4. Output üretir: y_t = W_y × h_t\n5. h_t sonraki adıma geçer (hafıza güncellendi!)\n\n**RNN Kullanım Alanları:**\n\n**1. Sequence to Sequence:**\n- Çeviri: \"Hello\" → \"Merhaba\"\n- Summarization: Uzun metin → Özet\n\n**2. Sequence to One:**\n- Sentiment analysis: \"Bu film harika!\" → Pozitif\n- Text classification: Haber başlığı → Kategori\n\n**3. One to Sequence:**\n- Image captioning: Resim → \"A dog playing in park\"\n- Music generation: Başlangıç nota → Melodi\n\n**4. Sequence to Sequence (aligned):**\n- Video labeling: Her frame'e label\n- Part-of-speech tagging: Her kelimeye tag\n\n**Vanilla RNN Problemi:**\n\nUzun sequence'lerde **vanishing gradient** problemi:\n- Çok geçmiş bilgi unutulur\n- Gradientler exponentially küçülür\n- Sadece kısa-term dependency öğrenebilir\n\nÇözüm: **LSTM** ve **GRU** (sonraki seviyede!)",
+    "level2_application": "**PyTorch ile Basit RNN:**\n\n```python\nimport torch.nn as nn\n\nclass SimpleRNN(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size):\n        super().__init__()\n        self.hidden_size = hidden_size\n        \n        # RNN layer\n        self.rnn = nn.RNN(input_size, hidden_size, batch_first=True)\n        \n        # Output layer\n        self.fc = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        # x shape: (batch, seq_len, input_size)\n        # h0: initial hidden state\n        h0 = torch.zeros(1, x.size(0), self.hidden_size)\n        \n        # RNN forward\n        out, hn = self.rnn(x, h0)\n        # out shape: (batch, seq_len, hidden_size)\n        # hn: final hidden state\n        \n        # Use last output\n        out = self.fc(out[:, -1, :])\n        return out\n```\n\n**LSTM (Long Short-Term Memory):**\n\nVanishing gradient'i çözer! 3 gate ile hafızayı kontrol eder:\n\n1. **Forget Gate:** Ne unutulsun?\n2. **Input Gate:** Yeni bilgi ne eklensin?\n3. **Output Gate:** Ne output olsun?\n\n```python\nclass LSTMModel(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size, num_layers=2):\n        super().__init__()\n        \n        self.lstm = nn.LSTM(\n            input_size, \n            hidden_size, \n            num_layers=num_layers,\n            batch_first=True,\n            dropout=0.2  # Regularization\n        )\n        \n        self.fc = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        # LSTM returns output and (h_n, c_n)\n        out, (hn, cn) = self.lstm(x)\n        \n        # Use last output\n        out = self.fc(out[:, -1, :])\n        return out\n```\n\n**GRU (Gated Recurrent Unit):**\n\nLSTM'in simplified versiyonu. 2 gate (Update, Reset):\n- Daha az parametre (LSTM'den ~25% az)\n- Genelde benzer performance\n- Daha hızlı training\n\n```python\nclass GRUModel(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size):\n        super().__init__()\n        \n        self.gru = nn.GRU(input_size, hidden_size, batch_first=True)\n        self.fc = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        out, hn = self.gru(x)\n        out = self.fc(out[:, -1, :])\n        return out\n```\n\n**Ne Zaman Hangisi?**\n\n- **RNN:** Kısa sequences, simple patterns\n- **LSTM:** Uzun sequences, long-term dependencies\n- **GRU:** LSTM ile benzer ama daha hızlı, daha az data",
+    "level3_advanced": "**LSTM Matematiksel Formülasyon:**\n\n**Gates (Kapılar):**\n$$f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f) \\quad \\text{(Forget)}$$\n$$i_t = \\sigma(W_i \\cdot [h_{t-1}, x_t] + b_i) \\quad \\text{(Input)}$$\n$$o_t = \\sigma(W_o \\cdot [h_{t-1}, x_t] + b_o) \\quad \\text{(Output)}$$\n\n**Cell State Update:**\n$$\\tilde{C}_t = \\tanh(W_C \\cdot [h_{t-1}, x_t] + b_C) \\quad \\text{(Candidate)}$$\n$$C_t = f_t \\odot C_{t-1} + i_t \\odot \\tilde{C}_t \\quad \\text{(New cell state)}$$\n\n**Hidden State:**\n$$h_t = o_t \\odot \\tanh(C_t)$$\n\nBurada:\n- $\\sigma$: Sigmoid (0-1 range, gate için)\n- $\\odot$: Element-wise multiplication\n- $C_t$: Cell state (long-term memory)\n- $h_t$: Hidden state (short-term memory)\n\n**GRU Formülasyonu:**\n\nDaha basit, 2 gate:\n\n$$z_t = \\sigma(W_z \\cdot [h_{t-1}, x_t]) \\quad \\text{(Update gate)}$$\n$$r_t = \\sigma(W_r \\cdot [h_{t-1}, x_t]) \\quad \\text{(Reset gate)}$$\n$$\\tilde{h}_t = \\tanh(W \\cdot [r_t \\odot h_{t-1}, x_t])$$\n$$h_t = (1 - z_t) \\odot h_{t-1} + z_t \\odot \\tilde{h}_t$$\n\n**Bidirectional RNN:**\n\nHem ileri hem geri oku:\n```\n→ → → → →  (Forward RNN)\nx x x x x\n← ← ← ← ←  (Backward RNN)\n```\n\nHer timestep için:\n$$h_t = [\\overrightarrow{h}_t; \\overleftarrow{h}_t]$$\n\nFayda: Full context (geçmiş + gelecek)\nKullanım: NER, POS tagging, sentiment analysis\n\n**Stacked (Multi-layer) RNN:**\n\n```\nLayer 3: RNN → RNN → RNN\n              ↑\nLayer 2: RNN → RNN → RNN\n              ↑\nLayer 1: RNN → RNN → RNN\n              ↑\nInput:    x₁    x₂    x₃\n```\n\n2-4 layers tipik. Daha deep → Daha abstract representations\n\n**Attention Mechanism:**\n\nTüm hidden states'lere weighted access:\n\n$$\\alpha_{t,i} = \\text{softmax}(\\text{score}(h_t, h_i))$$\n$$c_t = \\sum_i \\alpha_{t,i} h_i \\quad \\text{(Context vector)}$$\n\nEn önemli input'lara focus edebilir!\nTransformer'ın temeli (\"Attention is All You Need\")",
+    "level4_expert": "**Sequence to Sequence (Seq2Seq) with Attention:**\n\n```python\nclass Seq2SeqAttention(nn.Module):\n    def __init__(self, encoder, decoder, attention):\n        super().__init__()\n        self.encoder = encoder\n        self.decoder = decoder\n        self.attention = attention\n    \n    def forward(self, src, tgt):\n        # Encode\n        encoder_outputs, hidden = self.encoder(src)\n        \n        # Decode with attention\n        outputs = []\n        for t in range(tgt.size(1)):\n            # Attention\n            context = self.attention(hidden, encoder_outputs)\n            \n            # Decoder step\n            output, hidden = self.decoder(tgt[:, t], hidden, context)\n            outputs.append(output)\n        \n        return torch.stack(outputs, dim=1)\n```\n\n**Teacher Forcing:**\n\nTraining trick: Decoder'a gerçek target'ı ver (kendi tahminini değil)\n\n```python\ndef train_step(model, src, tgt, teacher_forcing_ratio=0.5):\n    output = model.encoder(src)\n    \n    for t in range(tgt.size(1)):\n        if random.random() < teacher_forcing_ratio:\n            decoder_input = tgt[:, t]  # Use ground truth\n        else:\n            decoder_input = prediction  # Use own prediction\n        \n        prediction = model.decoder(decoder_input, output)\n```\n\nFayda: Faster convergence\nRisk: Exposure bias (test'te kendi tahminini kullanacak!)\n\n**Scheduled Sampling:**\nTeacher forcing ratio'yu azalt:\n```python\nepoch_ratio = max(0, 1 - epoch / total_epochs)\n```\n\n**Beam Search (Decoding):**\n\nGreedy (her adımda en iyi): Bazen suboptimal\nBeam search: Top-k alternatifleri takip et\n\n```python\ndef beam_search(model, src, beam_size=5, max_len=50):\n    encoder_output = model.encoder(src)\n    \n    # Initialize beams\n    beams = [([], 0)]  # (sequence, score)\n    \n    for _ in range(max_len):\n        candidates = []\n        for seq, score in beams:\n            if seq and seq[-1] == EOS_TOKEN:\n                candidates.append((seq, score))\n                continue\n            \n            # Get top-k predictions\n            probs = model.decoder(seq, encoder_output)\n            top_k = probs.topk(beam_size)\n            \n            for prob, token in zip(top_k.values, top_k.indices):\n                new_seq = seq + [token]\n                new_score = score + log(prob)\n                candidates.append((new_seq, new_score))\n        \n        # Keep top beam_size\n        beams = sorted(candidates, key=lambda x: x[1], reverse=True)[:beam_size]\n    \n    return beams[0][0]  # Best sequence\n```\n\n**Gradient Clipping (Çok Önemli!):**\n\nRNN'de gradient explode edebilir:\n\n```python\ntorch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)\n```\n\n**Packed Sequences (Variable Length):**\n\nFarklı uzunluktaki sequences'leri efficiently işle:\n\n```python\nfrom torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence\n\n# Pack\nlengths = torch.tensor([5, 3, 2])  # Actual lengths\nembedded = embedding(inputs)  # (batch, max_len, emb_dim)\npacked = pack_padded_sequence(embedded, lengths, batch_first=True, enforce_sorted=False)\n\n# RNN\noutput, hidden = lstm(packed)\n\n# Unpack\noutput, _ = pad_packed_sequence(output, batch_first=True)\n```\n\nFayda: Padding'e hesaplama yapılmaz, 2-3x hızlanma!\n\n**Truncated Backpropagation Through Time (TBPTT):**\n\nÇok uzun sequences için:\n\n```python\ndef train_tbptt(model, sequence, chunk_size=50):\n    hidden = None\n    \n    for i in range(0, len(sequence), chunk_size):\n        chunk = sequence[i:i+chunk_size]\n        \n        # Detach to limit backprop\n        if hidden is not None:\n            hidden = hidden.detach()\n        \n        output, hidden = model(chunk, hidden)\n        loss = criterion(output, target)\n        loss.backward()\n```\n\n**Peephole Connections (LSTM Variant):**\n\nGates'lere cell state'i de ver:\n\n$$f_t = \\sigma(W_f \\cdot [C_{t-1}, h_{t-1}, x_t] + b_f)$$\n\nBazı task'larda +1-2% improvement"
+  },
+  "whatIsIt": "RNN (Recurrent Neural Network), sequence verisi için tasarlanmış neural network'tür. Temel fark: 'Hafıza' var! Her adımda önceki hidden state'i kullanır, böylece geçmiş bilgiyi hatırlar. h_t = f(x_t, h_{t-1}) şeklinde çalışır. Vanilla RNN vanishing gradient problemi yaşar (uzun sequences'de geçmiş unutulur). LSTM ve GRU bu problemi gate mechanism ile çözer. NLP (dil modelleri, çeviri), time series (hisse tahmin, weather), video analizi, ses tanıma - her sequence problem RNN kullanır.",
+  "whyNeeded": "Normal NN sequence'leri işleyemez! Her input bağımsız, geçmiş bilgi yok. Ama birçok problem sequential: Dil (kelimeler sıralı), time series (zaman bağımlı), video (frame'ler sıralı). 'Gökyüzü çok mavi, havada hiç ___' → 'bulut' tahmin etmek için önceki kelimeleri hatırlamak gerekir. RNN bunu sağlar. LSTM/GRU ile long-term dependencies öğrenebilir (100+ steps). Modern NLP'nin (GPT öncesi) ve time series'in temel yapı taşı!",
+  "realWorldAnalogy": "RNN bir konuşma gibidir. Normal NN her cümleyi bağımsız duyar (hafıza yok), ama insan konuşurken önceki cümleleri hatırlar. 'Dün sinemaya gittim. Film çok güzeldi.' → 'Film' derken hangi film? Önceki cümleden hatırlıyorsun (sinemadaki film). RNN de böyle: Her kelimeyi işlerken 'hidden state' ile önceki kelimeleri hatırlar. LSTM ise uzun konuşmalarda bile başı hatırlayan insan gibi - önemli bilgiyi cell state'te saklar, gereksizi unutur (forget gate).",
+  "mathematics": {
+    "formulas": [
+      "h_t = \\tanh(W_{xh} x_t + W_{hh} h_{t-1} + b_h)",
+      "y_t = W_{hy} h_t + b_y",
+      "f_t = \\sigma(W_f [h_{t-1}, x_t] + b_f) \\quad \\text{(LSTM forget gate)}",
+      "i_t = \\sigma(W_i [h_{t-1}, x_t] + b_i) \\quad \\text{(LSTM input gate)}",
+      "C_t = f_t \\odot C_{t-1} + i_t \\odot \\tilde{C}_t \\quad \\text{(LSTM cell)}",
+      "h_t = o_t \\odot \\tanh(C_t) \\quad \\text{(LSTM hidden)}",
+      "h_t = (1-z_t) \\odot h_{t-1} + z_t \\odot \\tilde{h}_t \\quad \\text{(GRU)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize: h_0 = 0 (initial hidden state)",
+      "2. For each timestep t:",
+      "   a. Input al: x_t (örn: kelime embedding)",
+      "   b. Hidden state güncelle: h_t = tanh(W_x × x_t + W_h × h_{t-1} + b)",
+      "   c. Output üret: y_t = W_y × h_t",
+      "3. Loss hesapla: Tüm timestep'lerin loss'unu topla",
+      "4. BPTT (Backpropagation Through Time): Zaman boyunca geri yay",
+      "5. Weights güncelle: Gradient descent",
+      "6. Repeat: Convergence'a kadar",
+      "LSTM: Aynı ama gates ile (forget, input, output)"
+    ],
+    "complexity": "Forward: O(T × H²) - T: sequence length, H: hidden size. BPTT: O(T × H²). Memory: O(T × H) - Tüm hidden states saklanır!"
+  },
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "transformers",
+    "attention-mechanism",
+    "seq2seq-models",
+    "nlp-applications"
+  ],
+  "relatedTopics": [
+    "word-embeddings",
+    "language-models",
+    "time-series-analysis"
+  ],
+  "tags": [
+    "rnn",
+    "recurrent-neural-networks",
+    "lstm",
+    "gru",
+    "sequence-modeling",
+    "nlp",
+    "time-series",
+    "bptt",
+    "vanishing-gradient",
+    "pytorch"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "RNN Temel Kavram",
+      "code": "Normal Neural Network:\nInput → [NN] → Output\nHer input bağımsız, geçmiş yok.\n\nÖrnek: Kelime tahmin\n'mavi' → ?\n'gökyüzü' → ?\nBağımsız, context yok!\n\nRecurrent Neural Network:\nInput_1 → [RNN] → Output_1\n             ↓\n         (hidden state - hafıza)\n             ↓\nInput_2 → [RNN] → Output_2\n             ↓\n         (hafıza güncellendi)\n             ↓\nInput_3 → [RNN] → Output_3\n\nÖrnek:\n'gökyüzü' → 'çok' → 'mavi' → 'havada' → 'hiç' → ?\nRNN 'bulut' der çünkü tüm cümleyi hatırlıyor!\n\nHer adım önceki adımları hatırlar (hidden state).\nSequence'ler için perfect!",
+      "explanation": "RNN'in temel farkı: Hafıza! Her adımda önceki hidden state'i kullanır, böylece geçmiş bilgiyi hatırlar. Sequence modelling için gerekli."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Vanilla RNN (NumPy)",
+      "code": "import numpy as np\n\ndef rnn_step(x, h_prev, Wx, Wh, b):\n    \"\"\"\n    Single RNN step\n    x: input at timestep t (vocab_size,)\n    h_prev: hidden state from t-1 (hidden_size,)\n    \"\"\"\n    h = np.tanh(np.dot(Wx, x) + np.dot(Wh, h_prev) + b)\n    return h\n\ndef rnn_forward(inputs, Wx, Wh, Wy, bh, by):\n    \"\"\"\n    Full RNN forward pass\n    inputs: sequence of inputs (seq_len, vocab_size)\n    \"\"\"\n    seq_len, vocab_size = inputs.shape\n    hidden_size = Wh.shape[0]\n    \n    # Initialize hidden state\n    h = np.zeros(hidden_size)\n    \n    # Store all hidden states and outputs\n    hidden_states = []\n    outputs = []\n    \n    for t in range(seq_len):\n        # RNN step\n        h = np.tanh(np.dot(Wx, inputs[t]) + np.dot(Wh, h) + bh)\n        hidden_states.append(h)\n        \n        # Output\n        y = np.dot(Wy, h) + by\n        outputs.append(y)\n    \n    return outputs, hidden_states\n\n# Example\nvocab_size = 10\nhidden_size = 20\noutput_size = 10\nseq_len = 5\n\n# Initialize weights\nnp.random.seed(42)\nWx = np.random.randn(hidden_size, vocab_size) * 0.01\nWh = np.random.randn(hidden_size, hidden_size) * 0.01\nWy = np.random.randn(output_size, hidden_size) * 0.01\nbh = np.zeros(hidden_size)\nby = np.zeros(output_size)\n\n# Random input sequence\ninputs = np.random.randn(seq_len, vocab_size)\n\n# Forward\noutputs, hiddens = rnn_forward(inputs, Wx, Wh, Wy, bh, by)\n\nprint(f\"Input shape: {inputs.shape}\")\nprint(f\"Number of outputs: {len(outputs)}\")\nprint(f\"Each output shape: {outputs[0].shape}\")\nprint(f\"Number of hidden states: {len(hiddens)}\")\nprint(f\"Each hidden shape: {hiddens[0].shape}\")\nprint(\"\\n✓ Vanilla RNN forward pass complete!\")\nprint(\"\\nNote: Hidden state flows through time, creating memory!\")",
+      "explanation": "Sıfırdan RNN implementation. Her timestep'te önceki hidden state kullanılır. Bu 'memory' sequence'leri anlamayı sağlar."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch RNN for Text Classification",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\nclass TextRNN(nn.Module):\n    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim):\n        super().__init__()\n        \n        # Embedding layer\n        self.embedding = nn.Embedding(vocab_size, embedding_dim)\n        \n        # RNN layer\n        self.rnn = nn.RNN(embedding_dim, hidden_dim, batch_first=True)\n        \n        # Output layer\n        self.fc = nn.Linear(hidden_dim, output_dim)\n    \n    def forward(self, text):\n        # text: (batch_size, seq_len)\n        embedded = self.embedding(text)\n        # embedded: (batch_size, seq_len, embedding_dim)\n        \n        # RNN\n        output, hidden = self.rnn(embedded)\n        # output: (batch_size, seq_len, hidden_dim)\n        # hidden: (1, batch_size, hidden_dim)\n        \n        # Use last hidden state\n        hidden = hidden.squeeze(0)  # (batch_size, hidden_dim)\n        \n        # Classify\n        out = self.fc(hidden)\n        return out\n\n# Hyperparameters\nvocab_size = 10000\nembedding_dim = 100\nhidden_dim = 256\noutput_dim = 2  # Binary classification (positive/negative)\n\nmodel = TextRNN(vocab_size, embedding_dim, hidden_dim, output_dim)\n\nprint(\"Text RNN Model:\")\nprint(model)\nprint(f\"\\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Example forward pass\nbatch_size = 32\nseq_len = 50\n\n# Dummy input (word indices)\ntext = torch.randint(0, vocab_size, (batch_size, seq_len))\n\noutput = model(text)\nprint(f\"\\nInput shape: {text.shape}\")\nprint(f\"Output shape: {output.shape}\")\n\n# Training setup\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Dummy training step\ntarget = torch.randint(0, output_dim, (batch_size,))\nloss = criterion(output, target)\n\nprint(f\"\\nLoss: {loss.item():.4f}\")\nprint(\"\\n✓ RNN for text classification ready!\")\nprint(\"\\nUse case: Sentiment analysis, spam detection, topic classification\")",
+      "explanation": "PyTorch ile text classification RNN. Embedding layer kelime → vector. RNN sequence'i işler. Son hidden state classification için kullanılır."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "LSTM for Sequence Prediction",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\n\nclass LSTMPredictor(nn.Module):\n    def __init__(self, input_size, hidden_size, num_layers, output_size):\n        super().__init__()\n        \n        self.hidden_size = hidden_size\n        self.num_layers = num_layers\n        \n        # LSTM layer\n        self.lstm = nn.LSTM(\n            input_size, \n            hidden_size, \n            num_layers, \n            batch_first=True,\n            dropout=0.2 if num_layers > 1 else 0\n        )\n        \n        # Output layer\n        self.fc = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        # x shape: (batch, seq_len, input_size)\n        \n        # Initialize hidden and cell states\n        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)\n        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)\n        \n        # LSTM forward\n        out, (hn, cn) = self.lstm(x, (h0, c0))\n        # out: (batch, seq_len, hidden_size)\n        \n        # Decode the last output\n        out = self.fc(out[:, -1, :])\n        return out\n\n# Time series prediction example\ninput_size = 1  # Single feature\nhidden_size = 64\nnum_layers = 2\noutput_size = 1\n\nmodel = LSTMPredictor(input_size, hidden_size, num_layers, output_size)\n\nprint(\"LSTM Model:\")\nprint(model)\nprint(f\"\\nParameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Generate sine wave data\ndef generate_sine_wave(seq_len, num_samples):\n    X = []\n    y = []\n    for _ in range(num_samples):\n        start = np.random.rand() * 2 * np.pi\n        x_seq = np.sin(np.linspace(start, start + 4*np.pi, seq_len + 1))\n        X.append(x_seq[:-1].reshape(-1, 1))\n        y.append(x_seq[-1])\n    return np.array(X), np.array(y)\n\nseq_len = 50\nnum_samples = 1000\n\nX_train, y_train = generate_sine_wave(seq_len, num_samples)\nX_train = torch.FloatTensor(X_train)\ny_train = torch.FloatTensor(y_train)\n\nprint(f\"\\nTraining data:\")\nprint(f\"X shape: {X_train.shape}  # (samples, seq_len, features)\")\nprint(f\"y shape: {y_train.shape}  # (samples,)\")\n\n# Training loop (simplified)\ncriterion = nn.MSELoss()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\n\nmodel.train()\nfor epoch in range(5):\n    # Forward\n    optimizer.zero_grad()\n    outputs = model(X_train)\n    loss = criterion(outputs.squeeze(), y_train)\n    \n    # Backward\n    loss.backward()\n    \n    # Gradient clipping (important for RNN!)\n    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)\n    \n    optimizer.step()\n    \n    if (epoch + 1) % 1 == 0:\n        print(f\"Epoch [{epoch+1}/5], Loss: {loss.item():.4f}\")\n\nprint(\"\\n✓ LSTM time series prediction complete!\")\nprint(\"\\nLSTM advantages over vanilla RNN:\")\nprint(\"  ✓ Handles long sequences (100+ timesteps)\")\nprint(\"  ✓ No vanishing gradient (cell state!)\")\nprint(\"  ✓ Learns what to remember/forget (gates)\")",
+      "explanation": "LSTM ile time series prediction. Sine wave'i öğrenip devamını tahmin eder. Gradient clipping RNN'de çok önemli (exploding gradient önler)!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Bidirectional LSTM for NER",
+      "code": "import torch\nimport torch.nn as nn\n\nclass BiLSTM_NER(nn.Module):\n    \"\"\"Bidirectional LSTM for Named Entity Recognition\"\"\"\n    def __init__(self, vocab_size, embedding_dim, hidden_dim, num_tags):\n        super().__init__()\n        \n        self.embedding = nn.Embedding(vocab_size, embedding_dim)\n        \n        # Bidirectional LSTM\n        self.lstm = nn.LSTM(\n            embedding_dim,\n            hidden_dim,\n            num_layers=2,\n            bidirectional=True,  # Key: bidirectional!\n            batch_first=True,\n            dropout=0.3\n        )\n        \n        # Output layer (2*hidden_dim because bidirectional)\n        self.fc = nn.Linear(hidden_dim * 2, num_tags)\n    \n    def forward(self, text):\n        # text: (batch, seq_len)\n        embedded = self.embedding(text)\n        # embedded: (batch, seq_len, embedding_dim)\n        \n        # Bidirectional LSTM\n        lstm_out, _ = self.lstm(embedded)\n        # lstm_out: (batch, seq_len, hidden_dim * 2)\n        # First hidden_dim: forward direction →\n        # Second hidden_dim: backward direction ←\n        \n        # Tag scores for each token\n        tag_scores = self.fc(lstm_out)\n        # tag_scores: (batch, seq_len, num_tags)\n        \n        return tag_scores\n\n# NER task setup\nvocab_size = 10000\nembedding_dim = 100\nhidden_dim = 128\nnum_tags = 9  # B-PER, I-PER, B-LOC, I-LOC, B-ORG, I-ORG, B-MISC, I-MISC, O\n\nmodel = BiLSTM_NER(vocab_size, embedding_dim, hidden_dim, num_tags)\n\nprint(\"Bidirectional LSTM for NER:\")\nprint(model)\n\n# Example\nbatch_size = 16\nseq_len = 30\n\ntext = torch.randint(0, vocab_size, (batch_size, seq_len))\ntag_scores = model(text)\n\nprint(f\"\\nInput: {text.shape}\")\nprint(f\"Output: {tag_scores.shape}  # Tag scores for each token\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"BIDIRECTIONAL RNN BENEFITS:\")\nprint(\"=\"*60)\nprint(\"Forward RNN: Only sees past context\")\nprint(\"  'New York is a city' → At 'York', only sees 'New'\")\nprint(\"\\nBackward RNN: Only sees future context\")\nprint(\"  At 'York', only sees 'is a city'\")\nprint(\"\\nBidirectional: Sees both!\")\nprint(\"  At 'York', sees 'New' + 'is a city' = Full context\")\nprint(\"\\nPerfect for: NER, POS tagging, sentiment analysis\")\nprint(\"Not for: Language generation (can't see future!)\")\n\n# Prediction\nwith torch.no_grad():\n    predictions = tag_scores.argmax(dim=-1)\n    print(f\"\\nPredictions shape: {predictions.shape}\")\n    print(f\"Each token gets a tag: {predictions[0]}\")\n\nprint(\"\\n✓ Bidirectional LSTM NER model ready!\")",
+      "explanation": "Bidirectional LSTM hem ileri hem geri okur, full context sağlar. NER için ideal: 'New York' → İkisi birlikte location, ayrı ayrı değil!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "GRU vs LSTM Comparison",
+      "code": "import torch\nimport torch.nn as nn\nimport time\n\nclass LSTMModel(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size):\n        super().__init__()\n        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)\n        self.fc = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        out, (hn, cn) = self.lstm(x)\n        return self.fc(out[:, -1, :])\n\nclass GRUModel(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size):\n        super().__init__()\n        self.gru = nn.GRU(input_size, hidden_size, batch_first=True)\n        self.fc = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        out, hn = self.gru(x)\n        return self.fc(out[:, -1, :])\n\n# Setup\ninput_size = 50\nhidden_size = 128\noutput_size = 10\n\nlstm_model = LSTMModel(input_size, hidden_size, output_size)\ngru_model = GRUModel(input_size, hidden_size, output_size)\n\n# Count parameters\nlstm_params = sum(p.numel() for p in lstm_model.parameters())\ngru_params = sum(p.numel() for p in gru_model.parameters())\n\nprint(\"MODEL COMPARISON:\")\nprint(\"=\"*60)\nprint(f\"LSTM parameters: {lstm_params:,}\")\nprint(f\"GRU parameters:  {gru_params:,}\")\nprint(f\"Difference: {lstm_params - gru_params:,} ({100*(lstm_params-gru_params)/lstm_params:.1f}%)\")\n\n# Speed comparison\nbatch_size = 32\nseq_len = 100\nx = torch.randn(batch_size, seq_len, input_size)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SPEED COMPARISON (100 forward passes):\")\nprint(\"=\"*60)\n\n# LSTM\nstart = time.time()\nfor _ in range(100):\n    _ = lstm_model(x)\nlstm_time = time.time() - start\n\n# GRU\nstart = time.time()\nfor _ in range(100):\n    _ = gru_model(x)\ngru_time = time.time() - start\n\nprint(f\"LSTM: {lstm_time:.3f}s\")\nprint(f\"GRU:  {gru_time:.3f}s\")\nprint(f\"GRU is {lstm_time/gru_time:.2f}x faster\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"WHEN TO USE WHICH?\")\nprint(\"=\"*60)\nprint(\"\\nLSTM:\")\nprint(\"  ✓ Very long sequences (>100 timesteps)\")\nprint(\"  ✓ Complex long-term dependencies\")\nprint(\"  ✓ When you have lots of data\")\nprint(\"  ✓ Slightly better accuracy on some tasks\")\nprint(\"\\nGRU:\")\nprint(\"  ✓ Shorter sequences (<100 timesteps)\")\nprint(\"  ✓ Faster training needed\")\nprint(\"  ✓ Less data available (fewer parameters)\")\nprint(\"  ✓ Similar performance to LSTM on most tasks\")\nprint(\"\\nRule of thumb: Try GRU first, use LSTM if needed.\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ARCHITECTURAL DIFFERENCES:\")\nprint(\"=\"*60)\nprint(\"\\nLSTM: 3 gates + cell state\")\nprint(\"  - Forget gate: What to forget?\")\nprint(\"  - Input gate: What to add?\")\nprint(\"  - Output gate: What to output?\")\nprint(\"  - Cell state: Long-term memory\")\nprint(\"\\nGRU: 2 gates, no separate cell state\")\nprint(\"  - Update gate: How much to update?\")\nprint(\"  - Reset gate: How much past to forget?\")\nprint(\"  - Simpler, fewer parameters, faster\")",
+      "explanation": "LSTM vs GRU karşılaştırması. GRU %25 daha az parametre, daha hızlı. LSTM çok uzun sequences'de biraz daha iyi. Çoğu task'ta benzer performans!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Seq2Seq with Attention",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass Encoder(nn.Module):\n    def __init__(self, input_dim, emb_dim, hidden_dim, num_layers):\n        super().__init__()\n        self.embedding = nn.Embedding(input_dim, emb_dim)\n        self.lstm = nn.LSTM(emb_dim, hidden_dim, num_layers, batch_first=True)\n    \n    def forward(self, src):\n        embedded = self.embedding(src)\n        outputs, (hidden, cell) = self.lstm(embedded)\n        return outputs, hidden, cell\n\nclass Attention(nn.Module):\n    def __init__(self, hidden_dim):\n        super().__init__()\n        self.attn = nn.Linear(hidden_dim * 2, hidden_dim)\n        self.v = nn.Linear(hidden_dim, 1, bias=False)\n    \n    def forward(self, hidden, encoder_outputs):\n        # hidden: (batch, hidden_dim)\n        # encoder_outputs: (batch, src_len, hidden_dim)\n        \n        src_len = encoder_outputs.shape[1]\n        \n        # Repeat hidden state src_len times\n        hidden = hidden.unsqueeze(1).repeat(1, src_len, 1)\n        # hidden: (batch, src_len, hidden_dim)\n        \n        # Calculate attention scores\n        energy = torch.tanh(self.attn(torch.cat((hidden, encoder_outputs), dim=2)))\n        # energy: (batch, src_len, hidden_dim)\n        \n        attention = self.v(energy).squeeze(2)\n        # attention: (batch, src_len)\n        \n        return F.softmax(attention, dim=1)\n\nclass Decoder(nn.Module):\n    def __init__(self, output_dim, emb_dim, hidden_dim, num_layers, attention):\n        super().__init__()\n        self.output_dim = output_dim\n        self.attention = attention\n        \n        self.embedding = nn.Embedding(output_dim, emb_dim)\n        self.lstm = nn.LSTM(emb_dim + hidden_dim, hidden_dim, num_layers, batch_first=True)\n        self.fc = nn.Linear(hidden_dim * 2, output_dim)\n    \n    def forward(self, input, hidden, cell, encoder_outputs):\n        # input: (batch, 1)\n        input = input.unsqueeze(1)\n        \n        embedded = self.embedding(input)\n        # embedded: (batch, 1, emb_dim)\n        \n        # Calculate attention\n        a = self.attention(hidden[-1], encoder_outputs)\n        # a: (batch, src_len)\n        \n        a = a.unsqueeze(1)\n        # a: (batch, 1, src_len)\n        \n        # Weighted sum of encoder outputs\n        weighted = torch.bmm(a, encoder_outputs)\n        # weighted: (batch, 1, hidden_dim)\n        \n        # Concatenate embedded input and weighted context\n        rnn_input = torch.cat((embedded, weighted), dim=2)\n        # rnn_input: (batch, 1, emb_dim + hidden_dim)\n        \n        output, (hidden, cell) = self.lstm(rnn_input, (hidden, cell))\n        \n        # Concatenate output and context\n        output = torch.cat((output.squeeze(1), weighted.squeeze(1)), dim=1)\n        prediction = self.fc(output)\n        \n        return prediction, hidden, cell\n\nclass Seq2Seq(nn.Module):\n    def __init__(self, encoder, decoder):\n        super().__init__()\n        self.encoder = encoder\n        self.decoder = decoder\n    \n    def forward(self, src, tgt, teacher_forcing_ratio=0.5):\n        batch_size = src.shape[0]\n        tgt_len = tgt.shape[1]\n        tgt_vocab_size = self.decoder.output_dim\n        \n        outputs = torch.zeros(batch_size, tgt_len, tgt_vocab_size)\n        \n        encoder_outputs, hidden, cell = self.encoder(src)\n        \n        # First input to decoder is <SOS> token\n        input = tgt[:, 0]\n        \n        for t in range(1, tgt_len):\n            output, hidden, cell = self.decoder(input, hidden, cell, encoder_outputs)\n            outputs[:, t] = output\n            \n            # Teacher forcing\n            teacher_force = torch.rand(1).item() < teacher_forcing_ratio\n            top1 = output.argmax(1)\n            input = tgt[:, t] if teacher_force else top1\n        \n        return outputs\n\n# Model setup\ninput_dim = 10000  # Source vocab\noutput_dim = 10000  # Target vocab\nemb_dim = 256\nhidden_dim = 512\nnum_layers = 2\n\nencoder = Encoder(input_dim, emb_dim, hidden_dim, num_layers)\nattention = Attention(hidden_dim)\ndecoder = Decoder(output_dim, emb_dim, hidden_dim, num_layers, attention)\nmodel = Seq2Seq(encoder, decoder)\n\nprint(\"Seq2Seq with Attention:\")\nprint(f\"Parameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Example\nbatch_size = 4\nsrc_len = 20\ntgt_len = 25\n\nsrc = torch.randint(0, input_dim, (batch_size, src_len))\ntgt = torch.randint(0, output_dim, (batch_size, tgt_len))\n\noutputs = model(src, tgt)\n\nprint(f\"\\nSource: {src.shape}\")\nprint(f\"Target: {tgt.shape}\")\nprint(f\"Outputs: {outputs.shape}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ATTENTION MECHANISM:\")\nprint(\"=\"*60)\nprint(\"Without attention: Encoder compresses all info into fixed vector\")\nprint(\"  → Information bottleneck for long sequences!\")\nprint(\"\\nWith attention: Decoder can 'look at' all encoder outputs\")\nprint(\"  → Focuses on relevant parts for each output token\")\nprint(\"\\nExample (translation):\")\nprint(\"  'The cat sat on the mat' → 'Kedi paspasın üzerinde oturdu'\")\nprint(\"  When generating 'kedi', attention focuses on 'cat'\")\nprint(\"  When generating 'oturdu', attention focuses on 'sat'\")\n\nprint(\"\\n✓ Seq2Seq with Attention complete!\")\nprint(\"This architecture was state-of-art before Transformers!\")",
+      "explanation": "Seq2Seq with Attention: Encoder-Decoder + attention mechanism. Decoder her adımda encoder'ın en relevant output'larına bakabilir. Translation, summarization için!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Packed Sequences (Variable Length)",
+      "code": "import torch\nimport torch.nn as nn\nfrom torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence\n\nclass EfficientRNN(nn.Module):\n    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)\n        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)\n        self.fc = nn.Linear(hidden_dim, output_dim)\n    \n    def forward(self, text, text_lengths):\n        # text: (batch, max_seq_len) - padded\n        # text_lengths: (batch,) - actual lengths\n        \n        embedded = self.embedding(text)\n        \n        # Pack sequence (skip padding)\n        packed_embedded = pack_padded_sequence(\n            embedded, \n            text_lengths.cpu(), \n            batch_first=True, \n            enforce_sorted=False\n        )\n        \n        # LSTM on packed sequence\n        packed_output, (hidden, cell) = self.lstm(packed_embedded)\n        \n        # Unpack\n        output, output_lengths = pad_packed_sequence(packed_output, batch_first=True)\n        \n        # Get last actual output (not padding)\n        batch_size = text.shape[0]\n        last_outputs = []\n        for i in range(batch_size):\n            last_outputs.append(output[i, text_lengths[i]-1, :])\n        last_output = torch.stack(last_outputs)\n        \n        return self.fc(last_output)\n\n# Example with variable length sequences\nvocab_size = 1000\nembedding_dim = 100\nhidden_dim = 128\noutput_dim = 2\n\nmodel = EfficientRNN(vocab_size, embedding_dim, hidden_dim, output_dim)\n\n# Variable length sequences\nsentences = [\n    [45, 123, 67, 89, 12],           # Length 5\n    [34, 78, 90],                     # Length 3\n    [12, 45, 67, 89, 23, 56, 78],    # Length 7\n    [90, 12]                          # Length 2\n]\n\n# Get lengths\nlengths = torch.LongTensor([len(s) for s in sentences])\n\n# Pad sequences to same length\nmax_len = max(len(s) for s in sentences)\npadded = [s + [0] * (max_len - len(s)) for s in sentences]\npadded_tensor = torch.LongTensor(padded)\n\nprint(\"PACKED SEQUENCES EXAMPLE:\")\nprint(\"=\"*60)\nprint(f\"Original sentences (variable length):\")\nfor i, s in enumerate(sentences):\n    print(f\"  Sentence {i+1}: {s} (length {len(s)})\")\n\nprint(f\"\\nPadded tensor shape: {padded_tensor.shape}\")\nprint(f\"Padded tensor:\")\nprint(padded_tensor)\n\nprint(f\"\\nLengths: {lengths}\")\n\n# Forward pass\noutput = model(padded_tensor, lengths)\nprint(f\"\\nOutput shape: {output.shape}\")\nprint(f\"Output: {output}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"WHY PACKED SEQUENCES?\")\nprint(\"=\"*60)\nprint(\"\\nWithout packing:\")\nprint(\"  Sentence 1: [45, 123, 67, 89, 12, 0, 0]\")\nprint(\"  Sentence 2: [34, 78, 90, 0, 0, 0, 0]\")\nprint(\"  → LSTM computes on padding (0s) - WASTE!\")\nprint(\"\\nWith packing:\")\nprint(\"  Only computes on actual tokens\")\nprint(\"  Skips padding entirely\")\nprint(\"  → 2-3x speedup for variable length data!\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"BENCHMARK:\")\nprint(\"=\"*60)\n\nimport time\n\n# Without packing (naive)\nclass NaiveRNN(nn.Module):\n    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)\n        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)\n        self.fc = nn.Linear(hidden_dim, output_dim)\n    \n    def forward(self, text):\n        embedded = self.embedding(text)\n        output, (hidden, cell) = self.lstm(embedded)\n        return self.fc(output[:, -1, :])\n\nnaive_model = NaiveRNN(vocab_size, embedding_dim, hidden_dim, output_dim)\n\n# Benchmark\nnum_iterations = 100\n\nstart = time.time()\nfor _ in range(num_iterations):\n    _ = naive_model(padded_tensor)\nnaive_time = time.time() - start\n\nstart = time.time()\nfor _ in range(num_iterations):\n    _ = model(padded_tensor, lengths)\npacked_time = time.time() - start\n\nprint(f\"Naive (with padding): {naive_time:.3f}s\")\nprint(f\"Packed sequences: {packed_time:.3f}s\")\nprint(f\"Speedup: {naive_time/packed_time:.2f}x\")\n\nprint(\"\\n✓ Packed sequences are essential for efficiency!\")",
+      "explanation": "Packed sequences padding'i skip eder, sadece actual tokens'ta computation yapar. Variable length data için 2-3x hızlanma! NLP'de çok önemli."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "RNN'in normal neural network'ten temel farkı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Daha hızlı çalışır",
+        "Hidden state ile önceki adımları hatırlar (memory)",
+        "Daha az parametre kullanır",
+        "Sadece resimler için kullanılır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "RNN'in temel özelliği: Her adımda önceki hidden state'i kullanır, böylece geçmiş bilgiyi hatırlar. Bu 'memory' sequence'leri anlamak için gerekli!",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "Vanilla RNN'in en büyük problemi nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Çok fazla memory kullanır",
+        "Sadece kısa sequences için kullanılabilir",
+        "Vanishing gradient - uzun sequences'de geçmiş unutulur",
+        "GPU'da çalışmaz"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Vanilla RNN vanishing gradient problemi yaşar. Uzun sequences'de (>10-20 steps) gradient exponentially küçülür, geçmiş bilgi unutulur. LSTM/GRU bu problemi çözer!",
+      "difficulty": 2
+    },
+    {
+      "id": "q3",
+      "question": "LSTM'in 3 gate'i nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Input, Output, Memory",
+        "Forget, Input, Output",
+        "Read, Write, Delete",
+        "Forward, Backward, Reset"
+      ],
+      "correctAnswer": 1,
+      "explanation": "LSTM 3 gate kullanır: Forget (ne unutulsun?), Input (yeni bilgi ne eklensin?), Output (ne output olsun?). Bu gates long-term dependencies öğrenmeyi sağlar!",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Bidirectional RNN ne zaman kullanılır?",
+      "type": "multiple-choice",
+      "options": [
+        "Language generation (text oluşturma)",
+        "Real-time prediction",
+        "Classification ve tagging (full sequence available)",
+        "Her zaman, her task için"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Bidirectional RNN full sequence'e ihtiyaç duyar (hem past hem future context). NER, POS tagging, sentiment analysis için perfect. Language generation'da kullanılamaz (future göremezsin!).",
+      "difficulty": 3
+    },
+    {
+      "id": "q5",
+      "question": "GRU'nun LSTM'e göre avantajı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Her zaman daha iyi accuracy",
+        "Daha az parametre, daha hızlı, benzer performance",
+        "Daha uzun sequences handle edebilir",
+        "Daha kolay implement"
+      ],
+      "correctAnswer": 1,
+      "explanation": "GRU: 2 gate (LSTM: 3), %25 daha az parametre, daha hızlı training. Çoğu task'ta LSTM ile benzer performance. Rule: GRU dene, gerekirse LSTM'e geç!",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Packed sequences'in faydası nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Model accuracy'sini artırır",
+        "Padding'i skip eder, 2-3x hızlı computation",
+        "Daha az memory kullanır",
+        "Gradient'leri stabilize eder"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Packed sequences padding'de computation yapmaz, sadece actual tokens'ı işler. Variable length sequences'de 2-3x speedup! Memory'de biraz improvement, accuracy'de değişiklik yok.",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "RNN vs Normal NN?",
+      "back": "Normal NN: Her input bağımsız\n- Geçmiş bilgi yok\n- Sequence'leri anlayamaz\n\nRNN: Hidden state ile memory\n- h_t = f(x_t, h_{t-1})\n- Her adım öncekini hatırlar\n- Sequence'ler için perfect\n\nÖrnek: 'Gökyüzü mavi, havada ___'\nRNN 'bulut' der (context hatırladı!)"
+    },
+    {
+      "id": "fc2",
+      "front": "Vanilla RNN formülü?",
+      "back": "h_t = tanh(W_x × x_t + W_h × h_{t-1} + b)\n\nx_t: Current input\nh_{t-1}: Previous hidden (memory)\nh_t: New hidden (updated memory)\n\nProblem: Vanishing gradient\nLong sequences → Geçmiş unutulur\nÇözüm: LSTM/GRU"
+    },
+    {
+      "id": "fc3",
+      "front": "LSTM gates?",
+      "back": "3 gate ile memory control:\n\n1. Forget Gate (f_t):\n   Ne unutulsun? (0-1)\n\n2. Input Gate (i_t):\n   Yeni bilgi ne eklensin? (0-1)\n\n3. Output Gate (o_t):\n   Ne output olsun? (0-1)\n\nCell State: Long-term memory\nHidden State: Short-term memory\n\nVanishing gradient → Çözüldü!"
+    },
+    {
+      "id": "fc4",
+      "front": "GRU vs LSTM?",
+      "back": "GRU:\n✓ 2 gate (Update, Reset)\n✓ %25 daha az parametre  \n✓ Daha hızlı training\n✓ Benzer performance\n\nLSTM:\n✓ 3 gate + cell state\n✓ Çok uzun sequences'de biraz daha iyi\n✓ Daha established\n\nRule: GRU dene, gerekirse LSTM!"
+    },
+    {
+      "id": "fc5",
+      "front": "Bidirectional RNN?",
+      "back": "→ Forward RNN: Past context\n← Backward RNN: Future context\n\nHer timestep: [h_forward; h_backward]\n\nFaydalar:\n✓ Full context (past + future)\n✓ Better for classification/tagging\n\nKullanım:\n✓ NER, POS tagging, sentiment\n✗ Language generation (future yok!)"
+    },
+    {
+      "id": "fc6",
+      "front": "BPTT nedir?",
+      "back": "Backpropagation Through Time:\n\nRNN'de backward pass zaman boyunca:\n- Loss her timestep'ten gelir\n- Gradient tüm timestep'lere yayılır\n- Vanishing/exploding gradient riski!\n\nÇözümler:\n✓ Gradient clipping (max_norm=5)\n✓ LSTM/GRU kullan\n✓ Truncated BPTT (uzun seq)"
+    },
+    {
+      "id": "fc7",
+      "front": "Teacher Forcing?",
+      "back": "Training trick:\n\nWithout: Decoder kendi tahminini kullanır\n  → Yavaş, errors accumulate\n\nWith: Decoder ground truth kullanır\n  ✓ Faster convergence\n  ✗ Exposure bias (test'te farklı!)\n\nÇözüm: Scheduled sampling\n  ratio = 1 → 0 (epochs boyunca azalt)"
+    },
+    {
+      "id": "fc8",
+      "front": "Packed Sequences?",
+      "back": "Variable length sequences için:\n\nNaive: Padding'e de computation\n  [3, 5, 7, 0, 0] → Waste!\n\nPacked: Sadece actual tokens\n  [3, 5, 7] → Efficient!\n\npack_padded_sequence(...)\n✓ 2-3x speedup\n✓ Memory save\n\nNLP'de essential!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Gradient clipping yapmamak",
+      "why": "RNN'de gradient explode edebilir! Loss NaN olur, training çöker. Özellikle uzun sequences'de.",
+      "fix": "torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0) ekle. Her backward'dan sonra, optimizer.step()'ten önce!"
+    },
+    {
+      "mistake": "Vanilla RNN ile uzun sequence'leri işlemeye çalışmak",
+      "why": "Vanishing gradient: 20+ steps'te geçmiş tamamen unutulur. Model sadece son birkaç timestep'i görür.",
+      "fix": "LSTM veya GRU kullan! Long-term dependencies için tasarlandılar. Vanilla RNN sadece kısa sequences (<10 steps) için."
+    },
+    {
+      "mistake": "Bidirectional RNN ile generation yapmaya çalışmak",
+      "why": "BiRNN future'ı görür! Language generation'da future yok (henüz oluşturulmadı). Cheating olur.",
+      "fix": "Generation için: Unidirectional RNN. Classification/tagging için: Bidirectional kullanabilirsin (full sequence var)."
+    },
+    {
+      "mistake": "Hidden state'i her batch'te sıfırlamak (language modeling'de)",
+      "why": "Uzun text'lerde her batch bağımsız olursa context kaybolur. Model cümleler arası ilişkiyi öğrenemez.",
+      "fix": "Hidden state'i detach edip next batch'e taşı: hidden = hidden.detach(). Gradient kesil ama değer kalır!"
+    },
+    {
+      "mistake": "Variable length sequences'de padding efficiency kaybı",
+      "why": "Tüm sequences max_len'e pad edilirse, kısa sequences'de çok fazla padding → Wasted computation!",
+      "fix": "pack_padded_sequence ve pad_packed_sequence kullan. Padding'e computation yapılmaz, 2-3x hızlanma!"
+    },
+    {
+      "mistake": "Teacher forcing ratio'yu fixed tutmak",
+      "why": "100% teacher forcing: Model kendi hatalarını görmüyor → Test'te exposure bias. 0%: Çok yavaş convergence.",
+      "fix": "Scheduled sampling: ratio = 1 → 0 (epochs boyunca azalt). Örnek: 1 - epoch/total_epochs. Balance bulur!"
+    },
+    {
+      "mistake": "Embedding layer'ı dondurmamak (pretrained kullanırken)",
+      "why": "Word2Vec, GloVe gibi pretrained embeddings kullanıyorsan, fine-tune etmek bazen zararlı (özellikle küçük data'da).",
+      "fix": "embedding.weight.requires_grad = False yap ilk başta. Later epochs'ta unfreeze edebilirsin."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "rnn-unrolled",
+      "type": "animation",
+      "title": "RNN Unrolled Through Time",
+      "description": "RNN'in zaman boyunca nasıl açıldığını (unroll) ve hidden state'in nasıl aktığını görün"
+    },
+    {
+      "id": "lstm-gates",
+      "type": "interactive",
+      "title": "LSTM Gates Visualization",
+      "description": "LSTM'in 3 gate'inin her timestep'te nasıl çalıştığını interaktif olarak keşfedin"
+    },
+    {
+      "id": "attention-heatmap",
+      "type": "plot",
+      "title": "Attention Weights Heatmap",
+      "description": "Seq2seq attention'da decoder'ın encoder'ın hangi pozisyonlarına odaklandığını görün"
+    },
+    {
+      "id": "vanishing-gradient",
+      "type": "plot",
+      "title": "Gradient Flow (RNN vs LSTM)",
+      "description": "Vanilla RNN'de vanishing gradient, LSTM'de stable gradient flow'u karşılaştırın"
+    }
+  ],
+  "references": [
+    {
+      "title": "Understanding LSTMs",
+      "url": "http://colah.github.io/posts/2015-08-Understanding-LSTMs/",
+      "type": "blog",
+      "author": "Christopher Olah"
+    },
+    {
+      "title": "The Unreasonable Effectiveness of RNNs",
+      "url": "http://karpathy.github.io/2015/05/21/rnn-effectiveness/",
+      "type": "blog",
+      "author": "Andrej Karpathy"
+    },
+    {
+      "title": "LSTM Paper (Original)",
+      "url": "https://www.bioinf.jku.at/publications/older/2604.pdf",
+      "type": "paper",
+      "author": "Hochreiter & Schmidhuber, 1997"
+    },
+    {
+      "title": "GRU Paper",
+      "url": "https://arxiv.org/abs/1406.1078",
+      "type": "paper",
+      "author": "Cho et al., 2014"
+    },
+    {
+      "title": "Sequence to Sequence Learning",
+      "url": "https://arxiv.org/abs/1409.3215",
+      "type": "paper",
+      "author": "Sutskever et al., 2014"
+    },
+    {
+      "title": "PyTorch RNN Tutorial",
+      "url": "https://pytorch.org/tutorials/intermediate/char_rnn_classification_tutorial.html",
+      "type": "documentation"
+    }
+  ]
+}

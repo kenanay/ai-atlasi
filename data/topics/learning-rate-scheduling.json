@@ -1,0 +1,247 @@
+{
+  "id": "learning-rate-scheduling",
+  "title": "Learning Rate Scheduling (Step Decay, Cosine Annealing, Warmup)",
+  "category": "neural-networks",
+  "level": 2,
+  "estimatedTime": 45,
+  "description": "Learning rate'i training sırasında dinamik ayarlama. Step decay, exponential decay, cosine annealing, warmup strategies. Convergence hızlandırma, fine-tuning optimization.",
+  "prerequisites": ["gradient-descent", "backpropagation", "optimization-algorithms"],
+  "tags": ["learning-rate", "scheduling", "optimization", "training", "convergence", "warmup"],
+  "content": {
+    "level0_basic": "Learning rate: gradient descent step size! Fixed LR problem: Başlangıç çok büyük → unstable, sonra çok küçük → slow. Solution: Schedule! Başlangıç büyük (fast progress), sonra küçült (fine convergence). Step decay: Her N epoch LR/10. Cosine annealing: Smooth decrease. Warmup: Başlangıç küçük, sonra artır (stability). Modern training'de critical!",
+    "level1_beginner": "**Problem: Fixed Learning Rate**\n\nFixed LR suboptimal:\n- **LR too high:** Training unstable, overshoots minimum\n- **LR too low:** Training too slow, stuck in plateaus\n- **Ideal:** High LR initially (fast), low LR later (precise)\n\n**Solution: LR Scheduling**\n\nLR'yi training sırasında adjust et!\n\n**Basic Strategies:**\n\n**1. Step Decay:**\n\nHer N epoch'ta LR'yi factor ile çarp.\n\n$$\\text{LR}_{\\text{epoch}} = \\text{LR}_0 \\times \\gamma^{\\lfloor \\text{epoch} / \\text{step\\_size} \\rfloor}$$\n\n**Example:**\n- LR₀ = 0.1\n- Step size = 30\n- γ = 0.1\n\n```\nEpoch   0-29:  LR = 0.1\nEpoch  30-59:  LR = 0.01\nEpoch  60-89:  LR = 0.001\nEpoch 90-119:  LR = 0.0001\n```\n\n**Pros:** Simple, widely used\n**Cons:** Abrupt changes, manual step_size tuning\n\n**2. Exponential Decay:**\n\nSmooth exponential decrease.\n\n$$\\text{LR}_t = \\text{LR}_0 \\times e^{-\\lambda t}$$\n\n- λ: decay rate\n- t: epoch/iteration\n\n**Example:** LR₀ = 0.1, λ = 0.01\n```\nEpoch   0: LR = 0.1000\nEpoch  50: LR = 0.0607\nEpoch 100: LR = 0.0368\nEpoch 150: LR = 0.0223\n```\n\n**Pros:** Smooth, continuous\n**Cons:** Still needs λ tuning\n\n**3. Polynomial Decay:**\n\n$$\\text{LR}_t = \\text{LR}_0 \\times \\left(1 - \\frac{t}{T}\\right)^p$$\n\n- T: total epochs\n- p: power (usually 0.9 or 1.0)\n\n**Linear (p=1):**\nSmooth linear decrease to 0.\n\n**When to use:**\n- Step decay: Classification, proven baseline\n- Exponential: When smooth decay preferred\n- Polynomial: Fixed training duration known",
+    "level2_application": "**Advanced Schedules:**\n\n**1. Cosine Annealing:**\n\nCosine curve ile smooth decrease.\n\n$$\\text{LR}_t = \\text{LR}_{\\text{min}} + \\frac{1}{2}(\\text{LR}_{\\text{max}} - \\text{LR}_{\\text{min}})\\left(1 + \\cos\\left(\\frac{t}{T}\\pi\\right)\\right)$$\n\n- t: current epoch\n- T: total epochs\n- LRₘᵢₙ: minimum LR (often 0)\n- LRₘₐₓ: maximum LR (initial)\n\n**Shape:**\n```\nLR\n |\n │   ╲\n │    ╲\n │     ╲\n │      ╲___\n └──────────── Epochs\n```\n\nSmooth, fast initial decrease, gentle landing.\n\n**Pros:**\n✓ No hyperparameter tuning (just T)\n✓ Smooth convergence\n✓ Better than step decay often\n\n**2. Cosine Annealing with Restarts (SGDR):**\n\nPeriodic LR restarts!\n\n$$\\text{LR}_t = \\text{LR}_{\\text{min}} + \\frac{1}{2}(\\text{LR}_{\\text{max}} - \\text{LR}_{\\text{min}})\\left(1 + \\cos\\left(\\frac{T_{\\text{cur}}}{T_i}\\pi\\right)\\right)$$\n\n- Tᵢ: restart period (increases each restart)\n- Tᶜᵤᵣ: epochs since last restart\n\n**Pattern:**\n```\nLR\n │╲    ╲    ╲\n │ ╲    ╲    ╲\n │  ╲    ╲    ╲___\n └────────────────── Epochs\n    ↑    ↑    ↑\n  Restart points\n```\n\n**Why?**\n- Escape local minima\n- Explore multiple solutions\n- Often finds better minima\n\n**3. Reduce on Plateau:**\n\nAdaptive! Reduce LR when validation stops improving.\n\n**Algorithm:**\n```python\nif val_loss not improved for N epochs:\n    LR = LR * factor  # e.g., factor=0.5\n```\n\n**Example:**\n- Patience = 5 epochs\n- Factor = 0.5\n\nVal loss plateau → LR cut in half.\n\n**Pros:**\n✓ Adaptive to training dynamics\n✓ No manual scheduling\n✓ Works well in practice\n\n**Cons:**\n❌ Reactive (not proactive)\n❌ May reduce too late\n\n**4. Warmup:**\n\nGradually INCREASE LR at start!\n\n**Why?**\n- Large LR at start → unstable (params random!)\n- Warmup: Start small, gradually increase\n- Stabilizes early training\n\n**Linear Warmup:**\n\n$$\\text{LR}_t = \\text{LR}_{\\text{target}} \\times \\frac{t}{T_{\\text{warmup}}}$$\n\n**Example:** Warmup 5 epochs to LR=0.1\n```\nEpoch 0: LR = 0.00  (0/5 * 0.1)\nEpoch 1: LR = 0.02  (1/5 * 0.1)\nEpoch 2: LR = 0.04  (2/5 * 0.1)\nEpoch 3: LR = 0.06  (3/5 * 0.1)\nEpoch 4: LR = 0.08  (4/5 * 0.1)\nEpoch 5: LR = 0.10  (target reached)\n```\n\nAfter warmup → regular schedule (cosine, etc.)\n\n**When critical:**\n- Large batch training\n- Transformers (BERT, GPT)\n- Transfer learning\n- Adam with high LR\n\n**Warmup + Cosine:**\n\nCommon combo!\n\n```\nLR\n │    ╱╲\n │   ╱  ╲\n │  ╱    ╲\n │ ╱      ╲___\n └────────────── Epochs\n  Warmup  Cosine\n```\n\n**5. One Cycle Policy:**\n\nLR increases then decreases in one cycle.\n\n**Phases:**\n1. **Warmup:** 0 → LRₘₐₓ (30-40% of training)\n2. **Annealing:** LRₘₐₓ → LRₘᵢₙ (remaining)\n\n**Shape:**\n```\nLR\n │      ╱╲\n │     ╱  ╲\n │    ╱    ╲\n │   ╱      ╲___\n └────────────── Epochs\n```\n\n**Benefits:**\n✓ Fast convergence\n✓ Better generalization\n✓ Fewer epochs needed\n\n**Use:** Fast.ai popularized, works well!",
+    "level3_advanced": "**Cyclical Learning Rates (CLR):**\n\nLR oscillates between bounds.\n\n**Triangular Policy:**\n\n$$\\text{LR}_t = \\text{LR}_{\\text{min}} + (\\text{LR}_{\\text{max}} - \\text{LR}_{\\text{min}}) \\times \\max(0, 1 - |x|)$$\n\nwhere $x = \\frac{t \\mod (2 \\times \\text{step\\_size})}{\\text{step\\_size}} - 1$\n\n**Pattern:**\n```\nLR\n │  ╱╲  ╱╲  ╱╲\n │ ╱  ╲╱  ╲╱  ╲\n └────────────── Iterations\n   Cycle period\n```\n\n**Why oscillate?**\n- High LR: Escape local minima\n- Low LR: Converge precisely\n- Regular switches explore better\n\n**Finding LR Range:**\n\n**LR Range Test:**\n\n1. Start LR very small (1e-7)\n2. Increase exponentially each batch\n3. Record loss at each LR\n4. Plot loss vs LR\n5. Choose:\n   - LRₘᵢₙ: where loss starts decreasing\n   - LRₘₐₓ: where loss minimum (before increasing)\n\n**Example plot:**\n```\nLoss\n │         ╱\n │        ╱\n │       ╱\n │╲     ╱\n │ ╲___╱  ← Min (LRₘₐₓ)\n │   ↑\n │ LRₘᵢₙ\n └──────────── LR (log scale)\n```\n\n**Adaptive Schedules:**\n\n**1. Layer-wise LR:**\n\nDifferent LR per layer!\n\n**Example:** Fine-tuning pretrained model\n```python\n[\n    {'params': model.layer1.parameters(), 'lr': 1e-5},  # Early layers\n    {'params': model.layer2.parameters(), 'lr': 1e-4},\n    {'params': model.layer3.parameters(), 'lr': 1e-3},  # Later layers\n]\n```\n\n**Why?**\n- Early layers: general features, small updates\n- Later layers: task-specific, larger updates\n\n**2. Discriminative Learning Rates:**\n\nTransfer learning için!\n\n- Pretrained layers: Very small LR\n- New layers: Normal LR\n\n**Exponential schedule:**\n$$\\text{LR}_i = \\text{LR}_{\\text{base}} \\times \\text{decay}^{i}$$\n\n- i: layer index\n- decay: 0.95 typically\n\n**Gradient Accumulation + LR Scaling:**\n\nLarge batch simulation:\n\n**Linear Scaling Rule:**\n\nBatch size 2× → LR 2×\n\n$$\\text{LR}_{\\text{new}} = \\text{LR}_{\\text{base}} \\times \\frac{\\text{BatchSize}_{\\text{new}}}{\\text{BatchSize}_{\\text{base}}}$$\n\n**Why?**\nLarger batch → smoother gradients → can use higher LR.\n\n**With warmup:**\nEssential for stability!\n\n**Schedule Combination:**\n\nModern best practice:\n\n**Warmup + Cosine + Restarts:**\n\n1. Warmup: 0 → LRₘₐₓ (5-10 epochs)\n2. Cosine: Smooth decay\n3. Optional restarts: Periodic jumps\n\n**Implementation:**\n```python\nif epoch < warmup_epochs:\n    lr = lr_max * (epoch / warmup_epochs)\nelse:\n    t = (epoch - warmup_epochs)\n    T = (total_epochs - warmup_epochs)\n    lr = lr_min + 0.5 * (lr_max - lr_min) * (1 + cos(pi * t / T))\n```\n\n**Practical Tips:**\n\n**1. Monitor training:**\nPlot LR schedule alongside loss.\n\n**2. Validation-based adjustment:**\nReduce on plateau safeguard.\n\n**3. Early stopping:**\nIf val loss diverges, schedule may be wrong.\n\n**4. Fine-tuning:**\nSmaller LR than from-scratch training.\n\n**5. Save best model:**\nSchedule may overshoot at end.",
+    "level4_expert": "**Theoretical Foundations:**\n\n**Convergence Analysis:**\n\nSGD convergence rate with decaying LR:\n\n$$\\mathbb{E}[f(\\bar{x}_T) - f(x^*)] \\leq O\\left(\\frac{1}{\\sqrt{T}}\\right)$$\n\nwith LR schedule: $\\eta_t = \\frac{C}{\\sqrt{t}}$\n\n**Optimal Schedule:**\n\nFor strongly convex: $\\eta_t = \\frac{1}{\\mu t}$\n- μ: strong convexity parameter\n\n**Non-convex (deep learning):**\nNo closed-form optimal schedule!\n\n**Loss Surface Intuition:**\n\nHigh LR:\n- Explores broadly\n- Can escape sharp minima\n- Finds flat minima (better generalization!)\n\nLow LR:\n- Converges precisely\n- May get stuck in sharp minima\n- Fine-tunes solution\n\n**Flat vs Sharp Minima:**\n\n**Flat minimum:**\n```\n    ___\n   /   \\___\n```\n\n**Sharp minimum:**\n```\n     /\\___\n```\n\nFlat → robust to perturbations → better generalization!\n\nHigh LR escapes sharp, finds flat.\n\n**Super-Convergence:**\n\nOne-cycle with very high LRₘₐₓ:\n- Faster convergence\n- Fewer epochs\n- Better accuracy\n\n**Requirements:**\n- Proper LRₘₐₓ (via LR range test)\n- Short warmup\n- Sufficient regularization\n\n**Production Best Practices:**\n\n**1. Start with proven schedule:**\n- ImageNet: Step decay [30, 60, 90]\n- Transformers: Warmup + cosine\n- ResNets: Multi-step decay\n\n**2. LR Range Test:**\nAlways run before full training!\n\n**3. Log everything:**\n```python\nlogger.log({\n    'lr': current_lr,\n    'train_loss': loss,\n    'val_loss': val_loss,\n    'epoch': epoch\n})\n```\n\n**4. Checkpoint best model:**\nSchedule may overshoot → keep best.\n\n**5. Early stopping backup:**\nIf schedule fails, early stopping saves you.\n\n**6. A/B test schedules:**\nTry multiple, compare validation.\n\n**Implementation Optimizations:**\n\n**Per-iteration scheduling:**\n\nBetter than per-epoch (large datasets).\n\n```python\ntotal_iterations = len(dataloader) * epochs\n\nfor iteration in range(total_iterations):\n    lr = schedule(iteration, total_iterations)\n    optimizer.param_groups[0]['lr'] = lr\n```\n\n**Gradient Clipping + Scheduling:**\n\nCombine for stability:\n\n```python\nclip_grad_norm_(model.parameters(), max_norm=1.0)\noptimizer.step()\nscheduler.step()\n```\n\n**Mixed Precision Training:**\n\nFP16 can be less stable:\n- Use warmup!\n- Lower LRₘₐₓ slightly\n- Monitor for NaN\n\n**Multi-GPU Scaling:**\n\nLinear scaling rule:\n```python\nlr = base_lr * num_gpus\nwarmup_epochs = 5  # Stabilize\n```\n\n**Research Directions:**\n\n**1. AutoLR:**\nRL-based LR scheduling.\n\n**2. Hypernetworks:**\nNeural network predicts LR.\n\n**3. Meta-learning schedules:**\nLearn schedule from multiple tasks.\n\n**4. Per-parameter schedules:**\nAdaptive per weight (beyond Adam).\n\n**Schedule Selection Guide:**\n\n| Task | Recommended Schedule |\n|------|---------------------|\n| Image classification | Step decay or Cosine |\n| Object detection | Warmup + multi-step |\n| NLP (Transformers) | Warmup + cosine |\n| Fine-tuning | Reduce on plateau |\n| Fast training | One-cycle |\n| Exploration needed | Cosine restarts |\n| Unknown | Cosine (robust default) |",
+    "level5_research": "**Research Topics:**\n\n**1. Stochastic Weight Averaging (SWA):**\nAverage weights from different LR schedule points.\n\n**2. Lookahead Optimizer:**\nCombines fast and slow weights, LR scheduling interaction.\n\n**3. Budget-Aware Scheduling:**\nSchedule adapts to remaining computational budget.\n\n**4. Population-Based Training:**\nEvolutionary approach to hyperparameter + LR tuning.\n\n**5. Neural Architecture + LR Co-optimization:**\nLR schedule depends on architecture found by NAS."
+  },
+  "whatIsIt": "Learning rate scheduling: LR'yi training sırasında dynamically adjust et. Başlangıç high (fast progress), sonra decrease (precise convergence). Step decay, cosine annealing, warmup common strategies!",
+  "whyNeeded": "Fixed LR suboptimal! Too high → unstable, too low → slow. Scheduling: Fast initial training + stable final convergence. Modern training'de critical, especially transformers!",
+  "realWorldAnalogy": "Yeni şehre giderken: Önce hızlı sürersin (otoban, high LR), hedefe yaklaşınca yavaşlarsın (mahallelerde, low LR). Scheduling aynısı: adaptive speed for optimal arrival!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Step Decay: } \\text{LR}_t = \\text{LR}_0 \\times \\gamma^{\\lfloor t / S \\rfloor}",
+      "\\text{Exponential: } \\text{LR}_t = \\text{LR}_0 \\times e^{-\\lambda t}",
+      "\\text{Cosine: } \\text{LR}_t = \\text{LR}_{\\text{min}} + \\frac{1}{2}(\\text{LR}_{\\text{max}} - \\text{LR}_{\\text{min}})(1 + \\cos(\\frac{t}{T}\\pi))",
+      "\\text{Warmup: } \\text{LR}_t = \\text{LR}_{\\text{max}} \\times \\frac{t}{T_{\\text{warmup}}}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "COSINE ANNEALING WITH WARMUP:",
+      "1. Define: LR_max, LR_min, warmup_epochs, total_epochs",
+      "2. For each epoch t:",
+      "   If t < warmup_epochs:",
+      "     LR = LR_max * (t / warmup_epochs)  # Linear warmup",
+      "   Else:",
+      "     progress = (t - warmup_epochs) / (total_epochs - warmup_epochs)",
+      "     LR = LR_min + 0.5 * (LR_max - LR_min) * (1 + cos(π * progress))",
+      "3. Update optimizer LR",
+      "4. Train epoch",
+      "5. Log LR and metrics"
+    ],
+    "complexity": "Negligible overhead! Schedule computation O(1) per epoch/iteration. Improves convergence speed significantly."
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Basic LR Schedules (Step, Exponential, Cosine)",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.optim.lr_scheduler import StepLR, ExponentialLR, CosineAnnealingLR\n\nprint(\"=\"*60)\nprint(\"LEARNING RATE SCHEDULING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nProblem: Fixed LR suboptimal!\n  • Too high → unstable\n  • Too low → slow\n\nSolution: Schedule LR during training!\n\"\"\")\n\n# Dummy model and optimizer\nmodel = nn.Linear(10, 1)\noptimizer = optim.SGD(model.parameters(), lr=0.1)\n\ntotal_epochs = 100\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"1️⃣  STEP DECAY\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nEvery step_size epochs: LR = LR * gamma\n\nConfig:\n  LR₀ = 0.1\n  step_size = 30\n  gamma = 0.1\n\"\"\")\n\nscheduler = StepLR(optimizer, step_size=30, gamma=0.1)\n\nlr_history_step = []\nfor epoch in range(total_epochs):\n    lr = optimizer.param_groups[0]['lr']\n    lr_history_step.append(lr)\n    \n    # Training step (dummy)\n    optimizer.step()\n    scheduler.step()\n\nprint(f\"\\nLR progression:\")\nfor epoch in [0, 29, 30, 59, 60, 89, 90, 99]:\n    print(f\"  Epoch {epoch:3d}: LR = {lr_history_step[epoch]:.6f}\")\n\nprint(\"\\n💡 Abrupt drops at epochs 30, 60, 90\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  EXPONENTIAL DECAY\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nSmooth exponential decrease:\n  LR_t = LR₀ * gamma^t\n\nConfig:\n  LR₀ = 0.1\n  gamma = 0.95 (per epoch)\n\"\"\")\n\n# Reset\noptimizer = optim.SGD(model.parameters(), lr=0.1)\nscheduler = ExponentialLR(optimizer, gamma=0.95)\n\nlr_history_exp = []\nfor epoch in range(total_epochs):\n    lr = optimizer.param_groups[0]['lr']\n    lr_history_exp.append(lr)\n    \n    optimizer.step()\n    scheduler.step()\n\nprint(f\"\\nLR progression:\")\nfor epoch in [0, 10, 25, 50, 75, 99]:\n    print(f\"  Epoch {epoch:3d}: LR = {lr_history_exp[epoch]:.6f}\")\n\nprint(\"\\n💡 Smooth continuous decrease\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  COSINE ANNEALING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nCosine curve from LR_max to LR_min:\n  LR_t = LR_min + 0.5*(LR_max - LR_min)*(1 + cos(πt/T))\n\nConfig:\n  LR₀ = 0.1\n  T_max = 100 (total epochs)\n  eta_min = 0 (minimum LR)\n\"\"\")\n\n# Reset\noptimizer = optim.SGD(model.parameters(), lr=0.1)\nscheduler = CosineAnnealingLR(optimizer, T_max=total_epochs, eta_min=0)\n\nlr_history_cosine = []\nfor epoch in range(total_epochs):\n    lr = optimizer.param_groups[0]['lr']\n    lr_history_cosine.append(lr)\n    \n    optimizer.step()\n    scheduler.step()\n\nprint(f\"\\nLR progression:\")\nfor epoch in [0, 10, 25, 50, 75, 90, 99]:\n    print(f\"  Epoch {epoch:3d}: LR = {lr_history_cosine[epoch]:.6f}\")\n\nprint(\"\\n💡 Smooth cosine decrease, gentle landing\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"COMPARISON\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n| Schedule    | Shape      | Pros               | Cons            |\n|-------------|------------|--------------------|-----------------|\n| Step        | Stairs     | Simple, proven     | Abrupt, tuning  |\n| Exponential | Smooth exp | Continuous         | Still needs γ   |\n| Cosine      | Smooth cos | No tuning, robust  | None really!    |\n\n✓ Cosine annealing: modern default choice!\n\"\"\")\n\n# Visualize\nfig, axes = plt.subplots(2, 2, figsize=(14, 10))\n\nepochs = range(total_epochs)\n\n# Step decay\nax = axes[0, 0]\nax.plot(epochs, lr_history_step, linewidth=2)\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('Step Decay (step=30, γ=0.1)', fontsize=14)\nax.grid(True, alpha=0.3)\nax.set_yscale('log')\n\n# Exponential decay\nax = axes[0, 1]\nax.plot(epochs, lr_history_exp, linewidth=2, color='orange')\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('Exponential Decay (γ=0.95)', fontsize=14)\nax.grid(True, alpha=0.3)\nax.set_yscale('log')\n\n# Cosine annealing\nax = axes[1, 0]\nax.plot(epochs, lr_history_cosine, linewidth=2, color='green')\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('Cosine Annealing', fontsize=14)\nax.grid(True, alpha=0.3)\n\n# All together\nax = axes[1, 1]\nax.plot(epochs, lr_history_step, label='Step Decay', linewidth=2)\nax.plot(epochs, lr_history_exp, label='Exponential', linewidth=2)\nax.plot(epochs, lr_history_cosine, label='Cosine', linewidth=2)\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('All Schedules Comparison', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n✓ Choose schedule based on task and training dynamics!\")",
+      "explanation": "3 basic schedules: Step (stairs), Exponential (smooth exp), Cosine (smooth cos). PyTorch implementation, visualization, comparison. Cosine modern default!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Warmup Strategy",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\n\nprint(\"=\"*60)\nprint(\"LEARNING RATE WARMUP\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nProblem: High LR at start → unstable!\n  • Parameters random initialized\n  • Large steps → divergence\n  • Especially bad for:\n    - Large batch training\n    - Transformers\n    - Adam with high LR\n\nSolution: WARMUP!\n  • Start with small LR\n  • Gradually increase to target\n  • Stabilizes early training\n\"\"\")\n\n# Dummy model\nmodel = nn.Linear(10, 1)\noptimizer = optim.Adam(model.parameters(), lr=0.001)  # Will be overridden\n\ntotal_epochs = 50\nwarmup_epochs = 5\nlr_max = 0.001\nlr_min = 0.00001\n\nprint(f\"\\nConfig:\")\nprint(f\"  Total epochs: {total_epochs}\")\nprint(f\"  Warmup epochs: {warmup_epochs}\")\nprint(f\"  LR_max: {lr_max}\")\nprint(f\"  LR_min: {lr_min}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"LINEAR WARMUP + COSINE ANNEALING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nPhase 1 (Warmup): LR linearly increases\n  LR_t = LR_max * (t / warmup_epochs)\n\nPhase 2 (Cosine): LR decreases smoothly\n  LR_t = LR_min + 0.5*(LR_max - LR_min)*(1 + cos(π*(t-warmup)/T))\n\"\"\")\n\ndef get_lr_with_warmup(epoch, warmup_epochs, total_epochs, lr_max, lr_min=0):\n    \"\"\"Warmup + Cosine Annealing\"\"\"\n    if epoch < warmup_epochs:\n        # Linear warmup\n        return lr_max * (epoch / warmup_epochs)\n    else:\n        # Cosine annealing\n        progress = (epoch - warmup_epochs) / (total_epochs - warmup_epochs)\n        return lr_min + 0.5 * (lr_max - lr_min) * (1 + np.cos(np.pi * progress))\n\nlr_history_warmup = []\n\nfor epoch in range(total_epochs):\n    lr = get_lr_with_warmup(epoch, warmup_epochs, total_epochs, lr_max, lr_min)\n    lr_history_warmup.append(lr)\n    \n    # Update optimizer LR\n    for param_group in optimizer.param_groups:\n        param_group['lr'] = lr\n    \n    # Training step (dummy)\n    optimizer.step()\n\nprint(\"\\nLR progression:\\n\")\nprint(\"WARMUP PHASE:\")\nfor epoch in range(warmup_epochs + 1):\n    print(f\"  Epoch {epoch:2d}: LR = {lr_history_warmup[epoch]:.8f}\")\n\nprint(\"\\nCOSINE PHASE:\")\nfor epoch in [10, 20, 30, 40, 49]:\n    print(f\"  Epoch {epoch:2d}: LR = {lr_history_warmup[epoch]:.8f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"COMPARISON: WITH vs WITHOUT WARMUP\")\nprint(\"=\"*60)\n\n# Without warmup (direct cosine)\nlr_history_no_warmup = []\nfor epoch in range(total_epochs):\n    progress = epoch / total_epochs\n    lr = lr_min + 0.5 * (lr_max - lr_min) * (1 + np.cos(np.pi * progress))\n    lr_history_no_warmup.append(lr)\n\nprint(\"\\nFirst 10 epochs:\")\nprint(\"\\nEpoch | With Warmup    | Without Warmup | Difference\")\nprint(\"-\" * 60)\nfor epoch in range(10):\n    diff = lr_history_warmup[epoch] - lr_history_no_warmup[epoch]\n    print(f\"{epoch:5d} | {lr_history_warmup[epoch]:.8f} | {lr_history_no_warmup[epoch]:.8f} | {diff:+.8f}\")\n\nprint(\"\\n💡 Warmup starts much smaller → stable!\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"WHEN TO USE WARMUP\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n✓ ALWAYS use warmup for:\n  • Large batch training (>512)\n  • Transformers (BERT, GPT, etc.)\n  • Adam/AdamW with high LR\n  • Transfer learning with large LR\n  • Distributed training\n\n✓ Optional for:\n  • Small batch + SGD\n  • Well-tuned small LR\n\nWarmup duration:\n  • Small datasets: 5-10 epochs\n  • Large datasets: 2-5% of total epochs\n  • Transformers: ~10K steps typical\n\"\"\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\nepochs = range(total_epochs)\n\n# Warmup + Cosine\nax = axes[0]\nax.plot(epochs, lr_history_warmup, linewidth=3, label='With Warmup')\nax.axvline(warmup_epochs, color='red', linestyle='--', linewidth=2,\n          label=f'Warmup End (epoch {warmup_epochs})')\nax.fill_betweenx([0, lr_max*1.1], 0, warmup_epochs, alpha=0.2, color='yellow',\n                label='Warmup Phase')\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('Warmup + Cosine Annealing', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\n# Comparison\nax = axes[1]\nax.plot(epochs, lr_history_warmup, linewidth=3, label='With Warmup')\nax.plot(epochs, lr_history_no_warmup, linewidth=3, linestyle='--',\n       label='Without Warmup', alpha=0.7)\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('With vs Without Warmup', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n✓ Warmup stabilizes early training, especially for transformers!\")",
+      "explanation": "Warmup: LR gradually increase at start! Stability için critical. Linear warmup + cosine annealing combination. When to use guidelines."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "ReduceLROnPlateau (Adaptive)",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.optim.lr_scheduler import ReduceLROnPlateau\n\nprint(\"=\"*60)\nprint(\"REDUCE LR ON PLATEAU\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nAdaptive scheduling!\n  • Monitor validation loss\n  • If no improvement for N epochs → reduce LR\n  • Reactive, not proactive\n\nConfig:\n  • patience: epochs to wait\n  • factor: LR multiplier (e.g., 0.5)\n  • min_lr: minimum LR\n\"\"\")\n\n# Simulate training\nnp.random.seed(42)\ntotal_epochs = 50\n\n# Simulated val loss (decreasing with plateaus)\nval_losses = []\nloss = 2.0\n\nfor epoch in range(total_epochs):\n    # Simulate loss decrease with plateaus\n    if epoch < 10:\n        loss -= 0.08 + np.random.normal(0, 0.02)\n    elif epoch < 20:\n        # Plateau 1\n        loss += np.random.normal(0, 0.01)\n    elif epoch < 30:\n        loss -= 0.03 + np.random.normal(0, 0.01)\n    elif epoch < 40:\n        # Plateau 2\n        loss += np.random.normal(0, 0.005)\n    else:\n        loss -= 0.01 + np.random.normal(0, 0.005)\n    \n    val_losses.append(max(0.1, loss))  # Floor at 0.1\n\nprint(f\"\\nSimulated {total_epochs} epochs of training...\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SCHEDULE WITH REDUCE ON PLATEAU\")\nprint(\"=\"*60)\n\nmodel = nn.Linear(10, 1)\noptimizer = optim.SGD(model.parameters(), lr=0.1)\n\nscheduler = ReduceLROnPlateau(\n    optimizer,\n    mode='min',        # Minimize val loss\n    factor=0.5,        # LR *= 0.5\n    patience=5,        # Wait 5 epochs\n    verbose=True,\n    min_lr=1e-6\n)\n\nprint(\"\\nConfig:\")\nprint(\"  Initial LR: 0.1\")\nprint(\"  Factor: 0.5 (halve LR)\")\nprint(\"  Patience: 5 epochs\")\nprint(\"  Min LR: 1e-6\")\n\nlr_history = []\nreductions = []  # Track when LR reduced\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TRAINING SIMULATION\")\nprint(\"=\"*60)\n\nprint(\"\\nEpoch | Val Loss | LR         | Action\")\nprint(\"-\" * 60)\n\nfor epoch in range(total_epochs):\n    val_loss = val_losses[epoch]\n    \n    lr_before = optimizer.param_groups[0]['lr']\n    \n    # Step scheduler (monitors val_loss)\n    scheduler.step(val_loss)\n    \n    lr_after = optimizer.param_groups[0]['lr']\n    lr_history.append(lr_after)\n    \n    action = \"\"\n    if lr_after < lr_before:\n        action = \"⬇️ LR REDUCED!\"\n        reductions.append(epoch)\n    \n    # Print key epochs\n    if epoch < 3 or epoch in reductions or epoch in range(reductions[0]-2, reductions[0]+2) if reductions else []:\n        print(f\"{epoch:5d} | {val_loss:8.4f} | {lr_after:.8f} | {action}\")\n    elif epoch % 10 == 0:\n        print(f\"{epoch:5d} | {val_loss:8.4f} | {lr_after:.8f} |\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"LR REDUCTION SUMMARY\")\nprint(\"=\"*60)\n\nprint(f\"\\nTotal LR reductions: {len(reductions)}\")\nprint(f\"Reduced at epochs: {reductions}\")\n\nfor i, epoch in enumerate(reductions):\n    print(f\"\\nReduction {i+1}:\")\n    print(f\"  Epoch: {epoch}\")\n    print(f\"  Val loss plateau detected\")\n    print(f\"  LR: {lr_history[epoch-1]:.8f} → {lr_history[epoch]:.8f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"💡 OBSERVATIONS\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n✓ Adaptive: Reacts to training dynamics\n✓ No manual tuning: Just set patience & factor\n✓ Works well in practice\n\n⚠️ Reactive: Reduces AFTER plateau (not proactive)\n⚠️ May reduce too late\n⚠️ Can get stuck in local minima\n\n📝 Best Practice:\n  Use ReduceLROnPlateau as backup!\n  Primary: Planned schedule (cosine, etc.)\n  Backup: ReduceLROnPlateau (catches unexpected plateaus)\n\"\"\")\n\n# Visualize\nfig, axes = plt.subplots(2, 1, figsize=(14, 10))\n\nepochs = range(total_epochs)\n\n# Val loss\nax = axes[0]\nax.plot(epochs, val_losses, linewidth=2, marker='o', markersize=4)\nfor epoch in reductions:\n    ax.axvline(epoch, color='red', linestyle='--', alpha=0.7, linewidth=2)\n    ax.text(epoch, max(val_losses)*0.9, f'LR↓', ha='center',\n           fontsize=11, color='red', weight='bold')\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Validation Loss', fontsize=12)\nax.set_title('Validation Loss (red lines = LR reductions)', fontsize=14)\nax.grid(True, alpha=0.3)\n\n# LR schedule\nax = axes[1]\nax.plot(epochs, lr_history, linewidth=3)\nfor epoch in reductions:\n    ax.axvline(epoch, color='red', linestyle='--', alpha=0.7, linewidth=2)\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('Learning Rate Schedule (Adaptive)', fontsize=14)\nax.set_yscale('log')\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n✓ ReduceLROnPlateau: Adaptive backup for unexpected plateaus!\")",
+      "explanation": "ReduceLROnPlateau: Adaptive scheduling! Val loss plateau → LR reduce. Patience, factor config. Reactive vs proactive comparison. Best as backup!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "One-Cycle Policy & LR Range Test",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.optim.lr_scheduler import OneCycleLR\n\nprint(\"=\"*60)\nprint(\"ONE-CYCLE POLICY & LR RANGE TEST\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nOne-Cycle: Modern fast training strategy!\n  • Phase 1: Warmup (0 → LR_max)\n  • Phase 2: Annealing (LR_max → LR_min)\n  • Single cycle!\n\nBenefits:\n  ✓ Faster convergence\n  ✓ Better generalization\n  ✓ Fewer epochs needed\n  ✓ Escapes local minima (high LR phase)\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"STEP 1: LR RANGE TEST\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nFind optimal LR_max:\n  1. Start LR very small (1e-7)\n  2. Increase exponentially each batch\n  3. Record loss\n  4. Plot loss vs LR\n  5. Choose LR where loss minimum\n\"\"\")\n\n# Simulate LR range test\nnp.random.seed(42)\nn_iterations = 100\n\nlr_values = np.logspace(-7, 0, n_iterations)  # 1e-7 to 1\nlosses = []\n\n# Simulate loss curve\nfor lr in lr_values:\n    if lr < 1e-5:\n        # Too small: no progress\n        loss = 2.0 + np.random.normal(0, 0.1)\n    elif lr < 1e-2:\n        # Sweet spot: loss decreases\n        loss = 2.0 - 15 * np.log10(lr / 1e-5) + np.random.normal(0, 0.1)\n    elif lr < 0.1:\n        # Optimal region\n        loss = 0.5 + (lr - 0.01)**2 * 50 + np.random.normal(0, 0.05)\n    else:\n        # Too large: unstable\n        loss = 0.5 + np.exp((lr - 0.1) * 5) + np.random.normal(0, 0.5)\n    \n    losses.append(max(0.1, loss))\n\n# Find optimal LR\nmin_loss_idx = np.argmin(losses)\noptimal_lr = lr_values[min_loss_idx]\n\n# Suggested range\nlr_min = optimal_lr / 10\nlr_max = optimal_lr\n\nprint(f\"\\nLR Range Test Results:\")\nprint(f\"  Optimal LR (min loss): {optimal_lr:.6f}\")\nprint(f\"  Suggested LR_min: {lr_min:.6f}\")\nprint(f\"  Suggested LR_max: {lr_max:.6f}\")\n\nprint(\"\\n💡 Use LR_max for one-cycle policy!\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"STEP 2: ONE-CYCLE POLICY\")\nprint(\"=\"*60)\n\n# Dummy model and data\nmodel = nn.Linear(10, 1)\noptimizer = optim.SGD(model.parameters(), lr=optimal_lr)\n\ntotal_epochs = 30\nsteps_per_epoch = 100\ntotal_steps = total_epochs * steps_per_epoch\n\nprint(f\"\\nConfig:\")\nprint(f\"  Total epochs: {total_epochs}\")\nprint(f\"  Steps per epoch: {steps_per_epoch}\")\nprint(f\"  Total steps: {total_steps}\")\nprint(f\"  LR_max: {lr_max:.6f}\")\nprint(f\"  LR_min: {lr_min:.6f}\")\nprint(f\"  Warmup: 30% of training\")\nprint(f\"  Annealing: 70% of training\")\n\n# One-cycle scheduler\nscheduler = OneCycleLR(\n    optimizer,\n    max_lr=lr_max,\n    total_steps=total_steps,\n    pct_start=0.3,      # 30% warmup\n    anneal_strategy='cos',  # Cosine annealing\n    div_factor=10,      # Initial LR = max_lr / 10\n    final_div_factor=100  # Final LR = max_lr / 100\n)\n\nlr_history = []\n\nfor epoch in range(total_epochs):\n    for step in range(steps_per_epoch):\n        lr = optimizer.param_groups[0]['lr']\n        lr_history.append(lr)\n        \n        # Training step (dummy)\n        optimizer.step()\n        scheduler.step()  # Step per iteration!\n\nprint(\"\\nLR progression:\\n\")\n\nkey_steps = [0, int(0.1*total_steps), int(0.3*total_steps),\n            int(0.5*total_steps), int(0.8*total_steps), total_steps-1]\n\nfor step in key_steps:\n    epoch = step // steps_per_epoch\n    progress = step / total_steps * 100\n    print(f\"  Step {step:4d} (Epoch {epoch:2d}, {progress:5.1f}%): LR = {lr_history[step]:.8f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ONE-CYCLE vs TRADITIONAL\")\nprint(\"=\"*60)\n\n# Traditional: Fixed LR or simple decay\nlr_traditional = [optimal_lr] * total_steps\n\nprint(\"\"\"\n| Aspect          | Traditional        | One-Cycle          |\n|-----------------|--------------------|--------------------|  \n| LR pattern      | Fixed or simple    | Warmup + annealing |\n| Max LR used     | Often too cautious | Aggressive optimal |\n| Training speed  | Standard           | Faster (fewer epochs) |\n| Generalization  | Good               | Often better       |\n| Complexity      | Low                | Medium             |\n\n✓ One-Cycle: Fast training with good generalization!\n\"\"\")\n\n# Visualize\nfig, axes = plt.subplots(2, 2, figsize=(14, 10))\n\n# LR Range Test\nax = axes[0, 0]\nax.semilogx(lr_values, losses, linewidth=2)\nax.axvline(optimal_lr, color='red', linestyle='--', linewidth=2,\n          label=f'Optimal: {optimal_lr:.6f}')\nax.scatter([optimal_lr], [losses[min_loss_idx]], color='red', s=100, zorder=5)\nax.set_xlabel('Learning Rate (log scale)', fontsize=12)\nax.set_ylabel('Loss', fontsize=12)\nax.set_title('LR Range Test', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\n# One-Cycle Schedule\nax = axes[0, 1]\nsteps = range(total_steps)\nax.plot(steps, lr_history, linewidth=2)\nwarmup_end = int(0.3 * total_steps)\nax.axvline(warmup_end, color='red', linestyle='--', alpha=0.5,\n          label=f'Warmup End (30%)')\nax.set_xlabel('Training Step', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('One-Cycle LR Schedule', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\n# One-Cycle by Epoch\nax = axes[1, 0]\nlr_per_epoch = [lr_history[i*steps_per_epoch] for i in range(total_epochs)]\nepochs_range = range(total_epochs)\nax.plot(epochs_range, lr_per_epoch, linewidth=3, marker='o')\nax.set_xlabel('Epoch', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('One-Cycle Schedule (per epoch)', fontsize=14)\nax.grid(True, alpha=0.3)\n\n# Comparison\nax = axes[1, 1]\nax.plot(steps, lr_history, linewidth=2, label='One-Cycle')\nax.plot(steps, lr_traditional, linewidth=2, linestyle='--',\n       label='Traditional (fixed)', alpha=0.7)\nax.set_xlabel('Training Step', fontsize=12)\nax.set_ylabel('Learning Rate', fontsize=12)\nax.set_title('One-Cycle vs Traditional', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n✓ One-Cycle: Fast training strategy popularized by fast.ai!\")",
+      "explanation": "One-Cycle policy: Warmup → annealing, single cycle! LR range test ile optimal LR bulma. Fast training, better generalization. fast.ai strategy!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Learning rate scheduling neden gerekli?",
+      "options": [
+        "Gereksiz, fixed LR yeterli",
+        "High LR initially (fast) + low LR later (precise convergence)",
+        "Sadece slow training için",
+        "Sadece büyük models için"
+      ],
+      "correct": 1,
+      "explanation": "Fixed LR suboptimal! Initially high LR → fast progress, later low LR → stable convergence. Modern training'de critical, especially transformers!"
+    },
+    {
+      "question": "Cosine annealing'in avantajı nedir?",
+      "options": [
+        "Hızlı",
+        "Smooth decrease, no hyperparameter tuning (just total epochs), robust",
+        "Her zaman step decay'den kötü",
+        "Sadece small datasets için"
+      ],
+      "correct": 1,
+      "explanation": "Cosine annealing: Smooth cosine decrease, no manual step_size tuning! Just set total epochs. Modern default choice, robust performance!"
+    },
+    {
+      "question": "Warmup ne zaman critical?",
+      "options": [
+        "Her zaman gereksiz",
+        "Large batch, transformers, high initial LR (stability için)",
+        "Sadece small datasets",
+        "Sadece test time"
+      ],
+      "correct": 1,
+      "explanation": "Warmup critical for: Large batch training, transformers (BERT, GPT), high initial LR. Prevents early instability, gradual LR increase!"
+    },
+    {
+      "question": "ReduceLROnPlateau'nun özelliği?",
+      "options": [
+        "Proactive scheduling",
+        "Adaptive! Val loss plateau → LR reduce. Reactive, backup olarak kullan",
+        "En hızlı method",
+        "Transformer'lar için ideal"
+      ],
+      "correct": 1,
+      "explanation": "ReduceLROnPlateau adaptive, reactive! Val loss plateau detects → LR reduce. Best as backup, unexpected plateaus için. Primary schedule ile combine et!"
+    },
+    {
+      "question": "One-Cycle policy'nin faydası?",
+      "options": [
+        "Slow but stable",
+        "Fast convergence, better generalization, fewer epochs!",
+        "Sadece small models için",
+        "Gereksiz"
+      ],
+      "correct": 1,
+      "explanation": "One-Cycle: Warmup + annealing single cycle! Fast convergence, better generalization, fewer epochs. High LR phase → escape local minima. fast.ai popularized!"
+    },
+    {
+      "question": "LR range test nasıl yapılır?",
+      "options": [
+        "Random seç",
+        "LR'yi exponentially increase et (1e-7 → 1), loss plot et, minimum loss LR seç",
+        "En büyük LR seç",
+        "Gereksiz"
+      ],
+      "correct": 1,
+      "explanation": "LR range test: Start tiny (1e-7), exponentially increase each batch, record loss. Plot loss vs LR. Optimal LR = where loss minimum (before divergence)!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Fixed LR kullanmak (scheduling yok)",
+      "why": "Suboptimal! Initially slow or unstable, later either stuck or overshoots.",
+      "fix": "Schedule kullan! Cosine annealing good default.",
+      "example": "# YANLIŞ\noptimizer = optim.SGD(model.parameters(), lr=0.1)  # ❌ Fixed!\n\n# DOĞRU\nscheduler = CosineAnnealingLR(optimizer, T_max=epochs)  # ✓"
+    },
+    {
+      "mistake": "Warmup kullanmamak (large batch, transformers)",
+      "why": "High LR at start → early instability, NaN loss!",
+      "fix": "Warmup kullan! 5-10 epochs linear warmup.",
+      "example": "# Large batch, high LR → unstable!\n# Add warmup:\nif epoch < warmup_epochs:\n    lr = lr_max * (epoch / warmup_epochs)  # ✓"
+    },
+    {
+      "mistake": "Scheduler.step() yanlış yerde çağırmak",
+      "why": "Per-epoch vs per-iteration schedulers farklı! OneCycleLR per-iteration!",
+      "fix": "Dokümantasyonu oku, doğru yerde step().",
+      "example": "# OneCycleLR: per-iteration step\nfor epoch in range(epochs):\n    for batch in dataloader:\n        optimizer.step()\n        scheduler.step()  # ✓ Her iteration!"
+    },
+    {
+      "mistake": "LR range test yapmadan agresif LR seçmek",
+      "why": "Too high LR → divergence, too low → waste time!",
+      "fix": "LR range test yap, optimal LR bul.",
+      "example": "# LR range test:\nfor lr in np.logspace(-7, 0, 100):\n    # Train, record loss\n# Plot, find optimal  # ✓"
+    },
+    {
+      "mistake": "Schedule'ı ignore edip checkpoint en son epoch'tan almak",
+      "why": "Last epoch LR çok küçük, suboptimal! Schedule overshoot edebilir.",
+      "fix": "Best validation checkpoint kullan.",
+      "example": "# Save best model during training\nif val_loss < best_val_loss:\n    best_val_loss = val_loss\n    torch.save(model.state_dict(), 'best.pth')  # ✓"
+    },
+    {
+      "mistake": "Step decay için step_size rastgele seçmek",
+      "why": "Poorly timed drops → suboptimal. Too early/late harmful.",
+      "fix": "Learning curve izle, val loss plateau'larda drop et. Ya da cosine kullan (tuning gereksiz)!",
+      "example": "# Better: Cosine (no step_size tuning)\nscheduler = CosineAnnealingLR(optimizer, T_max=epochs)  # ✓"
+    },
+    {
+      "mistake": "Fine-tuning'de from-scratch ile aynı LR schedule",
+      "why": "Pretrained weights → smaller updates needed!",
+      "fix": "Fine-tuning: 10-100× smaller LR.",
+      "example": "# Fine-tuning\noptimizer = optim.Adam(model.parameters(), lr=1e-5)  # ✓ Small!\n# Not lr=1e-3 like from-scratch"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Learning rate scheduling neden?",
+      "back": "Fixed LR suboptimal! High initially (fast progress) + low later (precise convergence). Modern training critical, especially transformers!"
+    },
+    {
+      "front": "Cosine annealing formula?",
+      "back": "LR = LR_min + 0.5*(LR_max - LR_min)*(1 + cos(πt/T)). Smooth decrease, no tuning needed (just T), robust. Modern default!"
+    },
+    {
+      "front": "Warmup nedir, ne zaman?",
+      "back": "LR gradually increase at start! Stability için. Critical for: Large batch, transformers, high initial LR. 5-10 epochs typical."
+    },
+    {
+      "front": "Step decay nasıl?",
+      "back": "Every step_size epochs: LR *= gamma. Example: step=30, gamma=0.1 → LR drops at 30, 60, 90. Abrupt, needs tuning."
+    },
+    {
+      "front": "ReduceLROnPlateau ne zaman?",
+      "back": "Adaptive! Val loss plateau → LR reduce. Reactive (not proactive). Best as backup, unexpected plateaus için. Patience + factor config."
+    },
+    {
+      "front": "One-Cycle policy?",
+      "back": "Warmup (0→LR_max, 30%) + Annealing (LR_max→0, 70%). Single cycle! Fast convergence, better generalization. fast.ai popularized!"
+    },
+    {
+      "front": "LR range test nasıl?",
+      "back": "LR exponentially increase (1e-7→1), record loss, plot. Optimal LR = min loss point. Use for one-cycle LR_max!"
+    },
+    {
+      "front": "Modern LR schedule combo?",
+      "back": "Warmup + Cosine + Optional Restarts. Warmup stability, cosine smooth decrease, restarts escape local minima. Transformer standard!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "LR Schedule Comparison",
+      "description": "Step, exponential, cosine, warmup schedules. Interactive parameters, side-by-side comparison, effect on training curve.",
+      "component": "LRScheduleComparison"
+    },
+    {
+      "type": "animation",
+      "title": "Warmup Effect",
+      "description": "Training with/without warmup animation. Loss curves, parameter updates, stability demonstration.",
+      "component": "WarmupAnimation"
+    },
+    {
+      "type": "interactive",
+      "title": "LR Range Test",
+      "description": "Interactive LR range test simulation. Loss vs LR plot, optimal LR selection, one-cycle configuration.",
+      "component": "LRRangeTest"
+    },
+    {
+      "type": "plot",
+      "title": "One-Cycle Policy",
+      "description": "One-cycle phases visualization. Warmup, annealing, momentum coupling, training dynamics.",
+      "component": "OneCycleViz"
+    }
+  ]
+}

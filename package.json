@@ -1,21 +1,38 @@
 {
   "name": "ai-atlasi",
-  "version": "0.1.0",
+  "version": "2.0.0",
+  "description": "Yapay Zeka Öğrenme ve Deney Laboratuvarı - İnteraktif AI eğitim platformu",
+  "author": "Kenan AY",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "launch": "node scripts/start.js",
+    "launch:auto": "node scripts/start.js --auto",
+    "launch:bash": "bash scripts/start.sh",
+    "launch:win": "scripts\\start.bat"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@types/dompurify": "^3.0.5",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.4.15",
+    "katex": "^0.18.7",
+    "lucide-react": "^1.45.0",
+    "marked": "^18.0.12",
     "next": "16.3.5",
+    "plotly.js": "^4.1.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-katex": "^3.1.0",
+    "react-plotly.js": "^4.1.0",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

@@ -1,0 +1,260 @@
+{
+  "id": "word-embeddings",
+  "title": "Word Embeddings (Word2Vec, GloVe, FastText)",
+  "category": "deep-learning",
+  "level": 2,
+  "estimatedTime": 50,
+  "description": "Kelimeleri dense vector'lere çeviren representation learning teknikleri. Word2Vec (Skip-gram, CBOW), GloVe, FastText ve semantic relationships.",
+  "prerequisites": ["neural-networks", "vectors"],
+  "tags": ["nlp", "word2vec", "glove", "fasttext", "embeddings", "representation-learning"],
+  "content": {
+    "level0_basic": "Kelimeleri bilgisayara nasıl anlatırsın? 'Kedi' ve 'köpek' benzer mi? One-hot encoding ile 'kedi' = [1,0,0,...], 'köpek' = [0,1,0,...] dersin ama bu hiçbir semantic relationship göstermez! Word embeddings kelimeleri 100-300 boyutlu dense vector'lere çevirir: benzer kelimelerin vector'leri birbirine yakın olur. 'Kedi' ve 'köpek' hayvan olduğu için vector space'te yakın, 'elma' uzak. 'Kral' - 'erkek' + 'kadın' = 'kraliçe' gibi işlemler yapabilirsin!",
+    "level1_beginner": "Traditional NLP'de kelimeler one-hot encoding ile gösterilir: vocabulary size kadar boyutlu sparse vector. Bu representation'da semantic similarity yok!\n\n**Word Embeddings:**\nKelimeleri dense, low-dimensional vector'lere map eder (genelde 100-300 boyut).\n\n**Temel Fikir: Distributional Hypothesis**\n> \"You shall know a word by the company it keeps\" - Firth 1957\n\nBir kelimenin anlamı context'inden (yanındaki kelimelerden) çıkarsanır.\n\n**Word2Vec (Mikolov et al., 2013):**\n\n2 mimari var:\n\n**1. Skip-gram:**\nMerkezideki kelimeden context'i tahmin et.\n- Input: center word\n- Output: context words\n- Rare words için daha iyi\n\n**2. CBOW (Continuous Bag of Words):**\nContext'ten merkez kelimeyi tahmin et.\n- Input: context words\n- Output: center word\n- Frequent words için daha hızlı\n\n**Matematiksel Formülasyon (Skip-gram):**\n\nAmaç: Her kelime için likelihood'ı maksimize et:\n\n$$J(\\theta) = \\frac{1}{T}\\sum_{t=1}^{T}\\sum_{-c \\leq j \\leq c, j \\neq 0} \\log p(w_{t+j} | w_t)$$\n\n- $w_t$: center word\n- $w_{t+j}$: context words\n- $c$: window size\n\n**Softmax:**\n$$p(w_O | w_I) = \\frac{\\exp(v_{w_O}^T v_{w_I})}{\\sum_{w=1}^{V} \\exp(v_w^T v_{w_I})}$$\n\n**Problem:** Softmax vocabulary size kadar (milyonlarca) hesap gerektirir!\n\n**Çözümler:**\n1. **Negative Sampling:** Sadece birkaç negative örnek al\n2. **Hierarchical Softmax:** Binary tree ile hesapla",
+    "level2_application": "**Word2Vec Training Details:**\n\n**Negative Sampling:**\nHer positive sample için k tane negative sample al (k=5-20).\n\nObjective:\n$$J(\\theta) = \\log \\sigma(v_{w_O}^T v_{w_I}) + \\sum_{i=1}^{k} \\mathbb{E}_{w_i \\sim P_n(w)}[\\log \\sigma(-v_{w_i}^T v_{w_I})]$$\n\n- $\\sigma$: sigmoid function\n- $P_n(w)$: noise distribution (genelde $U(w)^{3/4}$)\n\nVocabulary'nin tamamı yerine sadece k+1 kelime için hesap!\n\n**GloVe (Global Vectors, Pennington et al., 2014):**\n\nWord2Vec local context kullanır. GloVe global co-occurrence statistics kullanır.\n\n**Co-occurrence Matrix:**\n$X_{ij}$: Kelime $i$'nin kelime $j$ ile birlikte görülme sayısı.\n\n**Objective:**\n$$J = \\sum_{i,j=1}^{V} f(X_{ij})(w_i^T \\tilde{w}_j + b_i + \\tilde{b}_j - \\log X_{ij})^2$$\n\n- $f(X_{ij})$: weighting function (rare words'e düşük ağırlık)\n- $w_i, \\tilde{w}_j$: word vectors\n\n**Word2Vec vs GloVe:**\n- Word2Vec: local context, online learning\n- GloVe: global statistics, matrix factorization\n- Performance benzer, corpus'a bağlı\n\n**FastText (Bojanowski et al., 2017):**\n\nWord2Vec'in gelişmişi: subword information kullanır!\n\n**Character n-grams:**\n'apple' → '<ap', 'app', 'ppl', 'ple', 'le>'\n\nHer kelime = subword vectors'ın toplamı:\n$$v_{word} = \\sum_{g \\in G_{word}} v_g$$\n\n**Avantajları:**\n1. **OOV (Out-of-Vocabulary) handling:** Yeni kelimeler için subword'lerden vector oluştur\n2. **Morphology:** 'run', 'running', 'runner' benzer embeddings\n3. **Rare words:** Subword'ler sık görülür, daha iyi representation",
+    "level3_advanced": "**Embedding Quality Evaluation:**\n\n**1. Intrinsic Evaluation:**\n\n**Word Similarity Tasks:**\n- WordSim-353, SimLex-999\n- Cosine similarity ile insan judgments'ları karşılaştır\n\n**Word Analogy Tasks:**\n- 'king' - 'man' + 'woman' = 'queen'\n- Semantic: capital-country, currency-country\n- Syntactic: plural, verb tenses\n\n**Evaluation:**\n$$\\text{answer} = \\arg\\max_{w \\in V} \\cos(v_w, v_{king} - v_{man} + v_{woman})$$\n\n**2. Extrinsic Evaluation:**\nDownstream tasks'te test et:\n- Sentiment analysis\n- Named entity recognition\n- Machine translation\n\n**Training Optimization:**\n\n**Subsampling Frequent Words:**\nÇok sık kelimeler (the, a, is) az bilgi taşır.\n\nProbability of discarding word $w$:\n$$P(w) = 1 - \\sqrt{\\frac{t}{f(w)}}$$\n- $f(w)$: word frequency\n- $t$: threshold (genelde $10^{-5}$)\n\n**Context Window Sampling:**\nHer örnek için window size'ı dynamic sample et (1 ile c arası).\n\n**Pre-trained Embeddings:**\n\n**Popular Models:**\n- **Word2Vec Google News:** 300d, 3M words\n- **GloVe (Stanford):** 50d-300d, 6B-840B tokens\n- **FastText (Facebook):** 300d, 157 languages\n\n**Transfer Learning:**\n```python\n# Load pre-trained\nembeddings = load_pretrained('glove-wiki-gigaword-300')\n\n# Fine-tune on your corpus\nmodel = Word2Vec(corpus, vector_size=300)\nmodel.build_vocab_from_freq(embeddings.vocab)\nmodel.wv.vectors[:] = embeddings.vectors\nmodel.train(corpus, total_examples=len(corpus), epochs=5)\n```\n\n**Contextualized Embeddings (vs Static):**\n\nWord2Vec/GloVe static embeddings:\n- 'bank' her zaman aynı vector\n- Polysemy (çok anlamlılık) problemi!\n\nModern approach: **Contextualized embeddings** (ELMo, BERT)\n- 'bank' kelimesinin vectorü context'e bağlı değişir\n- 'river bank' vs 'bank account' farklı vectors",
+    "level4_expert": "**Advanced Topics & Research:**\n\n**Bias in Word Embeddings:**\n\nWord embeddings training data'daki bias'ı öğrenir!\n\n**Examples:**\n- 'doctor' - 'man' + 'woman' = 'nurse'\n- 'programmer' - 'man' + 'woman' = 'homemaker'\n\nGender, racial, age bias var!\n\n**Debiasing Techniques:**\n\n1. **Post-processing (Bolukbasi et al., 2016):**\n   - Gender subspace'i identify et\n   - Neutral words'ü bu subspace'ten project out et\n\n2. **Counterfactual Data Augmentation:**\n   - 'He is a doctor' → 'She is a doctor'\n   - Balanced training data\n\n**Multi-sense Embeddings:**\n\nBir kelime birden fazla anlama sahip olabilir.\n\n**Approaches:**\n\n1. **Clustering-based:**\n   - Context vectors'ı cluster'la\n   - Her cluster = bir sense\n\n2. **Non-parametric (Neelakantan et al., 2014):**\n   - Training sırasında dynamic olarak sense sayısını belirle\n\n**Cross-lingual Embeddings:**\n\nFarklı dillerin kelimelerini aynı vector space'e map et.\n\n**Approaches:**\n\n1. **Parallel Corpora:**\n   - Bilingual dictionary ile align et\n\n2. **Unsupervised (MUSE, Conneau et al., 2018):**\n   - Adversarial training\n   - Monolingual embeddings'i align et\n\n**Rotation Matrix:**\n$$\\min_W ||W X - Y||_F$$\n- $X$: source language embeddings\n- $Y$: target language embeddings\n- $W$: rotation matrix\n\n**Production Considerations:**\n\n**Compression:**\nFull embeddings memory-intensive!\n- 1M words × 300d × 4 bytes = 1.2GB\n\n**Techniques:**\n1. **Quantization:** Float32 → Int8 (4x compression)\n2. **PCA:** 300d → 100d dimension reduction\n3. **Product Quantization:** Vector'ü subvector'lere böl, codebook kullan\n\n**Incremental Updates:**\nYeni kelimeler nasıl eklenir?\n\n```python\n# Option 1: Retrain from scratch (costly!)\n# Option 2: Freeze old embeddings, train new ones\nfor word in new_words:\n    model.build_vocab([word], update=True)\n    model.train([word], total_examples=1, epochs=10)\n```\n\n**Serving:**\n- **Lookup table:** O(1) access\n- **Approximate nearest neighbors:** FAISS, Annoy\n- **Caching:** Popular words'ü cache'le\n\n**Evaluation in Production:**\n- **A/B testing:** Embedding change → downstream metric\n- **Embedding drift:** Distribution shift detection\n- **OOV rate:** Coverage monitoring",
+    "level5_research": "**Cutting-edge Research:**\n\n**1. Dynamic Embeddings:**\nWord meanings change over time!\n- 'gay' (1900 vs 2020)\n- 'tweet' (2000 vs 2020)\n\nTemporal embeddings: Her time period için ayrı embeddings.\n\n**2. Knowledge-enhanced Embeddings:**\nKnowledge graphs (WordNet, ConceptNet) kullan:\n- Synonyms benzer embeddings\n- Hypernyms: semantic hierarchy\n\n**3. Multimodal Embeddings:**\nText + Image:\n- 'dog' kelimesi + köpek resimleri\n- Grounded representations\n\n**4. Sparse Embeddings:**\nDense embeddings interpretable değil!\n\nSparse constraint'ler:\n- L1 regularization\n- Non-negative matrix factorization\n\n**5. Hyperbolic Embeddings:**\nEuclidean space yerine hyperbolic space:\n- Hierarchical structures için daha iyi (WordNet tree)\n- Poincaré embeddings"
+  },
+  "whatIsIt": "Word embeddings kelimeleri dense, low-dimensional vector'lere map eder. Semantic similarity vector space'te cosine similarity ile ölçülür. 'King - man + woman = queen' gibi arithmetic operations mümkün!",
+  "whyNeeded": "One-hot encoding sparse, semantic relationship yok. Word embeddings compact, semantic ve syntactic properties'i encode eder. NLP'nin temel building block'u!",
+  "realWorldAnalogy": "Kelimeleri bir harita üzerinde düşün. Benzer anlamlı kelimeler (kedi, köpek) yakın, farklı kelimeler (elma, araba) uzak. Bu harita semantic relationships'i preserve eder - tıpkı gerçek haritanın geographic relationships'i koruması gibi!",
+  "mathematics": {
+    "formulas": [
+      "p(w_O | w_I) = \\frac{\\exp(v_{w_O}^T v_{w_I})}{\\sum_{w=1}^{V} \\exp(v_w^T v_{w_I})}",
+      "\\text{similarity}(w_1, w_2) = \\cos(v_{w_1}, v_{w_2}) = \\frac{v_{w_1} \\cdot v_{w_2}}{||v_{w_1}|| \\cdot ||v_{w_2}||}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Corpus'u tokenize et, vocabulary oluştur",
+      "2. Training pairs oluştur:",
+      "   - Skip-gram: (center word, context word)",
+      "   - CBOW: (context words, center word)",
+      "3. Word vectors'ı random initialize et",
+      "4. Her training pair için:",
+      "   a. Forward pass: predict context/center",
+      "   b. Loss hesapla (negative sampling veya hierarchical softmax)",
+      "   c. Backward pass: gradients",
+      "   d. Update word vectors",
+      "5. Converge olana kadar iterate et",
+      "6. Final word vectors = learned embeddings"
+    ],
+    "complexity": "Training: O(T × d × c) - T tokens, d embedding dim, c window size. Negative sampling ile vocabulary size'dan bağımsız!"
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Word2Vec with Gensim - Complete Example",
+      "code": "from gensim.models import Word2Vec\nfrom gensim.utils import simple_preprocess\nimport numpy as np\n\n# Sample corpus\ncorpus = [\n    \"the cat sat on the mat\",\n    \"the dog played in the garden\",\n    \"cats and dogs are animals\",\n    \"the king rules the kingdom\",\n    \"the queen is the wife of the king\",\n    \"man and woman are humans\",\n    \"the boy played with the dog\",\n    \"the girl sat with the cat\"\n]\n\nprint(\"=\"*60)\nprint(\"WORD2VEC TRAINING\")\nprint(\"=\"*60)\n\n# Tokenize\nsentences = [simple_preprocess(sent) for sent in corpus]\nprint(f\"\\nTokenized sentences: {len(sentences)}\")\nprint(f\"Example: {sentences[0]}\")\n\n# Train Word2Vec\nprint(\"\\n🚀 Training Word2Vec...\")\nmodel = Word2Vec(\n    sentences=sentences,\n    vector_size=50,      # Embedding dimension\n    window=2,            # Context window\n    min_count=1,         # Min word frequency\n    workers=4,           # Parallel threads\n    sg=1,                # 1=Skip-gram, 0=CBOW\n    negative=5,          # Negative sampling\n    epochs=100\n)\n\nprint(f\"✓ Training complete!\")\nprint(f\"\\nVocabulary size: {len(model.wv)}\")\nprint(f\"Embedding dimension: {model.wv.vector_size}\")\n\n# Word vector\nprint(\"\\n\" + \"=\"*60)\nprint(\"WORD VECTORS\")\nprint(\"=\"*60)\n\nword = 'king'\nvector = model.wv[word]\nprint(f\"\\nVector for '{word}':\")\nprint(f\"Shape: {vector.shape}\")\nprint(f\"First 10 dims: {vector[:10]}\")\n\n# Similarity\nprint(\"\\n\" + \"=\"*60)\nprint(\"WORD SIMILARITY\")\nprint(\"=\"*60)\n\nword_pairs = [('cat', 'dog'), ('king', 'queen'), ('man', 'woman')]\n\nfor w1, w2 in word_pairs:\n    if w1 in model.wv and w2 in model.wv:\n        similarity = model.wv.similarity(w1, w2)\n        print(f\"\\nSimilarity('{w1}', '{w2}'): {similarity:.4f}\")\n\n# Most similar words\nprint(\"\\n\" + \"=\"*60)\nprint(\"MOST SIMILAR WORDS\")\nprint(\"=\"*60)\n\nfor word in ['king', 'cat', 'played']:\n    if word in model.wv:\n        print(f\"\\nMost similar to '{word}':\")\n        similar = model.wv.most_similar(word, topn=3)\n        for similar_word, score in similar:\n            print(f\"  {similar_word}: {score:.4f}\")\n\nprint(\"\\n💡 Note: Small corpus → embeddings may not be perfect!\")\nprint(\"   Use large corpus (Wikipedia, news) for better quality.\")",
+      "explanation": "Gensim ile Word2Vec training. Skip-gram (sg=1) veya CBOW (sg=0) seçebilirsin. Negative sampling ile hızlı training!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Word Analogies - 'King - Man + Woman = Queen'",
+      "code": "from gensim.models import Word2Vec\nimport numpy as np\n\n# Larger corpus for better embeddings\nfrom gensim.test.utils import common_texts\nfrom gensim.models import Word2Vec\n\nprint(\"=\"*60)\nprint(\"WORD ANALOGIES\")\nprint(\"=\"*60)\n\n# Train on common texts (larger corpus)\nmodel = Word2Vec(\n    sentences=common_texts,\n    vector_size=100,\n    window=5,\n    min_count=1,\n    sg=1,\n    epochs=200\n)\n\nprint(f\"\\nVocabulary: {len(model.wv)} words\")\n\n# Word analogy\nprint(\"\\n\" + \"=\"*60)\nprint(\"ANALOGY: King - Man + Woman = ?\")\nprint(\"=\"*60)\n\ndef word_analogy(model, word1, word2, word3, topn=3):\n    \"\"\"\n    Find word4 such that:\n    word1 - word2 + word3 ≈ word4\n    Example: king - man + woman = queen\n    \"\"\"\n    print(f\"\\n🔍 {word1} - {word2} + {word3} = ?\")\n    \n    try:\n        result = model.wv.most_similar(\n            positive=[word1, word3],  # Add these\n            negative=[word2],         # Subtract this\n            topn=topn\n        )\n        \n        print(\"\\nResults:\")\n        for word, score in result:\n            print(f\"  {word}: {score:.4f}\")\n        \n        return result[0][0]\n    \n    except KeyError as e:\n        print(f\"❌ Word not in vocabulary: {e}\")\n        return None\n\n# Try analogies\nif all(w in model.wv for w in ['computer', 'computers', 'system', 'systems']):\n    word_analogy(model, 'computer', 'computers', 'system')\n\n# Manual analogy calculation\nprint(\"\\n\" + \"=\"*60)\nprint(\"MANUAL ANALOGY CALCULATION\")\nprint(\"=\"*60)\n\nif all(w in model.wv for w in ['computer', 'computers', 'system']):\n    # Vector arithmetic\n    vec_result = (\n        model.wv['computer'] \n        - model.wv['computers'] \n        + model.wv['system']\n    )\n    \n    print(\"\\nVector arithmetic:\")\n    print(f\"  v(computer) - v(computers) + v(system)\")\n    print(f\"  Result vector shape: {vec_result.shape}\")\n    \n    # Find closest word\n    closest = model.wv.similar_by_vector(vec_result, topn=3)\n    print(\"\\nClosest words to result vector:\")\n    for word, score in closest:\n        print(f\"  {word}: {score:.4f}\")\n\nprint(\"\\n💡 How it works:\")\nprint(\"   1. Compute: v_result = v(king) - v(man) + v(woman)\")\nprint(\"   2. Find word with vector closest to v_result\")\nprint(\"   3. Use cosine similarity for distance\")",
+      "explanation": "Word analogies vector arithmetic ile çalışır. 'King - man + woman' vector space'te semantic operation! Cosine similarity ile closest word bulunur."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Pre-trained Embeddings - GloVe & FastText",
+      "code": "import gensim.downloader as api\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"PRE-TRAINED EMBEDDINGS\")\nprint(\"=\"*60)\n\n# List available models\nprint(\"\\nAvailable pre-trained models:\")\navailable_models = list(api.info()['models'].keys())\nprint(f\"Total: {len(available_models)} models\")\nprint(\"\\nPopular ones:\")\nprint(\"  • glove-wiki-gigaword-50\")\nprint(\"  • glove-wiki-gigaword-100\")\nprint(\"  • glove-wiki-gigaword-300\")\nprint(\"  • word2vec-google-news-300\")\nprint(\"  • fasttext-wiki-news-subwords-300\")\n\n# Load GloVe\nprint(\"\\n🚀 Loading GloVe embeddings...\")\nprint(\"   (This may take a minute on first run)\")\n\nglove = api.load('glove-wiki-gigaword-50')  # 50d for speed\n\nprint(f\"✓ Loaded!\")\nprint(f\"\\nVocabulary: {len(glove)} words\")\nprint(f\"Embedding dim: {glove.vector_size}\")\n\n# Test word similarity\nprint(\"\\n\" + \"=\"*60)\nprint(\"SEMANTIC SIMILARITY\")\nprint(\"=\"*60)\n\nword_pairs = [\n    ('king', 'queen'),\n    ('man', 'woman'),\n    ('paris', 'france'),\n    ('python', 'programming'),\n    ('car', 'automobile'),\n    ('cat', 'dog'),\n    ('cat', 'car')  # Different!\n]\n\nfor w1, w2 in word_pairs:\n    if w1 in glove and w2 in glove:\n        sim = glove.similarity(w1, w2)\n        bar = '█' * int(sim * 20)\n        print(f\"\\n{w1:12} ↔ {w2:12}  {sim:.4f}  {bar}\")\n\n# Most similar\nprint(\"\\n\" + \"=\"*60)\nprint(\"MOST SIMILAR WORDS\")\nprint(\"=\"*60)\n\nfor word in ['python', 'machine', 'deep']:\n    if word in glove:\n        print(f\"\\nMost similar to '{word}':\")\n        similar = glove.most_similar(word, topn=5)\n        for sim_word, score in similar:\n            print(f\"  {sim_word:15} {score:.4f}\")\n\n# Word analogies\nprint(\"\\n\" + \"=\"*60)\nprint(\"WORD ANALOGIES\")\nprint(\"=\"*60)\n\nanalogies = [\n    ('king', 'man', 'queen'),  # king - man + queen = ?\n    ('paris', 'france', 'london'),  # paris - france + london = ?\n    ('good', 'better', 'bad'),  # good - better + bad = ?\n]\n\nfor w1, w2, w3 in analogies:\n    if all(w in glove for w in [w1, w2, w3]):\n        result = glove.most_similar(\n            positive=[w1, w3],\n            negative=[w2],\n            topn=1\n        )\n        print(f\"\\n{w1} - {w2} + {w3} = {result[0][0]} ({result[0][1]:.4f})\")\n\nprint(\"\\n💡 Pre-trained embeddings:\")\nprint(\"   ✓ Trained on billions of tokens\")\nprint(\"   ✓ Ready to use (no training needed)\")\nprint(\"   ✓ Transfer learning: fine-tune on your data\")\nprint(\"   ✓ Better quality than training from scratch\")",
+      "explanation": "Pre-trained embeddings (GloVe, Word2Vec, FastText) milyarlarca token ile train edilmiş. Download edip direkt kullanabilirsin - transfer learning!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "FastText - Subword Embeddings & OOV Handling",
+      "code": "from gensim.models import FastText\nfrom gensim.utils import simple_preprocess\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"FASTTEXT - SUBWORD EMBEDDINGS\")\nprint(\"=\"*60)\n\n# Corpus\ncorpus = [\n    \"running runner run runs\",\n    \"playing player play plays\",\n    \"swimming swimmer swim swims\",\n    \"coding coder code codes\",\n    \"learning learner learn learns\"\n]\n\nsentences = [simple_preprocess(sent) for sent in corpus]\n\n# Train FastText\nprint(\"\\n🚀 Training FastText...\")\nmodel = FastText(\n    sentences=sentences,\n    vector_size=50,\n    window=2,\n    min_count=1,\n    min_n=2,      # Min character n-gram\n    max_n=5,      # Max character n-gram\n    word_ngrams=1,\n    epochs=100\n)\n\nprint(\"✓ Training complete!\")\n\n# Character n-grams\nprint(\"\\n\" + \"=\"*60)\nprint(\"CHARACTER N-GRAMS\")\nprint(\"=\"*60)\n\nword = 'running'\nprint(f\"\\nWord: '{word}'\")\nprint(f\"Character n-grams (n=2 to 5):\")\n\n# Generate n-grams manually\nfor n in range(2, 6):\n    ngrams = [word[i:i+n] for i in range(len(word)-n+1)]\n    # Add boundary markers\n    word_marked = f'<{word}>'\n    ngrams_marked = [word_marked[i:i+n] for i in range(len(word_marked)-n+1)]\n    print(f\"  n={n}: {ngrams_marked}\")\n\n# OOV (Out-of-Vocabulary) Handling\nprint(\"\\n\" + \"=\"*60)\nprint(\"OOV HANDLING\")\nprint(\"=\"*60)\n\n# Words in vocabulary\nin_vocab = 'running'\nprint(f\"\\nIn vocabulary: '{in_vocab}'\")\nprint(f\"  Vector shape: {model.wv[in_vocab].shape}\")\n\n# OOV word (not in training)\noov_word = 'runner123'  # Made-up word\nprint(f\"\\nOOV word: '{oov_word}'\")\nprint(f\"  In vocab? {oov_word in model.wv}\")\n\ntry:\n    # FastText can handle OOV!\n    oov_vector = model.wv[oov_word]\n    print(f\"  ✓ Can generate vector!\")\n    print(f\"  Vector shape: {oov_vector.shape}\")\n    print(f\"  How? Uses subword n-grams of '{oov_word}'\")\n    \n    # Find similar words\n    similar = model.wv.most_similar(oov_word, topn=3)\n    print(f\"\\n  Most similar to '{oov_word}':\")\n    for word, score in similar:\n        print(f\"    {word}: {score:.4f}\")\nexcept KeyError:\n    print(f\"  ✗ Cannot generate vector (too few n-grams)\")\n\n# Morphological similarity\nprint(\"\\n\" + \"=\"*60)\nprint(\"MORPHOLOGICAL SIMILARITY\")\nprint(\"=\"*60)\n\nmorpho_groups = [\n    ('run', 'runs', 'running', 'runner'),\n    ('code', 'codes', 'coding', 'coder'),\n    ('learn', 'learns', 'learning', 'learner')\n]\n\nfor group in morpho_groups:\n    print(f\"\\n{group[0]} family:\")\n    base_word = group[0]\n    \n    for word in group[1:]:\n        if base_word in model.wv and word in model.wv:\n            sim = model.wv.similarity(base_word, word)\n            print(f\"  {base_word:10} ↔ {word:10}  {sim:.4f}\")\n\nprint(\"\\n💡 FastText advantages:\")\nprint(\"   ✓ OOV handling via subword n-grams\")\nprint(\"   ✓ Better for morphologically rich languages (Turkish, German)\")\nprint(\"   ✓ Rare words: subwords seen more frequently\")\nprint(\"   ✓ Spelling variations: similar subwords → similar embeddings\")",
+      "explanation": "FastText subword n-grams kullanır. OOV words için vector generate edebilir! Morphology-rich languages için ideal. 'running' = n-grams toplamı."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Embedding Visualization with t-SNE",
+      "code": "from sklearn.manifold import TSNE\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"EMBEDDING VISUALIZATION\")\nprint(\"=\"*60)\n\n# Use pre-trained GloVe\nimport gensim.downloader as api\n\nprint(\"\\n🚀 Loading embeddings...\")\nglove = api.load('glove-wiki-gigaword-50')\n\n# Select interesting words\nwords = [\n    # Animals\n    'cat', 'dog', 'lion', 'tiger', 'elephant',\n    # Countries\n    'france', 'germany', 'italy', 'spain', 'china',\n    # Tech\n    'computer', 'laptop', 'phone', 'tablet', 'software',\n    # Verbs\n    'run', 'walk', 'jump', 'fly', 'swim',\n]\n\n# Filter words in vocabulary\nwords = [w for w in words if w in glove]\nprint(f\"\\nSelected {len(words)} words for visualization\")\n\n# Get vectors\nvectors = np.array([glove[word] for word in words])\nprint(f\"Vectors shape: {vectors.shape}\")\n\n# t-SNE dimensionality reduction (50D → 2D)\nprint(\"\\n🔄 Running t-SNE (50D → 2D)...\")\ntsne = TSNE(\n    n_components=2,\n    random_state=42,\n    perplexity=5,  # Small dataset\n    n_iter=1000\n)\n\nvectors_2d = tsne.fit_transform(vectors)\nprint(f\"✓ Reduced to 2D: {vectors_2d.shape}\")\n\n# Plot\nfig, ax = plt.subplots(figsize=(12, 10))\n\n# Define categories for coloring\ncategories = {\n    'Animals': ['cat', 'dog', 'lion', 'tiger', 'elephant'],\n    'Countries': ['france', 'germany', 'italy', 'spain', 'china'],\n    'Tech': ['computer', 'laptop', 'phone', 'tablet', 'software'],\n    'Verbs': ['run', 'walk', 'jump', 'fly', 'swim']\n}\n\ncolors = {'Animals': 'red', 'Countries': 'blue', 'Tech': 'green', 'Verbs': 'orange'}\n\nfor word, (x, y) in zip(words, vectors_2d):\n    # Find category\n    category = None\n    for cat, cat_words in categories.items():\n        if word in cat_words:\n            category = cat\n            break\n    \n    color = colors.get(category, 'gray')\n    \n    # Plot point\n    ax.scatter(x, y, c=color, s=100, alpha=0.6)\n    ax.annotate(word, (x, y), fontsize=12, ha='center', va='bottom')\n\n# Legend\nfrom matplotlib.patches import Patch\nlegend_elements = [Patch(facecolor=color, label=cat) \n                  for cat, color in colors.items()]\nax.legend(handles=legend_elements, loc='best', fontsize=12)\n\nax.set_title('Word Embeddings Visualization (t-SNE)', fontsize=16)\nax.set_xlabel('Dimension 1', fontsize=12)\nax.set_ylabel('Dimension 2', fontsize=12)\nax.grid(True, alpha=0.3)\nplt.tight_layout()\n\nprint(\"\\n💡 Observations:\")\nprint(\"   • Similar words cluster together\")\nprint(\"   • Animals: cat, dog close to each other\")\nprint(\"   • Countries: france, germany form a cluster\")\nprint(\"   • Tech words: computer, laptop nearby\")\nprint(\"   • Semantic relationships preserved in 2D!\")\n\nplt.savefig('word_embeddings_tsne.png', dpi=150, bbox_inches='tight')\nprint(\"\\n✓ Saved to 'word_embeddings_tsne.png'\")",
+      "explanation": "t-SNE ile embeddings'i 2D'ye project et. Benzer kelimeler cluster oluşturur! 50-300 boyutlu space'i visualize etmek için."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production: Embedding Layer in Neural Network",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"EMBEDDING LAYER IN NEURAL NETWORK\")\nprint(\"=\"*60)\n\n# Vocabulary\nvocab = ['<PAD>', '<UNK>', 'the', 'cat', 'sat', 'on', 'mat', 'dog', 'played']\nvocab_size = len(vocab)\nembedding_dim = 50\n\nprint(f\"\\nVocabulary size: {vocab_size}\")\nprint(f\"Embedding dim: {embedding_dim}\")\n\n# Word to index mapping\nword2idx = {word: idx for idx, word in enumerate(vocab)}\nidx2word = {idx: word for word, idx in word2idx.items()}\n\nprint(f\"\\nWord to index: {word2idx}\")\n\n# Embedding layer\nprint(\"\\n\" + \"=\"*60)\nprint(\"PYTORCH EMBEDDING LAYER\")\nprint(\"=\"*60)\n\nembedding = nn.Embedding(\n    num_embeddings=vocab_size,\n    embedding_dim=embedding_dim,\n    padding_idx=0  # <PAD> token\n)\n\nprint(f\"\\nEmbedding layer:\")\nprint(f\"  Input: word indices (integers)\")\nprint(f\"  Output: dense vectors ({embedding_dim}D)\")\nprint(f\"  Parameters: {vocab_size} × {embedding_dim} = {vocab_size * embedding_dim:,}\")\n\n# Test embedding\nprint(\"\\n\" + \"=\"*60)\nprint(\"EMBEDDING LOOKUP\")\nprint(\"=\"*60)\n\nsentence = \"the cat sat\"\nword_indices = torch.tensor([word2idx[w] for w in sentence.split()])\n\nprint(f\"\\nSentence: '{sentence}'\")\nprint(f\"Word indices: {word_indices.tolist()}\")\n\n# Embed\nembedded = embedding(word_indices)\nprint(f\"\\nEmbedded shape: {embedded.shape}\")\nprint(f\"  [sequence_length, embedding_dim]\")\nprint(f\"\\nFirst word embedding ('{sentence.split()[0]}'):\")\nprint(f\"  Shape: {embedded[0].shape}\")\nprint(f\"  First 10 dims: {embedded[0][:10].detach().numpy()}\")\n\n# Load pre-trained embeddings\nprint(\"\\n\" + \"=\"*60)\nprint(\"LOAD PRE-TRAINED EMBEDDINGS\")\nprint(\"=\"*60)\n\nprint(\"\\nScenario: Load GloVe into PyTorch Embedding layer\")\n\n# Simulate pre-trained embeddings\npretrained_embeddings = np.random.randn(vocab_size, embedding_dim).astype(np.float32)\n\nprint(f\"Pre-trained shape: {pretrained_embeddings.shape}\")\n\n# Create embedding with pre-trained weights\nembedding_pretrained = nn.Embedding(\n    num_embeddings=vocab_size,\n    embedding_dim=embedding_dim,\n    padding_idx=0,\n    _weight=torch.from_numpy(pretrained_embeddings)\n)\n\nprint(\"✓ Loaded pre-trained embeddings into layer\")\n\n# Freeze embeddings (don't train)\nembedding_pretrained.weight.requires_grad = False\nprint(\"✓ Froze embeddings (won't be trained)\")\n\n# Fine-tune embeddings (train)\nembedding_finetune = nn.Embedding(\n    num_embeddings=vocab_size,\n    embedding_dim=embedding_dim,\n    _weight=torch.from_numpy(pretrained_embeddings)\n)\nembedding_finetune.weight.requires_grad = True\nprint(\"✓ Fine-tuning enabled (will be trained)\")\n\n# Simple classifier with embeddings\nprint(\"\\n\" + \"=\"*60)\nprint(\"TEXT CLASSIFIER WITH EMBEDDINGS\")\nprint(\"=\"*60)\n\nclass TextClassifier(nn.Module):\n    def __init__(self, vocab_size, embedding_dim, num_classes, pretrained=None):\n        super().__init__()\n        \n        if pretrained is not None:\n            self.embedding = nn.Embedding(\n                vocab_size, embedding_dim,\n                _weight=torch.from_numpy(pretrained)\n            )\n        else:\n            self.embedding = nn.Embedding(vocab_size, embedding_dim)\n        \n        self.fc1 = nn.Linear(embedding_dim, 64)\n        self.fc2 = nn.Linear(64, num_classes)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        # x: [batch_size, seq_len]\n        embedded = self.embedding(x)  # [batch_size, seq_len, embedding_dim]\n        pooled = embedded.mean(dim=1)  # [batch_size, embedding_dim] - mean pooling\n        hidden = self.relu(self.fc1(pooled))  # [batch_size, 64]\n        output = self.fc2(hidden)  # [batch_size, num_classes]\n        return output\n\nmodel = TextClassifier(\n    vocab_size=vocab_size,\n    embedding_dim=embedding_dim,\n    num_classes=2,  # Binary classification\n    pretrained=pretrained_embeddings\n)\n\nprint(\"\\nModel architecture:\")\nprint(model)\n\n# Test forward pass\nbatch_sentences = torch.tensor([\n    [word2idx['the'], word2idx['cat'], word2idx['sat']],\n    [word2idx['the'], word2idx['dog'], word2idx['played']]\n])  # [batch_size=2, seq_len=3]\n\noutput = model(batch_sentences)\nprint(f\"\\nBatch input shape: {batch_sentences.shape}\")\nprint(f\"Output shape: {output.shape}  [batch_size, num_classes]\")\n\nprint(\"\\n💡 Production tips:\")\nprint(\"   • Load pre-trained embeddings (GloVe, FastText)\")\nprint(\"   • Freeze for small datasets, fine-tune for large\")\nprint(\"   • Use padding_idx for variable-length sequences\")\nprint(\"   • Embedding lookup is O(1) - very fast!\")",
+      "explanation": "PyTorch Embedding layer word indices'i dense vectors'e çevirir. Pre-trained embeddings yüklenebilir (GloVe), freeze veya fine-tune edilebilir. Production NLP models'in temel building block'u!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Word2Vec'te Skip-gram ve CBOW arasındaki fark nedir?",
+      "options": [
+        "Skip-gram context'ten center'ı, CBOW center'dan context'i tahmin eder",
+        "Skip-gram center'dan context'i, CBOW context'ten center'ı tahmin eder",
+        "İkisi aynıdır, sadece isimleri farklı",
+        "Skip-gram supervised, CBOW unsupervised'dır"
+      ],
+      "correct": 1,
+      "explanation": "Skip-gram: center word verilen, context words'ü tahmin et. CBOW: context words verilen, center word'ü tahmin et. Skip-gram rare words için, CBOW frequent words için daha iyi."
+    },
+    {
+      "question": "Word embeddings'te 'king - man + woman ≈ queen' analogy neden çalışır?",
+      "options": [
+        "Tesadüf, her zaman çalışmaz",
+        "Embeddings gender direction'ını öğrenir, vector arithmetic ile semantic operations yapılabilir",
+        "Sadece bu örnekte çalışır",
+        "Manual olarak programlanmıştır"
+      ],
+      "correct": 1,
+      "explanation": "Word embeddings semantic relationships'i vector space'te geometric relationships olarak encode eder. 'man→king' ve 'woman→queen' paralel transformations, vector arithmetic ile capture edilebilir!"
+    },
+    {
+      "question": "FastText'in Word2Vec'e göre avantajı nedir?",
+      "options": [
+        "Daha hızlı train edilir",
+        "Subword n-grams kullanır, OOV words handle edebilir",
+        "Daha küçük model size",
+        "Sadece İngilizce için çalışır"
+      ],
+      "correct": 1,
+      "explanation": "FastText character n-grams kullanır. Her kelime = subword vectors toplamı. OOV words için bile vector generate edebilir çünkü subword'ler training'de görülmüş olabilir!"
+    },
+    {
+      "question": "GloVe'un Word2Vec'ten farkı nedir?",
+      "options": [
+        "GloVe supervised, Word2Vec unsupervised",
+        "GloVe global co-occurrence matrix, Word2Vec local context window kullanır",
+        "GloVe daha hızlıdır",
+        "Aynıdır, sadece isim farklı"
+      ],
+      "correct": 1,
+      "explanation": "Word2Vec local context window ile online learning yapar. GloVe önce global co-occurrence matrix oluşturur, sonra matrix factorization yapar. İkisi de unsupervised, performance benzer."
+    },
+    {
+      "question": "Negative sampling neden kullanılır?",
+      "options": [
+        "Model accuracy'sini artırmak için",
+        "Softmax hesabını hızlandırmak için (vocabulary size'dan bağımsız)",
+        "Embeddings'i normalize etmek için",
+        "Overfitting'i önlemek için"
+      ],
+      "correct": 1,
+      "explanation": "Vanilla softmax tüm vocabulary üzerinden hesap yapar (milyonlarca kelime!). Negative sampling her positive sample için sadece k tane (5-20) negative sample alır → çok daha hızlı!"
+    },
+    {
+      "question": "Pre-trained embeddings'i ne zaman freeze etmelisin?",
+      "options": [
+        "Her zaman freeze et",
+        "Hiçbir zaman freeze etme",
+        "Küçük dataset'te freeze et, büyük dataset'te fine-tune et",
+        "Sadece test ederken freeze et"
+      ],
+      "correct": 2,
+      "explanation": "Küçük dataset: Freeze et (pre-trained knowledge'ı koru, overfit olma). Büyük dataset: Fine-tune et (domain-specific patterns öğren). Trade-off: generalization vs specialization."
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Küçük corpus'ta Word2Vec train etmek",
+      "why": "Word2Vec büyük corpus gerektirir (milyonlarca token). Küçük corpus'ta embeddings kalitesiz olur, semantic relationships öğrenilemez.",
+      "fix": "Pre-trained embeddings kullan (GloVe, FastText) veya corpus'u büyüt!",
+      "example": "# YANLIŞ: 100 cümle ile train\ncorpus = [... 100 sentences ...]\nmodel = Word2Vec(corpus)  # Kötü embeddings!\n\n# DOĞRU: Pre-trained kullan\nimport gensim.downloader as api\nglove = api.load('glove-wiki-gigaword-100')"
+    },
+    {
+      "mistake": "OOV (out-of-vocabulary) words'ü ignore etmek",
+      "why": "Word2Vec/GloVe training'de görülmeyen kelimeler için vector üretemez. KeyError hatası verir!",
+      "fix": "FastText kullan (subword n-grams ile OOV handle eder) veya <UNK> token kullan.",
+      "example": "# OOV problem\nword = 'supercalifragilisticexpialidocious'\nif word in model.wv:\n    vector = model.wv[word]\nelse:\n    vector = model.wv['<UNK>']  # Fallback"
+    },
+    {
+      "mistake": "Embeddings'i normalize etmeden cosine similarity hesaplamak",
+      "why": "Cosine similarity vector magnitude'den etkilenir. Normalize edilmemiş vectors'te yanıltıcı olabilir.",
+      "fix": "sklearn.metrics.pairwise.cosine_similarity kullan veya manual normalize et.",
+      "example": "# Manuel cosine similarity\ndef cosine_sim(v1, v2):\n    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))\n\n# Gensim zaten normalize ediyor\nmodel.wv.similarity('cat', 'dog')  # ✓"
+    },
+    {
+      "mistake": "Embedding dimension'ı çok küçük veya çok büyük seçmek",
+      "why": "Çok küçük (10-20): Semantic information kaybı. Çok büyük (1000+): Overfitting, slow training, memory waste.",
+      "fix": "50-300 arası standard. Vocabulary size ve corpus size'a göre ayarla.",
+      "example": "# Typical choices\n# Small corpus: 50-100\n# Medium: 100-200\n# Large (Wikipedia): 200-300\nmodel = Word2Vec(corpus, vector_size=100)"
+    },
+    {
+      "mistake": "Context window size'ı yanlış seçmek",
+      "why": "Çok küçük (1-2): Sadece syntactic patterns. Çok büyük (15+): Noise, unrelated words.",
+      "fix": "5-10 arası optimal. Syntactic için küçük, semantic için biraz daha büyük.",
+      "example": "# Window size\nmodel = Word2Vec(\n    corpus,\n    window=5,  # 5 words left + 5 right\n    sg=1\n)"
+    },
+    {
+      "mistake": "Embedding layer'ı train ederken padding token'ı da train etmek",
+      "why": "<PAD> token'ı meaning taşımaz, train edilirse noise öğrenir.",
+      "fix": "padding_idx parametresi kullan, <PAD> embedding'i frozen kalsın.",
+      "example": "# PyTorch\nembedding = nn.Embedding(\n    num_embeddings=vocab_size,\n    embedding_dim=300,\n    padding_idx=0  # <PAD> at index 0\n)"
+    },
+    {
+      "mistake": "Bias in embeddings'i kontrol etmemek",
+      "why": "Word embeddings training data'daki social bias'ları öğrenir (gender, race, age). Production'da etik problemler yaratabilir!",
+      "fix": "Embedding bias'ını test et, debiasing techniques uygula.",
+      "example": "# Check bias\n# 'doctor' - 'man' + 'woman' = 'nurse' ?\n# Stereotype! Debias or be aware."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Word embeddings nedir?",
+      "back": "Kelimeleri dense, low-dimensional vector'lere map eder (50-300 boyut). Semantic similarity vector space'te cosine similarity ile ölçülür. One-hot encoding'in semantic versiyonu!"
+    },
+    {
+      "front": "Skip-gram vs CBOW?",
+      "back": "Skip-gram: center word → predict context. CBOW: context → predict center. Skip-gram rare words için iyi, CBOW frequent words için hızlı."
+    },
+    {
+      "front": "Negative sampling nedir?",
+      "back": "Softmax hesabını hızlandırır. Her positive sample için k tane (5-20) negative sample al. Vocabulary size'dan bağımsız → çok daha hızlı training!"
+    },
+    {
+      "front": "GloVe nasıl çalışır?",
+      "back": "Global co-occurrence matrix kullanır. Matrix factorization ile word vectors öğrenir. Word2Vec local context, GloVe global statistics."
+    },
+    {
+      "front": "FastText'in avantajı?",
+      "back": "Subword n-grams kullanır. OOV words handle edebilir! Morphology-rich languages (Turkish, German) için ideal. 'running' = n-grams toplamı."
+    },
+    {
+      "front": "Word analogy nasıl çalışır?",
+      "back": "Vector arithmetic: king - man + woman ≈ queen. Semantic relationships vector space'te geometric relationships olarak encode edilir. Linear transformations!"
+    },
+    {
+      "front": "Pre-trained embeddings ne zaman kullanılır?",
+      "back": "Her zaman! Milyarlarca token ile train edilmiş. Transfer learning: fine-tune on your data. GloVe, Word2Vec-GoogleNews, FastText popular."
+    },
+    {
+      "front": "Embedding dimension nasıl seçilir?",
+      "back": "50-300 arası standard. Small corpus: 50-100. Large (Wikipedia): 200-300. Trade-off: expressiveness vs overfitting vs memory."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "Word2Vec Skip-gram Training",
+      "description": "Skip-gram training process'ini interaktif gösterir. Center word seç, context window'u gör, negative sampling'i visualize et.",
+      "component": "Word2VecTraining"
+    },
+    {
+      "type": "plot",
+      "title": "Word Embeddings t-SNE Projection",
+      "description": "300D embeddings'i 2D'ye project et. Semantic clusters'ı görselleştir (animals, countries, verbs).",
+      "component": "EmbeddingTSNE"
+    },
+    {
+      "type": "interactive",
+      "title": "Word Analogy Explorer",
+      "description": "'King - man + woman = ?' gibi analogies'i interaktif dene. Vector arithmetic'i visualize et.",
+      "component": "WordAnalogyExplorer"
+    },
+    {
+      "type": "animation",
+      "title": "FastText Subword N-grams",
+      "description": "FastText'in subword n-grams'ı nasıl kullandığını animate eder. OOV word handling'i gösterir.",
+      "component": "FastTextSubwords"
+    }
+  ]
+}

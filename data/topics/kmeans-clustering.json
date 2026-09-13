@@ -1,0 +1,279 @@
+{
+  "id": "kmeans-clustering",
+  "title": "K-Means Clustering",
+  "category": "unsupervised-learning",
+  "level": 1,
+  "estimatedTime": 45,
+  "description": "K-Means: Unsupervised clustering! Group data into K clusters. Algorithm: (1) Initialize K centroids randomly. (2) Assign each point to nearest centroid. (3) Update centroids (mean of assigned points). (4) Repeat until convergence. Simple, fast, scalable. Hyperparameter: K (number of clusters) - choose via elbow method, silhouette score. Applications: Customer segmentation, image compression, anomaly detection. Limitations: Assumes spherical clusters, sensitive to initialization (use k-means++), needs to specify K beforehand.",
+  "content": {
+    "level0_basic": "K-Means: Group similar data points! Example: Customer segmentation (high/medium/low spenders). Algorithm: (1) Pick K random points as cluster centers. (2) Assign each point to nearest center. (3) Move centers to average of their points. (4) Repeat until stable. Simple! Choose K: Elbow method (plot error vs K, find 'elbow'). Fast: O(n·K·iterations). Works well when clusters are round/spherical. Fails on weird shapes (moons, rings). k-means++: Better initialization (not fully random).",
+    "level1_beginner": "**K-Means Algorithm:**\n\n```\n1. Initialize K centroids (k-means++ or random)\n2. Repeat until convergence:\n   a. Assignment: Each point → nearest centroid\n   b. Update: Move centroid to mean of assigned points\n3. Converged when centroids don't move\n```\n\n**Distance:** Euclidean typically\n**Objective:** Minimize within-cluster sum of squares (WCSS)\n**Initialization:** k-means++ (smart seeding)\n**Choosing K:** Elbow method, silhouette score",
+    "level2_application": "**Scikit-learn:**\n\n```python\nfrom sklearn.cluster import KMeans\nimport matplotlib.pyplot as plt\n\nkmeans = KMeans(n_clusters=3, init='k-means++', random_state=42)\nkmeans.fit(X)\n\nlabels = kmeans.labels_\ncenters = kmeans.cluster_centers_\ninertia = kmeans.inertia_  # WCSS\n\nplt.scatter(X[:, 0], X[:, 1], c=labels)\nplt.scatter(centers[:, 0], centers[:, 1], marker='X', s=200, c='red')\nplt.show()\n```",
+    "level3_advanced": "**Elbow Method:**\n\n```python\ninertias = []\nfor k in range(1, 11):\n    km = KMeans(n_clusters=k, random_state=42)\n    km.fit(X)\n    inertias.append(km.inertia_)\n\nplt.plot(range(1, 11), inertias, marker='o')\nplt.xlabel('K')\nplt.ylabel('Inertia')\nplt.title('Elbow Method')\nplt.show()\n```",
+    "level4_expert": "**Mini-Batch K-Means (Large Scale):**\n\n```python\nfrom sklearn.cluster import MiniBatchKMeans\n\nmbkm = MiniBatchKMeans(n_clusters=100, batch_size=1000)\nmbkm.fit(large_dataset)  # Millions of samples OK\n```"
+  },
+  "whatIsIt": "K-Means: Partitional clustering. Assigns each point to one of K clusters. Minimizes within-cluster sum of squared distances (WCSS). Iterative: Assignment step (Voronoi diagram), update step (centroid = mean). Converges to local minimum. k-means++: Smart initialization reduces bad local minima. Hard clustering (each point one cluster). Soft variant: Fuzzy c-means.",
+  "whyNeeded": "Why clustering: Find natural groups in unlabeled data! Applications: (1) Customer segmentation (marketing). (2) Image compression (color quantization). (3) Document clustering (topic discovery). (4) Anomaly detection (points far from all clusters). (5) Feature engineering (cluster membership as feature). K-Means advantages: Simple, fast O(n·K·i), scales well. Disadvantages: Assumes spherical clusters, sensitive to outliers, needs K beforehand.",
+  "realWorldAnalogy": "K-Means = Friend groups! High school: K groups (jocks, nerds, artists, etc.). Algorithm: (1) Seed: Pick K random 'leaders'. (2) Assignment: Each person joins nearest leader's group. (3) Update: Each group's new 'leader' = average personality of group. (4) Repeat: People might switch groups as leaders change. Converge: Stable groups! Choosing K: Too few (K=2, jocks vs everyone) → oversimplified. Too many (K=50) → overfitted. Elbow: Find natural number of groups. Spherical assumption: Groups are 'round' (similar sizes, shapes). Fails if weird shapes!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Objective: } \\min \\sum_{i=1}^K \\sum_{x \\in C_i} ||x - \\mu_i||^2",
+      "\\text{Centroid: } \\mu_i = \\frac{1}{|C_i|} \\sum_{x \\in C_i} x",
+      "\\text{Assignment: } c_i = \\arg\\min_j ||x_i - \\mu_j||^2"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize K centroids (k-means++ or random)",
+      "2. Repeat until convergence:",
+      "   a. Assign each point to nearest centroid",
+      "   b. Update each centroid to mean of assigned points",
+      "3. Return cluster assignments and centroids"
+    ],
+    "complexity": "O(n·K·i·d) where n=samples, K=clusters, i=iterations (typically <100), d=dimensions. Mini-batch: O(b·K·i·d) where b=batch size. Space: O(n·d + K·d)."
+  },
+  "prerequisites": [],
+  "nextTopics": [
+    "hierarchical-clustering",
+    "dbscan",
+    "gaussian-mixture-models"
+  ],
+  "relatedTopics": [
+    "pca",
+    "dimensionality-reduction"
+  ],
+  "tags": [
+    "kmeans",
+    "clustering",
+    "unsupervised",
+    "segmentation"
+  ],
+  "codeExamples": [
+    {
+      "title": "Basic K-Means",
+      "language": "python",
+      "code": "from sklearn.cluster import KMeans\nimport numpy as np\n\nX = np.random.randn(300, 2)\nkmeans = KMeans(n_clusters=3, random_state=42)\nkmeans.fit(X)\n\nprint(f'Labels: {kmeans.labels_[:10]}')\nprint(f'Centers: {kmeans.cluster_centers_}')\nprint(f'Inertia: {kmeans.inertia_:.2f}')",
+      "level": 1,
+      "explanation": "Basic K-Means code"
+    },
+    {
+      "title": "Elbow Method",
+      "language": "python",
+      "code": "inertias = []\nfor k in range(1, 11):\n    km = KMeans(n_clusters=k)\n    km.fit(X)\n    inertias.append(km.inertia_)\n\nimport matplotlib.pyplot as plt\nplt.plot(range(1, 11), inertias, 'o-')\nplt.xlabel('K')\nplt.ylabel('Inertia')\nplt.title('Elbow Method')\nplt.show()",
+      "level": 2,
+      "explanation": "Elbow Method code"
+    },
+    {
+      "title": "Silhouette Score",
+      "language": "python",
+      "code": "from sklearn.metrics import silhouette_score\n\nfor k in range(2, 11):\n    km = KMeans(n_clusters=k)\n    labels = km.fit_predict(X)\n    score = silhouette_score(X, labels)\n    print(f'K={k}: Silhouette={score:.3f}')",
+      "level": 2,
+      "explanation": "Silhouette Score code"
+    },
+    {
+      "title": "Visualization",
+      "language": "python",
+      "code": "import matplotlib.pyplot as plt\n\nkmeans = KMeans(n_clusters=3)\nlabels = kmeans.fit_predict(X)\ncenters = kmeans.cluster_centers_\n\nplt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.5)\nplt.scatter(centers[:, 0], centers[:, 1], c='red', marker='X', s=200, edgecolors='black')\nplt.title('K-Means Clustering')\nplt.show()",
+      "level": 2,
+      "explanation": "Visualization code"
+    },
+    {
+      "title": "Mini-Batch K-Means",
+      "language": "python",
+      "code": "from sklearn.cluster import MiniBatchKMeans\nimport time\n\n# Large dataset\nX_large = np.random.randn(100000, 50)\n\nstart = time.time()\nmbkm = MiniBatchKMeans(n_clusters=10, batch_size=1000)\nmbkm.fit(X_large)\nprint(f'Mini-batch time: {time.time()-start:.2f}s')\n\nstart = time.time()\nkm = KMeans(n_clusters=10)\nkm.fit(X_large)\nprint(f'Regular time: {time.time()-start:.2f}s')",
+      "level": 3,
+      "explanation": "Mini-Batch K-Means code"
+    },
+    {
+      "title": "Image Compression",
+      "language": "python",
+      "code": "from sklearn.cluster import KMeans\nimport numpy as np\nfrom PIL import Image\n\n# Load image\nimg = Image.open('image.jpg')\nimg_array = np.array(img)\npixels = img_array.reshape(-1, 3)  # Flatten to (n_pixels, 3)\n\n# Cluster colors\nkmeans = KMeans(n_clusters=16)  # 16 colors only\nkmeans.fit(pixels)\n\n# Replace with cluster centers\ncompressed = kmeans.cluster_centers_[kmeans.labels_]\ncompressed_img = compressed.reshape(img_array.shape).astype('uint8')\n\nImage.fromarray(compressed_img).save('compressed.jpg')\nprint('Image compressed from 16M to 16 colors!')",
+      "level": 4,
+      "explanation": "Image Compression code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "K-Means'in amacı nedir?",
+      "options": [
+        "Classification",
+        "Minimize within-cluster sum of squares: Group similar points together!",
+        "Regression",
+        "Dimension reduction"
+      ],
+      "correctAnswer": 1,
+      "explanation": "K-Means objective: Minimize WCSS (within-cluster sum of squared distances). Each point should be close to its cluster centroid. Iteratively improves: Assignment (move points) + Update (move centroids). Converges to local minimum. Unsupervised: No labels needed!"
+    },
+    {
+      "question": "k-means++ neden kullanılır?",
+      "options": [
+        "Faster algorithm",
+        "Better initialization: Spreads initial centroids, avoids bad local minima",
+        "More clusters",
+        "Handles outliers"
+      ],
+      "correctAnswer": 1,
+      "explanation": "k-means++: Smart initialization! Instead of random centroids, spreads them out. Picks first random, then picks next far from existing ones. Result: Better starting point → better final clusters, faster convergence. Sklearn default! Without: Can get stuck in bad local minimum."
+    },
+    {
+      "question": "Elbow method ne işe yarar?",
+      "options": [
+        "Faster clustering",
+        "Find optimal K: Plot inertia vs K, look for 'elbow' point!",
+        "Outlier detection",
+        "Feature selection"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Elbow method: Choose K! Plot inertia (WCSS) vs K. Inertia always decreases with more K. Look for 'elbow': Point where decrease slows. Before elbow: Adding clusters helps a lot. After: Diminishing returns. Not always clear elbow! Alternatives: Silhouette score, domain knowledge."
+    },
+    {
+      "question": "K-Means hangi cluster şekillerinde başarısız?",
+      "options": [
+        "Spherical",
+        "Non-spherical: Moons, rings, elongated shapes!",
+        "Small",
+        "Large"
+      ],
+      "correctAnswer": 1,
+      "explanation": "K-Means assumes: Spherical clusters, similar sizes. Fails on: (1) Non-convex shapes (moons, crescents). (2) Different densities. (3) Elongated clusters. (4) Nested structures (ring inside ring). Why: Uses Euclidean distance, finds circular regions. Alternatives: DBSCAN (density), hierarchical (any shape), GMM (elliptical)."
+    },
+    {
+      "question": "Inertia (WCSS) nedir?",
+      "options": [
+        "Number of iterations",
+        "Sum of squared distances from points to their centroids: Clustering quality!",
+        "Number of clusters",
+        "Outlier count"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Inertia = WCSS = Σ||x - μ_cluster||². Lower = better clustering (points closer to centroids). Always decreases with more K! K=n → inertia=0 (each point its own cluster). Not comparable across datasets. Use: Track convergence, elbow method. Alternative: Silhouette (compares to other clusters)."
+    },
+    {
+      "question": "Mini-Batch K-Means'in avantajı?",
+      "options": [
+        "Better accuracy",
+        "Much faster: Uses random batches, scales to millions of samples!",
+        "Finds optimal K",
+        "Handles non-spherical"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Mini-Batch K-Means: Sample random batch, update centroids, repeat. Much faster! 10-100× speedup on large data. Slight accuracy loss (~1-2%). Essential for: Large datasets (>100k samples), streaming data, online learning. Regular K-Means: Recomputes all distances each iteration → slow. Mini-batch: Stochastic, faster convergence."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "K-Means Algorithm",
+      "back": "1. **Init:** K random centroids\n2. **Assign:** Points → nearest centroid\n3. **Update:** Centroid = mean of points\n4. **Repeat** until stable\n\nSimple! Fast! 🎯"
+    },
+    {
+      "front": "Choosing K",
+      "back": "**Elbow Method:**\nPlot inertia vs K\nFind 'elbow' point\n\n**Silhouette Score:**\nMeasure separation\nHigher = better\n\n**Domain knowledge!** 📊"
+    },
+    {
+      "front": "k-means++",
+      "back": "**Smart initialization:**\nSpread initial centroids\n\n**Benefit:**\nAvoids bad local minima\nFaster convergence\n\n**Sklearn default!** ✅"
+    },
+    {
+      "front": "Inertia (WCSS)",
+      "back": "**Within-Cluster Sum of Squares**\n\nΣ||x - μ||²\n\n**Lower = better**\nAlways decreases with K\n\n**Optimization goal!** 🎯"
+    },
+    {
+      "front": "Limitations",
+      "back": "**Assumes:**\n- Spherical clusters\n- Similar sizes\n- Need to know K\n\n**Fails on:**\nMoons, rings, weird shapes\n\n**Use DBSCAN instead!** ⚠️"
+    },
+    {
+      "front": "Applications",
+      "back": "✓ Customer segmentation\n✓ Image compression\n✓ Anomaly detection\n✓ Document clustering\n✓ Feature engineering\n\nVersatile! 🚀"
+    },
+    {
+      "front": "Mini-Batch",
+      "back": "**For large data:**\nUse random batches\n\n**Speed:**\n10-100× faster!\n\n**Trade-off:**\nSlight accuracy loss\n\n**Scalable!** ⚡"
+    },
+    {
+      "front": "Convergence",
+      "back": "**Stops when:**\nCentroids don't move\n\n**Guaranteed:**\nConverges to local min\n\n**Iterations:**\nTypically 10-100\n\n**Fast!** ✅"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Not scaling features",
+      "why": "K-Means uses Euclidean distance! Different scales → large-scale features dominate clustering.",
+      "fix": "Always StandardScaler before K-Means! Critical for good results. Otherwise: Clustering based on scale, not patterns."
+    },
+    {
+      "mistake": "Using K=1 or random K",
+      "why": "K=1: Everything one cluster (useless). Random K: No validation. Suboptimal clusters.",
+      "fix": "Use elbow method or silhouette score to choose K! Or domain knowledge. Try range (2-10), evaluate quality."
+    },
+    {
+      "mistake": "Single random initialization",
+      "why": "K-Means converges to local minimum! Random init → different results each time. Might be bad local min.",
+      "fix": "Use init='k-means++' (sklearn default) or multiple random initializations (n_init=10). Take best result. More stable!"
+    },
+    {
+      "mistake": "Ignoring convergence",
+      "why": "Default max_iter=300. Large datasets: Might not converge. Bad clusters, wasted computation.",
+      "fix": "Check: kmeans.n_iter_. If equals max_iter: Didn't converge! Increase max_iter or check data quality."
+    },
+    {
+      "mistake": "Using on non-spherical data",
+      "why": "K-Means assumes spherical! Moons, rings, elongated → fails completely. Meaningless clusters.",
+      "fix": "Check data shape first! Non-spherical: Use DBSCAN, hierarchical, or GMM. K-Means: Only when clusters roughly round."
+    },
+    {
+      "mistake": "Not removing outliers",
+      "why": "Outliers pull centroids! Distort clusters. One outlier can ruin entire cluster.",
+      "fix": "Detect and remove outliers first! Or use robust methods (DBSCAN handles outliers). Or increase K to isolate outliers in own cluster."
+    },
+    {
+      "mistake": "Comparing inertia across datasets",
+      "why": "Inertia scale-dependent! Dataset A: inertia=100 'good'. Dataset B: inertia=100 might be bad. Not comparable!",
+      "fix": "Don't compare absolute inertia! Use: (1) Silhouette score (normalized). (2) Within-dataset comparisons (elbow). (3) Domain validation."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "animation",
+      "title": "K-Means Iterations",
+      "description": "Animation: Shows assignment step (points change color), update step (centroids move). Converges to stable clusters. 5-10 iterations typically."
+    },
+    {
+      "type": "metric",
+      "title": "Elbow Method",
+      "description": "Line plot: K (1-10) vs Inertia. Shows decreasing curve, elbow point highlighted. Interactive: Click to see clusters at each K."
+    },
+    {
+      "type": "comparison",
+      "title": "Random Init vs k-means++",
+      "description": "Side-by-side: Same data. Random: Potentially bad clusters. k-means++: Better, more stable. Run multiple times to show variance."
+    },
+    {
+      "type": "interactive",
+      "title": "K-Means on Different Shapes",
+      "description": "Four datasets: Blobs (works), Moons (fails), Rings (fails), Elongated (struggles). Shows K-Means limitations."
+    }
+  ],
+  "references": [
+    {
+      "title": "Some Methods for Classification and Analysis of Multivariate Observations",
+      "authors": "MacQueen",
+      "year": 1967,
+      "link": "https://projecteuclid.org/euclid.bsmsp/1200512992",
+      "type": "paper"
+    },
+    {
+      "title": "k-means++: The Advantages of Careful Seeding",
+      "authors": "Arthur & Vassilvitskii",
+      "year": 2007,
+      "link": "http://ilpubs.stanford.edu:8090/778/",
+      "type": "paper"
+    },
+    {
+      "title": "Scikit-learn Clustering Guide",
+      "authors": "Scikit-learn Team",
+      "year": 2023,
+      "link": "https://scikit-learn.org/stable/modules/clustering.html",
+      "type": "documentation"
+    }
+  ]
+}

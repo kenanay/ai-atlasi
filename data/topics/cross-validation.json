@@ -1,0 +1,246 @@
+{
+  "id": "cross-validation",
+  "title": "Cross-Validation (K-Fold, Stratified, Time Series)",
+  "category": "fundamentals",
+  "level": 1,
+  "estimatedTime": 40,
+  "description": "Model performance'ını güvenilir şekilde değerlendirme. K-Fold, Stratified K-Fold, Leave-One-Out, Time Series CV. Overfitting detection, hyperparameter tuning.",
+  "prerequisites": ["train-test-split", "evaluation-metrics"],
+  "tags": ["cross-validation", "k-fold", "stratified", "evaluation", "overfitting", "model-selection"],
+  "content": {
+    "level0_basic": "Model'ini train et, test et - basit! Ama tek bir split şans eseri iyi/kötü olabilir. Cross-validation çözüm: Data'yı K parçaya böl (örn. 5), 4 parça train 1 parça test, rotate et, 5 kere yap. Her veri parçası hem train hem test olur. Ortalama performance → reliable! K-Fold en yaygın. İmbalanced data → Stratified K-Fold (her fold'ta class balance korunur). Time series → özel CV (future tahmin et, geçmiş kullan).",
+    "level1_beginner": "**Problem: Single Train-Test Split**\n\nTek split şansa bağlı:\n- Lucky split → overoptimistic\n- Unlucky split → pessimistic\n- Variance high, unreliable!\n\n**Solution: Cross-Validation**\n\nMultiple splits, average results → robust estimate!\n\n**K-Fold Cross-Validation:**\n\n**Algorithm:**\n1. Data'yı K equal folds'a böl\n2. For each fold k:\n   - Fold k = test set\n   - Remaining K-1 folds = train set\n   - Train model, evaluate on fold k\n3. Average K scores\n\n**Example: 5-Fold CV**\n```\nIteration 1: [Test][Train][Train][Train][Train]\nIteration 2: [Train][Test][Train][Train][Train]\nIteration 3: [Train][Train][Test][Train][Train]\nIteration 4: [Train][Train][Train][Test][Train]\nIteration 5: [Train][Train][Train][Train][Test]\n```\n\n**Result:**\n$$\\text{CV Score} = \\frac{1}{K}\\sum_{i=1}^{K} \\text{Score}_i$$\n\n**Standard Error:**\n$$SE = \\frac{\\sigma}{\\sqrt{K}}$$\n\nReport: Mean ± SE\n\n**Typical K values:**\n- K=5: Fast, reasonable\n- K=10: More robust, standard\n- K=n (LOOCV): Maximum data use, expensive\n\n**Pros:**\n✓ Every example used for both train and test\n✓ Reliable performance estimate\n✓ Reduced variance\n\n**Cons:**\n❌ K times slower than single split\n❌ Not for very large datasets\n\n**Stratified K-Fold:**\n\nİmbalanced classes için!\n\n**Problem:** Random K-Fold → some folds may have no minority class!\n\n**Solution:** Preserve class distribution in each fold.\n\n**Example:** 100 samples (90 class 0, 10 class 1)\n- Each fold: 9 class 0, 1 class 1\n- Proportions preserved!\n\n**When to use:**\n- Classification with imbalanced classes\n- Small dataset with rare classes\n- Always safer than random K-Fold\n\n**Leave-One-Out CV (LOOCV):**\n\nK = n (every sample is a fold!)\n\n**Pros:**\n✓ Maximum data for training (n-1)\n✓ Deterministic (no randomness)\n✓ Nearly unbiased estimate\n\n**Cons:**\n❌ Very expensive (n iterations!)\n❌ High variance\n❌ Not for large datasets\n\n**Use:** Small datasets (<100 samples)",
+    "level2_application": "**Time Series Cross-Validation:**\n\nSpecial case! Can't shuffle (temporal order matters).\n\n**Forward Chaining (Rolling Origin):**\n\n```\nFold 1: [Train                    ][Test]\nFold 2: [Train                         ][Test]\nFold 3: [Train                              ][Test]\nFold 4: [Train                                   ][Test]\n```\n\n**Rules:**\n- Always train on past\n- Test on future\n- No data leakage!\n\n**Expanding Window:**\nTrain set grows each fold.\n\n**Sliding Window:**\nFixed-size train set, slides forward.\n\n**Blocked CV:**\n\nClustered/grouped data için!\n\n**Example:** Medical data (multiple visits per patient)\n- Can't split patient across train/test\n- Block = all samples from one patient\n- CV by patient, not by sample\n\n**Nested Cross-Validation:**\n\nHyperparameter tuning + model evaluation!\n\n**Structure:**\n```\nOuter loop (5-fold): Model evaluation\n  Inner loop (3-fold): Hyperparameter tuning\n```\n\n**Algorithm:**\n```python\nfor outer_fold in outer_cv:\n    train_data, test_data = split(outer_fold)\n    \n    # Inner CV for hyperparameter tuning\n    best_params = None\n    best_score = -inf\n    \n    for params in param_grid:\n        inner_scores = []\n        for inner_fold in inner_cv:\n            inner_train, inner_val = split(train_data, inner_fold)\n            model = train(inner_train, params)\n            score = evaluate(model, inner_val)\n            inner_scores.append(score)\n        \n        avg_score = mean(inner_scores)\n        if avg_score > best_score:\n            best_score = avg_score\n            best_params = params\n    \n    # Train with best params on full train_data\n    final_model = train(train_data, best_params)\n    outer_score = evaluate(final_model, test_data)\n    outer_scores.append(outer_score)\n\nfinal_performance = mean(outer_scores)\n```\n\n**Why?**\nSingle CV için hyperparameter tuning → optimistic bias!\n\n**Computational Cost:**\nOuter K × Inner K × #param combinations\n\nExample: 5 × 3 × 100 = 1500 model trainings!\n\n**Cross-Validation for:**\n\n**1. Model Evaluation:**\nReliable performance estimate.\n\n**2. Model Selection:**\nCompare algorithms (SVM vs Random Forest).\n\n**3. Hyperparameter Tuning:**\nGrid search, random search.\n\n**4. Feature Selection:**\nWhich features improve performance?\n\n**Best Practices:**\n\n**1. Stratify for classification:**\nAlways use stratified K-fold.\n\n**2. Shuffle before splitting:**\nUnless time series!\n\n**3. Fixed random seed:**\nReproducibility.\n\n**4. Report mean ± std:**\nNot just mean.\n\n**5. Same CV scheme for all models:**\nFair comparison.",
+    "level3_advanced": "**Statistical Significance Testing:**\n\nModel A vs Model B: Is difference significant?\n\n**Paired t-test:**\n\n$$t = \\frac{\\bar{d}}{s_d / \\sqrt{K}}$$\n\n- $\\bar{d}$: Mean difference\n- $s_d$: Std of differences\n- K: Number of folds\n\nCV provides paired samples (same folds)!\n\n**Corrected Resampled t-test:**\n\nStandard t-test underestimates variance (training sets overlap).\n\n**Nadeau & Bengio correction:**\n\n$$t = \\frac{\\bar{d}}{\\sqrt{(\\frac{1}{K} + \\frac{n_{test}}{n_{train}})s_d^2}}$$\n\n**Bootstrap Hypothesis Testing:**\n\nAlternative to t-test:\n\n1. Compute difference: $d = \\text{Score}_A - \\text{Score}_B$\n2. Bootstrap: Resample with replacement\n3. Null distribution: $d$ under $H_0: \\text{Score}_A = \\text{Score}_B$\n4. p-value: Fraction where $|d_{\\text{boot}}| \\geq |d_{\\text{obs}}|$\n\n**Variance Estimation:**\n\nCV variance comes from:\n1. **Data sampling:** Different train/test splits\n2. **Algorithm randomness:** Random init, stochastic optimization\n\n**Total variance:**\n$$\\text{Var}_{\\text{total}} = \\text{Var}_{\\text{data}} + \\mathbb{E}[\\text{Var}_{\\text{algo}}]$$\n\n**Bias-Variance Trade-off:**\n\n- **K small (2-3):** High bias, low variance, fast\n- **K large (10+):** Low bias, high variance, slow\n- **LOOCV:** Lowest bias, highest variance\n\n**Optimal K:** Usually 5 or 10 (empirically)\n\n**Advanced CV Variants:**\n\n**1. Repeated K-Fold:**\n\nRepeat K-fold multiple times with different random splits.\n\n**Example:** 5-fold repeated 10 times = 50 evaluations\n\n**Pro:** More stable estimate\n**Con:** 10× more expensive\n\n**2. Monte Carlo CV:**\n\nRandom train/test splits (not exhaustive like K-fold).\n\n**Algorithm:**\n```python\nfor i in range(n_iterations):\n    train, test = random_split(data, test_size=0.2)\n    score = evaluate(train, test)\n    scores.append(score)\n```\n\n**Pro:** Flexible, can control train/test ratio\n**Con:** Not all samples guaranteed in test\n\n**3. Grouped K-Fold:**\n\nEnsure groups don't appear in both train and test.\n\n**Example:** Medical images from same patient\n- Patient = group\n- All images from patient in same fold\n\n**4. Shuffle Split:**\n\nRandom permutations, multiple train/test splits.\n\nSimilar to Monte Carlo but sklearn implementation.\n\n**Cross-Validation in Production:**\n\n**Problem:** CV for hyperparameter tuning, but final model?\n\n**Options:**\n\n**1. Retrain on full data:**\nUse best hyperparameters, train on all data.\n\n**Pro:** Maximum data\n**Con:** No held-out evaluation\n\n**2. Use one CV fold:**\nDeploy model from one fold.\n\n**Pro:** Evaluated\n**Con:** Less data than full\n\n**3. Ensemble CV models:**\nDeploy all K models, average predictions.\n\n**Pro:** Robust, often better\n**Con:** K× inference cost\n\n**Recommendation:** #1 (retrain on full) most common.",
+    "level4_expert": "**Computational Optimization:**\n\n**Parallel CV:**\n\n```python\nfrom joblib import Parallel, delayed\nfrom sklearn.model_selection import KFold\n\ndef cv_fold(train_idx, test_idx, model, X, y):\n    model.fit(X[train_idx], y[train_idx])\n    return model.score(X[test_idx], y[test_idx])\n\nkf = KFold(n_splits=5)\nscores = Parallel(n_jobs=-1)(\n    delayed(cv_fold)(train, test, clone(model), X, y)\n    for train, test in kf.split(X)\n)\n```\n\n**Cache Intermediate Results:**\n\nNested CV: Cache inner CV results.\n\n**Early Stopping:**\n\nStop training if validation plateau (within CV).\n\n**Approximate CV:**\n\nFor very large datasets:\n- Subsample CV (use subset)\n- Approximate LOO (closed-form for some models)\n\n**Learning Curves:**\n\nCV with varying training set size:\n\n```python\ntrain_sizes = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]\nfor size in train_sizes:\n    scores = cross_val_score(model, X[:int(size*len(X))], y[...])\n    plot(size, mean(scores))\n```\n\nDiagnose:\n- Plateau → more data won't help\n- Still improving → get more data\n- Gap train-test → overfitting\n\n**Stratification Beyond Classification:**\n\n**Regression:** Stratify by binned target.\n\n```python\nfrom sklearn.model_selection import KFold\nimport numpy as np\n\n# Bin continuous target\ny_binned = np.digitize(y, bins=np.percentile(y, [25, 50, 75]))\n\n# Stratified split\nfrom sklearn.model_selection import StratifiedKFold\nskf = StratifiedKFold(n_splits=5)\nfor train, test in skf.split(X, y_binned):\n    # Balanced target distribution in folds\n    pass\n```\n\n**Multi-label Stratification:**\n\nMultiple labels per sample:\n- Iterative stratification\n- Balance all labels simultaneously\n\n**Production Monitoring:**\n\n**CV in Production:**\n- Online learning: Rolling window CV\n- A/B testing: Interleaved CV\n- Model refresh: Periodic CV on new data\n\n**Drift Detection:**\n\nCV scores degrade over time → data drift!\n\n**Alert:** If production score < CV score - 2σ\n\n**Best Practices Summary:**\n\n1. ✓ Always use CV for evaluation\n2. ✓ Stratified K-Fold for classification\n3. ✓ Time-aware CV for time series\n4. ✓ Nested CV for hyperparameter tuning\n5. ✓ Report mean ± std\n6. ✓ Test statistical significance\n7. ✓ Check for data leakage\n8. ✓ Parallelize for speed\n9. ✓ Use learning curves for diagnosis\n10. ✓ Monitor CV vs production gap",
+    "level5_research": "**Research Topics:**\n\n**1. Conformal Prediction:**\nDistribution-free prediction intervals with CV.\n\n**2. Stability Selection:**\nFeature selection with subsampling.\n\n**3. Cross-Validation for Deep Learning:**\nExpensive! Alternatives:\n- Early stopping on validation\n- K-fold for small models\n- Single split for large models\n\n**4. Causal CV:**\nCV for causal inference, avoiding selection bias.\n\n**5. Fairness-Aware CV:**\nStratify by protected attributes, ensure fairness across folds."
+  },
+  "whatIsIt": "Cross-validation multiple train/test splits yapar, average performance hesaplar. K-Fold en yaygın: K parçaya böl, K kere train-test, ortala. Reliable evaluation!",
+  "whyNeeded": "Single split şansa bağlı, unreliable! CV multiple splits ile variance azaltır, robust estimate verir. Model selection, hyperparameter tuning, overfitting detection için şart!",
+  "realWorldAnalogy": "Bir öğrenciyi tek sınavla değerlendirmek yanıltıcı (kötü gün!). 5 sınav yap, ortalamasını al → reliable! CV aynısı: Multiple evaluations, average score.",
+  "mathematics": {
+    "formulas": [
+      "\\text{CV Score} = \\frac{1}{K}\\sum_{i=1}^{K} \\text{Score}_i",
+      "SE = \\frac{\\sigma}{\\sqrt{K}}",
+      "t = \\frac{\\bar{d}}{s_d / \\sqrt{K}}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "K-FOLD CROSS-VALIDATION:",
+      "1. Shuffle data (unless time series)",
+      "2. Split into K equal folds",
+      "3. For each fold k (k=1 to K):",
+      "   a. Use fold k as test set",
+      "   b. Use remaining K-1 folds as train set",
+      "   c. Train model on train set",
+      "   d. Evaluate on test set → score_k",
+      "4. Compute mean: (score_1 + ... + score_K) / K",
+      "5. Compute std: √(Σ(score_i - mean)² / (K-1))",
+      "6. Report: mean ± std"
+    ],
+    "complexity": "K× training cost. K=5 → 5× slower than single split. Parallel: Linear speedup with K cores."
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "K-Fold Cross-Validation Basics",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import KFold, cross_val_score\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.datasets import make_classification\n\nprint(\"=\"*60)\nprint(\"K-FOLD CROSS-VALIDATION\")\nprint(\"=\"*60)\n\n# Generate data\nX, y = make_classification(n_samples=100, n_features=20, \n                          n_informative=15, n_redundant=5,\n                          random_state=42)\n\nprint(f\"\\nDataset: {X.shape[0]} samples, {X.shape[1]} features\")\nprint(f\"Classes: {np.bincount(y)}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"1️⃣  MANUAL K-FOLD\")\nprint(\"=\"*60)\n\n# Manual K-Fold\nkf = KFold(n_splits=5, shuffle=True, random_state=42)\nmodel = LogisticRegression(max_iter=1000, random_state=42)\n\nscores = []\nfold_num = 1\n\nprint(\"\\nTraining 5-Fold CV manually...\\n\")\n\nfor train_idx, test_idx in kf.split(X):\n    # Split data\n    X_train, X_test = X[train_idx], X[test_idx]\n    y_train, y_test = y[train_idx], y[test_idx]\n    \n    # Train\n    model.fit(X_train, y_train)\n    \n    # Evaluate\n    score = model.score(X_test, y_test)\n    scores.append(score)\n    \n    print(f\"Fold {fold_num}:\")\n    print(f\"  Train size: {len(train_idx)}, Test size: {len(test_idx)}\")\n    print(f\"  Accuracy: {score:.4f}\")\n    fold_num += 1\n\n# Results\nmean_score = np.mean(scores)\nstd_score = np.std(scores)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"RESULTS\")\nprint(\"=\"*60)\n\nprint(f\"\\nIndividual fold scores: {[f'{s:.4f}' for s in scores]}\")\nprint(f\"\\nMean accuracy: {mean_score:.4f}\")\nprint(f\"Std deviation: {std_score:.4f}\")\nprint(f\"\\n✓ Report as: {mean_score:.3f} ± {std_score:.3f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  SKLEARN SHORTCUT\")\nprint(\"=\"*60)\n\n# Using cross_val_score (much easier!)\nscores_sklearn = cross_val_score(\n    model, X, y, \n    cv=5,  # 5-fold\n    scoring='accuracy'\n)\n\nprint(f\"\\nUsing cross_val_score():\")\nprint(f\"  Scores: {[f'{s:.4f}' for s in scores_sklearn]}\")\nprint(f\"  Mean: {scores_sklearn.mean():.4f} ± {scores_sklearn.std():.4f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  COMPARING K VALUES\")\nprint(\"=\"*60)\n\nprint(\"\\nEffect of K on CV estimate:\\n\")\n\nk_values = [2, 3, 5, 10, 20]\nresults = {}\n\nfor k in k_values:\n    cv_scores = cross_val_score(model, X, y, cv=k)\n    results[k] = {\n        'mean': cv_scores.mean(),\n        'std': cv_scores.std(),\n        'min': cv_scores.min(),\n        'max': cv_scores.max()\n    }\n    \n    print(f\"K={k:2d}: {cv_scores.mean():.4f} ± {cv_scores.std():.4f} \"\n          f\"(range: [{cv_scores.min():.4f}, {cv_scores.max():.4f}])\")\n\nprint(\"\\n💡 Observations:\")\nprint(\"   • K small (2-3): Faster but higher variance\")\nprint(\"   • K large (10-20): More stable but slower\")\nprint(\"   • K=5 or K=10: Standard choice (good balance)\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Fold scores\nax = axes[0]\nax.bar(range(1, 6), scores, alpha=0.7, edgecolor='black')\nax.axhline(mean_score, color='r', linestyle='--', linewidth=2, \n          label=f'Mean: {mean_score:.4f}')\nax.fill_between(range(0, 7), mean_score - std_score, mean_score + std_score,\n               alpha=0.3, color='red', label='±1 std')\nax.set_xlabel('Fold', fontsize=12)\nax.set_ylabel('Accuracy', fontsize=12)\nax.set_title('5-Fold CV Scores', fontsize=14)\nax.set_xticks(range(1, 6))\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3, axis='y')\n\n# K comparison\nax = axes[1]\nk_vals = list(results.keys())\nmeans = [results[k]['mean'] for k in k_vals]\nstds = [results[k]['std'] for k in k_vals]\n\nax.errorbar(k_vals, means, yerr=stds, marker='o', markersize=8,\n           linewidth=2, capsize=5)\nax.set_xlabel('K (number of folds)', fontsize=12)\nax.set_ylabel('Mean Accuracy', fontsize=12)\nax.set_title('CV Performance vs K', fontsize=14)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n✓ K-Fold CV provides robust performance estimate!\")",
+      "explanation": "K-Fold CV temel implementasyon! Manual loop, sklearn shortcut, K comparison. Mean ± std reporting. Variance vs K relationship."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Stratified K-Fold for Imbalanced Data",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import KFold, StratifiedKFold, cross_val_score\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.datasets import make_classification\nfrom collections import Counter\n\nprint(\"=\"*60)\nprint(\"STRATIFIED K-FOLD FOR IMBALANCED DATA\")\nprint(\"=\"*60)\n\n# Imbalanced dataset\nX, y = make_classification(\n    n_samples=1000, n_features=20,\n    n_informative=15,\n    n_classes=2,\n    weights=[0.9, 0.1],  # 90% class 0, 10% class 1\n    random_state=42\n)\n\nprint(f\"\\nDataset: {X.shape[0]} samples\")\nclass_counts = Counter(y)\nprint(f\"Class distribution:\")\nfor cls, count in class_counts.items():\n    print(f\"  Class {cls}: {count} ({count/len(y)*100:.1f}%)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"1️⃣  REGULAR K-FOLD (BAD FOR IMBALANCED)\")\nprint(\"=\"*60)\n\nkf = KFold(n_splits=5, shuffle=True, random_state=42)\n\nprint(\"\\nClass distribution in each fold:\\n\")\n\nfor fold, (train_idx, test_idx) in enumerate(kf.split(X), 1):\n    y_train, y_test = y[train_idx], y[test_idx]\n    \n    train_dist = Counter(y_train)\n    test_dist = Counter(y_test)\n    \n    print(f\"Fold {fold}:\")\n    print(f\"  Train: Class 0={train_dist[0]:3d} ({train_dist[0]/len(y_train)*100:.1f}%), \"\n          f\"Class 1={train_dist[1]:3d} ({train_dist[1]/len(y_train)*100:.1f}%)\")\n    print(f\"  Test:  Class 0={test_dist[0]:3d} ({test_dist[0]/len(y_test)*100:.1f}%), \"\n          f\"Class 1={test_dist.get(1, 0):3d} ({test_dist.get(1, 0)/len(y_test)*100:.1f}%)\")\n\nprint(\"\\n⚠️  Problem: Test distributions vary! Some folds may have few/no minority class.\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  STRATIFIED K-FOLD (GOOD!)\")\nprint(\"=\"*60)\n\nskf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n\nprint(\"\\nClass distribution in each fold:\\n\")\n\nfor fold, (train_idx, test_idx) in enumerate(skf.split(X, y), 1):\n    y_train, y_test = y[train_idx], y[test_idx]\n    \n    train_dist = Counter(y_train)\n    test_dist = Counter(y_test)\n    \n    print(f\"Fold {fold}:\")\n    print(f\"  Train: Class 0={train_dist[0]:3d} ({train_dist[0]/len(y_train)*100:.1f}%), \"\n          f\"Class 1={train_dist[1]:3d} ({train_dist[1]/len(y_train)*100:.1f}%)\")\n    print(f\"  Test:  Class 0={test_dist[0]:3d} ({test_dist[0]/len(y_test)*100:.1f}%), \"\n          f\"Class 1={test_dist[1]:3d} ({test_dist[1]/len(y_test)*100:.1f}%)\")\n\nprint(\"\\n✓ Consistent! Each fold preserves 90%-10% distribution.\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  PERFORMANCE COMPARISON\")\nprint(\"=\"*60)\n\nmodel = LogisticRegression(max_iter=1000, random_state=42)\n\n# Regular K-Fold\nscores_kfold = cross_val_score(model, X, y, cv=KFold(n_splits=5, shuffle=True, random_state=42))\n\n# Stratified K-Fold\nscores_stratified = cross_val_score(model, X, y, cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42))\n\nprint(f\"\\nRegular K-Fold:\")\nprint(f\"  Scores: {[f'{s:.4f}' for s in scores_kfold]}\")\nprint(f\"  Mean: {scores_kfold.mean():.4f} ± {scores_kfold.std():.4f}\")\nprint(f\"  Variance: {scores_kfold.var():.6f}\")\n\nprint(f\"\\nStratified K-Fold:\")\nprint(f\"  Scores: {[f'{s:.4f}' for s in scores_stratified]}\")\nprint(f\"  Mean: {scores_stratified.mean():.4f} ± {scores_stratified.std():.4f}\")\nprint(f\"  Variance: {scores_stratified.var():.6f} ✓ Lower!\")\n\nprint(\"\\n💡 Stratified K-Fold:\")\nprint(\"   ✓ Lower variance (more stable)\")\nprint(\"   ✓ Each fold representative\")\nprint(\"   ✓ Better for imbalanced data\")\nprint(\"   ✓ Always use for classification!\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\n# Score comparison\nax = axes[0]\nwidth = 0.35\nx_pos = np.arange(5)\n\nax.bar(x_pos - width/2, scores_kfold, width, label='Regular K-Fold', \n      alpha=0.8, edgecolor='black')\nax.bar(x_pos + width/2, scores_stratified, width, label='Stratified K-Fold',\n      alpha=0.8, edgecolor='black')\n\nax.set_xlabel('Fold', fontsize=12)\nax.set_ylabel('Accuracy', fontsize=12)\nax.set_title('K-Fold vs Stratified K-Fold', fontsize=14)\nax.set_xticks(x_pos)\nax.set_xticklabels([f'{i+1}' for i in range(5)])\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3, axis='y')\n\n# Variance comparison\nax = axes[1]\nmethods = ['Regular\\nK-Fold', 'Stratified\\nK-Fold']\nvariances = [scores_kfold.var(), scores_stratified.var()]\ncolors = ['lightcoral', 'lightgreen']\n\nbars = ax.bar(methods, variances, color=colors, edgecolor='black', linewidth=2)\nax.set_ylabel('Variance', fontsize=12)\nax.set_title('Variance Comparison', fontsize=14)\nax.grid(True, alpha=0.3, axis='y')\n\n# Annotate\nfor bar, var in zip(bars, variances):\n    height = bar.get_height()\n    ax.text(bar.get_x() + bar.get_width()/2., height,\n           f'{var:.6f}',\n           ha='center', va='bottom', fontsize=11)\n\nplt.tight_layout()\n\nprint(\"\\n✓ Always use Stratified K-Fold for classification!\")",
+      "explanation": "Stratified K-Fold imbalanced data için! Class distribution her fold'ta preserve edilir. Regular K-Fold ile comparison, variance reduction demonstration."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Time Series Cross-Validation",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import TimeSeriesSplit\nfrom sklearn.linear_model import Ridge\nfrom sklearn.metrics import mean_squared_error\n\nprint(\"=\"*60)\nprint(\"TIME SERIES CROSS-VALIDATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nTime series: CANNOT shuffle!\n  • Temporal order matters\n  • Train on past, test on future\n  • No data leakage!\n\"\"\")\n\n# Generate time series data\nnp.random.seed(42)\nn_samples = 200\ntime = np.arange(n_samples)\n\n# Trend + seasonality + noise\ntrend = 0.02 * time\nseasonality = 10 * np.sin(2 * np.pi * time / 50)\nnoise = np.random.normal(0, 1, n_samples)\ny = trend + seasonality + noise\n\n# Features: lagged values\nX = np.column_stack([\n    np.roll(y, 1),   # t-1\n    np.roll(y, 2),   # t-2\n    np.roll(y, 7),   # t-7 (weekly)\n])\n\n# Remove first few rows (NaN from rolling)\nX = X[10:]\ny = y[10:]\n\nprint(f\"\\nTime series: {len(y)} samples\")\nprint(f\"Features: Lags at t-1, t-2, t-7\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TIME SERIES SPLIT\")\nprint(\"=\"*60)\n\n# TimeSeriesSplit\ntscv = TimeSeriesSplit(n_splits=5)\n\nprint(\"\\nFold structure (train → test):\")\nprint()\n\nfor fold, (train_idx, test_idx) in enumerate(tscv.split(X), 1):\n    print(f\"Fold {fold}:\")\n    print(f\"  Train: [{train_idx[0]:3d}:{train_idx[-1]:3d}] ({len(train_idx):3d} samples)\")\n    print(f\"  Test:  [{test_idx[0]:3d}:{test_idx[-1]:3d}] ({len(test_idx):3d} samples)\")\n    print()\n\nprint(\"💡 Notice:\")\nprint(\"   • Train set grows each fold (expanding window)\")\nprint(\"   • Test set always AFTER train set (no future leakage!)\")\nprint(\"   • No overlap between folds\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TRAIN & EVALUATE\")\nprint(\"=\"*60)\n\nmodel = Ridge(alpha=1.0)\nscores = []\n\nfor fold, (train_idx, test_idx) in enumerate(tscv.split(X), 1):\n    X_train, X_test = X[train_idx], X[test_idx]\n    y_train, y_test = y[train_idx], y[test_idx]\n    \n    # Train\n    model.fit(X_train, y_train)\n    \n    # Predict\n    y_pred = model.predict(X_test)\n    \n    # Evaluate\n    mse = mean_squared_error(y_test, y_pred)\n    scores.append(mse)\n    \n    print(f\"Fold {fold}: MSE = {mse:.4f}\")\n\nprint(f\"\\nMean MSE: {np.mean(scores):.4f} ± {np.std(scores):.4f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"⚠️  WHAT NOT TO DO\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nDON'T:\n  ❌ Shuffle time series data\n  ❌ Use regular K-Fold (random splits)\n  ❌ Use future data in training\n  ❌ Use test data for feature engineering\n\nDO:\n  ✓ Use TimeSeriesSplit\n  ✓ Respect temporal order\n  ✓ Train on past, test on future\n  ✓ Feature engineering on train only\n\"\"\")\n\n# Visualize\nfig, axes = plt.subplots(2, 1, figsize=(14, 10))\n\n# Time series with CV splits\nax = axes[0]\nax.plot(range(len(y)), y, 'k-', linewidth=1, alpha=0.7, label='Time series')\n\ncolors = plt.cm.Set3(np.linspace(0, 1, 5))\nfor fold, (train_idx, test_idx) in enumerate(tscv.split(X)):\n    # Shade train region\n    ax.axvspan(train_idx[0], train_idx[-1], alpha=0.2, \n              color=colors[fold], label=f'Fold {fold+1} train' if fold == 0 else '')\n    # Shade test region  \n    ax.axvspan(test_idx[0], test_idx[-1], alpha=0.4,\n              color=colors[fold])\n    # Mark test start\n    ax.axvline(test_idx[0], color=colors[fold], linestyle='--', linewidth=2)\n\nax.set_xlabel('Time', fontsize=12)\nax.set_ylabel('Value', fontsize=12)\nax.set_title('Time Series Cross-Validation Splits', fontsize=14)\nax.grid(True, alpha=0.3)\nax.legend(fontsize=11)\n\n# Fold scores\nax = axes[1]\nax.bar(range(1, 6), scores, alpha=0.7, edgecolor='black')\nax.axhline(np.mean(scores), color='r', linestyle='--', linewidth=2,\n          label=f'Mean: {np.mean(scores):.4f}')\nax.set_xlabel('Fold', fontsize=12)\nax.set_ylabel('MSE', fontsize=12)\nax.set_title('Performance by Fold', fontsize=14)\nax.set_xticks(range(1, 6))\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3, axis='y')\n\nplt.tight_layout()\n\nprint(\"\\n✓ Time series CV respects temporal order!\")",
+      "explanation": "Time series CV: TimeSeriesSplit, expanding window, no shuffle! Train on past, test on future. Temporal order preservation, no data leakage."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Nested CV for Hyperparameter Tuning",
+      "code": "import numpy as np\nfrom sklearn.model_selection import GridSearchCV, cross_val_score, KFold\nfrom sklearn.svm import SVC\nfrom sklearn.datasets import make_classification\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"NESTED CROSS-VALIDATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nProblem: Hyperparameter tuning on same CV folds → optimistic bias!\n\nSolution: Nested CV\n  • Outer loop: Model evaluation (unbiased)\n  • Inner loop: Hyperparameter tuning\n\"\"\")\n\n# Data\nX, y = make_classification(n_samples=200, n_features=20,\n                          n_informative=15, random_state=42)\n\nprint(f\"\\nDataset: {X.shape[0]} samples, {X.shape[1]} features\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"NON-NESTED CV (WRONG!)\")\nprint(\"=\"*60)\n\nprint(\"\\nDoing hyperparameter tuning with same CV folds...\")\n\n# Hyperparameter grid\nparam_grid = {\n    'C': [0.1, 1, 10, 100],\n    'gamma': ['scale', 'auto', 0.001, 0.01, 0.1]\n}\n\n# Grid search with CV\ngrid_search = GridSearchCV(\n    SVC(random_state=42),\n    param_grid,\n    cv=5,\n    scoring='accuracy',\n    n_jobs=-1\n)\n\ngrid_search.fit(X, y)\n\nprint(f\"\\nBest parameters: {grid_search.best_params_}\")\nprint(f\"Best CV score: {grid_search.best_score_:.4f}\")\nprint(f\"\\n⚠️  This score is OPTIMISTICALLY BIASED!\")\nprint(f\"   (Tuned on same folds we're evaluating on)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"NESTED CV (CORRECT!)\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nStructure:\n  Outer 5-fold: Model evaluation\n    Inner 3-fold: Hyperparameter tuning\n\nTotal: 5 × 3 × 20 = 300 model fits!\n\"\"\")\n\n# Outer CV\nouter_cv = KFold(n_splits=5, shuffle=True, random_state=42)\n# Inner CV  \ninner_cv = KFold(n_splits=3, shuffle=True, random_state=42)\n\nouter_scores = []\nbest_params_per_fold = []\n\nprint(\"\\nRunning nested CV...\\n\")\n\nfor fold, (train_idx, test_idx) in enumerate(outer_cv.split(X), 1):\n    # Split outer fold\n    X_train, X_test = X[train_idx], X[test_idx]\n    y_train, y_test = y[train_idx], y[test_idx]\n    \n    # Inner CV: Hyperparameter tuning on train set only\n    grid_search = GridSearchCV(\n        SVC(random_state=42),\n        param_grid,\n        cv=inner_cv,  # Inner CV!\n        scoring='accuracy',\n        n_jobs=-1\n    )\n    \n    grid_search.fit(X_train, y_train)\n    \n    # Best model from inner CV\n    best_model = grid_search.best_estimator_\n    best_params = grid_search.best_params_\n    best_params_per_fold.append(best_params)\n    \n    # Evaluate on OUTER test set (unseen during tuning!)\n    outer_score = best_model.score(X_test, y_test)\n    outer_scores.append(outer_score)\n    \n    print(f\"Outer Fold {fold}:\")\n    print(f\"  Best params: {best_params}\")\n    print(f\"  Inner CV score: {grid_search.best_score_:.4f}\")\n    print(f\"  Outer test score: {outer_score:.4f}\")\n    print()\n\nprint(\"=\"*60)\nprint(\"FINAL RESULTS\")\nprint(\"=\"*60)\n\nprint(f\"\\nNon-nested CV score: {grid_search.best_score_:.4f} (BIASED!)\")\nprint(f\"Nested CV score: {np.mean(outer_scores):.4f} ± {np.std(outer_scores):.4f} (UNBIASED!)\")\n\nprint(f\"\\nBias: {grid_search.best_score_ - np.mean(outer_scores):.4f}\")\nprint(f\"(Non-nested overestimates by this much!)\")\n\nprint(\"\\n💡 Nested CV:\")\nprint(\"   ✓ Unbiased performance estimate\")\nprint(\"   ✓ Proper hyperparameter tuning\")\nprint(\"   ✓ Prevents optimistic bias\")\nprint(\"   ❌ Expensive (outer × inner × params)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"HYPERPARAMETER STABILITY\")\nprint(\"=\"*60)\n\nprint(\"\\nBest parameters found in each outer fold:\\n\")\n\nfor fold, params in enumerate(best_params_per_fold, 1):\n    print(f\"Fold {fold}: {params}\")\n\n# Check consistency\nC_values = [p['C'] for p in best_params_per_fold]\ngamma_values = [p['gamma'] for p in best_params_per_fold]\n\nprint(f\"\\nC values: {C_values}\")\nprint(f\"Gamma values: {gamma_values}\")\n\nif len(set(C_values)) == 1 and len(set(str(g) for g in gamma_values)) == 1:\n    print(\"\\n✓ Stable! Same parameters across all folds.\")\nelse:\n    print(\"\\n⚠️  Unstable! Different parameters across folds.\")\n    print(\"   → High variance in hyperparameter selection\")\n    print(\"   → May need more data or simpler model\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\n# Score comparison\nax = axes[0]\nax.bar(['Non-nested\\n(Biased)', 'Nested\\n(Unbiased)'],\n      [grid_search.best_score_, np.mean(outer_scores)],\n      color=['lightcoral', 'lightgreen'],\n      edgecolor='black', linewidth=2, alpha=0.7)\nax.set_ylabel('Accuracy', fontsize=12)\nax.set_title('CV Score Comparison', fontsize=14)\nax.grid(True, alpha=0.3, axis='y')\n\n# Outer fold scores\nax = axes[1]\nax.bar(range(1, 6), outer_scores, alpha=0.7, edgecolor='black')\nax.axhline(np.mean(outer_scores), color='r', linestyle='--',\n          linewidth=2, label=f'Mean: {np.mean(outer_scores):.4f}')\nax.set_xlabel('Outer Fold', fontsize=12)\nax.set_ylabel('Accuracy', fontsize=12)\nax.set_title('Nested CV: Outer Fold Scores', fontsize=14)\nax.set_xticks(range(1, 6))\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3, axis='y')\n\nplt.tight_layout()\n\nprint(\"\\n✓ Use nested CV for hyperparameter tuning!\")",
+      "explanation": "Nested CV: Outer loop (evaluation) + Inner loop (hyperparameter tuning). Unbiased estimate! Non-nested CV optimistically biased. Hyperparameter stability check."
+    }
+  ],
+  "quiz": [
+    {
+      "question": "K-Fold CV neden single train-test split'ten better?",
+      "options": [
+        "Daha hızlı",
+        "Multiple splits → variance azaltır, robust estimate",
+        "Her zaman daha yüksek accuracy",
+        "Daha az memory"
+      ],
+      "correct": 1,
+      "explanation": "Single split şansa bağlı, unreliable. K-Fold multiple splits → average performance, variance azaltır, robust estimate! Every sample hem train hem test olur."
+    },
+    {
+      "question": "Stratified K-Fold ne zaman kullanılır?",
+      "options": [
+        "Her zaman",
+        "Imbalanced classification için (class distribution preserve eder)",
+        "Sadece regression",
+        "Sadece large datasets"
+      ],
+      "correct": 1,
+      "explanation": "Stratified K-Fold imbalanced classes için! Her fold'ta class distribution preserve edilir. 90%-10% data → her fold 90%-10%. Always use for classification!"
+    },
+    {
+      "question": "Time series CV'de neden shuffle yapamazsın?",
+      "options": [
+        "Slow olur",
+        "Temporal order bozulur, future leakage → unrealistic evaluation",
+        "Yapabilirsin",
+        "Sadece küçük datasets için problem"
+      ],
+      "correct": 1,
+      "explanation": "Time series: Temporal order matters! Shuffle → future data train'de → data leakage! TimeSeriesSplit kullan: always train on past, test on future."
+    },
+    {
+      "question": "Nested CV neden gerekli (hyperparameter tuning)?",
+      "options": [
+        "Daha hızlı",
+        "Single CV tuning + evaluation → optimistic bias. Nested unbiased!",
+        "Gereksiz",
+        "Sadece deep learning için"
+      ],
+      "correct": 1,
+      "explanation": "Single CV ile hyperparameter tune edersen same folds'ta evaluate → optimistic bias! Nested CV: Outer (evaluation) + Inner (tuning) → unbiased estimate!"
+    },
+    {
+      "question": "K değeri nasıl seçilir?",
+      "options": [
+        "Her zaman K=2",
+        "K=5 veya K=10 standard (bias-variance balance)",
+        "K=n (LOOCV) her zaman best",
+        "Random"
+      ],
+      "correct": 1,
+      "explanation": "K small (2-3): fast, high variance. K large (20+): slow, low variance but high computational cost. K=5 or 10: Standard choice, good balance!"
+    },
+    {
+      "question": "LOOCV (Leave-One-Out) ne zaman kullanılır?",
+      "options": [
+        "Her zaman",
+        "Very small datasets (<100 samples)",
+        "Large datasets",
+        "Production'da"
+      ],
+      "correct": 1,
+      "explanation": "LOOCV: K=n, n iterations! Maximum data use (n-1 train), ama very expensive. Only for small datasets (<100). Large datasets için impractical!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Hyperparameter tuning ile evaluation aynı CV folds'ta",
+      "why": "Optimistic bias! Tuned parameters o folds'a overfit eder, gerçek performance overestimate edilir.",
+      "fix": "Nested CV kullan: Outer loop evaluation, inner loop tuning.",
+      "example": "# YANLIŞ\ngrid = GridSearchCV(model, params, cv=5)\ngrid.fit(X, y)\nprint(grid.best_score_)  # ❌ Biased!\n\n# DOĞRU: Nested CV\nscores = cross_val_score(\n    GridSearchCV(model, params, cv=3),  # Inner\n    X, y, cv=5  # Outer\n)  # ✓ Unbiased"
+    },
+    {
+      "mistake": "Time series data'yı shuffle etmek",
+      "why": "Temporal order bozulur, future data train'de → unrealistic! Data leakage.",
+      "fix": "TimeSeriesSplit kullan, shuffle=False.",
+      "example": "# YANLIŞ\nkf = KFold(n_splits=5, shuffle=True)  # ❌ Time series için!\n\n# DOĞRU\ntscv = TimeSeriesSplit(n_splits=5)  # ✓"
+    },
+    {
+      "mistake": "Classification'da regular K-Fold kullanmak (imbalanced data)",
+      "why": "Some folds minority class yok olabilir, unreliable evaluation!",
+      "fix": "Stratified K-Fold kullan, class balance preserve et.",
+      "example": "# YANLIŞ\nkf = KFold(n_splits=5)  # ❌ Imbalanced için\n\n# DOĞRU\nskf = StratifiedKFold(n_splits=5)  # ✓"
+    },
+    {
+      "mistake": "Sadece mean report etmek, std yazmamak",
+      "why": "Variance önemli! High variance → unreliable estimate.",
+      "fix": "Mean ± std report et.",
+      "example": "# YANLIŞ\nprint(f\"Score: {scores.mean():.3f}\")  # ❌ Incomplete\n\n# DOĞRU\nprint(f\"Score: {scores.mean():.3f} ± {scores.std():.3f}\")  # ✓"
+    },
+    {
+      "mistake": "Data preprocessing CV dışında yapmak",
+      "why": "Test data bilgisi train'e leak olur! Scaling, feature selection hepsi CV içinde olmalı.",
+      "fix": "Pipeline kullan, preprocessing CV içinde.",
+      "example": "# YANLIŞ\nX_scaled = scaler.fit_transform(X)  # ❌ Tüm data!\nscores = cross_val_score(model, X_scaled, y, cv=5)\n\n# DOĞRU\nfrom sklearn.pipeline import Pipeline\npipe = Pipeline([('scaler', scaler), ('model', model)])\nscores = cross_val_score(pipe, X, y, cv=5)  # ✓"
+    },
+    {
+      "mistake": "K çok büyük seçmek (K=n, LOOCV) large datasets'te",
+      "why": "n iterations! Computationally prohibitive, high variance.",
+      "fix": "K=5 or 10 use et, practical ve sufficient.",
+      "example": "# Large dataset (n=10000)\nkf = KFold(n_splits=10000)  # ❌ 10K iterations!\n\n# Better\nkf = KFold(n_splits=10)  # ✓ Reasonable"
+    },
+    {
+      "mistake": "CV scores'u model selection için kullanıp final model train etmemek",
+      "why": "CV evaluation için, final model full data ile train edilmeli!",
+      "fix": "CV ile evaluate et, en iyi model + hyperparameters bul, full data ile retrain.",
+      "example": "# CV ile best model bul\nbest_model = select_best(cv_results)\n\n# Full data ile retrain\nbest_model.fit(X, y)  # ✓\n\n# Deploy this model"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "K-Fold Cross-Validation nedir?",
+      "back": "Data'yı K equal folds'a böl. Her fold sırayla test, diğerleri train. K kere train-test, average performance. Robust estimate, variance azaltır!"
+    },
+    {
+      "front": "Stratified K-Fold ne zaman kullanılır?",
+      "back": "Imbalanced classification için! Her fold'ta class distribution preserve edilir. 90%-10% data → every fold 90%-10%. Always use for classification!"
+    },
+    {
+      "front": "Time Series CV'nin özel rule'u?",
+      "back": "NEVER shuffle! TimeSeriesSplit: Always train on past, test on future. Expanding window. Temporal order preserve et, data leakage önle!"
+    },
+    {
+      "front": "Nested CV neden gerekli?",
+      "back": "Hyperparameter tuning için! Outer loop: evaluation (unbiased), Inner loop: tuning. Single CV ile tuning → optimistic bias. Nested unbiased estimate!"
+    },
+    {
+      "front": "K=5 vs K=10 vs LOOCV?",
+      "back": "K=5: Fast, reasonable. K=10: Standard, more robust. LOOCV (K=n): Max data use, expensive, high variance. Small datasets only! Usually K=5 or 10."
+    },
+    {
+      "front": "CV reporting best practice?",
+      "back": "Mean ± std report et! Variance önemli. High std → unreliable. Example: 0.850 ± 0.032. Never report just mean!"
+    },
+    {
+      "front": "Data preprocessing CV'de nasıl?",
+      "back": "Pipeline içinde! Scaling, feature selection CV içinde olmalı. Dışarıda → data leakage. Pipeline = preprocessing + model, CV'ye ver!"
+    },
+    {
+      "front": "CV sonrası final model?",
+      "back": "CV evaluation için. Best model/hyperparameters bul, FULL data ile retrain! Deployment için full data model kullan. Maximize training data!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "animation",
+      "title": "K-Fold CV Animation",
+      "description": "K-Fold process animation. Each fold rotating as test set, train/test split visualization, score collection, averaging.",
+      "component": "KFoldAnimation"
+    },
+    {
+      "type": "interactive",
+      "title": "Stratified vs Regular K-Fold",
+      "description": "Imbalanced data ile comparison. Class distributions her fold'ta, variance comparison, interactive K selection.",
+      "component": "StratifiedComparison"
+    },
+    {
+      "type": "plot",
+      "title": "Time Series CV Splits",
+      "description": "TimeSeriesSplit visualization. Expanding/sliding windows, train-test boundaries, temporal order preservation.",
+      "component": "TimeSeriesCVViz"
+    },
+    {
+      "type": "interactive",
+      "title": "Nested CV Structure",
+      "description": "Outer-inner loop visualization. Hyperparameter tuning flow, bias demonstration, computational cost.",
+      "component": "NestedCVInteractive"
+    }
+  ]
+}

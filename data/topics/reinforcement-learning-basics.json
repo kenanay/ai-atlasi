@@ -1,0 +1,316 @@
+{
+  "id": "reinforcement-learning-basics",
+  "title": "Reinforcement Learning Basics",
+  "category": "reinforcement-learning",
+  "level": 3,
+  "estimatedTime": 90,
+  "description": "Reinforcement Learning: Agent learns by interaction! Trial and error, rewards and penalties. Core concepts: State, action, reward, policy, value function. Q-Learning: Learn state-action values, Q-table! Deep Q-Network (DQN): Neural network for Q-values, experience replay, target network. Policy Gradients: Directly learn policy (action probabilities). Exploration vs Exploitation: ε-greedy strategy. Markov Decision Process (MDP): Mathematical framework. Applications: Game playing (AlphaGo, Atari), robotics (manipulation, navigation), autonomous driving, recommendation systems. Bellman equation, temporal difference learning, discount factor γ.",
+  "content": {
+    "level0_basic": "Reinforcement Learning (RL): Learn by trial and error! Agent interacts with environment, takes actions, receives rewards/penalties. Goal: Maximize cumulative reward! Like training a dog: Good behavior → treat (reward), bad behavior → no treat (penalty). Core concepts: (1) Agent: Decision maker (player, robot). (2) Environment: World agent interacts with (game, road). (3) State: Current situation (game screen, robot position). (4) Action: What agent can do (move left/right, jump). (5) Reward: Feedback signal (+1 for goal, -1 for death, 0 otherwise). (6) Policy: Strategy (which action in each state). Q-Learning: Learn Q(state, action) = expected future reward. Start random, improve over time! DQN (Deep Q-Network): Neural network predicts Q-values. AlphaGo, Atari games breakthrough! Exploration vs Exploitation: Try new actions (explore) vs use best known action (exploit). ε-greedy: Random action with probability ε, best action otherwise. Applications: Game playing (Chess, Go, Atari), Robotics (grasping, walking), Autonomous vehicles, Resource allocation, Recommendation systems. Different from Supervised Learning: No labeled data! Agent discovers through experience.",
+    "level1_beginner": "**RL Problem Setup:**\n\n```\nAgent-Environment Loop:\n  1. Agent observes state s_t\n  2. Agent takes action a_t\n  3. Environment returns:\n     - New state s_{t+1}\n     - Reward r_t\n  4. Repeat!\n  \n  Goal: Maximize cumulative reward\n        R = r_0 + r_1 + r_2 + ... + r_T\n```\n\n**Example: Grid World**\n\n```\nEnvironment: 4×4 grid\n  S . . G\n  . # . .\n  . . . .\n  . . # .\n  \n  S = Start, G = Goal (+10), # = Hole (-5), . = Empty (0)\n\nAgent Actions: Up, Down, Left, Right\n\nEpisode:\n  State: (0,0) → Action: Right → Reward: 0 → State: (0,1)\n  State: (0,1) → Action: Right → Reward: 0 → State: (0,2)\n  State: (0,2) → Action: Right → Reward: +10 → State: (0,3) GOAL!\n  \n  Total Reward: 0 + 0 + 10 = 10\n```\n\n**Q-Learning Algorithm:**\n\n```\nQ-Table: Store Q(state, action) values\n\n  State  |  Up  | Down | Left | Right\n  -------|------|------|------|-------\n  (0,0)  | 0.0  | 0.0  | 0.0  | 2.5\n  (0,1)  | 0.0  | 0.0  | 1.8  | 5.0\n  (0,2)  | 0.0  | 0.0  | 3.2  | 10.0  ← Best path!\n  \nUpdate Rule:\n  Q(s,a) ← Q(s,a) + α[r + γ max Q(s',a') - Q(s,a)]\n  \n  α = learning rate (0.1)\n  γ = discount factor (0.9)\n  \nExplanation:\n  Current estimate: Q(s,a)\n  New information: r + γ max Q(s',a')\n  Update: Move towards new information\n```\n\n**Exploration vs Exploitation:**\n\n```\nε-greedy Strategy:\n  With probability ε (e.g., 0.1):\n    Choose random action (explore!)\n  \n  With probability 1-ε (0.9):\n    Choose best action from Q-table (exploit!)\n  \nEarly Training:\n  ε = 0.9 (explore 90%)\n  Agent tries many actions, discovers environment\n  \nLate Training:\n  ε = 0.1 (explore 10%)\n  Agent mostly uses learned policy\n  Still explores occasionally (prevent local optima)\n\nε Decay:\n  Start high → gradually decrease\n  ε = ε_start × decay^episode\n```\n\n**Bellman Equation:**\n\n```\nValue Function V(s):\n  Expected cumulative reward from state s\n  \n  V(s) = max_a [R(s,a) + γ Σ P(s'|s,a) V(s')]\n  \n  Intuition:\n    Value of state = \n      Immediate reward + \n      Discounted value of next state\n\nQ-Function:\n  Q(s,a) = R(s,a) + γ Σ P(s'|s,a) max_a' Q(s',a')\n  \n  Value of taking action a in state s\n\nDiscount Factor γ:\n  γ = 0: Only immediate reward (myopic)\n  γ = 0.9: Balance immediate + future\n  γ = 1: All future rewards equal (far-sighted)\n```",
+    "level2_application": "**Q-Learning Implementation:**\n\n```python\nimport numpy as np\nimport random\n\nclass QLearningAgent:\n    def __init__(self, n_states, n_actions, learning_rate=0.1, \n                 discount=0.99, epsilon=1.0, epsilon_decay=0.995):\n        self.n_states = n_states\n        self.n_actions = n_actions\n        self.lr = learning_rate\n        self.gamma = discount\n        self.epsilon = epsilon\n        self.epsilon_decay = epsilon_decay\n        self.epsilon_min = 0.01\n        \n        # Q-table: state × action\n        self.q_table = np.zeros((n_states, n_actions))\n    \n    def get_action(self, state):\n        '''ε-greedy action selection'''\n        if random.random() < self.epsilon:\n            # Explore: random action\n            return random.randint(0, self.n_actions - 1)\n        else:\n            # Exploit: best action\n            return np.argmax(self.q_table[state])\n    \n    def update(self, state, action, reward, next_state, done):\n        '''Q-learning update'''\n        # Current Q-value\n        current_q = self.q_table[state, action]\n        \n        # Target Q-value\n        if done:\n            target_q = reward  # No future rewards\n        else:\n            target_q = reward + self.gamma * np.max(self.q_table[next_state])\n        \n        # Update Q-value\n        self.q_table[state, action] += self.lr * (target_q - current_q)\n    \n    def decay_epsilon(self):\n        '''Decrease exploration over time'''\n        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)\n\n# Training loop\nagent = QLearningAgent(n_states=16, n_actions=4)  # 4×4 grid, 4 actions\n\nfor episode in range(1000):\n    state = env.reset()\n    total_reward = 0\n    done = False\n    \n    while not done:\n        # Choose action\n        action = agent.get_action(state)\n        \n        # Take action\n        next_state, reward, done = env.step(action)\n        \n        # Update Q-table\n        agent.update(state, action, reward, next_state, done)\n        \n        state = next_state\n        total_reward += reward\n    \n    # Decay exploration\n    agent.decay_epsilon()\n    \n    if episode % 100 == 0:\n        print(f\"Episode {episode}: Reward = {total_reward:.2f}, ε = {agent.epsilon:.3f}\")\n\n# Learned policy\nprint(\"\\nLearned Q-table:\")\nprint(agent.q_table)\n```\n\n**Simple Grid World Environment:**\n\n```python\nimport numpy as np\n\nclass GridWorld:\n    def __init__(self, size=4):\n        self.size = size\n        self.n_states = size * size\n        self.n_actions = 4  # Up, Down, Left, Right\n        \n        # Goal and holes\n        self.goal = (0, size-1)  # Top-right\n        self.holes = [(1, 1), (3, 2)]  # Dangerous positions\n        \n        self.reset()\n    \n    def reset(self):\n        '''Start new episode'''\n        self.pos = (0, 0)  # Start position\n        return self._state_to_index(self.pos)\n    \n    def _state_to_index(self, pos):\n        '''Convert (row, col) to state index'''\n        return pos[0] * self.size + pos[1]\n    \n    def step(self, action):\n        '''Take action, return (next_state, reward, done)'''\n        row, col = self.pos\n        \n        # Actions: 0=Up, 1=Down, 2=Left, 3=Right\n        if action == 0:\n            row = max(0, row - 1)\n        elif action == 1:\n            row = min(self.size - 1, row + 1)\n        elif action == 2:\n            col = max(0, col - 1)\n        elif action == 3:\n            col = min(self.size - 1, col + 1)\n        \n        self.pos = (row, col)\n        \n        # Compute reward\n        if self.pos == self.goal:\n            reward = 10.0\n            done = True\n        elif self.pos in self.holes:\n            reward = -5.0\n            done = True\n        else:\n            reward = -0.1  # Small penalty for each step\n            done = False\n        \n        state = self._state_to_index(self.pos)\n        return state, reward, done\n\n# Usage\nenv = GridWorld(size=4)\nstate = env.reset()\nprint(f\"Start state: {state}\")\n\naction = 3  # Right\nnext_state, reward, done = env.step(action)\nprint(f\"Action: Right → State: {next_state}, Reward: {reward}, Done: {done}\")\n```",
+    "level3_advanced": "**Deep Q-Network (DQN):**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nfrom collections import deque\nimport random\n\nclass DQN(nn.Module):\n    '''Deep Q-Network: Neural network for Q-values'''\n    def __init__(self, state_dim, action_dim, hidden_dim=128):\n        super().__init__()\n        \n        self.network = nn.Sequential(\n            nn.Linear(state_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, action_dim)\n        )\n    \n    def forward(self, state):\n        return self.network(state)\n\nclass ReplayBuffer:\n    '''Experience Replay: Store and sample transitions'''\n    def __init__(self, capacity=10000):\n        self.buffer = deque(maxlen=capacity)\n    \n    def push(self, state, action, reward, next_state, done):\n        self.buffer.append((state, action, reward, next_state, done))\n    \n    def sample(self, batch_size):\n        batch = random.sample(self.buffer, batch_size)\n        states, actions, rewards, next_states, dones = zip(*batch)\n        return (\n            torch.FloatTensor(states),\n            torch.LongTensor(actions),\n            torch.FloatTensor(rewards),\n            torch.FloatTensor(next_states),\n            torch.FloatTensor(dones)\n        )\n    \n    def __len__(self):\n        return len(self.buffer)\n\nclass DQNAgent:\n    def __init__(self, state_dim, action_dim):\n        self.action_dim = action_dim\n        \n        # Q-network and target network\n        self.q_network = DQN(state_dim, action_dim)\n        self.target_network = DQN(state_dim, action_dim)\n        self.target_network.load_state_dict(self.q_network.state_dict())\n        \n        self.optimizer = optim.Adam(self.q_network.parameters(), lr=0.001)\n        self.replay_buffer = ReplayBuffer(capacity=10000)\n        \n        self.epsilon = 1.0\n        self.epsilon_decay = 0.995\n        self.epsilon_min = 0.01\n        self.gamma = 0.99\n        self.batch_size = 64\n        self.target_update_freq = 100\n        self.steps = 0\n    \n    def get_action(self, state):\n        '''ε-greedy action selection'''\n        if random.random() < self.epsilon:\n            return random.randint(0, self.action_dim - 1)\n        \n        with torch.no_grad():\n            state_tensor = torch.FloatTensor(state).unsqueeze(0)\n            q_values = self.q_network(state_tensor)\n            return q_values.argmax().item()\n    \n    def train_step(self):\n        '''Sample from replay buffer and update Q-network'''\n        if len(self.replay_buffer) < self.batch_size:\n            return\n        \n        # Sample batch\n        states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)\n        \n        # Current Q-values\n        current_q = self.q_network(states).gather(1, actions.unsqueeze(1))\n        \n        # Target Q-values (from target network!)\n        with torch.no_grad():\n            next_q = self.target_network(next_states).max(1)[0]\n            target_q = rewards + (1 - dones) * self.gamma * next_q\n        \n        # Loss and update\n        loss = nn.MSELoss()(current_q.squeeze(), target_q)\n        \n        self.optimizer.zero_grad()\n        loss.backward()\n        self.optimizer.step()\n        \n        # Update target network periodically\n        self.steps += 1\n        if self.steps % self.target_update_freq == 0:\n            self.target_network.load_state_dict(self.q_network.state_dict())\n        \n        # Decay epsilon\n        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)\n        \n        return loss.item()\n\n# Training\nagent = DQNAgent(state_dim=4, action_dim=2)  # CartPole\n\nfor episode in range(500):\n    state = env.reset()\n    total_reward = 0\n    done = False\n    \n    while not done:\n        # Choose and take action\n        action = agent.get_action(state)\n        next_state, reward, done, _ = env.step(action)\n        \n        # Store transition\n        agent.replay_buffer.push(state, action, reward, next_state, done)\n        \n        # Train\n        loss = agent.train_step()\n        \n        state = next_state\n        total_reward += reward\n    \n    if episode % 50 == 0:\n        print(f\"Episode {episode}: Reward = {total_reward:.2f}, ε = {agent.epsilon:.3f}\")\n```\n\n**Policy Gradient (REINFORCE):**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.distributions import Categorical\n\nclass PolicyNetwork(nn.Module):\n    '''Policy network: Output action probabilities'''\n    def __init__(self, state_dim, action_dim, hidden_dim=128):\n        super().__init__()\n        \n        self.network = nn.Sequential(\n            nn.Linear(state_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, action_dim),\n            nn.Softmax(dim=-1)\n        )\n    \n    def forward(self, state):\n        return self.network(state)\n\nclass REINFORCEAgent:\n    def __init__(self, state_dim, action_dim):\n        self.policy = PolicyNetwork(state_dim, action_dim)\n        self.optimizer = optim.Adam(self.policy.parameters(), lr=0.01)\n        self.gamma = 0.99\n    \n    def get_action(self, state):\n        '''Sample action from policy'''\n        state_tensor = torch.FloatTensor(state)\n        probs = self.policy(state_tensor)\n        dist = Categorical(probs)\n        action = dist.sample()\n        return action.item(), dist.log_prob(action)\n    \n    def train_episode(self, states, actions, rewards, log_probs):\n        '''Update policy using episode'''\n        # Compute returns (discounted cumulative rewards)\n        returns = []\n        G = 0\n        for r in reversed(rewards):\n            G = r + self.gamma * G\n            returns.insert(0, G)\n        \n        returns = torch.FloatTensor(returns)\n        \n        # Normalize returns (helps training)\n        returns = (returns - returns.mean()) / (returns.std() + 1e-8)\n        \n        # Policy gradient loss\n        policy_loss = []\n        for log_prob, G in zip(log_probs, returns):\n            policy_loss.append(-log_prob * G)\n        \n        policy_loss = torch.stack(policy_loss).sum()\n        \n        # Update policy\n        self.optimizer.zero_grad()\n        policy_loss.backward()\n        self.optimizer.step()\n        \n        return policy_loss.item()\n\n# Training\nagent = REINFORCEAgent(state_dim=4, action_dim=2)\n\nfor episode in range(1000):\n    state = env.reset()\n    states, actions, rewards, log_probs = [], [], [], []\n    done = False\n    \n    # Collect episode\n    while not done:\n        action, log_prob = agent.get_action(state)\n        next_state, reward, done, _ = env.step(action)\n        \n        states.append(state)\n        actions.append(action)\n        rewards.append(reward)\n        log_probs.append(log_prob)\n        \n        state = next_state\n    \n    # Train on episode\n    loss = agent.train_episode(states, actions, rewards, log_probs)\n    \n    if episode % 100 == 0:\n        total_reward = sum(rewards)\n        print(f\"Episode {episode}: Reward = {total_reward:.2f}\")\n```",
+    "level4_expert": "**Advanced: Actor-Critic (A2C):**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.distributions import Categorical\n\nclass ActorCritic(nn.Module):\n    '''\n    Actor-Critic: Learn policy AND value function\n    Actor: Policy (what to do)\n    Critic: Value function (how good is state)\n    '''\n    def __init__(self, state_dim, action_dim, hidden_dim=128):\n        super().__init__()\n        \n        # Shared feature extractor\n        self.shared = nn.Sequential(\n            nn.Linear(state_dim, hidden_dim),\n            nn.ReLU()\n        )\n        \n        # Actor: Policy head\n        self.actor = nn.Sequential(\n            nn.Linear(hidden_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, action_dim),\n            nn.Softmax(dim=-1)\n        )\n        \n        # Critic: Value head\n        self.critic = nn.Sequential(\n            nn.Linear(hidden_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, 1)\n        )\n    \n    def forward(self, state):\n        features = self.shared(state)\n        policy = self.actor(features)\n        value = self.critic(features)\n        return policy, value\n\nclass A2CAgent:\n    def __init__(self, state_dim, action_dim):\n        self.model = ActorCritic(state_dim, action_dim)\n        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)\n        self.gamma = 0.99\n    \n    def get_action(self, state):\n        state_tensor = torch.FloatTensor(state)\n        policy, value = self.model(state_tensor)\n        \n        dist = Categorical(policy)\n        action = dist.sample()\n        log_prob = dist.log_prob(action)\n        \n        return action.item(), log_prob, value\n    \n    def train_step(self, log_prob, value, reward, next_value, done):\n        '''\n        Update using TD error (advantage)\n        '''\n        # TD target\n        if done:\n            target = reward\n        else:\n            target = reward + self.gamma * next_value.item()\n        \n        # Advantage\n        advantage = target - value.item()\n        \n        # Actor loss (policy gradient with advantage)\n        actor_loss = -log_prob * advantage\n        \n        # Critic loss (TD error)\n        critic_loss = (target - value) ** 2\n        \n        # Total loss\n        loss = actor_loss + 0.5 * critic_loss\n        \n        # Update\n        self.optimizer.zero_grad()\n        loss.backward()\n        self.optimizer.step()\n        \n        return loss.item()\n\n# Training\nagent = A2CAgent(state_dim=4, action_dim=2)\n\nfor episode in range(500):\n    state = env.reset()\n    total_reward = 0\n    done = False\n    \n    while not done:\n        # Get action and value\n        action, log_prob, value = agent.get_action(state)\n        \n        # Take action\n        next_state, reward, done, _ = env.step(action)\n        \n        # Get next value (for TD)\n        if not done:\n            with torch.no_grad():\n                _, next_value = agent.model(torch.FloatTensor(next_state))\n        else:\n            next_value = torch.tensor(0.0)\n        \n        # Train\n        loss = agent.train_step(log_prob, value, reward, next_value, done)\n        \n        state = next_state\n        total_reward += reward\n    \n    if episode % 50 == 0:\n        print(f\"Episode {episode}: Reward = {total_reward:.2f}\")\n```"
+  },
+  "whatIsIt": "Reinforcement Learning: Agent learns optimal behavior through trial and error! Core: Agent interacts with environment, takes actions, receives rewards. Goal: Maximize cumulative reward. Components: State (situation), action (choice), reward (feedback), policy (strategy). Q-Learning: Learn Q(state, action) = expected future reward, Q-table updated via Bellman equation. DQN: Neural network for Q-values, experience replay (break correlation), target network (stability). Policy Gradient: Directly learn policy (action probabilities), REINFORCE algorithm. Exploration-exploitation: ε-greedy (random vs best action). Discount factor γ: Balance immediate vs future rewards. Applications: Game AI (AlphaGo, Atari), robotics, autonomous vehicles. Different from supervised: No labels, learn from experience!",
+  "whyNeeded": "Supervised learning: Needs labeled data (expensive, not always available!). RL: Learn from interaction, no labels needed! Use cases: (1) Game Playing: AlphaGo defeated world champion (no game tree enumeration!), Atari games human-level. (2) Robotics: Robot learns to walk/grasp through trial (simulation → real world). No need to program every motion! (3) Autonomous Driving: Learn complex decisions (merge, overtake) from experience. (4) Resource Allocation: Data center cooling (Google: 40% energy savings!), network routing. (5) Personalization: Recommendation systems (Netflix, YouTube) learn user preferences. (6) Finance: Trading strategies, portfolio management. Why powerful? Discovers strategies humans might miss! Can handle: Delayed rewards (chess: sacrifice piece for checkmate 10 moves later), Large state spaces (Go: 10^170 states), Continuous adaptation (environment changes).",
+  "realWorldAnalogy": "RL training a dog gibi! Dog (agent), environment (home/park), actions (sit, stay, come), rewards (treats for good behavior, no treat for bad). Initially: Dog random actions tries (exploration). Good action (sit on command) → treat → dog learns association. Over time: Dog optimal strategy learns (policy). Always treat veremezsin → dog occasionally random actions tries (ε-greedy, exploration continues). Q-Learning = Dog mental note takes: 'Sitting in living room when owner says sit = high reward'. Value function learns! DQN = Dog complex situations handles (not just single room). Neural network generalizes! Policy Gradient = Dog directly 'sit' likelihood learns (not value estimation, direct policy). Discount factor = Immediate treat (γ=0) vs future treats matter (γ=1). Dog training: Balance needed!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Return: } G_t = r_t + \\gamma r_{t+1} + \\gamma^2 r_{t+2} + ... = \\sum_{k=0}^\\infty \\gamma^k r_{t+k}",
+      "\\text{Value Function: } V^\\pi(s) = E_\\pi[G_t | s_t = s]",
+      "\\text{Q-Function: } Q^\\pi(s,a) = E_\\pi[G_t | s_t = s, a_t = a]",
+      "\\text{Bellman Equation: } V(s) = \\max_a [R(s,a) + \\gamma \\sum_{s'} P(s'|s,a) V(s')]",
+      "\\text{Q-Learning Update: } Q(s,a) \\leftarrow Q(s,a) + \\alpha[r + \\gamma \\max_{a'} Q(s',a') - Q(s,a)]",
+      "\\text{Policy Gradient: } \\nabla_\\theta J(\\theta) = E_\\pi[\\nabla_\\theta \\log \\pi_\\theta(a|s) G_t]",
+      "\\text{TD Error: } \\delta_t = r_t + \\gamma V(s_{t+1}) - V(s_t)"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Q-Learning:",
+      "1. Initialize Q(s,a) = 0 for all state-action pairs",
+      "2. For each episode:",
+      "  a. Start at initial state s",
+      "  b. While not terminal:",
+      "    i. Choose action a using ε-greedy (explore vs exploit)",
+      "    ii. Take action, observe reward r and next state s'",
+      "    iii. Update: Q(s,a) ← Q(s,a) + α[r + γ max Q(s',a') - Q(s,a)]",
+      "    iv. s ← s'",
+      "  c. Decay ε (reduce exploration over time)",
+      "3. Final policy: π(s) = argmax_a Q(s,a)",
+      "",
+      "DQN: Replace Q-table with neural network, add experience replay + target network"
+    ],
+    "complexity": "Q-Learning: O(|S|×|A|) space for Q-table, O(|A|) per update. DQN: O(network_params) space, O(batch_size × forward_pass) per update. Training episodes: 100s-1000s for simple tasks, millions for complex (Atari). Convergence: Not guaranteed (off-policy, function approximation), requires careful tuning."
+  },
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "optimizers"
+  ],
+  "nextTopics": [
+    "deep-rl-advanced",
+    "multi-agent-rl",
+    "model-based-rl"
+  ],
+  "relatedTopics": [
+    "neural-networks",
+    "optimizers",
+    "gans"
+  ],
+  "tags": [
+    "reinforcement-learning",
+    "q-learning",
+    "dqn",
+    "policy-gradient",
+    "markov-decision-process",
+    "agent",
+    "reward",
+    "exploration",
+    "exploitation",
+    "game-ai"
+  ],
+  "codeExamples": [
+    {
+      "title": "Simple Q-Learning Agent",
+      "language": "python",
+      "code": "import numpy as np\nimport random\n\nclass QLearningAgent:\n    def __init__(self, n_states, n_actions, lr=0.1, gamma=0.99, epsilon=1.0):\n        self.q_table = np.zeros((n_states, n_actions))\n        self.lr = lr  # Learning rate\n        self.gamma = gamma  # Discount factor\n        self.epsilon = epsilon  # Exploration rate\n    \n    def get_action(self, state):\n        # ε-greedy policy\n        if random.random() < self.epsilon:\n            return random.randint(0, self.q_table.shape[1] - 1)\n        return np.argmax(self.q_table[state])\n    \n    def update(self, state, action, reward, next_state, done):\n        # Q-learning update\n        current_q = self.q_table[state, action]\n        \n        if done:\n            target_q = reward\n        else:\n            target_q = reward + self.gamma * np.max(self.q_table[next_state])\n        \n        # Update Q-value\n        self.q_table[state, action] += self.lr * (target_q - current_q)\n    \n    def decay_epsilon(self, decay_rate=0.995):\n        self.epsilon = max(0.01, self.epsilon * decay_rate)\n\n# Example usage\nagent = QLearningAgent(n_states=16, n_actions=4)\n\n# Training loop\nfor episode in range(100):\n    state = 0  # Initial state\n    total_reward = 0\n    \n    for step in range(50):\n        action = agent.get_action(state)\n        # next_state, reward, done = env.step(action)\n        # agent.update(state, action, reward, next_state, done)\n        # state = next_state\n        pass\n    \n    agent.decay_epsilon()\n    print(f\"Episode {episode}: ε = {agent.epsilon:.3f}\")\n\nprint(f\"\\nLearned Q-table shape: {agent.q_table.shape}\")",
+      "level": 0,
+      "explanation": "Simple Q-Learning Agent code"
+    },
+    {
+      "title": "Grid World Environment",
+      "language": "python",
+      "code": "import numpy as np\n\nclass GridWorld:\n    def __init__(self, size=5):\n        self.size = size\n        self.n_states = size * size\n        self.n_actions = 4  # Up, Down, Left, Right\n        \n        # Define goal and obstacles\n        self.goal = (size-1, size-1)\n        self.obstacles = [(1, 1), (2, 2), (3, 1)]\n        \n        self.reset()\n    \n    def reset(self):\n        self.pos = (0, 0)\n        return self._pos_to_state(self.pos)\n    \n    def _pos_to_state(self, pos):\n        return pos[0] * self.size + pos[1]\n    \n    def step(self, action):\n        row, col = self.pos\n        \n        # Move based on action\n        if action == 0:  # Up\n            row = max(0, row - 1)\n        elif action == 1:  # Down\n            row = min(self.size - 1, row + 1)\n        elif action == 2:  # Left\n            col = max(0, col - 1)\n        elif action == 3:  # Right\n            col = min(self.size - 1, col + 1)\n        \n        new_pos = (row, col)\n        \n        # Check if hit obstacle\n        if new_pos in self.obstacles:\n            reward = -10\n            done = False\n            # Stay in same position\n        elif new_pos == self.goal:\n            reward = 100\n            done = True\n            self.pos = new_pos\n        else:\n            reward = -1  # Small penalty for each step\n            done = False\n            self.pos = new_pos\n        \n        return self._pos_to_state(self.pos), reward, done\n    \n    def render(self):\n        grid = np.zeros((self.size, self.size), dtype=str)\n        grid[:] = '.'\n        \n        for obs in self.obstacles:\n            grid[obs] = '#'\n        grid[self.goal] = 'G'\n        grid[self.pos] = 'A'\n        \n        for row in grid:\n            print(' '.join(row))\n        print()\n\n# Test environment\nenv = GridWorld(size=5)\nstate = env.reset()\nenv.render()\n\nfor _ in range(3):\n    action = np.random.randint(4)\n    next_state, reward, done = env.step(action)\n    print(f\"Action: {action}, Reward: {reward}, Done: {done}\")\n    env.render()\n    if done:\n        break",
+      "level": 1,
+      "explanation": "Grid World Environment code"
+    },
+    {
+      "title": "Complete Q-Learning Training",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Grid World + Q-Learning Agent (from previous examples)\n\ndef train_q_learning(env, agent, n_episodes=500):\n    rewards_history = []\n    epsilon_history = []\n    \n    for episode in range(n_episodes):\n        state = env.reset()\n        total_reward = 0\n        done = False\n        \n        while not done:\n            # Choose action\n            action = agent.get_action(state)\n            \n            # Take action\n            next_state, reward, done = env.step(action)\n            \n            # Update Q-table\n            agent.update(state, action, reward, next_state, done)\n            \n            state = next_state\n            total_reward += reward\n        \n        # Decay exploration\n        agent.decay_epsilon()\n        \n        rewards_history.append(total_reward)\n        epsilon_history.append(agent.epsilon)\n        \n        if episode % 100 == 0:\n            avg_reward = np.mean(rewards_history[-100:])\n            print(f\"Episode {episode}: Avg Reward = {avg_reward:.2f}, ε = {agent.epsilon:.3f}\")\n    \n    return rewards_history, epsilon_history\n\n# Train\nenv = GridWorld(size=5)\nagent = QLearningAgent(n_states=25, n_actions=4, lr=0.1, gamma=0.99)\n\nrewards, epsilons = train_q_learning(env, agent, n_episodes=500)\n\n# Plot learning curve\nplt.figure(figsize=(12, 4))\n\nplt.subplot(1, 2, 1)\nplt.plot(rewards)\nplt.xlabel('Episode')\nplt.ylabel('Total Reward')\nplt.title('Learning Curve')\n\nplt.subplot(1, 2, 2)\nplt.plot(epsilons)\nplt.xlabel('Episode')\nplt.ylabel('Epsilon')\nplt.title('Exploration Decay')\n\nplt.tight_layout()\nplt.savefig('q_learning_training.png')\nprint(\"\\nTraining completed!\")",
+      "level": 2,
+      "explanation": "Complete Q-Learning Training code"
+    },
+    {
+      "title": "Deep Q-Network (DQN) with Experience Replay",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom collections import deque\nimport random\nimport numpy as np\n\nclass DQN(nn.Module):\n    def __init__(self, state_dim, action_dim):\n        super().__init__()\n        self.network = nn.Sequential(\n            nn.Linear(state_dim, 128),\n            nn.ReLU(),\n            nn.Linear(128, 128),\n            nn.ReLU(),\n            nn.Linear(128, action_dim)\n        )\n    \n    def forward(self, x):\n        return self.network(x)\n\nclass ReplayBuffer:\n    def __init__(self, capacity=10000):\n        self.buffer = deque(maxlen=capacity)\n    \n    def push(self, state, action, reward, next_state, done):\n        self.buffer.append((state, action, reward, next_state, done))\n    \n    def sample(self, batch_size):\n        batch = random.sample(self.buffer, batch_size)\n        return map(np.array, zip(*batch))\n    \n    def __len__(self):\n        return len(self.buffer)\n\nclass DQNAgent:\n    def __init__(self, state_dim, action_dim):\n        self.q_network = DQN(state_dim, action_dim)\n        self.target_network = DQN(state_dim, action_dim)\n        self.target_network.load_state_dict(self.q_network.state_dict())\n        \n        self.optimizer = optim.Adam(self.q_network.parameters(), lr=0.001)\n        self.replay_buffer = ReplayBuffer()\n        \n        self.epsilon = 1.0\n        self.gamma = 0.99\n        self.batch_size = 64\n    \n    def get_action(self, state, epsilon=None):\n        if epsilon is None:\n            epsilon = self.epsilon\n        \n        if random.random() < epsilon:\n            return random.randint(0, 1)  # Assuming 2 actions\n        \n        with torch.no_grad():\n            state_t = torch.FloatTensor(state).unsqueeze(0)\n            q_values = self.q_network(state_t)\n            return q_values.argmax().item()\n    \n    def train_step(self):\n        if len(self.replay_buffer) < self.batch_size:\n            return None\n        \n        # Sample batch\n        states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)\n        \n        states = torch.FloatTensor(states)\n        actions = torch.LongTensor(actions)\n        rewards = torch.FloatTensor(rewards)\n        next_states = torch.FloatTensor(next_states)\n        dones = torch.FloatTensor(dones)\n        \n        # Current Q values\n        current_q = self.q_network(states).gather(1, actions.unsqueeze(1))\n        \n        # Target Q values (using target network)\n        with torch.no_grad():\n            next_q = self.target_network(next_states).max(1)[0]\n            target_q = rewards + (1 - dones) * self.gamma * next_q\n        \n        # Loss and optimization\n        loss = nn.MSELoss()(current_q.squeeze(), target_q)\n        \n        self.optimizer.zero_grad()\n        loss.backward()\n        self.optimizer.step()\n        \n        return loss.item()\n    \n    def update_target_network(self):\n        self.target_network.load_state_dict(self.q_network.state_dict())\n\nprint(\"DQN Agent created!\")\nprint(\"Key features: Experience replay + Target network for stability\")",
+      "level": 3,
+      "explanation": "Deep Q-Network (DQN) with Experience Replay code"
+    },
+    {
+      "title": "Policy Gradient (REINFORCE)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.distributions import Categorical\n\nclass PolicyNetwork(nn.Module):\n    def __init__(self, state_dim, action_dim):\n        super().__init__()\n        self.network = nn.Sequential(\n            nn.Linear(state_dim, 128),\n            nn.ReLU(),\n            nn.Linear(128, action_dim),\n            nn.Softmax(dim=-1)\n        )\n    \n    def forward(self, x):\n        return self.network(x)\n\nclass REINFORCEAgent:\n    def __init__(self, state_dim, action_dim, lr=0.01):\n        self.policy = PolicyNetwork(state_dim, action_dim)\n        self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)\n        self.gamma = 0.99\n    \n    def get_action(self, state):\n        state = torch.FloatTensor(state)\n        probs = self.policy(state)\n        dist = Categorical(probs)\n        action = dist.sample()\n        return action.item(), dist.log_prob(action)\n    \n    def train_episode(self, log_probs, rewards):\n        # Calculate returns (discounted rewards)\n        returns = []\n        G = 0\n        for r in reversed(rewards):\n            G = r + self.gamma * G\n            returns.insert(0, G)\n        \n        returns = torch.FloatTensor(returns)\n        # Normalize\n        returns = (returns - returns.mean()) / (returns.std() + 1e-8)\n        \n        # Policy gradient\n        policy_loss = []\n        for log_prob, G in zip(log_probs, returns):\n            policy_loss.append(-log_prob * G)\n        \n        policy_loss = torch.stack(policy_loss).sum()\n        \n        # Update\n        self.optimizer.zero_grad()\n        policy_loss.backward()\n        self.optimizer.step()\n        \n        return policy_loss.item()\n\n# Training example\nagent = REINFORCEAgent(state_dim=4, action_dim=2)\n\nfor episode in range(100):\n    # Collect episode\n    log_probs = []\n    rewards = []\n    \n    # state = env.reset()\n    # while not done:\n    #     action, log_prob = agent.get_action(state)\n    #     next_state, reward, done = env.step(action)\n    #     log_probs.append(log_prob)\n    #     rewards.append(reward)\n    #     state = next_state\n    \n    # Train on episode\n    # loss = agent.train_episode(log_probs, rewards)\n    \n    if episode % 10 == 0:\n        print(f\"Episode {episode}\")\n\nprint(\"\\nPolicy Gradient training completed!\")",
+      "level": 3,
+      "explanation": "Policy Gradient (REINFORCE) code"
+    },
+    {
+      "title": "Actor-Critic (A2C) Implementation",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.distributions import Categorical\n\nclass ActorCritic(nn.Module):\n    def __init__(self, state_dim, action_dim):\n        super().__init__()\n        \n        # Shared layers\n        self.shared = nn.Sequential(\n            nn.Linear(state_dim, 128),\n            nn.ReLU()\n        )\n        \n        # Actor (policy)\n        self.actor = nn.Sequential(\n            nn.Linear(128, action_dim),\n            nn.Softmax(dim=-1)\n        )\n        \n        # Critic (value function)\n        self.critic = nn.Linear(128, 1)\n    \n    def forward(self, x):\n        features = self.shared(x)\n        policy = self.actor(features)\n        value = self.critic(features)\n        return policy, value\n\nclass A2CAgent:\n    def __init__(self, state_dim, action_dim, lr=0.001):\n        self.model = ActorCritic(state_dim, action_dim)\n        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)\n        self.gamma = 0.99\n    \n    def get_action(self, state):\n        state = torch.FloatTensor(state)\n        policy, value = self.model(state)\n        \n        dist = Categorical(policy)\n        action = dist.sample()\n        log_prob = dist.log_prob(action)\n        \n        return action.item(), log_prob, value\n    \n    def train_step(self, log_prob, value, reward, next_value, done):\n        # TD target\n        if done:\n            target = reward\n        else:\n            target = reward + self.gamma * next_value.item()\n        \n        # Advantage (TD error)\n        advantage = target - value.item()\n        \n        # Actor loss\n        actor_loss = -log_prob * advantage\n        \n        # Critic loss\n        critic_loss = (target - value) ** 2\n        \n        # Combined loss\n        loss = actor_loss + 0.5 * critic_loss\n        \n        # Update\n        self.optimizer.zero_grad()\n        loss.backward()\n        self.optimizer.step()\n        \n        return loss.item()\n\n# Initialize\nagent = A2CAgent(state_dim=4, action_dim=2)\n\nprint(\"Actor-Critic Agent created!\")\nprint(\"Benefits: Lower variance than REINFORCE, learns value function\")\nprint(\"Actor: What to do (policy)\")\nprint(\"Critic: How good is it (value function)\")",
+      "level": 4,
+      "explanation": "Actor-Critic (A2C) Implementation code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Reinforcement Learning'i supervised learning'den ayıran temel fark nedir?",
+      "options": [
+        "RL daha hızlıdır",
+        "RL labeled data gerektirmez, agent trial-and-error ile learns from rewards/penalties",
+        "RL sadece game playing için kullanılır",
+        "RL daha az data gerektirir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Supervised Learning: Labeled data (input→correct output). Teacher signal! RL: No labels! Agent explores environment, takes actions, receives rewards. Learns optimal behavior through experience. Trial and error! Dog training analogy: No one tells exact action, dog learns from treats (rewards). Key difference: RL discovers behavior, supervised mimics provided examples."
+    },
+    {
+      "question": "Q-Learning'de Q(state, action) ne represent eder?",
+      "options": [
+        "Action'ın probability'si",
+        "Expected cumulative future reward from taking action in state",
+        "Current state'in value'su",
+        "Number of times action taken"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Q(s,a) = Expected future reward starting from state s, taking action a, then following optimal policy. Example: Q(chess_position, 'move_knight') = Expected reward (win/loss) if move knight now, play optimally after. High Q → good action! Agent learns Q-values through Bellman update. Policy: Choose action with highest Q(s,a)."
+    },
+    {
+      "question": "Exploration vs Exploitation trade-off nedir?",
+      "options": [
+        "RL'de speed vs accuracy trade-off",
+        "Try new actions (explore) to discover better strategies vs use best known action (exploit) for immediate reward",
+        "Training vs testing phase",
+        "Online vs offline learning"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Exploration: Try new actions → might discover better strategy! Risk: Temporary lower reward. Exploitation: Use best known action → safe, immediate reward. Risk: Might miss better options! ε-greedy: Random action (ε probability) = explore, best action (1-ε) = exploit. Early training: High ε (explore more), Late training: Low ε (exploit learned policy). Balance critical! Pure exploitation: Stuck at local optimum. Pure exploration: Never uses learned knowledge."
+    },
+    {
+      "question": "DQN (Deep Q-Network)'de experience replay neden kullanılır?",
+      "options": [
+        "Training speed'i artırır sadece",
+        "Break correlation between consecutive samples, improve stability, reuse experiences",
+        "Memory kullanımını azaltır",
+        "Sadece Atari games için gerekli"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Problem: Consecutive experiences highly correlated → neural network instability! Example: Agent in corner → many similar states in sequence → network overfits to current situation. Solution: Experience Replay! Store (s,a,r,s') transitions in buffer. Sample random minibatch for training → breaks correlation! Benefits: (1) Data efficiency (reuse experiences), (2) Stability (decorrelated samples), (3) Better convergence. Critical for DQN success on Atari games!"
+    },
+    {
+      "question": "Discount factor γ (gamma) ne işe yarar?",
+      "options": [
+        "Learning rate'i control eder",
+        "Balance immediate vs future rewards. γ=0 → myopic (only immediate), γ=1 → far-sighted (all future equal)",
+        "Exploration rate'i determine eder",
+        "Network convergence speed'i artırır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "γ (gamma): Discount factor [0,1]. Return = r₀ + γr₁ + γ²r₂ + ... γ=0: Only immediate reward matters (myopic agent). γ=0.5: Future rewards exponentially decay. γ=0.9: Typical, balance immediate + long-term. γ=1: All future rewards equal weight (far-sighted, can diverge!). Chess example: γ=0 → grab pieces immediately. γ=0.99 → sacrifice piece for checkmate 20 moves later. Typical: 0.9-0.99."
+    },
+    {
+      "question": "Policy Gradient methods'un Q-Learning'e göre advantage'ı nedir?",
+      "options": [
+        "Her zaman daha hızlıdır",
+        "Can handle continuous action spaces, learn stochastic policies, better for high-dimensional actions",
+        "Daha az memory kullanır",
+        "Guaranteed convergence"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Q-Learning: Discrete actions only! (Up, Down, Left, Right). Continuous (robot arm angles)? Discretize → loses precision. Policy Gradient: Directly learn policy π(a|s) = probability of action. Benefits: (1) Continuous actions (output probability distribution), (2) Stochastic policies (useful for exploration), (3) High-dimensional actions. Trade-off: Higher variance, slower convergence. Applications: Robotics (continuous control), complex action spaces. Q-Learning: Discrete, deterministic. Policy Gradient: Continuous, stochastic."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "RL Core Concepts",
+      "back": "**Agent:** Decision maker\n\n**Environment:** World agent interacts\n\n**State:** Current situation\n\n**Action:** Agent's choice\n\n**Reward:** Feedback (+/- signal)\n\n**Policy:** Strategy (state→action)\n\nGoal: Maximize cumulative reward! 🎯"
+    },
+    {
+      "front": "Q-Learning Algorithm",
+      "back": "**Q(s,a):** Expected future reward\n\n**Update Rule:**\nQ(s,a) ← Q(s,a) + α[r + γ max Q(s',a') - Q(s,a)]\n\n**Components:**\n- α: Learning rate\n- γ: Discount factor\n- r: Immediate reward\n- max Q(s',a'): Best future Q\n\n**Learn optimal policy from experience!**"
+    },
+    {
+      "front": "ε-greedy Exploration",
+      "back": "**Strategy:** Balance explore vs exploit\n\n**With probability ε:**\nRandom action (explore new options)\n\n**With probability 1-ε:**\nBest action (exploit knowledge)\n\n**Decay:** ε starts high (0.9) → gradually decreases (0.01)\n\nEarly: Explore more\nLate: Exploit learned policy"
+    },
+    {
+      "front": "Deep Q-Network (DQN)",
+      "back": "**Idea:** Neural network for Q-values\n\n**Key Innovations:**\n1. **Experience Replay:** Store transitions, sample randomly\n2. **Target Network:** Separate network for stability\n\n**Benefits:**\n- Handle large state spaces\n- Generalization\n- End-to-end learning\n\n**Breakthrough:** Human-level Atari games! 🎮"
+    },
+    {
+      "front": "Bellman Equation",
+      "back": "**Value Function:**\nV(s) = max_a [R(s,a) + γ Σ P(s'|s,a) V(s')]\n\n**Intuition:**\nValue of state = Immediate reward + Discounted future value\n\n**Q-Function:**\nQ(s,a) = R(s,a) + γ Σ P(s'|s,a) max_a' Q(s',a')\n\n**Foundation of RL algorithms!**"
+    },
+    {
+      "front": "Discount Factor γ",
+      "back": "**Range:** [0, 1]\n\n**γ = 0:** Only immediate reward (myopic)\n\n**γ = 0.9:** Typical, balance immediate + future\n\n**γ = 1:** All future rewards equal (far-sighted)\n\n**Effect on Return:**\nG = r₀ + γr₁ + γ²r₂ + γ³r₃ + ...\n\nHigher γ → More long-term planning! 📈"
+    },
+    {
+      "front": "Policy Gradient",
+      "back": "**Idea:** Directly learn policy π(a|s)\n\n**Update:**\n∇J(θ) = E[∇ log π(a|s) G]\n\n**Gradient ascent:** Increase probability of actions with high return\n\n**Benefits:**\n- Continuous actions\n- Stochastic policies\n- High-dimensional actions\n\n**Algorithm:** REINFORCE, Actor-Critic"
+    },
+    {
+      "front": "RL Applications",
+      "back": "**Game Playing:**\n- AlphaGo (defeated world champion)\n- Atari games (human-level)\n\n**Robotics:**\n- Manipulation, walking, grasping\n\n**Autonomous Vehicles:**\n- Decision making, path planning\n\n**Resource Allocation:**\n- Data centers (Google: -40% energy!)\n\n**Personalization:**\n- Recommendations (Netflix, YouTube)\n\nTrial-and-error learning! 🤖"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Too high learning rate (α > 0.5)",
+      "why": "Q-values oscillate, never converge! Update too aggressive → overshoots optimal values. Especially bad with function approximation (neural networks).",
+      "fix": "Start small: α = 0.1 for Q-Learning, α = 0.001-0.01 for DQN. Decay learning rate over time. Monitor Q-value stability. Too high: Unstable. Too low: Slow learning. Typical: 0.001-0.1 depending on problem."
+    },
+    {
+      "mistake": "Not using experience replay in DQN",
+      "why": "Consecutive experiences highly correlated → neural network catastrophic forgetting! Agent in corner → many similar states → network overfits → forgets previous learning.",
+      "fix": "Always use experience replay for DQN! Store (s,a,r,s') in buffer (10K-1M transitions). Sample random minibatch (32-64) for training. Breaks temporal correlation, improves stability. Critical for deep RL success!"
+    },
+    {
+      "mistake": "Pure exploitation (ε=0) too early",
+      "why": "Agent stuck at local optimum! Learned 'good' path, never discovers 'best' path. Example: Takes safe route (reward +5), never finds shortcut (reward +10).",
+      "fix": "ε-greedy with decay! Start high ε=1.0 (pure exploration), gradually decay to ε=0.01-0.1 (never fully stop exploring). Monitor performance: If plateaus early → increase exploration. Balance: Early exploration (discover) → late exploitation (optimize)."
+    },
+    {
+      "mistake": "Discount factor γ=1 (no discounting)",
+      "why": "Infinite horizon problems → divergence! All future rewards equally important → agent can't decide. Training unstable, Q-values explode. Mathematically: Geometric series without convergence.",
+      "fix": "Use γ < 1 (typically 0.9-0.99). Short episodes: γ=0.9 OK. Long-term planning needed: γ=0.99. Trade-off: Lower γ → myopic (immediate reward), Higher γ → far-sighted (long-term). Never exactly 1 unless episodic with finite horizon!"
+    },
+    {
+      "mistake": "Not updating target network in DQN",
+      "why": "Training instability! Target keeps changing → moving target problem → oscillations. Neural network chases its own predictions → divergence.",
+      "fix": "Use target network: Separate copy of Q-network, update every N steps (100-1000). Or soft update: θ_target ← τθ + (1-τ)θ_target (τ=0.001). Keeps target stable during training. Critical for DQN convergence!"
+    },
+    {
+      "mistake": "Wrong reward design (sparse rewards)",
+      "why": "Agent rarely receives feedback → can't learn! Example: Only reward at goal → agent wanders randomly, never reaches goal, never learns.",
+      "fix": "Reward shaping! Intermediate rewards: Distance to goal decreases → small positive reward. But careful: Don't guide too much (agent exploits shaping, ignores true goal). Alternative: Curriculum learning (start simple → gradually harder). Intrinsic motivation (curiosity-driven exploration)."
+    },
+    {
+      "mistake": "Training on single environment seed",
+      "why": "Overfitting to specific layout/initial conditions! Agent memorizes solution for one configuration, fails on variations. No generalization!",
+      "fix": "Train on multiple environment seeds! Randomize: Initial positions, layouts, obstacles. Test on unseen seeds. Data augmentation for RL! Ensures: Robust policy, generalization, real-world applicability. Critical for deployment!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "algorithm",
+      "title": "Q-Learning Update Process",
+      "description": "Interactive visualization: Agent in grid world, Q-table updates in real-time. Shows exploration (random moves) vs exploitation (best moves), Q-values converging."
+    },
+    {
+      "type": "comparison",
+      "title": "Exploration vs Exploitation Trade-off",
+      "description": "Graph showing ε-greedy strategy: High ε (explore more) → Low ε (exploit learned policy). Performance over time with different ε schedules."
+    },
+    {
+      "type": "architecture",
+      "title": "DQN Architecture with Experience Replay",
+      "description": "Diagram: Neural network (Q-network), replay buffer, target network. Shows how experiences stored and sampled for training."
+    },
+    {
+      "type": "metric",
+      "title": "Discount Factor Effect on Returns",
+      "description": "Interactive: Adjust γ (0 to 1), see how cumulative reward calculation changes. Visualize myopic vs far-sighted behavior."
+    }
+  ],
+  "references": [
+    {
+      "title": "Playing Atari with Deep Reinforcement Learning (DQN)",
+      "authors": "Mnih et al. (DeepMind)",
+      "year": 2013,
+      "link": "https://arxiv.org/abs/1312.5602",
+      "type": "paper"
+    },
+    {
+      "title": "Human-level control through deep reinforcement learning",
+      "authors": "Mnih et al. (DeepMind)",
+      "year": 2015,
+      "link": "https://www.nature.com/articles/nature14236",
+      "type": "paper"
+    },
+    {
+      "title": "Reinforcement Learning: An Introduction",
+      "authors": "Sutton & Barto",
+      "year": 2018,
+      "link": "http://incompleteideas.net/book/the-book-2nd.html",
+      "type": "book"
+    },
+    {
+      "title": "OpenAI Gym",
+      "authors": "OpenAI",
+      "year": 2023,
+      "link": "https://gym.openai.com/",
+      "type": "library"
+    },
+    {
+      "title": "Stable Baselines3: Reliable RL Implementations",
+      "authors": "Raffin et al.",
+      "year": 2021,
+      "link": "https://stable-baselines3.readthedocs.io/",
+      "type": "library"
+    }
+  ]
+}

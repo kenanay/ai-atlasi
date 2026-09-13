@@ -1,0 +1,308 @@
+{
+  "id": "autoencoders-vae",
+  "title": "Autoencoders & Variational Autoencoders (VAE)",
+  "category": "generative-models",
+  "level": 3,
+  "estimatedTime": 75,
+  "description": "Autoencoders: Unsupervised learning, compress and reconstruct data! Encoder (input→latent), Decoder (latent→reconstruction). Bottleneck forces learning meaningful representations. Applications: Dimensionality reduction, denoising, anomaly detection. Variational Autoencoder (VAE): Probabilistic encoder, samples from latent distribution. KL divergence + reconstruction loss. Generate NEW data! Latent space interpolation, disentangled representations. vs GAN: VAE more stable training, explicit likelihood. Architecture: Convolutional for images, fully connected for tabular. Reparameterization trick for backprop through sampling. Applications: Image generation, data compression, feature learning.",
+  "content": {
+    "level0_basic": "Autoencoder: Neural network learns to compress and reconstruct data! Two parts: (1) Encoder: Compresses input to lower-dimensional latent code (bottleneck). Like ZIP file! (2) Decoder: Reconstructs from latent code. Loss: Reconstruction error (input vs output). Unsupervised: No labels needed! Network learns meaningful features automatically. Applications: (1) Dimensionality Reduction: 784D image → 32D code (like PCA but nonlinear!). (2) Denoising: Noisy input → clean output. (3) Anomaly Detection: Normal data reconstructs well, anomalies have high error. (4) Feature Learning: Use encoder as preprocessing for other tasks. Variational Autoencoder (VAE): Probabilistic version! Encoder outputs mean & variance (distribution), sample latent code. KL divergence ensures smooth latent space. Can GENERATE new data by sampling! vs Regular AE: VAE can generate, AE only reconstructs. vs GAN: VAE more stable, explicit likelihood. Applications: Image generation, data augmentation, interpolation between samples. Latent space: Continuous, meaningful (smile, age, pose for faces).",
+    "level1_beginner": "**Autoencoder Architecture:**\n\n```\nInput (784D) → Encoder → Latent (32D) → Decoder → Output (784D)\n                         ↑\n                    Bottleneck!\n                    Forces compression\n\nEncoder:\n  784 → 512 (ReLU) → 256 (ReLU) → 32 (linear)\n  \nDecoder:\n  32 → 256 (ReLU) → 512 (ReLU) → 784 (sigmoid)\n  \nLoss:\n  MSE = ||input - output||²\n  Or Binary Cross-Entropy (for images)\n```\n\n**Why Bottleneck Works:**\n\n```\nNo bottleneck:\n  784 → 784 (identity)\n  Network just copies input → learns nothing!\n\nWith bottleneck (32D):\n  784 → 32 → 784\n  MUST compress → learns important features!\n  \n  What's preserved: Shapes, edges, patterns\n  What's lost: Noise, irrelevant details\n```\n\n**Variational Autoencoder (VAE):**\n\n```\nRegular AE:\n  Encoder → single latent point (deterministic)\n  \nVAE:\n  Encoder → μ (mean) + σ (std) → sample z ~ N(μ, σ²)\n  \n  Probabilistic! Not single point, but distribution.\n\nWhy?\n  Smooth latent space!\n  Can sample → generate NEW data\n  \nExample:\n  Face images:\n    Point A: Happy face\n    Point B: Sad face\n    Interpolate: Gradually changing expression!\n```\n\n**VAE Loss Function:**\n\n```\nTotal Loss = Reconstruction Loss + KL Divergence\n\nReconstruction Loss:\n  How well decoder reconstructs?\n  MSE(input, output)\n  \nKL Divergence:\n  Regularization: Keep latent distribution close to N(0,1)\n  KL(q(z|x) || p(z))\n  \n  Effect: Prevents encoder from cheating!\n  Without KL: Encoder could use any crazy distribution\n  With KL: Forces standard normal → smooth space\n```\n\n**Applications:**\n\n```\n1. Dimensionality Reduction:\n   MNIST (784D) → Latent (2D) → Visualize clusters!\n   Better than PCA (nonlinear)\n\n2. Denoising:\n   Train: Noisy input → clean target\n   Network learns to remove noise\n   \n3. Anomaly Detection:\n   Train on normal data\n   Normal: Low reconstruction error\n   Anomaly: High reconstruction error\n   \n4. Data Generation (VAE):\n   Sample z ~ N(0,1) → Decoder → New image!\n   \n5. Feature Learning:\n   Use encoder as feature extractor\n   Feed to classifier\n```",
+    "level2_application": "**Basic Autoencoder Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass Autoencoder(nn.Module):\n    def __init__(self, input_dim=784, latent_dim=32):\n        super().__init__()\n        \n        # Encoder\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim, 512),\n            nn.ReLU(),\n            nn.Linear(512, 256),\n            nn.ReLU(),\n            nn.Linear(256, latent_dim)\n        )\n        \n        # Decoder\n        self.decoder = nn.Sequential(\n            nn.Linear(latent_dim, 256),\n            nn.ReLU(),\n            nn.Linear(256, 512),\n            nn.ReLU(),\n            nn.Linear(512, input_dim),\n            nn.Sigmoid()  # Output [0,1] for images\n        )\n    \n    def forward(self, x):\n        latent = self.encoder(x)\n        reconstruction = self.decoder(latent)\n        return reconstruction, latent\n\n# Training\nmodel = Autoencoder()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.MSELoss()\n\nfor epoch in range(50):\n    for batch in dataloader:\n        images = batch.view(-1, 784)  # Flatten\n        \n        # Forward\n        reconstructed, latent = model(images)\n        loss = criterion(reconstructed, images)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    \n    print(f\"Epoch {epoch}: Loss = {loss.item():.4f}\")\n\n# Use encoder for dimensionality reduction\nwith torch.no_grad():\n    test_images = test_data.view(-1, 784)\n    _, latent_codes = model(test_images)\n    print(f\"Compressed: {test_images.shape} → {latent_codes.shape}\")\n```\n\n**Convolutional Autoencoder (for images):**\n\n```python\nclass ConvAutoencoder(nn.Module):\n    def __init__(self, latent_dim=128):\n        super().__init__()\n        \n        # Encoder (downsample)\n        self.encoder = nn.Sequential(\n            nn.Conv2d(1, 32, 3, stride=2, padding=1),  # 28→14\n            nn.ReLU(),\n            nn.Conv2d(32, 64, 3, stride=2, padding=1), # 14→7\n            nn.ReLU(),\n            nn.Flatten(),\n            nn.Linear(64 * 7 * 7, latent_dim)\n        )\n        \n        # Decoder (upsample)\n        self.decoder = nn.Sequential(\n            nn.Linear(latent_dim, 64 * 7 * 7),\n            nn.ReLU(),\n            nn.Unflatten(1, (64, 7, 7)),\n            nn.ConvTranspose2d(64, 32, 3, stride=2, padding=1, output_padding=1), # 7→14\n            nn.ReLU(),\n            nn.ConvTranspose2d(32, 1, 3, stride=2, padding=1, output_padding=1),  # 14→28\n            nn.Sigmoid()\n        )\n    \n    def forward(self, x):\n        latent = self.encoder(x)\n        reconstruction = self.decoder(latent)\n        return reconstruction, latent\n\n# Usage\nmodel = ConvAutoencoder(latent_dim=128)\nx = torch.randn(4, 1, 28, 28)  # Batch of 4 MNIST images\nreconstructed, latent = model(x)\nprint(f\"Input: {x.shape}, Latent: {latent.shape}, Output: {reconstructed.shape}\")\n```",
+    "level3_advanced": "**Variational Autoencoder (VAE) Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass VAE(nn.Module):\n    def __init__(self, input_dim=784, latent_dim=20):\n        super().__init__()\n        \n        # Encoder: outputs μ and log(σ²)\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim, 512),\n            nn.ReLU(),\n            nn.Linear(512, 256),\n            nn.ReLU()\n        )\n        \n        self.fc_mu = nn.Linear(256, latent_dim)\n        self.fc_logvar = nn.Linear(256, latent_dim)\n        \n        # Decoder\n        self.decoder = nn.Sequential(\n            nn.Linear(latent_dim, 256),\n            nn.ReLU(),\n            nn.Linear(256, 512),\n            nn.ReLU(),\n            nn.Linear(512, input_dim),\n            nn.Sigmoid()\n        )\n    \n    def encode(self, x):\n        h = self.encoder(x)\n        mu = self.fc_mu(h)\n        logvar = self.fc_logvar(h)\n        return mu, logvar\n    \n    def reparameterize(self, mu, logvar):\n        '''Reparameterization trick: z = μ + σ * ε, ε ~ N(0,1)'''\n        std = torch.exp(0.5 * logvar)\n        eps = torch.randn_like(std)\n        z = mu + eps * std\n        return z\n    \n    def decode(self, z):\n        return self.decoder(z)\n    \n    def forward(self, x):\n        mu, logvar = self.encode(x)\n        z = self.reparameterize(mu, logvar)\n        reconstruction = self.decode(z)\n        return reconstruction, mu, logvar\n\ndef vae_loss(reconstructed, original, mu, logvar):\n    '''VAE loss = Reconstruction + KL divergence'''\n    # Reconstruction loss\n    recon_loss = F.binary_cross_entropy(reconstructed, original, reduction='sum')\n    \n    # KL divergence: KL(q(z|x) || N(0,1))\n    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())\n    \n    return recon_loss + kl_loss\n\n# Training\nmodel = VAE(latent_dim=20)\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\n\nfor epoch in range(50):\n    for batch in dataloader:\n        images = batch.view(-1, 784)\n        \n        # Forward\n        reconstructed, mu, logvar = model(images)\n        loss = vae_loss(reconstructed, images, mu, logvar)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    \n    print(f\"Epoch {epoch}: Loss = {loss.item():.2f}\")\n\n# Generate new samples\nwith torch.no_grad():\n    z = torch.randn(16, 20)  # Sample from N(0,1)\n    generated = model.decode(z)\n    print(f\"Generated {generated.shape[0]} new samples!\")\n```",
+    "level4_expert": "**Advanced: β-VAE for Disentangled Representations:**\n\n```python\nclass BetaVAE(VAE):\n    '''β-VAE: Emphasize disentanglement with β weight on KL'''\n    def __init__(self, input_dim=784, latent_dim=10, beta=4.0):\n        super().__init__(input_dim, latent_dim)\n        self.beta = beta\n\ndef beta_vae_loss(reconstructed, original, mu, logvar, beta=4.0):\n    '''β-VAE loss with adjustable KL weight'''\n    recon_loss = F.binary_cross_entropy(reconstructed, original, reduction='sum')\n    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())\n    \n    # β weight on KL divergence\n    return recon_loss + beta * kl_loss\n```\n\n**Conditional VAE (CVAE):**\n\n```python\nclass ConditionalVAE(nn.Module):\n    '''VAE conditioned on class labels'''\n    def __init__(self, input_dim=784, latent_dim=20, num_classes=10):\n        super().__init__()\n        \n        self.label_embedding = nn.Embedding(num_classes, num_classes)\n        \n        # Encoder (input + label)\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim + num_classes, 512),\n            nn.ReLU(),\n            nn.Linear(512, 256),\n            nn.ReLU()\n        )\n        \n        self.fc_mu = nn.Linear(256, latent_dim)\n        self.fc_logvar = nn.Linear(256, latent_dim)\n        \n        # Decoder (latent + label)\n        self.decoder = nn.Sequential(\n            nn.Linear(latent_dim + num_classes, 256),\n            nn.ReLU(),\n            nn.Linear(256, 512),\n            nn.ReLU(),\n            nn.Linear(512, input_dim),\n            nn.Sigmoid()\n        )\n    \n    def encode(self, x, labels):\n        label_emb = self.label_embedding(labels)\n        x_labeled = torch.cat([x, label_emb], dim=1)\n        h = self.encoder(x_labeled)\n        return self.fc_mu(h), self.fc_logvar(h)\n    \n    def decode(self, z, labels):\n        label_emb = self.label_embedding(labels)\n        z_labeled = torch.cat([z, label_emb], dim=1)\n        return self.decoder(z_labeled)\n    \n    def forward(self, x, labels):\n        mu, logvar = self.encode(x, labels)\n        z = self.reparameterize(mu, logvar)\n        reconstruction = self.decode(z, labels)\n        return reconstruction, mu, logvar\n\n# Generate specific digit\nmodel = ConditionalVAE()\nwith torch.no_grad():\n    z = torch.randn(1, 20)\n    label = torch.LongTensor([7])  # Generate digit 7\n    generated = model.decode(z, label)\n```"
+  },
+  "whatIsIt": "Autoencoder: Unsupervised neural network, learns to compress (encode) and reconstruct (decode) data! Architecture: Input → Encoder → Latent (bottleneck) → Decoder → Output. Loss: Reconstruction error. Forces learning meaningful compressed representation. VAE (Variational Autoencoder): Probabilistic version! Encoder outputs distribution (μ, σ), sample latent code z ~ N(μ,σ²). Loss: Reconstruction + KL divergence. Smooth latent space → can generate NEW data! Reparameterization trick for backprop. Applications: Dimensionality reduction (like PCA but nonlinear), denoising (clean from noisy), anomaly detection (high reconstruction error), feature learning (encoder as preprocessing), data generation (VAE sampling). vs GAN: More stable training, explicit likelihood. Latent space: Continuous, interpolatable, meaningful directions.",
+  "whyNeeded": "Unsupervised learning: No labels needed! Learn from raw data. Use cases: (1) Dimensionality Reduction: 784D MNIST → 2D visualization, better than PCA (nonlinear). (2) Denoising: Medical images (MRI, X-ray) noise removal, old photo restoration. (3) Anomaly Detection: Manufacturing (defect detection), fraud detection (unusual transactions), network intrusion. Normal data reconstructs well, anomalies have high error! (4) Data Compression: Better than JPEG for specific domains. (5) Feature Learning: Pre-training for downstream tasks (classification, clustering). (6) Data Generation (VAE): Augmentation for training, creative applications (art, design). (7) Representation Learning: Disentangled factors (age, gender, pose separately controllable). Why powerful? Learns without labels, discovers latent structure, nonlinear compression, generative capability (VAE). Real impact: Drug discovery (molecule generation), astronomy (galaxy classification), neuroscience (brain data compression).",
+  "realWorldAnalogy": "Autoencoder WhatsApp fotoğraf compression gibi! Original photo (10MB) → Compressed (500KB) → Decompress → Similar photo. Encoder = Compression algorithm (keeps important info, loses details). Decoder = Decompression. Bottleneck = Limited bandwidth, forces smart compression! VAE = Artistic interpretation! Photographer sees scene → Mental image (μ, σ) → Multiple valid photos possible (sampling). Not exact copy, but plausible variation! Latent space = Style knobs: 'Brightness', 'Contrast', 'Saturation'. Smooth adjustment between styles. Denoising AE = Old photo restoration: Scratches, noise → Clean version. Network learned 'what photos should look like'. Anomaly detection = Quality control: Seen 1000 good products → New product very different → Alarm! High reconstruction error = Doesn't match learned patterns.",
+  "mathematics": {
+    "formulas": [
+      "\\text{AE Loss: } L = ||x - \\hat{x}||^2 = ||x - D(E(x))||^2",
+      "\\text{VAE Loss: } L = L_{\\text{recon}} + \\beta \\cdot D_{KL}(q(z|x) || p(z))",
+      "\\text{Reconstruction: } L_{\\text{recon}} = -E_{q(z|x)}[\\log p(x|z)]",
+      "\\text{KL Divergence: } D_{KL} = -\\frac{1}{2}\\sum(1 + \\log\\sigma^2 - \\mu^2 - \\sigma^2)",
+      "\\text{Reparameterization: } z = \\mu + \\sigma \\odot \\epsilon, \\quad \\epsilon \\sim N(0,I)",
+      "\\text{ELBO: } \\log p(x) \\geq E_{q(z|x)}[\\log p(x|z)] - D_{KL}(q(z|x)||p(z))"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Autoencoder:",
+      "1. Forward: x → Encoder → z (latent) → Decoder → x̂ (reconstruction)",
+      "2. Compute loss: ||x - x̂||² (MSE) or BCE",
+      "3. Backprop and update weights",
+      "4. Repeat until convergence",
+      "",
+      "VAE:",
+      "1. Forward: x → Encoder → (μ, log σ²)",
+      "2. Reparameterize: z = μ + σ * ε, ε ~ N(0,1)",
+      "3. Decode: z → Decoder → x̂",
+      "4. Compute VAE loss: Reconstruction + KL divergence",
+      "5. Backprop (gradient through reparameterization)",
+      "6. Generate: Sample z ~ N(0,1) → Decoder → new sample"
+    ],
+    "complexity": "Forward: O(input_dim × hidden_dim + hidden_dim × latent_dim). Training: Similar to standard neural network. VAE: Additional KL computation O(latent_dim). Generation (VAE): O(latent_dim × hidden_dim + hidden_dim × input_dim) per sample."
+  },
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "convolutional-neural-networks"
+  ],
+  "nextTopics": [
+    "vq-vae",
+    "diffusion-models",
+    "flow-based-models"
+  ],
+  "relatedTopics": [
+    "generative-adversarial-networks",
+    "convolutional-neural-networks",
+    "dimensionality-reduction"
+  ],
+  "tags": [
+    "autoencoder",
+    "vae",
+    "variational-autoencoder",
+    "unsupervised-learning",
+    "generative-models",
+    "dimensionality-reduction",
+    "latent-space",
+    "reconstruction",
+    "kl-divergence",
+    "feature-learning"
+  ],
+  "codeExamples": [
+    {
+      "title": "Simple Autoencoder",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass Autoencoder(nn.Module):\n    def __init__(self, input_dim=784, latent_dim=32):\n        super().__init__()\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim, 128),\n            nn.ReLU(),\n            nn.Linear(128, latent_dim)\n        )\n        self.decoder = nn.Sequential(\n            nn.Linear(latent_dim, 128),\n            nn.ReLU(),\n            nn.Linear(128, input_dim),\n            nn.Sigmoid()\n        )\n    \n    def forward(self, x):\n        z = self.encoder(x)\n        return self.decoder(z), z\n\nmodel = Autoencoder()\nx = torch.randn(4, 784)\nrecon, latent = model(x)\nprint(f'Compressed: {x.shape} → {latent.shape} → {recon.shape}')",
+      "level": 0,
+      "explanation": "Simple Autoencoder code"
+    },
+    {
+      "title": "Denoising Autoencoder",
+      "language": "python",
+      "code": "def add_noise(x, noise_factor=0.3):\n    noisy = x + noise_factor * torch.randn_like(x)\n    return torch.clamp(noisy, 0., 1.)\n\nmodel = Autoencoder()\ncriterion = nn.MSELoss()\noptimizer = torch.optim.Adam(model.parameters())\n\nfor epoch in range(10):\n    for clean_images in dataloader:\n        noisy_images = add_noise(clean_images)\n        \n        recon, _ = model(noisy_images.view(-1, 784))\n        loss = criterion(recon, clean_images.view(-1, 784))\n        \n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    print(f'Epoch {epoch}: Loss = {loss.item():.4f}')",
+      "level": 1,
+      "explanation": "Denoising Autoencoder code"
+    },
+    {
+      "title": "Convolutional Autoencoder",
+      "language": "python",
+      "code": "class ConvAE(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.encoder = nn.Sequential(\n            nn.Conv2d(1, 16, 3, stride=2, padding=1),\n            nn.ReLU(),\n            nn.Conv2d(16, 32, 3, stride=2, padding=1),\n            nn.ReLU()\n        )\n        self.decoder = nn.Sequential(\n            nn.ConvTranspose2d(32, 16, 3, stride=2, padding=1, output_padding=1),\n            nn.ReLU(),\n            nn.ConvTranspose2d(16, 1, 3, stride=2, padding=1, output_padding=1),\n            nn.Sigmoid()\n        )\n    \n    def forward(self, x):\n        z = self.encoder(x)\n        return self.decoder(z)\n\nmodel = ConvAE()\nx = torch.randn(4, 1, 28, 28)\nout = model(x)\nprint(f'{x.shape} → {out.shape}')",
+      "level": 2,
+      "explanation": "Convolutional Autoencoder code"
+    },
+    {
+      "title": "VAE Complete Implementation",
+      "language": "python",
+      "code": "class VAE(nn.Module):\n    def __init__(self, latent_dim=20):\n        super().__init__()\n        self.encoder = nn.Sequential(nn.Linear(784, 400), nn.ReLU())\n        self.fc_mu = nn.Linear(400, latent_dim)\n        self.fc_logvar = nn.Linear(400, latent_dim)\n        self.decoder = nn.Sequential(\n            nn.Linear(latent_dim, 400), nn.ReLU(),\n            nn.Linear(400, 784), nn.Sigmoid()\n        )\n    \n    def encode(self, x):\n        h = self.encoder(x)\n        return self.fc_mu(h), self.fc_logvar(h)\n    \n    def reparameterize(self, mu, logvar):\n        std = torch.exp(0.5 * logvar)\n        eps = torch.randn_like(std)\n        return mu + eps * std\n    \n    def forward(self, x):\n        mu, logvar = self.encode(x)\n        z = self.reparameterize(mu, logvar)\n        return self.decoder(z), mu, logvar\n\ndef vae_loss(recon, x, mu, logvar):\n    BCE = F.binary_cross_entropy(recon, x, reduction='sum')\n    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())\n    return BCE + KLD",
+      "level": 3,
+      "explanation": "VAE Complete Implementation code"
+    },
+    {
+      "title": "VAE Image Generation",
+      "language": "python",
+      "code": "model = VAE(latent_dim=20)\nmodel.eval()\n\nwith torch.no_grad():\n    z = torch.randn(16, 20)\n    generated = model.decoder(z)\n    generated = generated.view(-1, 1, 28, 28)\n    print(f'Generated {generated.shape[0]} new images!')\n\n# Interpolation\nz1 = torch.randn(1, 20)\nz2 = torch.randn(1, 20)\nalphas = torch.linspace(0, 1, 10)\ninterpolations = []\nfor alpha in alphas:\n    z_interp = (1 - alpha) * z1 + alpha * z2\n    img = model.decoder(z_interp)\n    interpolations.append(img)\nprint('Smooth interpolation between two samples!')",
+      "level": 3,
+      "explanation": "VAE Image Generation code"
+    },
+    {
+      "title": "Anomaly Detection with Autoencoder",
+      "language": "python",
+      "code": "model = Autoencoder()\n# Train on normal data only\nfor epoch in range(50):\n    for normal_data in train_loader:\n        recon, _ = model(normal_data)\n        loss = F.mse_loss(recon, normal_data)\n        # optimize...\n\n# Test: Compute reconstruction error\ndef detect_anomaly(x, threshold=0.1):\n    model.eval()\n    with torch.no_grad():\n        recon, _ = model(x)\n        error = F.mse_loss(recon, x, reduction='none').mean(dim=1)\n        is_anomaly = error > threshold\n        return is_anomaly, error\n\ntest_data = torch.randn(100, 784)\nanomalies, errors = detect_anomaly(test_data)\nprint(f'Found {anomalies.sum()} anomalies')",
+      "level": 4,
+      "explanation": "Anomaly Detection with Autoencoder code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Autoencoder'da bottleneck (latent layer) neden critical?",
+      "options": [
+        "Training speed artırır",
+        "Forces compression → learns meaningful features! Too large → identity mapping",
+        "Memory kullanımını azaltır",
+        "Sadece görsel amaçlı"
+      ],
+      "correctAnswer": 1,
+      "explanation": "No bottleneck: Network can just copy input (784→784). Learns nothing! With bottleneck (784→32→784): MUST compress. Forced to learn important patterns, features. Like ZIP: Can't store everything, picks what matters! Too small: Information loss. Too large: No compression, learns identity. Sweet spot: Preserves important info, discards noise."
+    },
+    {
+      "question": "VAE'nin regular autoencoder'dan farkı nedir?",
+      "options": [
+        "Daha hızlı training",
+        "Probabilistic: Encoder outputs distribution (μ,σ), can generate NEW data via sampling",
+        "Daha iyi reconstruction",
+        "Sadece image için çalışır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Regular AE: Deterministic encoding (single point). Can only reconstruct. VAE: Probabilistic! Encoder → (μ, σ) → sample z ~ N(μ,σ²). Benefits: (1) Smooth latent space (interpolation), (2) Generate new data (sample z ~ N(0,1)), (3) Uncertainty modeling. KL divergence regularizes latent space. Use case: AE for compression, VAE for generation!"
+    },
+    {
+      "question": "VAE loss function'da KL divergence ne işe yarar?",
+      "options": [
+        "Reconstruction quality artırır",
+        "Regularization: Keeps latent distribution close to N(0,1), ensures smooth latent space",
+        "Training speed artırır",
+        "Overfitting'i tamamen önler"
+      ],
+      "correctAnswer": 1,
+      "explanation": "KL(q(z|x) || p(z)): Regularizer! Without KL: Encoder could use any crazy distribution → disconnected latent space → can't sample/interpolate. With KL: Forces q(z|x) ≈ N(0,1) → smooth, continuous latent space. Trade-off: Too much KL → posterior collapse (ignores input). β-VAE: Adjustable KL weight. Enables: Sampling, interpolation, disentanglement."
+    },
+    {
+      "question": "Reparameterization trick neden gerekli?",
+      "options": [
+        "Training speed artırır",
+        "Allows backprop through stochastic sampling: z = μ + σε, ε~N(0,1)",
+        "Memory optimize eder",
+        "Sadece VAE için değil, tüm models için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Problem: Sampling z ~ N(μ,σ²) non-differentiable! Can't backprop through random sampling. Solution: z = μ + σ * ε where ε ~ N(0,1). Now: Gradient flows through μ and σ! Stochasticity in ε (no gradient needed). Enables: Training VAE with backprop. Without trick: Can't train VAE! Critical innovation for VAE."
+    },
+    {
+      "question": "Denoising autoencoder nasıl çalışır?",
+      "options": [
+        "Sadece clean data kullanır",
+        "Train: Noisy input → Clean target. Network learns to remove noise, robust features",
+        "Input'a hiç noise eklenmez",
+        "Sadece audio için kullanılır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Training: x_clean → add_noise() → x_noisy. Model: x_noisy → Encoder → Decoder → x̂_clean. Loss: ||x_clean - x̂_clean||². Network learns: What's noise (remove), what's signal (keep). Benefits: (1) Robust features, (2) Better generalization, (3) Denoising capability. Applications: Image restoration, audio enhancement, sensor data cleaning. Regular AE: input=target. Denoising AE: noisy input, clean target."
+    },
+    {
+      "question": "Autoencoder'ın anomaly detection için kullanımı?",
+      "options": [
+        "Her data type için aynı threshold",
+        "Train on normal data. Anomalies have HIGH reconstruction error (model hasn't seen pattern)",
+        "Sadece supervised anomaly detection",
+        "Labels gereklidir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Idea: Train autoencoder on NORMAL data only. Model learns: What normal looks like. Normal data: Low reconstruction error (model knows pattern). Anomaly: High reconstruction error (unfamiliar pattern!). Threshold: error > τ → anomaly. Applications: Manufacturing defects, fraud detection, network intrusion. Unsupervised! No anomaly labels needed. One-class learning: Model normal, detect deviations."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Autoencoder Architecture",
+      "back": "Input → **Encoder** (compress) → **Latent** (bottleneck) → **Decoder** (reconstruct) → Output\n\nLoss: ||input - output||²\n\nBottleneck forces learning!\n\nApplications: Dimensionality reduction, denoising, anomaly detection"
+    },
+    {
+      "front": "VAE vs Autoencoder",
+      "back": "**AE:** Deterministic, single latent point\n\n**VAE:** Probabilistic!\n- Encoder → (μ, σ)\n- Sample: z ~ N(μ, σ²)\n- Smooth latent space\n- Can GENERATE new data\n\nVAE Loss: Reconstruction + KL"
+    },
+    {
+      "front": "VAE Loss Function",
+      "back": "Total = Reconstruction + KL\n\n**Reconstruction:** How well reconstructs?\nBCE or MSE\n\n**KL Divergence:** Regularizer\nKeep q(z|x) ≈ N(0,1)\n\nSmooth latent space! 🎯"
+    },
+    {
+      "front": "Reparameterization Trick",
+      "back": "**Problem:** Can't backprop through sampling\n\n**Solution:** z = μ + σ * ε\nwhere ε ~ N(0,1)\n\n**Benefit:** Gradient flows through μ, σ\n\nEnables VAE training! 🎓"
+    },
+    {
+      "front": "Denoising Autoencoder",
+      "back": "**Training:** Noisy input → Clean target\n\n**Effect:**\n- Learns to remove noise\n- Robust features\n- Better generalization\n\nApplications: Image/audio restoration 🔧"
+    },
+    {
+      "front": "Anomaly Detection",
+      "back": "**Train:** Normal data only\n\n**Test:** Reconstruction error\n\nNormal: Low error ✓\nAnomaly: High error ⚠️\n\nThreshold-based detection!\n\nUnsupervised approach 🎯"
+    },
+    {
+      "front": "Latent Space Properties",
+      "back": "**Good latent space:**\n- Continuous\n- Smooth\n- Interpolatable\n- Disentangled (VAE)\n\n**Enables:**\n- Interpolation\n- Arithmetic (face + smile)\n- Controlled generation"
+    },
+    {
+      "front": "AE Applications",
+      "back": "1. **Dimensionality Reduction**\n2. **Denoising**\n3. **Anomaly Detection**\n4. **Feature Learning**\n5. **Data Generation** (VAE)\n6. **Compression**\n7. **Pre-training**\n\nUnsupervised learning power! 🚀"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Latent dimension too large (no compression)",
+      "why": "Network learns identity mapping! 784→700→784 barely compresses. No forced feature learning. Defeats purpose of autoencoder.",
+      "fix": "Latent dimension should be MUCH smaller than input. MNIST (784D): Try 32D, 64D, 128D. Rule: 5-20% of input dimension. Experiment: Too small→information loss, too large→no compression. Monitor reconstruction quality vs compression ratio."
+    },
+    {
+      "mistake": "Not normalizing input data",
+      "why": "Pixel values [0,255] → large gradients, training instability. Sigmoid output expects [0,1]. Mismatch → poor convergence!",
+      "fix": "Normalize inputs to [0,1]: x/255. Match decoder output activation (Sigmoid→[0,1], Tanh→[-1,1]). Consistent range crucial! For other data: StandardScaler, MinMaxScaler."
+    },
+    {
+      "mistake": "Using wrong output activation",
+      "why": "Image data [0,1] with linear output → predictions outside range. Loss calculation incorrect! Negative pixel values meaningless.",
+      "fix": "Images: Sigmoid (outputs [0,1]). Normalized data [-1,1]: Tanh. Unbounded: Linear. Match activation to data range! MSE loss: Any activation. BCE loss: MUST use Sigmoid (expects probabilities)."
+    },
+    {
+      "mistake": "KL weight too high in VAE (β>1)",
+      "why": "Posterior collapse! KL dominates, encoder ignores input. Latent z ~ N(0,1) regardless of x. Decoder becomes unconditional generator. No reconstruction!",
+      "fix": "Start β=1 (standard VAE). If posterior collapse: Reduce β (0.1-0.5). β-VAE: β>1 for disentanglement but watch reconstruction. Monitor: KL and reconstruction losses separately. Balance needed!"
+    },
+    {
+      "mistake": "Not using reparameterization trick in VAE",
+      "why": "Direct sampling z ~ N(μ,σ²) non-differentiable! Can't backprop through randomness. Training fails, no gradient signal.",
+      "fix": "ALWAYS use reparameterization: z = μ + σ*ε where ε~N(0,1). PyTorch: torch.randn_like(std). Gradient flows through μ, σ. Critical for VAE training!"
+    },
+    {
+      "mistake": "Single sample for VAE training",
+      "why": "High variance! Single z sample → noisy gradients. Slow convergence, unstable training. Monte Carlo estimation poor with n=1.",
+      "fix": "Multiple samples per input (Monte Carlo): 5-10 samples, average gradients. Or: Large batch size helps (natural averaging). Trade-off: Computational cost vs variance reduction. Most implementations: 1 sample + large batches works OK."
+    },
+    {
+      "mistake": "Using autoencoder for classification directly",
+      "why": "Autoencoder unsupervised, learns reconstruction not discrimination! Latent space not optimized for class separation.",
+      "fix": "Use encoder as feature extractor: Freeze encoder → Train classifier on latent codes. Or: Pre-training → Fine-tune entire network for classification. Better: Train encoder with classification loss (supervised) or use contrastive learning!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "Autoencoder Architecture",
+      "description": "Visual diagram: Input → Encoder (downsample) → Bottleneck (latent) → Decoder (upsample) → Reconstruction. Shows compression and reconstruction flow."
+    },
+    {
+      "type": "comparison",
+      "title": "Autoencoder vs VAE",
+      "description": "Side-by-side: AE (deterministic point) vs VAE (probabilistic distribution). Shows latent space structure and generation capability."
+    },
+    {
+      "type": "algorithm",
+      "title": "VAE Latent Space Interpolation",
+      "description": "Interactive: Two images, interpolate in latent space. Shows smooth transitions (faces: age, expression, pose)."
+    },
+    {
+      "type": "metric",
+      "title": "Reconstruction Error for Anomaly Detection",
+      "description": "Histogram: Normal data (low error) vs Anomalies (high error). Threshold visualization for detection."
+    }
+  ],
+  "references": [
+    {
+      "title": "Auto-Encoding Variational Bayes",
+      "authors": "Kingma & Welling",
+      "year": 2013,
+      "link": "https://arxiv.org/abs/1312.6114",
+      "type": "paper"
+    },
+    {
+      "title": "Tutorial on Variational Autoencoders",
+      "authors": "Doersch",
+      "year": 2016,
+      "link": "https://arxiv.org/abs/1606.05908",
+      "type": "paper"
+    },
+    {
+      "title": "β-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework",
+      "authors": "Higgins et al.",
+      "year": 2017,
+      "link": "https://openreview.net/forum?id=Sy2fzU9gl",
+      "type": "paper"
+    },
+    {
+      "title": "PyTorch VAE Examples",
+      "authors": "PyTorch Team",
+      "year": 2023,
+      "link": "https://github.com/pytorch/examples/tree/master/vae",
+      "type": "code"
+    }
+  ]
+}

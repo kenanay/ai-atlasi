@@ -1,0 +1,324 @@
+{
+  "id": "linear-regression",
+  "title": "Doğrusal Regresyon (Linear Regression)",
+  "category": "supervised-learning",
+  "level": 1,
+  "estimatedTime": 45,
+  "description": "Sürekli sayısal değerleri tahmin etmek için makine öğrenmesinin en temel gözetimli öğrenme algoritması.",
+  "content": {
+    "level0_basic": "Doğrusal Regresyon, noktaların arasından geçen en iyi düz çizgiyi bulma sanatıdır. Örneğin; bir evin metrekaresi arttıkça fiyatı da artar. Elinizde 100 evin metrekaresi ve fiyatı varsa, bu noktaların tam ortasından geçen bir çizgi çekersiniz. Çizgiyi bir kez bulduğunuzda, daha önce hiç satılmamış 120 m² bir evin fiyatını cetvelle çizgiye bakarak anında tahmin edebilirsiniz.",
+    "level1_beginner": "Gözetimli öğrenmenin (supervised learning) ilk adımı olan Doğrusal Regresyon, girdi değişkenleri (X) ile sürekli hedef değişken (y) arasındaki doğrusal ilişkiyi modeller.\n\n**Temel Formül:**\n$$\\hat{y} = w x + b$$\n\n- $x$: Girdi özelliği (örn. metrekare)\n- $w$ (weight/ağırlık): Çizginin eğimi (metrekare başına fiyat artışı)\n- $b$ (bias/kesişim): Doğrunun y eksenini kestiği nokta\n- $\\hat{y}$: Modelin tahmini\n\n**Nasıl Öğrenir?**\n1. Başlangıçta rastgele bir çizgi çizer.\n2. Gerçek noktalar ile çizgi arasındaki dikey mesafelerin (hataların) karelerini toplar (MSE - Mean Squared Error).\n3. Gradient Descent (Gradyan İnişi) kullanarak hatayı en aza indiren en doğru $w$ ve $b$ değerlerine adım adım ulaşır.",
+    "level2_application": "Doğrusal Regresyon iki farklı yöntemle eğitilebilir: Analitik (Normal Denklem) veya İteratif (Gradient Descent).\n\n**1. Scikit-Learn ile Pratik Kullanım:**\n```python\nfrom sklearn.linear_model import LinearRegression\n\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)\npredictions = model.predict(X_test)\nprint(f\"Eğim (w): {model.coef_}, Kesişim (b): {model.intercept_}\")\n```\n\n**2. NumPy ile Sıfırdan Normal Denklem (Closed-Form):**\n$$\\mathbf{w} = (\\mathbf{X}^T \\mathbf{X})^{-1} \\mathbf{X}^T \\mathbf{y}$$\nVeri boyutu makul olduğunda matris çarpımıyla tek seferde optimal ağırlıkları bulur.",
+    "level3_advanced": "Matematiksel temeller ve Maliyet Fonksiyonunun (Cost Function) Türetimi:\n\n**MSE Kayıp Fonksiyonu:**\n$$J(w, b) = \\frac{1}{2m} \\sum_{i=1}^{m} (\\hat{y}^{(i)} - y^{(i)})^2 = \\frac{1}{2m} \\sum_{i=1}^{m} (w x^{(i)} + b - y^{(i)})^2$$\n\n**Gradyanların Hesaplanması:**\n$$\\frac{\\partial J}{\\partial w} = \\frac{1}{m} \\sum_{i=1}^{m} (\\hat{y}^{(i)} - y^{(i)}) x^{(i)}$$\n$$\\frac{\\partial J}{\\partial b} = \\frac{1}{m} \\sum_{i=1}^{m} (\\hat{y}^{(i)} - y^{(i)})$$\n\n**Parametre Güncelleme Kuralı:**\n$$w := w - \\alpha \\frac{\\partial J}{\\partial w}$$\n$$b := b - \\alpha \\frac{\\partial J}{\\partial b}$$\n\nMSE fonksiyonu dışbükey (convex) bir kase şeklindedir; bu sayede yerel minimuma takılma riski olmadan doğrudan küresel minimuma (global minimum) yakınsar.",
+    "level4_expert": "Üretim sistemlerinde doğrusal modeller ve optimizasyonlar:\n\n**1. Çoklu Doğrusallık (Multicollinearity) ve Düzenlileştirme (Regularization):**\n- Özellikler birbiriyle yüksek korelasyonlu olduğunda $(X^T X)$ matrisinin tersi alınamaz (singular matrix) veya aşırı hassaslaşır.\n- **Ridge Regresyon (L2):** Ağırlıkların karelerini cezalandırır: $J + \\lambda ||w||_2^2$\n- **Lasso Regresyon (L1):** Önemsiz ağırlıkları tam sıfır yaparak özellik seçimi (feature selection) yapar: $J + \\lambda ||w||_1$\n\n**2. Büyük Veride Ölçeklenebilirlik:**\n$X^T X$ matris çarpımı $O(n^2 m)$ ve tersini alma $O(n^3)$ karmaşıklığındadır ($n$ özellik sayısı). Milyonlarca özellik olduğunda analitik çözüm yerine Mini-Batch SGD veya Dağıtık Çözücüler kullanılır."
+  },
+  "whatIsIt": "Doğrusal Regresyon, bağımsız girdiler (özellikler) ile bağımlı sürekli çıktı (hedef) arasındaki doğrusal ilişkiyi en küçük hata ile modelleyen temel makine öğrenmesi algoritmasıdır.",
+  "whyNeeded": "Sayısal değer tahmini (fiyat, sıcaklık, satış adedi, borsa trendi) gerektiren problemlerin temel çözümüdür. Basit, son derece hızlı ve sonuçları yüzde yüz yorumlanabilir (interpretable) bir modeldir.",
+  "realWorldAnalogy": "Deneyim yılı arttıkça maaşın artması, çalışılan saat arttıkça sınav notunun yükselmesi gibi iki durum arasındaki doğru orantıyı gösteren cetvel çizgisidir.",
+  "mathematics": {
+    "formulas": [
+      "\\hat{y} = \\mathbf{w}^T \\mathbf{x} + b",
+      "J(\\mathbf{w}, b) = \\frac{1}{2m} \\sum_{i=1}^{m} (\\hat{y}^{(i)} - y^{(i)})^2",
+      "\\mathbf{w} = (\\mathbf{X}^T \\mathbf{X})^{-1} \\mathbf{X}^T \\mathbf{y} \\quad \\text{(Normal Denklem)}",
+      "w_j := w_j - \\alpha \\frac{1}{m} \\sum_{i=1}^{m} (\\hat{y}^{(i)} - y^{(i)}) x_j^{(i)}",
+      "R^2 = 1 - \\frac{\\sum (y_i - \\hat{y}_i)^2}{\\sum (y_i - \\bar{y})^2}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Ağırlıkları (w) ve bias'ı (b) sıfır veya rastgele başlat.",
+      "2. Veri kümesindeki her girdi için model tahminini üret: y_pred = w*X + b",
+      "3. Gerçek değerlerle farkı alarak hata (MSE) değerini hesapla.",
+      "4. w ve b'ye göre kısmi türevleri (gradyanları) hesapla.",
+      "5. w ve b değerlerini öğrenme oranı (alpha) ile gradyan yönünün tersine güncelle.",
+      "6. Hata değişimi eşik değerin altına inene veya belirlenen epoch sayısına ulaşana kadar tekrarla."
+    ],
+    "complexity": "Gradient Descent ile O(iterations * m * n). Normal denklem ile O(n^3)."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Doğrusal İlişki Örneği",
+      "code": "Metrekare (x) -> Fiyat (y)\n50 m²   -> 100.000 TL\n100 m²  -> 200.000 TL\n150 m²  -> 300.000 TL\n\nKural: Fiyat = 2.000 * Metrekare + 0\nEğer ev 80 m² ise:\nTahmin = 2.000 * 80 = 160.000 TL!",
+      "explanation": "Doğrusal regresyon bu çarpanı ve taban fiyatı verilerden otomatik öğrenir."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "NumPy ile Sıfırdan Doğrusal Regresyon",
+      "code": "import numpy as np\n\n# Sentetik veri: y = 3x + 4 + gürültü\nnp.random.seed(42)\nX = 2 * np.random.rand(100, 1)\ny = 4 + 3 * X + np.random.randn(100, 1) * 0.2\n\n# Normal Denklem ile çözüm: w = (X_b.T @ X_b)^-1 @ X_b.T @ y\nX_b = np.c_[np.ones((100, 1)), X] # Bias için 1 sütunu ekle\nw_optimal = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y\n\nb_learned, w_learned = w_optimal[0][0], w_optimal[1][0]\nprint(f\"Gerçek değerler: w=3.0, b=4.0\")\nprint(f\"Öğrenilen değerler: w={w_learned:.3f}, b={b_learned:.3f}\")",
+      "explanation": "Normal denklem matris cebiri kullanarak tek bir adımda en iyi doğruyu bulur."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Gradient Descent ile Linear Regression",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\nclass LinearRegressionGD:\n    def __init__(self, learning_rate=0.01, iterations=1000):\n        self.lr = learning_rate\n        self.iterations = iterations\n        self.weights = None\n        self.bias = None\n        self.loss_history = []\n    \n    def fit(self, X, y):\n        n_samples, n_features = X.shape\n        \n        # Parametreleri başlat\n        self.weights = np.zeros(n_features)\n        self.bias = 0\n        \n        # Gradient Descent\n        for i in range(self.iterations):\n            # Tahmin: y_pred = Xw + b\n            y_pred = np.dot(X, self.weights) + self.bias\n            \n            # Kayıp (MSE)\n            loss = np.mean((y_pred - y)**2)\n            self.loss_history.append(loss)\n            \n            # Gradyanları hesapla\n            dw = (2/n_samples) * np.dot(X.T, (y_pred - y))\n            db = (2/n_samples) * np.sum(y_pred - y)\n            \n            # Parametreleri güncelle\n            self.weights -= self.lr * dw\n            self.bias -= self.lr * db\n            \n            if i % 100 == 0:\n                print(f\"İterasyon {i}: Loss = {loss:.4f}\")\n    \n    def predict(self, X):\n        return np.dot(X, self.weights) + self.bias\n\n# Örnek kullanım\nnp.random.seed(42)\nX = 2 * np.random.rand(100, 1)\ny = 4 + 3 * X.ravel() + np.random.randn(100)\n\nmodel = LinearRegressionGD(learning_rate=0.1, iterations=1000)\nmodel.fit(X, y)\n\nprint(f\"\\nSonuç: w = {model.weights[0]:.4f}, b = {model.bias:.4f}\")\nprint(f\"Gerçek değerler: w = 3.0, b = 4.0\")\n\n# Loss grafiği\nplt.figure(figsize=(10, 4))\nplt.subplot(1, 2, 1)\nplt.plot(model.loss_history)\nplt.xlabel('İterasyon')\nplt.ylabel('Loss (MSE)')\nplt.title('Training Loss')\nplt.grid(True)\n\n# Predictions\nplt.subplot(1, 2, 2)\nplt.scatter(X, y, alpha=0.5)\nplt.plot(X, model.predict(X), 'r-', linewidth=2)\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Linear Regression Fit')\nplt.grid(True)\nplt.tight_layout()\nprint(\"\\n✓ Grafik oluşturuldu\")",
+      "explanation": "Gradient Descent ile linear regression sıfırdan implementasyonu. Her iterasyonda loss azalır ve model optimal parametrelere yakınsar."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Scikit-Learn ile Model Eğitimi",
+      "code": "from sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Veri oluştur\nnp.random.seed(42)\nX = np.random.rand(100, 1) * 10  # 0-10 arası\ny = 2.5 * X.ravel() + 5 + np.random.randn(100) * 2  # y = 2.5x + 5 + noise\n\n# Train-test split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Model eğit\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)\n\n# Tahmin\ny_train_pred = model.predict(X_train)\ny_test_pred = model.predict(X_test)\n\n# Değerlendirme\nprint(\"Model Parametreleri:\")\nprint(f\"  Eğim (w): {model.coef_[0]:.4f}\")\nprint(f\"  Kesişim (b): {model.intercept_:.4f}\")\nprint(f\"\\nGerçek: y = 2.5x + 5\")\n\nprint(\"\\nTrain Metrikleri:\")\nprint(f\"  MSE: {mean_squared_error(y_train, y_train_pred):.4f}\")\nprint(f\"  MAE: {mean_absolute_error(y_train, y_train_pred):.4f}\")\nprint(f\"  R²: {r2_score(y_train, y_train_pred):.4f}\")\n\nprint(\"\\nTest Metrikleri:\")\nprint(f\"  MSE: {mean_squared_error(y_test, y_test_pred):.4f}\")\nprint(f\"  MAE: {mean_absolute_error(y_test, y_test_pred):.4f}\")\nprint(f\"  R²: {r2_score(y_test, y_test_pred):.4f}\")\n\n# Görselleştirme\nplt.figure(figsize=(12, 4))\n\n# Train data\nplt.subplot(1, 3, 1)\nplt.scatter(X_train, y_train, alpha=0.6, label='Train data')\nplt.plot(X_train, y_train_pred, 'r-', linewidth=2, label='Prediction')\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Training Data')\nplt.legend()\nplt.grid(True)\n\n# Test data\nplt.subplot(1, 3, 2)\nplt.scatter(X_test, y_test, alpha=0.6, label='Test data', color='green')\nplt.plot(X_test, y_test_pred, 'r-', linewidth=2, label='Prediction')\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Test Data')\nplt.legend()\nplt.grid(True)\n\n# Residuals\nplt.subplot(1, 3, 3)\nresiduals = y_test - y_test_pred\nplt.scatter(y_test_pred, residuals, alpha=0.6)\nplt.axhline(y=0, color='r', linestyle='--')\nplt.xlabel('Predicted')\nplt.ylabel('Residuals')\nplt.title('Residual Plot')\nplt.grid(True)\n\nplt.tight_layout()\nprint(\"\\n✓ Grafik oluşturuldu\")",
+      "explanation": "Scikit-learn ile profesyonel linear regression. Train-test split, metrikler ve residual plot ile tam pipeline."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch ile Linear Regression",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Veri hazırlama\nnp.random.seed(42)\nX_np = np.random.rand(100, 1) * 10\ny_np = 2.5 * X_np + 5 + np.random.randn(100, 1) * 2\n\n# Torch tensors\nX = torch.FloatTensor(X_np)\ny = torch.FloatTensor(y_np)\n\n# Model tanımla\nmodel = nn.Linear(1, 1)  # 1 input, 1 output\n\n# Loss ve optimizer\ncriterion = nn.MSELoss()\noptimizer = optim.SGD(model.parameters(), lr=0.01)\n\n# Training\nnum_epochs = 1000\nloss_history = []\n\nfor epoch in range(num_epochs):\n    # Forward pass\n    y_pred = model(X)\n    loss = criterion(y_pred, y)\n    \n    # Backward pass\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n    \n    loss_history.append(loss.item())\n    \n    if (epoch + 1) % 100 == 0:\n        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')\n\n# Model parametreleri\nweight = model.weight.item()\nbias = model.bias.item()\n\nprint(f\"\\nÖğrenilen Parametreler:\")\nprint(f\"  Weight: {weight:.4f}\")\nprint(f\"  Bias: {bias:.4f}\")\nprint(f\"\\nGerçek: weight=2.5, bias=5.0\")\n\n# Görselleştirme\nplt.figure(figsize=(12, 4))\n\n# Loss curve\nplt.subplot(1, 3, 1)\nplt.plot(loss_history)\nplt.xlabel('Epoch')\nplt.ylabel('Loss')\nplt.title('Training Loss')\nplt.grid(True)\n\n# Data and predictions\nplt.subplot(1, 3, 2)\nwith torch.no_grad():\n    y_pred = model(X).numpy()\nplt.scatter(X_np, y_np, alpha=0.6, label='Data')\nplt.plot(X_np, y_pred, 'r-', linewidth=2, label='Prediction')\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Linear Regression Fit')\nplt.legend()\nplt.grid(True)\n\n# Parameters evolution (additional training to show)\nplt.subplot(1, 3, 3)\nx_line = np.linspace(0, 10, 100).reshape(-1, 1)\nwith torch.no_grad():\n    y_line = model(torch.FloatTensor(x_line)).numpy()\nplt.plot(x_line, y_line, 'g-', linewidth=2, label=f'y={weight:.2f}x+{bias:.2f}')\nplt.plot(x_line, 2.5*x_line + 5, 'r--', linewidth=2, label='y=2.5x+5 (true)')\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Learned vs True Line')\nplt.legend()\nplt.grid(True)\n\nplt.tight_layout()\nprint(\"\\n✓ PyTorch ile linear regression tamamlandı\")",
+      "explanation": "PyTorch ile neural network yaklaşımı. nn.Linear modülü kullanarak autograd ve optimizer ile training."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Çoklu Özellik ile Linear Regression",
+      "code": "from sklearn.linear_model import LinearRegression\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import mean_squared_error, r2_score\nimport numpy as np\nimport pandas as pd\n\n# Çoklu özellik ile veri (Ev fiyat örneği)\nnp.random.seed(42)\nn_samples = 200\n\n# Özellikler\nmetrekare = np.random.randint(50, 250, n_samples)\noda_sayisi = np.random.randint(1, 6, n_samples)\nyas = np.random.randint(0, 50, n_samples)\nkat = np.random.randint(1, 20, n_samples)\n\n# Hedef değişken (gerçekçi fiyat formülü)\nfiyat = (metrekare * 2000 + \n         oda_sayisi * 50000 + \n         -yas * 1000 + \n         kat * 5000 + \n         np.random.randn(n_samples) * 20000)\n\n# DataFrame oluştur\ndf = pd.DataFrame({\n    'metrekare': metrekare,\n    'oda_sayisi': oda_sayisi,\n    'yas': yas,\n    'kat': kat,\n    'fiyat': fiyat\n})\n\nprint(\"Veri Seti İlk 5 Satır:\")\nprint(df.head())\nprint(f\"\\nVeri boyutu: {df.shape}\")\n\n# Özellikler ve hedef\nX = df[['metrekare', 'oda_sayisi', 'yas', 'kat']].values\ny = df['fiyat'].values\n\n# Train-test split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Feature scaling (önemli!)\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\n\n# Model eğit\nmodel = LinearRegression()\nmodel.fit(X_train_scaled, y_train)\n\n# Tahminler\ny_train_pred = model.predict(X_train_scaled)\ny_test_pred = model.predict(X_test_scaled)\n\n# Değerlendirme\nprint(\"\\n\" + \"=\"*50)\nprint(\"MODEL PERFORMANSI\")\nprint(\"=\"*50)\nprint(f\"\\nTrain R²: {r2_score(y_train, y_train_pred):.4f}\")\nprint(f\"Test R²: {r2_score(y_test, y_test_pred):.4f}\")\nprint(f\"\\nTrain RMSE: {np.sqrt(mean_squared_error(y_train, y_train_pred)):,.0f} TL\")\nprint(f\"Test RMSE: {np.sqrt(mean_squared_error(y_test, y_test_pred)):,.0f} TL\")\n\n# Katsayılar\nprint(\"\\n\" + \"=\"*50)\nprint(\"ÖĞREN İLEN KATSAYILAR\")\nprint(\"=\"*50)\nfeature_names = ['metrekare', 'oda_sayisi', 'yas', 'kat']\nfor name, coef in zip(feature_names, model.coef_):\n    print(f\"{name:15s}: {coef:10,.2f}\")\nprint(f\"{'Sabit (bias)':15s}: {model.intercept_:10,.2f}\")\n\n# Örnek tahmin\nprint(\"\\n\" + \"=\"*50)\nprint(\"ÖRNEK TAHMİN\")\nprint(\"=\"*50)\nornek_ev = np.array([[120, 3, 5, 10]])  # 120m², 3 oda, 5 yaş, 10. kat\nornek_ev_scaled = scaler.transform(ornek_ev)\ntahmin = model.predict(ornek_ev_scaled)[0]\n\nprint(f\"Ev özellikleri: 120m², 3 oda, 5 yaşında, 10. kat\")\nprint(f\"Tahmin edilen fiyat: {tahmin:,.0f} TL\")",
+      "explanation": "Gerçek dünya problemi: Çoklu özellik ile ev fiyat tahmini. Feature scaling, train-test split ve detaylı model analizi."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Ridge Regression (L2 Regularization)",
+      "code": "from sklearn.linear_model import Ridge, LinearRegression\nfrom sklearn.preprocessing import PolynomialFeatures\nfrom sklearn.metrics import mean_squared_error\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Veri oluştur (outlier'lar ile)\nnp.random.seed(42)\nX = np.random.rand(50, 1) * 10\ny = 2 * X.ravel() + 3 + np.random.randn(50) * 2\n\n# Outlier ekle\nX = np.vstack([X, [[8], [9]]])\ny = np.append(y, [50, 55])  # Aşırı yüksek değerler\n\n# Polynomial features (overfitting riski)\npoly = PolynomialFeatures(degree=9)\nX_poly = poly.fit_transform(X)\n\n# Normal Linear Regression (overfit olabilir)\nlinear_model = LinearRegression()\nlinear_model.fit(X_poly, y)\n\n# Ridge Regression (regularized)\nridge_model = Ridge(alpha=10)  # alpha: regularization strength\nridge_model.fit(X_poly, y)\n\n# Test verisi\nX_test = np.linspace(0, 10, 300).reshape(-1, 1)\nX_test_poly = poly.transform(X_test)\n\ny_linear = linear_model.predict(X_test_poly)\ny_ridge = ridge_model.predict(X_test_poly)\n\n# Görselleştirme\nplt.figure(figsize=(14, 5))\n\n# Linear Regression\nplt.subplot(1, 3, 1)\nplt.scatter(X, y, alpha=0.6, label='Data')\nplt.plot(X_test, y_linear, 'r-', linewidth=2, label='Linear Reg')\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Linear Regression (Overfitting)')\nplt.legend()\nplt.ylim(-10, 60)\nplt.grid(True)\n\n# Ridge Regression\nplt.subplot(1, 3, 2)\nplt.scatter(X, y, alpha=0.6, label='Data')\nplt.plot(X_test, y_ridge, 'g-', linewidth=2, label='Ridge Reg')\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Ridge Regression (Regularized)')\nplt.legend()\nplt.ylim(-10, 60)\nplt.grid(True)\n\n# Karşılaştırma\nplt.subplot(1, 3, 3)\nplt.scatter(X, y, alpha=0.6, label='Data', zorder=3)\nplt.plot(X_test, y_linear, 'r--', linewidth=2, label='Linear', alpha=0.7)\nplt.plot(X_test, y_ridge, 'g-', linewidth=2, label='Ridge', alpha=0.7)\nplt.xlabel('X')\nplt.ylabel('y')\nplt.title('Comparison')\nplt.legend()\nplt.ylim(-10, 60)\nplt.grid(True)\n\nplt.tight_layout()\n\n# Katsayı karşılaştırması\nprint(\"Katsayı Büyüklükleri:\")\nprint(f\"Linear Regression: {np.linalg.norm(linear_model.coef_):.2f}\")\nprint(f\"Ridge Regression:  {np.linalg.norm(ridge_model.coef_):.2f}\")\nprint(\"\\n💡 Ridge regression katsayıları küçültür (regularization)\")\nprint(\"   Overfitting azalır, generalization iyileşir!\")",
+      "explanation": "Ridge regression L2 regularization ile overfitting'i önler. Katsayıları penalize eder, daha smooth model elde edilir."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Lasso Regression (L1 Regularization & Feature Selection)",
+      "code": "from sklearn.linear_model import Lasso, Ridge, LinearRegression\nfrom sklearn.preprocessing import StandardScaler\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Çok özellikli veri (bazıları gereksiz)\nnp.random.seed(42)\nn_samples = 100\nn_features = 20\n\n# Özellikler\nX = np.random.randn(n_samples, n_features)\n\n# Sadece 5 özellik gerçekten önemli\ntrue_coef = np.zeros(n_features)\ntrue_coef[0] = 5.0\ntrue_coef[3] = -3.0\ntrue_coef[7] = 2.0\ntrue_coef[12] = 4.0\ntrue_coef[18] = -2.5\n\ny = X @ true_coef + np.random.randn(n_samples) * 0.5\n\n# Scaling\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\n# Modeller\nlinear_model = LinearRegression()\nridge_model = Ridge(alpha=1.0)\nlasso_model = Lasso(alpha=0.1)\n\nlinear_model.fit(X_scaled, y)\nridge_model.fit(X_scaled, y)\nlasso_model.fit(X_scaled, y)\n\n# Görselleştirme\nplt.figure(figsize=(15, 5))\n\n# Linear Regression\nplt.subplot(1, 3, 1)\nplt.stem(range(n_features), linear_model.coef_, basefmt=' ')\nplt.axhline(y=0, color='k', linestyle='--', alpha=0.3)\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient')\nplt.title('Linear Regression Coefficients')\nplt.grid(True, alpha=0.3)\n\n# Ridge\nplt.subplot(1, 3, 2)\nplt.stem(range(n_features), ridge_model.coef_, basefmt=' ')\nplt.axhline(y=0, color='k', linestyle='--', alpha=0.3)\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient')\nplt.title('Ridge Regression Coefficients')\nplt.grid(True, alpha=0.3)\n\n# Lasso\nplt.subplot(1, 3, 3)\nplt.stem(range(n_features), lasso_model.coef_, basefmt=' ')\nplt.axhline(y=0, color='k', linestyle='--', alpha=0.3)\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient')\nplt.title('Lasso Regression Coefficients')\nplt.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\n# Analiz\nprint(\"Sıfır Olmayan Katsayılar:\")\nprint(f\"True model: {np.sum(true_coef != 0)}\")\nprint(f\"Linear: {np.sum(np.abs(linear_model.coef_) > 0.01)}\")\nprint(f\"Ridge: {np.sum(np.abs(ridge_model.coef_) > 0.01)}\")\nprint(f\"Lasso: {np.sum(np.abs(lasso_model.coef_) > 0.01)}\")\n\nprint(\"\\n💡 Lasso Regression:\")\nprint(\"  - Gereksiz özelliklerin katsayısını 0 yapar\")\nprint(\"  - Otomatik feature selection!\")\nprint(\"  - Sparse modeller için ideal\")\nprint(f\"\\nLasso {np.sum(lasso_model.coef_ == 0)} özelliği sıfırladı.\")",
+      "explanation": "Lasso regression L1 regularization kullanır ve gereksiz özellikleri otomatik olarak sıfırlar. Feature selection yaparak interpretable modeller oluşturur."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Cross-Validation ile Hyperparameter Tuning",
+      "code": "from sklearn.linear_model import Ridge, Lasso\nfrom sklearn.model_selection import GridSearchCV, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import Pipeline\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Veri\nnp.random.seed(42)\nX = np.random.rand(200, 10)\ny = X @ np.random.randn(10) + np.random.randn(200) * 0.5\n\n# Pipeline: Scaling + Model\nridge_pipeline = Pipeline([\n    ('scaler', StandardScaler()),\n    ('ridge', Ridge())\n])\n\nlasso_pipeline = Pipeline([\n    ('scaler', StandardScaler()),\n    ('lasso', Lasso(max_iter=10000))\n])\n\n# Hyperparameter grid\nparam_grid = {\n    'ridge__alpha': [0.001, 0.01, 0.1, 1, 10, 100],\n}\n\nlasso_param_grid = {\n    'lasso__alpha': [0.0001, 0.001, 0.01, 0.1, 1],\n}\n\n# Grid Search (Cross-Validation)\nridge_search = GridSearchCV(\n    ridge_pipeline,\n    param_grid,\n    cv=5,\n    scoring='neg_mean_squared_error',\n    n_jobs=-1\n)\n\nlasso_search = GridSearchCV(\n    lasso_pipeline,\n    lasso_param_grid,\n    cv=5,\n    scoring='neg_mean_squared_error',\n    n_jobs=-1\n)\n\nprint(\"Grid Search başlıyor...\")\nridge_search.fit(X, y)\nlasso_search.fit(X, y)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"RIDGE REGRESSION\")\nprint(\"=\"*60)\nprint(f\"En iyi alpha: {ridge_search.best_params_['ridge__alpha']}\")\nprint(f\"En iyi CV score: {-ridge_search.best_score_:.4f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"LASSO REGRESSION\")\nprint(\"=\"*60)\nprint(f\"En iyi alpha: {lasso_search.best_params_['lasso__alpha']}\")\nprint(f\"En iyi CV score: {-lasso_search.best_score_:.4f}\")\n\n# Görselleştirme\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))\n\n# Ridge CV scores\nridge_alphas = [r['ridge__alpha'] for r in ridge_search.cv_results_['params']]\nridge_scores = -ridge_search.cv_results_['mean_test_score']\n\nax1.semilogx(ridge_alphas, ridge_scores, 'bo-', linewidth=2, markersize=8)\nax1.axvline(ridge_search.best_params_['ridge__alpha'], \n            color='r', linestyle='--', label='Best alpha')\nax1.set_xlabel('Alpha (Regularization Strength)')\nax1.set_ylabel('Mean Squared Error')\nax1.set_title('Ridge: Alpha vs CV Error')\nax1.legend()\nax1.grid(True, alpha=0.3)\n\n# Lasso CV scores\nlasso_alphas = [r['lasso__alpha'] for r in lasso_search.cv_results_['params']]\nlasso_scores = -lasso_search.cv_results_['mean_test_score']\n\nax2.semilogx(lasso_alphas, lasso_scores, 'go-', linewidth=2, markersize=8)\nax2.axvline(lasso_search.best_params_['lasso__alpha'], \n            color='r', linestyle='--', label='Best alpha')\nax2.set_xlabel('Alpha (Regularization Strength)')\nax2.set_ylabel('Mean Squared Error')\nax2.set_title('Lasso: Alpha vs CV Error')\nax2.legend()\nax2.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n💡 Cross-validation ile en iyi hyperparameter bulundu!\")\nprint(\"   Alpha çok büyük → underfitting\")\nprint(\"   Alpha çok küçük → overfitting\")\nprint(\"   Grid search optimal dengeyi bulur.\")",
+      "explanation": "Production-ready kod: Grid search ile hyperparameter tuning, cross-validation ile robust değerlendirme. Pipeline ile scaling otomatiği."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "linear-fit-plot",
+      "type": "plot",
+      "title": "Regresyon Doğrusu Grafiği",
+      "description": "Örnek veri noktaları ve uydurulan f(x) = 2x + 1 doğrusu",
+      "component": "FunctionPlot"
+    },
+    {
+      "id": "loss-curve",
+      "type": "interactive",
+      "title": "Training Loss Curve",
+      "description": "Gradient descent sırasında MSE loss'unun epoch'lar boyunca nasıl azaldığını görün"
+    },
+    {
+      "id": "residual-plot",
+      "type": "plot",
+      "title": "Residual Plot",
+      "description": "Tahmin edilen değerlere karşı residuals (hatalar) grafiği"
+    },
+    {
+      "id": "ridge-lasso-comparison",
+      "type": "interactive",
+      "title": "Ridge vs Lasso Katsayı Karşılaştırması",
+      "description": "Regularization strength (alpha) değiştikçe katsayıların nasıl etkilendiğini görün"
+    }
+  ],
+  "prerequisites": [
+    "vectors",
+    "derivative",
+    "loss-functions",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "perceptron"
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Doğrusal olmayan verilere basit doğrusal regresyon uygulamak",
+      "why": "Veri eğrisel (polinomial veya üstel) bir yapıdaysa düz çizgi yüksek underfitting (yetersiz öğrenme) yapar.",
+      "fix": "Polinomial özellikler ekleyin (PolynomialFeatures) veya ağaç tabanlı / derin öğrenme modellerine geçin."
+    },
+    {
+      "mistake": "Aykırı değerleri (outliers) temizlemeden MSE ile model eğitmek",
+      "why": "MSE hataların karesini aldığı için tek bir uç değer doğruyu kendine doğru aşırı derecede büker.",
+      "fix": "Huber Loss kullanın veya aykırı değerleri veri ön işleme aşamasında filtreleyin (IQR method, Z-score)."
+    },
+    {
+      "mistake": "Feature scaling yapmamak",
+      "why": "Farklı ölçeklerdeki özellikler (örn: metrekare [50-250] ve yaş [0-50]) gradient descent'i yavaşlatır ve dengesiz katsayılar oluşturur.",
+      "fix": "StandardScaler veya MinMaxScaler ile özellikleri normalize edin. Özellikle Gradient Descent ve regularization kullanırken zorunlu!"
+    },
+    {
+      "mistake": "Multicollinearity'yi göz ardı etmek",
+      "why": "Yüksek korelasyonlu özellikler matris inverse alımını zorlaştırır ve katsayı tahminlerini instable yapar.",
+      "fix": "VIF (Variance Inflation Factor) hesaplayın. Yüksek VIF'li özellikleri çıkarın veya Ridge/Lasso regularization kullanın."
+    },
+    {
+      "mistake": "Train-test split yapmadan model değerlendirmek",
+      "why": "Model training verisini 'ezberler', gerçek performansı bilinmez. Overfitting var mı anlaşılmaz.",
+      "fix": "Her zaman train-test split (örn: 80-20) yapın. Daha iyisi: Cross-validation kullanın."
+    },
+    {
+      "mistake": "Residual'ları kontrol etmemek",
+      "why": "Residual plot pattern gösteriyorsa (U şeklinde, fan şeklinde) model assumptions ihlal ediliyor demektir.",
+      "fix": "Residual vs Predicted plot çizin. Pattern varsa: Polynomial features ekleyin, log transform uygulayın veya başka model deneyin."
+    },
+    {
+      "mistake": "Normal Denklem'i çok büyük veri setlerinde kullanmak",
+      "why": "(X^T X)^-1 hesabı O(n³) karmaşıklığındadır. n>10000 olduğunda çok yavaş ve memory-intensive olur.",
+      "fix": "Gradient Descent veya Stochastic Gradient Descent (SGD) kullanın. Büyük veri için iteratif yöntemler çok daha hızlıdır."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Doğrusal regresyon modelinin amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Veri noktaları arasındaki hatayı (MSE) minimize eden en iyi doğruyu bulmak",
+        "Resimlerdeki nesneleri sınıflandırmak",
+        "Verileri kümelere ayırmak",
+        "Metin üretmek"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Doğrusal regresyon sürekli bir hedef değişkeni tahmin etmek için en az hatalı doğruyu çizer.",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "R² (Belirleme Katsayısı) skoru 1.0 olduğunda ne anlama gelir?",
+      "type": "multiple-choice",
+      "options": [
+        "Model tüm verileri kusursuz (sıfır hata ile) açıklamaktadır",
+        "Model tamamen başarısızdır",
+        "Veride hiç doğrusal ilişki yoktur",
+        "Aşırı derecede underfitting vardır"
+      ],
+      "correctAnswer": 0,
+      "explanation": "R² skoru 1.0 ise model varyansın %100'ünü açıklamaktadır, tüm noktalar doğrunun tam üzerindedir.",
+      "difficulty": 1
+    },
+    {
+      "id": "q3",
+      "question": "Normal Denklem (Normal Equation) ile Gradient Descent arasındaki fark nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Normal denklem iteratif, Gradient Descent tek adımda çözüm bulur",
+        "Normal denklem matris işlemleriyle tek adımda optimal sonucu bulur, Gradient Descent iteratif yakınsar",
+        "İkisi de aynıdır",
+        "Normal denklem sadece classification için kullanılır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Normal denklem: w = (X^T X)^-1 X^T y formülü ile direkt çözüm (O(n³)). Gradient Descent: Iteratif optimizasyon (her adım O(n)). Büyük veri setlerinde GD tercih edilir.",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Ridge Regression'ın (L2) amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Modeli daha hızlı eğitmek",
+        "Overfitting'i önlemek için katsayıları penalize etmek",
+        "Daha fazla özellik eklemek",
+        "Loss fonksiyonunu değiştirmek"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Ridge Regression, loss fonksiyonuna L2 penalty ekler: Loss + λ||w||². Katsayılar küçülür, overfitting azalır, model daha general olur.",
+      "difficulty": 2
+    },
+    {
+      "id": "q5",
+      "question": "Lasso Regression'ın Ridge'den farkı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Lasso L1 penalty kullanır ve katsayıları tam sıfıra indirerek feature selection yapar",
+        "Lasso daha hızlıdır",
+        "Lasso sadece classification için kullanılır",
+        "Hiçbir farkı yoktur"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Lasso L1 penalty kullanır: Loss + λ||w||₁. Gereksiz özelliklerin katsayısını tam 0 yapar (sparse model). Ridge ise katsayıları küçültür ama sıfırlamaz. Lasso otomatik feature selection sağlar!",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Linear Regression hangi tip problemler için uygundur?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece binary classification (0/1 tahmini)",
+        "Sürekli sayısal değer tahmini (regression)",
+        "Metin sınıflandırma",
+        "Görüntü segmentasyonu"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Linear Regression, regression problemleri içindir: Ev fiyatı, sıcaklık, satış miktarı gibi sürekli sayısal değerleri tahmin eder. Classification için Logistic Regression kullanılır.",
+      "difficulty": 1
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Doğrusal Regresyon (Linear Regression) nedir?",
+      "back": "Girdi özellikleri ile sürekli hedef değişken arasındaki ilişkiyi y = wx + b doğrusu ile modelleyen gözetimli öğrenme algoritmasıdır."
+    },
+    {
+      "front": "Normal Denklem (Closed-form solution) nedir?",
+      "back": "Gradient descent adım adım yakınsaması yerine w = (X^T X)^-1 X^T y matris formülü ile analitik olarak doğrudan optimal ağırlıkları bulma yöntemidir."
+    },
+    {
+      "front": "R² (R-kare) metriği neyi ölçer?",
+      "back": "Bağımlı değişkendeki varyansın ne kadarının bağımsız değişkenler tarafından açıklandığını ölçer (0 ile 1 arası)."
+    },
+    {
+      "front": "MSE (Mean Squared Error) formülü?",
+      "back": "MSE = (1/n) Σ(y_true - y_pred)²\n\nHataların karelerinin ortalaması. Büyük hatalar daha çok penalize edilir."
+    },
+    {
+      "front": "Ridge vs Lasso Regression farkı?",
+      "back": "Ridge (L2): Loss + λ||w||² → Katsayıları küçültür\nLasso (L1): Loss + λ||w||₁ → Katsayıları sıfırlar (feature selection)\n\nLasso sparse modeller oluşturur!"
+    },
+    {
+      "front": "Multicollinearity nedir?",
+      "back": "Bağımsız değişkenlerin birbiriyle yüksek korelasyonlu olması.\n\nSorun: (X^T X) matrix singular olur, inverse alınamaz\nÇözüm: Ridge/Lasso regularization veya feature elimination"
+    },
+    {
+      "front": "Feature Scaling neden önemli?",
+      "back": "Farklı ölçeklerdeki özellikleri normalize eder.\n\nÖrneğin: Metrekare [50-250], Yas [0-50]\nScaling olmadan: Büyük değerler modeli domine eder\n\nStandardization: (x - μ) / σ"
+    },
+    {
+      "front": "Residual (Artık) nedir?",
+      "back": "Gerçek değer ile tahmin arasındaki fark:\n\nresidual = y_true - y_pred\n\nİdeal: Residuals rastgele dağılmalı (pattern yok)\nPattern var → Model eksik (polynomial gerekebilir)"
+    }
+  ],
+  "references": [
+    {
+      "title": "StatQuest: Linear Regression Clearly Explained",
+      "url": "https://www.youtube.com/watch?v=nk2CQITm_eo",
+      "type": "video"
+    },
+    {
+      "title": "Scikit-Learn Linear Regression Dokümantasyonu",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Andrew Ng - Linear Regression",
+      "url": "https://www.coursera.org/learn/machine-learning",
+      "type": "course"
+    },
+    {
+      "title": "Ridge and Lasso Regression Explained",
+      "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Understanding the Bias-Variance Tradeoff",
+      "url": "https://scott.fortmann-roe.com/docs/BiasVariance.html",
+      "type": "article"
+    }
+  ],
+  "tags": ["makine-ogrenmesi", "regresyon", "linear-regression", "mse", "supervised-learning", "ridge", "lasso", "gradient-descent", "sklearn", "temel"]
+}

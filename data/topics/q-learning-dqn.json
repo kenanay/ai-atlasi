@@ -1,0 +1,250 @@
+{
+  "id": "q-learning-dqn",
+  "title": "Q-Learning & Deep Q-Networks (DQN)",
+  "category": "reinforcement-learning",
+  "level": 3,
+  "estimatedTime": 50,
+  "description": "Reinforcement learning'in temel algoritması Q-Learning ve deep learning ile kombinasyonu DQN. Agent'lar environment'ta optimal policy öğrenir, Atari games'te human-level performance.",
+  "prerequisites": ["neural-networks", "optimization"],
+  "tags": ["reinforcement-learning", "q-learning", "dqn", "deep-q-networks", "atari", "bellman-equation"],
+  "content": {
+    "level0_basic": "Bir oyun oynamayı düşün: Her adımda bir aksiyon seç (yukarı, aşağı, sol, sağ), bir sonuç gör (puan, yenilgi). Nasıl öğrenirsin? Deneme-yanılma! Q-Learning tam bunu yapar: her (state, action) çifti için 'quality' (Q-value) öğrenir. Yüksek Q = iyi aksiyon. Zamanla optimal strateji (policy) öğrenir. DQN (Deep Q-Network) Q-table yerine neural network kullanır → milyonlarca state handle edebilir! Atari Breakout, Space Invaders gibi oyunları human-level oynayabilir!",
+    "level1_beginner": "**Reinforcement Learning (RL) Temel Kavramlar:**\n\n**Components:**\n- **Agent:** Karar veren entity (oyuncu)\n- **Environment:** Agent'ın etkileşimde bulunduğu dünya (oyun)\n- **State (s):** Environment'ın mevcut durumu\n- **Action (a):** Agent'ın yapabileceği aksiyon\n- **Reward (r):** Action sonrası alınan feedback (puan)\n- **Policy (π):** State'ten action'a mapping (strategy)\n\n**Goal:** Cumulative reward'ı maksimize et!\n\n$$G_t = r_t + r_{t+1} + r_{t+2} + ... = \\sum_{k=0}^{\\infty} r_{t+k}$$\n\n**Discount factor (γ):**\nGelecekteki rewards'ı discount et:\n\n$$G_t = r_t + \\gamma r_{t+1} + \\gamma^2 r_{t+2} + ... = \\sum_{k=0}^{\\infty} \\gamma^k r_{t+k}$$\n\n- $\\gamma = 0$: Sadece immediate reward\n- $\\gamma = 1$: Tüm future rewards eşit\n- Typical: $\\gamma = 0.9-0.99$\n\n**Q-Learning (Watkins, 1989):**\n\n**Q-Value (Action-Value Function):**\n\n$$Q(s, a) = \\mathbb{E}[G_t | s_t = s, a_t = a]$$\n\nState $s$'te action $a$ yapmanın expected cumulative reward'ı.\n\n**Bellman Equation:**\n\n$$Q(s, a) = r + \\gamma \\max_{a'} Q(s', a')$$\n\n- $s'$: next state\n- $a'$: next action\n- Recursive definition!\n\n**Q-Learning Update:**\n\n$$Q(s, a) \\leftarrow Q(s, a) + \\alpha [r + \\gamma \\max_{a'} Q(s', a') - Q(s, a)]$$\n\n- $\\alpha$: learning rate\n- $[...]$: TD error (temporal difference)\n\n**Algorithm:**\n```\n1. Initialize Q(s, a) arbitrarily\n2. For each episode:\n   a. Observe state s\n   b. Select action a (ε-greedy)\n   c. Execute a, observe r, s'\n   d. Update Q(s, a) using Bellman equation\n   e. s ← s'\n3. Repeat until convergence\n```\n\n**ε-Greedy Exploration:**\n\n- Probability $\\epsilon$: random action (explore)\n- Probability $1-\\epsilon$: argmax Q (exploit)\n\n$$a = \\begin{cases}\n\\text{random action} & \\text{with prob } \\epsilon \\\\\n\\arg\\max_a Q(s, a) & \\text{with prob } 1-\\epsilon\n\\end{cases}$$\n\nExploration vs Exploitation trade-off!",
+    "level2_application": "**Deep Q-Networks (DQN) - Mnih et al., 2015:**\n\n**Problem: Q-Table**\n\nTraditional Q-Learning Q-table kullanır:\n- States × Actions matrix\n- Atari: 210×160×3 pixels = 100,800 dimensions!\n- $256^{100800}$ possible states → impossible!\n\n**Solution: Function Approximation**\n\nQ-table yerine neural network:\n\n$$Q(s, a; \\theta) \\approx Q^*(s, a)$$\n\n- $\\theta$: network parameters\n- Input: state (pixels)\n- Output: Q-values for all actions\n\n**DQN Architecture:**\n\n```\nInput: 84×84×4 grayscale frames (stacked)\n  ↓\nConv1: 32 filters, 8×8, stride 4, ReLU\n  ↓\nConv2: 64 filters, 4×4, stride 2, ReLU\n  ↓\nConv3: 64 filters, 3×3, stride 1, ReLU\n  ↓\nFully Connected: 512 units, ReLU\n  ↓\nOutput: Q-values for each action (e.g., 4 actions)\n```\n\n**Loss Function:**\n\nMSE between predicted and target Q-values:\n\n$$L(\\theta) = \\mathbb{E}\\left[(r + \\gamma \\max_{a'} Q(s', a'; \\theta) - Q(s, a; \\theta))^2\\right]$$\n\nTarget: $y = r + \\gamma \\max_{a'} Q(s', a'; \\theta)$\n\n**Key Innovations:**\n\n**1. Experience Replay:**\n\nStore transitions $(s, a, r, s')$ in replay buffer.\n\n**Why?**\n- Breaks temporal correlation (successive states similar)\n- Data efficiency (reuse experiences)\n- Stable training\n\n**Algorithm:**\n```python\n# Store transition\nreplay_buffer.append((s, a, r, s', done))\n\n# Sample random minibatch\nbatch = replay_buffer.sample(batch_size)\n\n# Train on batch\nfor (s, a, r, s', done) in batch:\n    target = r + γ * max Q(s', a') if not done else r\n    loss = (Q(s, a) - target)^2\n```\n\n**2. Target Network:**\n\nİki ayrı network:\n- **Online network:** Her step update edilir\n- **Target network:** Periodic update (frozen)\n\n$$y = r + \\gamma \\max_{a'} Q(s', a'; \\theta^-)$$\n\n- $\\theta^-$: target network parameters\n- Her C steps'te: $\\theta^- \\leftarrow \\theta$\n\n**Why?**\nMoving target problem! Target network stabilize eder.\n\n**Training Procedure:**\n\n```python\nfor episode in range(num_episodes):\n    state = env.reset()\n    \n    for t in range(max_steps):\n        # ε-greedy action selection\n        if random() < epsilon:\n            action = random_action()\n        else:\n            action = argmax(Q_network(state))\n        \n        # Execute action\n        next_state, reward, done = env.step(action)\n        \n        # Store transition\n        replay_buffer.add(state, action, reward, next_state, done)\n        \n        # Sample minibatch and train\n        if len(replay_buffer) > batch_size:\n            batch = replay_buffer.sample(batch_size)\n            train_on_batch(batch)\n        \n        # Update target network\n        if t % target_update_freq == 0:\n            target_network.set_weights(online_network.get_weights())\n        \n        state = next_state\n        if done:\n            break\n    \n    # Decay epsilon\n    epsilon = max(epsilon_min, epsilon * epsilon_decay)\n```",
+    "level3_advanced": "**DQN Improvements:**\n\n**1. Double DQN (van Hasselt et al., 2016):**\n\n**Problem:** DQN overestimates Q-values (max operator bias).\n\n**Solution:** Use online network to select action, target network to evaluate:\n\n$$y = r + \\gamma Q(s', \\arg\\max_{a'} Q(s', a'; \\theta); \\theta^-)$$\n\nAction selection: $\\theta$ (online)\nAction evaluation: $\\theta^-$ (target)\n\n**2. Dueling DQN (Wang et al., 2016):**\n\nSeparate value and advantage streams:\n\n$$Q(s, a) = V(s) + A(s, a)$$\n\n- $V(s)$: State value (얼마나iyi state)\n- $A(s, a)$: Advantage (bu action얼마나 better)\n\n**Architecture:**\n```\nConvolutional layers\n  ↓\n  ├─→ Value stream: V(s)\n  └─→ Advantage stream: A(s, a)\n  ↓\nCombine: Q(s, a) = V(s) + (A(s, a) - mean(A(s, ·)))\n```\n\n**3. Prioritized Experience Replay (Schaul et al., 2016):**\n\nSample transitions based on TD error:\n\n$$P(i) = \\frac{p_i^\\alpha}{\\sum_k p_k^\\alpha}$$\n\n- $p_i = |\\delta_i| + \\epsilon$: priority (TD error)\n- $\\alpha$: how much prioritization\n\nHigher TD error → more important → sample more!\n\n**Importance Sampling Weights:**\n\n$$w_i = \\left(\\frac{1}{N} \\cdot \\frac{1}{P(i)}\\right)^\\beta$$\n\nCorrect bias from non-uniform sampling.\n\n**4. Multi-Step Returns:**\n\nN-step Bellman:\n\n$$y = r_t + \\gamma r_{t+1} + ... + \\gamma^{n-1} r_{t+n-1} + \\gamma^n \\max_{a'} Q(s_{t+n}, a')$$\n\nBalance bias-variance:\n- 1-step: low variance, high bias\n- n-step: higher variance, lower bias\n\n**5. Noisy Networks (Fortunato et al., 2018):**\n\nLearnable exploration! Parameters have noise:\n\n$$y = (\\mu^w + \\sigma^w \\odot \\epsilon^w) x + \\mu^b + \\sigma^b \\odot \\epsilon^b$$\n\nNetwork learns when to explore.\n\n**Rainbow DQN (Hessel et al., 2018):**\n\nCombines all improvements:\n- Double DQN\n- Dueling DQN\n- Prioritized replay\n- Multi-step returns\n- Distributional RL\n- Noisy networks\n\nState-of-the-art Atari performance!",
+    "level4_expert": "**Advanced Topics:**\n\n**Distributional RL (C51, QR-DQN):**\n\nModel full return distribution, not just expectation:\n\n$$Z(s, a) = \\text{distribution of } G_t$$\n\nMore information than single Q-value!\n\n**Implicit Quantile Networks (IQN):**\n\nLearn quantile function:\n\n$$Z_\\tau(s, a) = \\tau\\text{-th quantile of return distribution}$$\n\n**Model-Based RL:**\n\nLearn environment dynamics:\n\n$$P(s' | s, a), R(s, a)$$\n\nPlan using learned model (faster learning, sample efficient).\n\n**Off-Policy vs On-Policy:**\n\n- **DQN:** Off-policy (learn from any experience)\n- **Policy Gradient (PPO, A3C):** On-policy (learn from current policy)\n\nOff-policy more sample efficient!\n\n**Production Considerations:**\n\n**Training:**\n- **Compute:** 1 GPU, ~12 hours for Atari\n- **Hyperparameters:** Sensitive! ε-decay, learning rate, buffer size\n- **Reproducibility:** Seed everything, deterministic ops\n\n**Deployment:**\n- **Inference:** Forward pass (fast, ~1ms)\n- **Model size:** ~1-10 MB\n- **Quantization:** INT8 for edge devices\n\n**Challenges:**\n- **Sample efficiency:** Millions of frames needed\n- **Stability:** Can diverge, careful tuning\n- **Generalization:** Overfits to training environments\n- **Safety:** No guarantees, can learn dangerous policies\n\n**Applications:**\n- Game playing (Atari, Go, Starcraft)\n- Robotics (manipulation, navigation)\n- Autonomous vehicles\n- Resource management (data centers)\n- Trading (algorithmic trading)",
+    "level5_research": "**Research Frontiers:**\n\n**1. Meta-RL:**\nLearn to learn! Adapt quickly to new tasks.\n\n**2. Multi-Agent RL:**\nMultiple agents, cooperation/competition.\n\n**3. Offline RL:**\nLearn from fixed dataset (no environment interaction).\n\n**4. Safe RL:**\nConstraints, risk-aware policies.\n\n**5. Hierarchical RL:**\nOptions framework, temporal abstractions.\n\n**6. Transfer Learning:**\nTransfer knowledge across tasks/domains.\n\n**Future:**\n- Human-level sample efficiency\n- Continual learning (no catastrophic forgetting)\n- Explainable RL\n- Real-world deployment at scale"
+  },
+  "whatIsIt": "Q-Learning optimal action-value function öğrenir: Q(s,a) = expected return. DQN neural network ile Q'yu approximate eder, experience replay + target network ile stable training. Atari games'te human-level!",
+  "whyNeeded": "Sequential decision making, delayed rewards, exploration-exploitation trade-off. Oyunlar, robotik, otonom sistemler için şart. Trial-and-error ile optimal strategy öğrenir!",
+  "realWorldAnalogy": "Satranç öğrenmek gibi: Her hamle (action) bir durumda (state) yapılır, oyun sonunda kazanç/kayıp (reward). Zamanla hangi hamlelerin iyi olduğunu öğrenirsin. Q-value = 'bu hamlede얼마나good'.",
+  "mathematics": {
+    "formulas": [
+      "Q(s, a) = r + \\gamma \\max_{a'} Q(s', a')",
+      "Q(s, a) \\leftarrow Q(s, a) + \\alpha [r + \\gamma \\max_{a'} Q(s', a') - Q(s, a)]",
+      "L(\\theta) = \\mathbb{E}[(y - Q(s, a; \\theta))^2], \\quad y = r + \\gamma \\max_{a'} Q(s', a'; \\theta^-)"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "DQN TRAINING:",
+      "1. Initialize replay buffer D, online network Q(θ), target network Q(θ⁻)",
+      "2. For each episode:",
+      "   a. Reset environment, get initial state s",
+      "   b. For each timestep:",
+      "      i. Select action: ε-greedy (explore vs exploit)",
+      "      ii. Execute action, observe reward r, next state s'",
+      "      iii. Store transition (s, a, r, s', done) in D",
+      "      iv. Sample random minibatch from D",
+      "      v. Compute target: y = r + γ max Q(s', a'; θ⁻)",
+      "      vi. Loss: L = (y - Q(s, a; θ))²",
+      "      vii. Update θ via gradient descent",
+      "      viii. Every C steps: θ⁻ ← θ (update target network)",
+      "   c. Decay ε (reduce exploration over time)",
+      "3. Repeat until convergence"
+    ],
+    "complexity": "Forward pass: O(1) per action. Training: O(batch_size × forward_backward). Memory: O(buffer_size × state_size)."
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Simple Q-Learning - Grid World",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"Q-LEARNING: GRID WORLD\")\nprint(\"=\"*60)\n\n# Simple 5x5 grid world\n# S: start, G: goal, X: obstacle\ngrid = [\n    ['S', '.', '.', '.', '.'],\n    ['.', 'X', '.', 'X', '.'],\n    ['.', 'X', '.', '.', '.'],\n    ['.', '.', '.', 'X', '.'],\n    ['.', '.', '.', '.', 'G']\n]\n\nclass GridWorld:\n    def __init__(self, grid):\n        self.grid = grid\n        self.n_rows = len(grid)\n        self.n_cols = len(grid[0])\n        self.actions = ['up', 'down', 'left', 'right']\n        self.n_actions = len(self.actions)\n        \n        # Find start and goal\n        for i in range(self.n_rows):\n            for j in range(self.n_cols):\n                if grid[i][j] == 'S':\n                    self.start = (i, j)\n                elif grid[i][j] == 'G':\n                    self.goal = (i, j)\n    \n    def reset(self):\n        self.state = self.start\n        return self.state\n    \n    def step(self, action):\n        r, c = self.state\n        \n        # Apply action\n        if action == 0:  # up\n            r = max(0, r - 1)\n        elif action == 1:  # down\n            r = min(self.n_rows - 1, r + 1)\n        elif action == 2:  # left\n            c = max(0, c - 1)\n        elif action == 3:  # right\n            c = min(self.n_cols - 1, c + 1)\n        \n        # Check obstacle\n        if self.grid[r][c] == 'X':\n            r, c = self.state  # Stay in place\n        \n        self.state = (r, c)\n        \n        # Reward\n        if self.state == self.goal:\n            reward = 10.0\n            done = True\n        else:\n            reward = -0.1  # Step penalty\n            done = False\n        \n        return self.state, reward, done\n\n# Q-Learning\nenv = GridWorld(grid)\nn_states = env.n_rows * env.n_cols\nn_actions = env.n_actions\n\n# Q-table: [states, actions]\nQ = np.zeros((env.n_rows, env.n_cols, n_actions))\n\n# Hyperparameters\nalpha = 0.1  # Learning rate\ngamma = 0.9  # Discount factor\nepsilon = 1.0  # Exploration rate\nepsilon_decay = 0.995\nepsilon_min = 0.01\n\nprint(f\"\\nGrid World: {env.n_rows}×{env.n_cols}\")\nprint(f\"Start: {env.start}, Goal: {env.goal}\")\nprint(f\"\\nHyperparameters:\")\nprint(f\"  α (learning rate): {alpha}\")\nprint(f\"  γ (discount): {gamma}\")\nprint(f\"  ε (exploration): {epsilon} → {epsilon_min}\")\n\n# Training\nnum_episodes = 500\nrewards_history = []\n\nprint(\"\\n🏋️ Training Q-Learning...\\n\")\n\nfor episode in range(num_episodes):\n    state = env.reset()\n    total_reward = 0\n    \n    for step in range(100):  # Max steps per episode\n        r, c = state\n        \n        # ε-greedy action selection\n        if np.random.rand() < epsilon:\n            action = np.random.randint(n_actions)  # Explore\n        else:\n            action = np.argmax(Q[r, c])  # Exploit\n        \n        # Take action\n        next_state, reward, done = env.step(action)\n        next_r, next_c = next_state\n        \n        # Q-Learning update\n        old_q = Q[r, c, action]\n        next_max_q = np.max(Q[next_r, next_c])\n        new_q = old_q + alpha * (reward + gamma * next_max_q - old_q)\n        Q[r, c, action] = new_q\n        \n        total_reward += reward\n        state = next_state\n        \n        if done:\n            break\n    \n    rewards_history.append(total_reward)\n    \n    # Decay epsilon\n    epsilon = max(epsilon_min, epsilon * epsilon_decay)\n    \n    if (episode + 1) % 100 == 0:\n        avg_reward = np.mean(rewards_history[-100:])\n        print(f\"Episode {episode+1}/{num_episodes}, Avg Reward: {avg_reward:.2f}, ε: {epsilon:.3f}\")\n\nprint(\"\\n✓ Training complete!\")\n\n# Visualize learned policy\nprint(\"\\n\" + \"=\"*60)\nprint(\"LEARNED POLICY\")\nprint(\"=\"*60)\n\narrows = ['↑', '↓', '←', '→']\npolicy_grid = []\n\nfor i in range(env.n_rows):\n    row = []\n    for j in range(env.n_cols):\n        if (i, j) == env.goal:\n            row.append('G')\n        elif grid[i][j] == 'X':\n            row.append('X')\n        elif (i, j) == env.start:\n            row.append('S')\n        else:\n            best_action = np.argmax(Q[i, j])\n            row.append(arrows[best_action])\n    policy_grid.append(row)\n\nprint(\"\\nLearned Policy (arrows show best action):\")\nfor row in policy_grid:\n    print('  '.join(row))\n\n# Plot training curve\nplt.figure(figsize=(10, 6))\nplt.plot(rewards_history, alpha=0.3)\nplt.plot(np.convolve(rewards_history, np.ones(50)/50, mode='valid'), linewidth=2)\nplt.xlabel('Episode', fontsize=12)\nplt.ylabel('Total Reward', fontsize=12)\nplt.title('Q-Learning Training Progress', fontsize=14)\nplt.grid(True, alpha=0.3)\nplt.tight_layout()\n\nprint(\"\\n💡 Q-Learning learned optimal path from S to G!\")",
+      "explanation": "Simple Q-Learning grid world'de. Q-table ile discrete states/actions. ε-greedy exploration, Bellman update. Policy visualization!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "DQN - CartPole Environment",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nfrom collections import deque\nimport random\n\nprint(\"=\"*60)\nprint(\"DEEP Q-NETWORK (DQN)\")\nprint(\"=\"*60)\n\nclass DQN(nn.Module):\n    \"\"\"Deep Q-Network\"\"\"\n    def __init__(self, state_size, action_size, hidden_size=128):\n        super().__init__()\n        self.fc1 = nn.Linear(state_size, hidden_size)\n        self.fc2 = nn.Linear(hidden_size, hidden_size)\n        self.fc3 = nn.Linear(hidden_size, action_size)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = torch.relu(self.fc2(x))\n        x = self.fc3(x)  # Q-values for each action\n        return x\n\nclass ReplayBuffer:\n    \"\"\"Experience Replay Buffer\"\"\"\n    def __init__(self, capacity):\n        self.buffer = deque(maxlen=capacity)\n    \n    def add(self, state, action, reward, next_state, done):\n        self.buffer.append((state, action, reward, next_state, done))\n    \n    def sample(self, batch_size):\n        batch = random.sample(self.buffer, batch_size)\n        states, actions, rewards, next_states, dones = zip(*batch)\n        return (\n            np.array(states),\n            np.array(actions),\n            np.array(rewards),\n            np.array(next_states),\n            np.array(dones)\n        )\n    \n    def __len__(self):\n        return len(self.buffer)\n\nclass DQNAgent:\n    def __init__(self, state_size, action_size):\n        self.state_size = state_size\n        self.action_size = action_size\n        \n        # Networks\n        self.online_network = DQN(state_size, action_size)\n        self.target_network = DQN(state_size, action_size)\n        self.target_network.load_state_dict(self.online_network.state_dict())\n        self.target_network.eval()\n        \n        # Training\n        self.optimizer = optim.Adam(self.online_network.parameters(), lr=0.001)\n        self.criterion = nn.MSELoss()\n        \n        # Replay buffer\n        self.replay_buffer = ReplayBuffer(capacity=10000)\n        \n        # Hyperparameters\n        self.gamma = 0.99\n        self.epsilon = 1.0\n        self.epsilon_decay = 0.995\n        self.epsilon_min = 0.01\n        self.batch_size = 64\n        self.target_update_freq = 10\n        \n        self.steps = 0\n    \n    def select_action(self, state, training=True):\n        \"\"\"ε-greedy action selection\"\"\"\n        if training and random.random() < self.epsilon:\n            return random.randint(0, self.action_size - 1)\n        \n        with torch.no_grad():\n            state_tensor = torch.FloatTensor(state).unsqueeze(0)\n            q_values = self.online_network(state_tensor)\n            return q_values.argmax().item()\n    \n    def train_step(self):\n        \"\"\"Single training step\"\"\"\n        if len(self.replay_buffer) < self.batch_size:\n            return None\n        \n        # Sample batch\n        states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)\n        \n        # Convert to tensors\n        states = torch.FloatTensor(states)\n        actions = torch.LongTensor(actions)\n        rewards = torch.FloatTensor(rewards)\n        next_states = torch.FloatTensor(next_states)\n        dones = torch.FloatTensor(dones)\n        \n        # Current Q-values\n        current_q = self.online_network(states).gather(1, actions.unsqueeze(1)).squeeze()\n        \n        # Target Q-values (using target network)\n        with torch.no_grad():\n            next_q = self.target_network(next_states).max(1)[0]\n            target_q = rewards + self.gamma * next_q * (1 - dones)\n        \n        # Loss\n        loss = self.criterion(current_q, target_q)\n        \n        # Optimize\n        self.optimizer.zero_grad()\n        loss.backward()\n        self.optimizer.step()\n        \n        # Update target network\n        self.steps += 1\n        if self.steps % self.target_update_freq == 0:\n            self.target_network.load_state_dict(self.online_network.state_dict())\n        \n        return loss.item()\n    \n    def decay_epsilon(self):\n        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)\n\nprint(\"\\nDQN Agent created!\")\nprint(f\"  State size: 4 (CartPole: position, velocity, angle, angular_velocity)\")\nprint(f\"  Action size: 2 (left, right)\")\nprint(f\"  Network: 4 → 128 → 128 → 2\")\n\n# Mock training (CartPole-like)\nprint(\"\\n\" + \"=\"*60)\nprint(\"TRAINING SIMULATION\")\nprint(\"=\"*60)\n\nagent = DQNAgent(state_size=4, action_size=2)\n\nprint(\"\\nHyperparameters:\")\nprint(f\"  γ (discount): {agent.gamma}\")\nprint(f\"  ε (exploration): {agent.epsilon} → {agent.epsilon_min}\")\nprint(f\"  Batch size: {agent.batch_size}\")\nprint(f\"  Buffer capacity: {agent.replay_buffer.buffer.maxlen}\")\nprint(f\"  Target update freq: {agent.target_update_freq} steps\")\n\nprint(\"\\n🏋️ Training DQN...\\n\")\n\n# Simulate training\nnum_episodes = 200\nrewards_history = []\n\nfor episode in range(num_episodes):\n    # Simulate episode\n    state = np.random.randn(4)  # Mock state\n    episode_reward = 0\n    \n    for step in range(100):\n        # Select action\n        action = agent.select_action(state)\n        \n        # Mock environment step\n        next_state = np.random.randn(4)\n        reward = np.random.rand()  # Mock reward\n        done = step == 99 or np.random.rand() < 0.05\n        \n        # Store transition\n        agent.replay_buffer.add(state, action, reward, next_state, done)\n        \n        # Train\n        loss = agent.train_step()\n        \n        episode_reward += reward\n        state = next_state\n        \n        if done:\n            break\n    \n    # Decay epsilon\n    agent.decay_epsilon()\n    rewards_history.append(episode_reward)\n    \n    if (episode + 1) % 50 == 0:\n        avg_reward = np.mean(rewards_history[-50:])\n        print(f\"Episode {episode+1}/{num_episodes}, \"\n              f\"Avg Reward: {avg_reward:.2f}, \"\n              f\"ε: {agent.epsilon:.3f}, \"\n              f\"Buffer: {len(agent.replay_buffer)}\")\n\nprint(\"\\n✓ DQN training complete!\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"KEY COMPONENTS\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n1️⃣  Neural Network:\n   • Input: State vector\n   • Output: Q-values for each action\n   • Replace Q-table with function approximation\n\n2️⃣  Experience Replay:\n   • Store transitions (s, a, r, s', done)\n   • Sample random minibatches\n   • Break temporal correlation\n   • Data efficiency\n\n3️⃣  Target Network:\n   • Separate network for target Q-values\n   • Periodic update (frozen between updates)\n   • Stabilizes training (no moving target)\n\n4️⃣  ε-Greedy Exploration:\n   • ε = 1.0 → 0.01 (explore → exploit)\n   • Balance exploration vs exploitation\n   • Decay schedule important!\n\"\"\")",
+      "explanation": "Complete DQN implementation! Neural network Q-function, experience replay buffer, target network, ε-greedy. CartPole-style environment simulation."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Double DQN & Dueling DQN",
+      "code": "import torch\nimport torch.nn as nn\n\nprint(\"=\"*60)\nprint(\"DQN IMPROVEMENTS\")\nprint(\"=\"*60)\n\nprint(\"\\n1️⃣  DOUBLE DQN\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nProblem: DQN overestimates Q-values\n  • max operator introduces positive bias\n  • Q(s,a) systematically too high\n\nSolution: Decouple action selection and evaluation\n  • Online network: SELECT best action\n  • Target network: EVALUATE that action\n\"\"\")\n\nclass DoubleDQNAgent(DQNAgent):\n    def train_step_double(self):\n        if len(self.replay_buffer) < self.batch_size:\n            return None\n        \n        states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)\n        \n        states = torch.FloatTensor(states)\n        actions = torch.LongTensor(actions)\n        rewards = torch.FloatTensor(rewards)\n        next_states = torch.FloatTensor(next_states)\n        dones = torch.FloatTensor(dones)\n        \n        # Current Q\n        current_q = self.online_network(states).gather(1, actions.unsqueeze(1)).squeeze()\n        \n        with torch.no_grad():\n            # DOUBLE DQN:\n            # 1. Online network selects action\n            next_actions = self.online_network(next_states).argmax(1)\n            \n            # 2. Target network evaluates that action\n            next_q = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze()\n            \n            target_q = rewards + self.gamma * next_q * (1 - dones)\n        \n        loss = self.criterion(current_q, target_q)\n        \n        self.optimizer.zero_grad()\n        loss.backward()\n        self.optimizer.step()\n        \n        return loss.item()\n\nprint(\"\"\"\nCode comparison:\n\n# Standard DQN:\nnext_q = target_network(s').max()  # Same network selects & evaluates\n\n# Double DQN:\nbest_action = online_network(s').argmax()  # SELECT\nnext_q = target_network(s')[best_action]   # EVALUATE\n\nResult: Less overestimation, more stable!\n\"\"\")\n\nprint(\"\\n2️⃣  DUELING DQN\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nIdea: Separate value and advantage\n  Q(s, a) = V(s) + A(s, a)\n  \n  V(s): How good is this state?\n  A(s, a): How much better is this action?\n\"\"\")\n\nclass DuelingDQN(nn.Module):\n    def __init__(self, state_size, action_size, hidden_size=128):\n        super().__init__()\n        \n        # Shared feature extraction\n        self.feature = nn.Sequential(\n            nn.Linear(state_size, hidden_size),\n            nn.ReLU()\n        )\n        \n        # Value stream\n        self.value_stream = nn.Sequential(\n            nn.Linear(hidden_size, hidden_size),\n            nn.ReLU(),\n            nn.Linear(hidden_size, 1)  # Single value\n        )\n        \n        # Advantage stream\n        self.advantage_stream = nn.Sequential(\n            nn.Linear(hidden_size, hidden_size),\n            nn.ReLU(),\n            nn.Linear(hidden_size, action_size)  # Advantage per action\n        )\n    \n    def forward(self, x):\n        features = self.feature(x)\n        \n        value = self.value_stream(features)  # [batch, 1]\n        advantage = self.advantage_stream(features)  # [batch, n_actions]\n        \n        # Combine: Q = V + (A - mean(A))\n        # Subtract mean for identifiability\n        q_values = value + (advantage - advantage.mean(dim=1, keepdim=True))\n        \n        return q_values\n\nprint(\"\"\"\nArchitecture:\n\n  Input State\n      ↓\n  Shared Layers\n      ↓\n   ┌─────┴─────┐\n   ↓           ↓\n Value      Advantage\n Stream      Stream\n   ↓           ↓\n  V(s)      A(s,a)\n   └─────┬─────┘\n         ↓\n    Q(s,a) = V(s) + (A(s,a) - mean(A))\n\nBenefit:\n  • Learn state value independently\n  • Actions matter only when they differ\n  • Faster learning, better performance!\n\"\"\")\n\n# Test\nmodel = DuelingDQN(state_size=4, action_size=2)\nstate = torch.randn(1, 4)\nq_values = model(state)\n\nprint(f\"\\nTest forward pass:\")\nprint(f\"  Input shape: {state.shape}\")\nprint(f\"  Output Q-values: {q_values.shape}\")\nprint(f\"  Q-values: {q_values.detach().numpy()}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  PRIORITIZED EXPERIENCE REPLAY\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nIdea: Sample important transitions more frequently\n\nPriority = TD Error + ε\n  • High TD error → model surprised → learn more\n  • Small ε prevents zero probability\n\nSampling probability:\n  P(i) = (priority_i)^α / Σ(priority_k)^α\n  \n  α = 0: Uniform sampling\n  α = 1: Fully prioritized\n\nImportance Sampling Weight:\n  w_i = (1/N * 1/P(i))^β\n  \n  Corrects bias from non-uniform sampling\n  β = 0 → 1 during training\n\nResult: 2x faster learning!\n\"\"\")\n\nprint(\"\\n✓ DQN improvements significantly boost performance!\")",
+      "explanation": "DQN improvements: Double DQN (overestimation fix), Dueling DQN (value/advantage separation), Prioritized Replay (sample important transitions). Each adds significant performance boost!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production DQN - Best Practices",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\nfrom pathlib import Path\n\nprint(\"=\"*60)\nprint(\"PRODUCTION DQN BEST PRACTICES\")\nprint(\"=\"*60)\n\nclass ProductionDQN:\n    \"\"\"\n    Production-ready DQN with all best practices\n    \"\"\"\n    def __init__(self, config):\n        self.config = config\n        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n        \n        # Networks\n        self.online_network = self._build_network().to(self.device)\n        self.target_network = self._build_network().to(self.device)\n        self.target_network.load_state_dict(self.online_network.state_dict())\n        self.target_network.eval()\n        \n        # Optimizer\n        self.optimizer = torch.optim.Adam(\n            self.online_network.parameters(),\n            lr=config['learning_rate']\n        )\n        \n        # Replay buffer\n        self.replay_buffer = deque(maxlen=config['buffer_size'])\n        \n        # Training stats\n        self.steps = 0\n        self.episodes = 0\n        \n    def _build_network(self):\n        # Build network based on config\n        pass\n    \n    def save_checkpoint(self, path, episode, metrics):\n        \"\"\"\n        Save complete checkpoint for reproducibility\n        \"\"\"\n        checkpoint = {\n            'episode': episode,\n            'steps': self.steps,\n            'online_network': self.online_network.state_dict(),\n            'target_network': self.target_network.state_dict(),\n            'optimizer': self.optimizer.state_dict(),\n            'config': self.config,\n            'metrics': metrics,\n            'rng_state': {\n                'python': random.getstate(),\n                'numpy': np.random.get_state(),\n                'torch': torch.get_rng_state()\n            }\n        }\n        torch.save(checkpoint, path)\n        print(f\"✓ Checkpoint saved: {path}\")\n    \n    def load_checkpoint(self, path):\n        \"\"\"\n        Load checkpoint and restore exact state\n        \"\"\"\n        checkpoint = torch.load(path, map_location=self.device)\n        \n        self.online_network.load_state_dict(checkpoint['online_network'])\n        self.target_network.load_state_dict(checkpoint['target_network'])\n        self.optimizer.load_state_dict(checkpoint['optimizer'])\n        self.steps = checkpoint['steps']\n        self.episodes = checkpoint['episode']\n        \n        # Restore RNG states for reproducibility\n        random.setstate(checkpoint['rng_state']['python'])\n        np.random.set_state(checkpoint['rng_state']['numpy'])\n        torch.set_rng_state(checkpoint['rng_state']['torch'])\n        \n        print(f\"✓ Checkpoint loaded: episode {self.episodes}, steps {self.steps}\")\n        return checkpoint['metrics']\n\nprint(\"\"\"\n1️⃣  REPRODUCIBILITY\n\"\"\")\n\nprint(\"\"\"\ndef set_seed(seed=42):\n    random.seed(seed)\n    np.random.seed(seed)\n    torch.manual_seed(seed)\n    torch.cuda.manual_seed_all(seed)\n    torch.backends.cudnn.deterministic = True\n    torch.backends.cudnn.benchmark = False\n    \n    # Environment seed\n    env.seed(seed)\n\nset_seed(42)  # ALWAYS seed for reproducibility!\n\"\"\")\n\nprint(\"\\n2️⃣  GRADIENT CLIPPING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nDQN can have exploding gradients!\n\nloss.backward()\ntorch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)\noptimizer.step()\n\nTypical max_norm: 1.0 - 10.0\n\"\"\")\n\nprint(\"\\n3️⃣  LEARNING RATE SCHEDULING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n# Linear decay\nscheduler = torch.optim.lr_scheduler.LinearLR(\n    optimizer,\n    start_factor=1.0,\n    end_factor=0.1,\n    total_iters=num_episodes\n)\n\n# Or step decay\nscheduler = torch.optim.lr_scheduler.StepLR(\n    optimizer,\n    step_size=1000,\n    gamma=0.9\n)\n\"\"\")\n\nprint(\"\\n4️⃣  REWARD CLIPPING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nAtari: Rewards vary wildly (-100 to +100)\n\n# Clip to [-1, +1]\nreward = np.clip(reward, -1.0, 1.0)\n\nHelps:\n  • Stable gradients\n  • Consistent scale across games\n  • Faster convergence\n\"\"\")\n\nprint(\"\\n5️⃣  FRAME STACKING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nAtari: Single frame doesn't show motion\n\nSolution: Stack last 4 frames\n  Input: [batch, 4, 84, 84]  # 4 grayscale frames\n\nProvides temporal information (velocity, direction)\n\"\"\")\n\nprint(\"\\n6️⃣  EVALUATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\ndef evaluate(agent, env, num_episodes=10):\n    agent.online_network.eval()  # Eval mode\n    \n    total_rewards = []\n    \n    for _ in range(num_episodes):\n        state = env.reset()\n        episode_reward = 0\n        done = False\n        \n        while not done:\n            # No exploration during eval!\n            action = agent.select_action(state, training=False)\n            state, reward, done, _ = env.step(action)\n            episode_reward += reward\n        \n        total_rewards.append(episode_reward)\n    \n    agent.online_network.train()  # Back to train mode\n    \n    return {\n        'mean': np.mean(total_rewards),\n        'std': np.std(total_rewards),\n        'min': np.min(total_rewards),\n        'max': np.max(total_rewards)\n    }\n\n# Evaluate every N episodes\nif episode % eval_freq == 0:\n    metrics = evaluate(agent, env)\n    print(f\"Eval: {metrics['mean']:.2f} ± {metrics['std']:.2f}\")\n\"\"\")\n\nprint(\"\\n7️⃣  EARLY STOPPING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nbest_reward = -float('inf')\npatience = 50\npatience_counter = 0\n\nfor episode in range(max_episodes):\n    # Train...\n    \n    # Evaluate\n    if episode % eval_freq == 0:\n        eval_reward = evaluate(agent, env)['mean']\n        \n        if eval_reward > best_reward:\n            best_reward = eval_reward\n            patience_counter = 0\n            agent.save_checkpoint('best_model.pt', episode, {'reward': best_reward})\n        else:\n            patience_counter += 1\n        \n        if patience_counter >= patience:\n            print(f\"Early stopping at episode {episode}\")\n            break\n\"\"\")\n\nprint(\"\\n8️⃣  HYPERPARAMETER LOGGING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n# Use tensorboard or wandb\nfrom torch.utils.tensorboard import SummaryWriter\n\nwriter = SummaryWriter('runs/dqn_experiment')\n\nfor episode in range(num_episodes):\n    # Training...\n    \n    writer.add_scalar('Reward/train', episode_reward, episode)\n    writer.add_scalar('Loss/train', loss, episode)\n    writer.add_scalar('Epsilon', epsilon, episode)\n    writer.add_scalar('Q_value/mean', q_mean, episode)\n    \nwriter.close()\n\n# View: tensorboard --logdir runs/\n\"\"\")\n\nprint(\"\\n9️⃣  DEPLOYMENT\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n# Export to ONNX for production\ndummy_input = torch.randn(1, state_size)\ntorch.onnx.export(\n    agent.online_network,\n    dummy_input,\n    'dqn_model.onnx',\n    input_names=['state'],\n    output_names=['q_values'],\n    dynamic_axes={'state': {0: 'batch_size'}}\n)\n\n# Load in production (C++, TensorRT, etc.)\nimport onnxruntime as ort\nsession = ort.InferenceSession('dqn_model.onnx')\nq_values = session.run(None, {'state': state_np})[0]\naction = np.argmax(q_values)\n\"\"\")\n\nprint(\"\\n🔟  MONITORING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nTrack these metrics:\n  • Episode reward (mean, std, min, max)\n  • Episode length\n  • Loss\n  • Q-value statistics (mean, std)\n  • Epsilon (exploration rate)\n  • Replay buffer size\n  • Training FPS\n  • Gradient norms\n\nSet alerts:\n  • Loss = NaN → training diverged\n  • Q-values exploding → instability\n  • Reward not improving → hyperparameter issue\n\"\"\")\n\nprint(\"\\n✓ Production DQN checklist complete!\")",
+      "explanation": "Production DQN: Reproducibility (seed), gradient clipping, LR scheduling, reward clipping, frame stacking, proper evaluation, early stopping, logging, deployment (ONNX), monitoring. Industrial-strength implementation!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Q-Learning'de Bellman equation nedir?",
+      "options": [
+        "Q(s,a) = r",
+        "Q(s,a) = r + γ max Q(s', a')",
+        "Q(s,a) = max Q(s', a')",
+        "Q(s,a) = r + s'"
+      ],
+      "correct": 1,
+      "explanation": "Bellman equation: Q(s,a) = r + γ max Q(s',a'). Current Q-value = immediate reward + discounted best future Q-value. Recursive definition!"
+    },
+    {
+      "question": "DQN'de experience replay neden kullanılır?",
+      "options": [
+        "Training'i hızlandırır",
+        "Temporal correlation'ı kırar, data efficiency artar, stable training",
+        "Model size'ı küçültür",
+        "Sadece memory save için"
+      ],
+      "correct": 1,
+      "explanation": "Experience replay: (s,a,r,s') transitions'ı store et, random batch sample et. Successive states correlated → batch'te mix et → stable training. Data reuse → efficiency!"
+    },
+    {
+      "question": "Target network neden gerekli?",
+      "options": [
+        "Training'i hızlandırır",
+        "Moving target problem'i çözer, training stabilize eder",
+        "Memory save",
+        "Daha iyi exploration"
+      ],
+      "correct": 1,
+      "explanation": "Target network frozen (periodic update). Online network her step değişirse target da değişir (moving target) → unstable! Target frozen → stable training."
+    },
+    {
+      "question": "ε-greedy exploration nedir?",
+      "options": [
+        "Her zaman random action",
+        "Her zaman best action",
+        "ε probability random (explore), 1-ε probability best (exploit)",
+        "Sadece training başında explore"
+      ],
+      "correct": 2,
+      "explanation": "ε-greedy: ε prob'de random action (explore), 1-ε prob'de argmax Q (exploit). ε decay ile exploration azalır (1.0 → 0.01). Balance explore-exploit!"
+    },
+    {
+      "question": "Double DQN standard DQN'den nasıl farklı?",
+      "options": [
+        "2 tane agent kullanır",
+        "Action selection (online) ve evaluation (target) decouple eder",
+        "2 kat hızlı",
+        "Aynıdır"
+      ],
+      "correct": 1,
+      "explanation": "Double DQN: Online network action seçer, target network evaluate eder. DQN'deki overestimation bias'ını düzeltir. Tek network hem seçip hem evaluate ederse bias!"
+    },
+    {
+      "question": "Dueling DQN'de Q(s,a) nasıl decompose edilir?",
+      "options": [
+        "Q(s,a) = s + a",
+        "Q(s,a) = V(s) + A(s,a)",
+        "Q(s,a) = V(s) × A(s,a)",
+        "Decompose edilmez"
+      ],
+      "correct": 1,
+      "explanation": "Dueling: Q(s,a) = V(s) + A(s,a). V(s) =얼마나good state, A(s,a) = bu action얼마나 better. Separate streams, faster learning!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Target network'ü update etmeyi unutmak",
+      "why": "Target network frozen kalmalı, periodic update gerekli. Unutursan online=target olur, moving target problem!",
+      "fix": "Her C steps'te target_network.load_state_dict(online_network.state_dict())",
+      "example": "# Her 10 adımda update\nif self.steps % 10 == 0:\n    self.target_network.load_state_dict(\n        self.online_network.state_dict()\n    )  # ✓"
+    },
+    {
+      "mistake": "Evaluation sırasında exploration yapmak",
+      "why": "Evaluation deterministic olmalı! ε-greedy ile random actions → noisy metrics.",
+      "fix": "Evaluation'da training=False, her zaman argmax Q al.",
+      "example": "# YANLIŞ\naction = agent.select_action(state)  # ε-greedy!\n\n# DOĞRU\naction = agent.select_action(state, training=False)  # ✓ No ε"
+    },
+    {
+      "mistake": "Discount factor γ'yı yanlış seçmek",
+      "why": "γ=0 → myopic (sadece immediate), γ=1 → all equal (unstable). Balance gerekli!",
+      "fix": "γ=0.9-0.99 tipik. Short-term tasks için düşük, long-term için yüksek.",
+      "example": "# Short episodic tasks\ngamma = 0.9  # ✓\n\n# Long-term planning\ngamma = 0.99  # ✓"
+    },
+    {
+      "mistake": "Replay buffer'ı çok küçük tutmak",
+      "why": "Küçük buffer → recent experiences only → overfitting, poor generalization.",
+      "fix": "10K-1M capacity. Memory허락 ettiği kadar büyük!",
+      "example": "# Too small\nbuffer = ReplayBuffer(1000)  # ❌\n\n# Better\nbuffer = ReplayBuffer(100000)  # ✓"
+    },
+    {
+      "mistake": "ε decay'i çok hızlı yapmak",
+      "why": "Erken exploration bırakırsan suboptimal policy'ye takılırsın.",
+      "fix": "Yavaş decay: 1.0 → 0.01 over many episodes (1000+).",
+      "example": "# Too fast\nepsilon *= 0.9  # ❌ 0.01'e çok çabuk ulaşır\n\n# Better\nepsilon *= 0.995  # ✓ Gradual decay"
+    },
+    {
+      "mistake": "Training başında batch sample etmeye çalışmak",
+      "why": "Buffer henüz dolmadı! Batch_size kadar experience yok.",
+      "fix": "if len(buffer) < batch_size: return",
+      "example": "if len(self.replay_buffer) < self.batch_size:\n    return None  # ✓ Skip training"
+    },
+    {
+      "mistake": "Reward clipping yapmamak (Atari)",
+      "why": "Rewards vary wildly (-100 to +100) → unstable gradients.",
+      "fix": "Clip to [-1, +1] for Atari.",
+      "example": "reward = np.clip(reward, -1.0, 1.0)  # ✓"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Q-Learning nedir?",
+      "back": "Action-value function Q(s,a) öğrenir. Bellman equation ile update: Q(s,a) ← Q(s,a) + α[r + γ max Q(s',a') - Q(s,a)]. Optimal policy: π(s) = argmax Q(s,a)."
+    },
+    {
+      "front": "DQN'in 2 key innovation'ı?",
+      "back": "1) Experience replay: (s,a,r,s') store, random batch sample → break correlation. 2) Target network: Frozen Q for targets → stable training. Moving target problem çözer!"
+    },
+    {
+      "front": "ε-greedy exploration nedir?",
+      "back": "ε prob random action (explore), 1-ε prob argmax Q (exploit). ε decay: 1.0 → 0.01. Exploration-exploitation trade-off!"
+    },
+    {
+      "front": "Bellman equation?",
+      "back": "Q(s,a) = r + γ max Q(s',a'). Current Q = immediate reward + discounted best future Q. Recursive definition, optimal Q'ya converge eder!"
+    },
+    {
+      "front": "Double DQN nasıl çalışır?",
+      "back": "Online network action seçer, target network evaluate eder. DQN overestimation bias'ını fix eder. Decouple selection and evaluation!"
+    },
+    {
+      "front": "Dueling DQN architecture?",
+      "back": "Q(s,a) = V(s) + A(s,a). Value stream (얼마나 good state) + Advantage stream (얼마나 better action). Separate, combine. Faster learning!"
+    },
+    {
+      "front": "Discount factor γ'nin rolü?",
+      "back": "Future rewards'ı discount et. γ=0: myopic (immediate only), γ=1: all equal, γ=0.9-0.99: balance. Long-term için high!"
+    },
+    {
+      "front": "DQN applications?",
+      "back": "Atari games (human-level), robotics, autonomous vehicles, resource management, trading. Any sequential decision making with delayed rewards!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "Q-Learning Grid World",
+      "description": "Grid world'de Q-Learning training animation. Q-values evolution, policy convergence, exploration-exploitation.",
+      "component": "QLearningGridWorld"
+    },
+    {
+      "type": "animation",
+      "title": "DQN Architecture & Training",
+      "description": "DQN neural network architecture, experience replay, target network update. Forward pass, loss computation, gradient flow.",
+      "component": "DQNArchitecture"
+    },
+    {
+      "type": "plot",
+      "title": "Exploration vs Exploitation",
+      "description": "ε-greedy'nin training boyunca etkisi. Epsilon decay, reward evolution, action selection distribution.",
+      "component": "ExplorationExploitation"
+    },
+    {
+      "type": "interactive",
+      "title": "Double DQN vs DQN",
+      "description": "Q-value overestimation comparison. Standard DQN vs Double DQN, bias visualization.",
+      "component": "DoubleDQNComparison"
+    }
+  ]
+}

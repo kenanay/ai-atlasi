@@ -1,0 +1,251 @@
+{
+  "id": "tokenization",
+  "title": "Tokenization (BPE, WordPiece, SentencePiece)",
+  "category": "nlp",
+  "level": 2,
+  "estimatedTime": 45,
+  "description": "Text'i model'in anlayabileceği token'lara ayırma. BPE, WordPiece, SentencePiece algoritmaları. Subword tokenization, OOV handling, multilingual support.",
+  "prerequisites": ["word-embeddings", "neural-networks"],
+  "tags": ["nlp", "tokenization", "bpe", "wordpiece", "sentencepiece", "subword"],
+  "content": {
+    "level0_basic": "Bilgisayar kelimeleri anlamaz, sayıları anlar! 'Hello world' cümlesini modele vermeden önce token'lara ayırmalısın. En basit: kelime bazında → ['Hello', 'world']. Problem: 'supercalifragilistic' gibi nadir kelimeler? Vocabulary'de yok (OOV)! Subword tokenization çözüm: kelimeleri parçalara ayır → ['super', 'cal', 'ifrag', 'ilistic']. BPE, WordPiece bu işi yapar. Nadir kelimeler bile handle edilir, vocabulary küçük kalır. GPT, BERT hepsi subword kullanır!",
+    "level1_beginner": "**Tokenization:** Text'i atomik units'lere (tokens) ayırma.\n\n**Seçenekler:**\n\n**1. Character-level:**\n'hello' → ['h', 'e', 'l', 'l', 'o']\n\n✓ Small vocabulary (~100)\n✓ No OOV\n❌ Very long sequences\n❌ Lost word-level meaning\n\n**2. Word-level:**\n'hello world' → ['hello', 'world']\n\n✓ Semantic meaning preserved\n❌ Large vocabulary (100K+)\n❌ OOV problem (unseen words)\n❌ Morphology ignored ('run', 'running' separate)\n\n**3. Subword-level:** 🏆 Best!\n'running' → ['run', '##ning']\n\n✓ Medium vocabulary (30K-50K)\n✓ No OOV (compose from subwords)\n✓ Morphology captured\n✓ Rare words handled\n\n**BPE (Byte-Pair Encoding):**\n\nOriginally data compression, adapted for NLP (Sennrich et al., 2016).\n\n**Algorithm:**\n\n1. Start with character vocabulary\n2. Find most frequent adjacent pair\n3. Merge into new token\n4. Repeat until desired vocab size\n\n**Example:**\n\n```\nData: 'low low low lower lowest'\n\nIteration 1:\nMost frequent pair: ('l', 'o') → 'lo'\nVocab: ['l', 'o', 'w', 'e', 'r', 's', 't', 'lo']\n\nIteration 2:\nMost frequent: ('lo', 'w') → 'low'\nVocab: [..., 'low']\n\nIteration 3:\n('low', 'e') → 'lowe'\n...\n```\n\n**Encoding:**\n'lowest' → Greedy longest match:\n1. Check 'lowest' (not in vocab)\n2. Check 'lowes' (not in vocab)\n3. Check 'lowe' (in vocab!) → 'lowe'\n4. Remaining: 'st'\n5. Result: ['lowe', 's', 't']\n\n**WordPiece (Schuster & Nakajima, 2012):**\n\nUsed by BERT!\n\nSimilar to BPE but:\n- Merges based on likelihood increase (not frequency)\n- Uses '##' prefix for continuation tokens\n\n**Example:**\n'unbelievable' → ['un', '##bel', '##iev', '##able']\n\n'##' means: continuation of previous token.\n\n**SentencePiece (Kudo & Richardson, 2018):**\n\nLanguage-agnostic, no pre-tokenization!\n\n**Key difference:**\nBPE/WordPiece: Pre-tokenize with spaces\nSentencePiece: Treat text as raw byte stream\n\n**Why?**\nChinese, Japanese no spaces!\n'你好世界' → SentencePiece handles directly\n\n**Modes:**\n- BPE mode\n- Unigram language model mode\n\nUsed by: T5, XLNet, ALBERT",
+    "level2_application": "**BPE Detailed Algorithm:**\n\n**Training:**\n\n```python\ndef train_bpe(corpus, vocab_size):\n    # 1. Initialize with characters\n    vocab = set(char for word in corpus for char in word)\n    vocab.add('<unk>')  # Unknown token\n    \n    # 2. Word frequencies\n    word_freqs = Counter(corpus)\n    \n    # 3. Split words into characters\n    splits = {word: list(word) for word in word_freqs.keys()}\n    \n    # 4. Iteratively merge\n    while len(vocab) < vocab_size:\n        # Find most frequent pair\n        pairs = Counter()\n        for word, freq in word_freqs.items():\n            symbols = splits[word]\n            for i in range(len(symbols) - 1):\n                pairs[(symbols[i], symbols[i+1])] += freq\n        \n        if not pairs:\n            break\n        \n        best_pair = max(pairs, key=pairs.get)\n        \n        # Merge best pair\n        new_token = ''.join(best_pair)\n        vocab.add(new_token)\n        \n        # Update splits\n        for word in splits:\n            i = 0\n            new_split = []\n            while i < len(splits[word]):\n                if (i < len(splits[word]) - 1 and \n                    splits[word][i] == best_pair[0] and \n                    splits[word][i+1] == best_pair[1]):\n                    new_split.append(new_token)\n                    i += 2\n                else:\n                    new_split.append(splits[word][i])\n                    i += 1\n            splits[word] = new_split\n    \n    return vocab, splits\n```\n\n**Encoding (inference):**\n\n```python\ndef bpe_encode(text, vocab, merges):\n    # Start with characters\n    tokens = list(text)\n    \n    # Apply merges in order\n    for merge in merges:\n        i = 0\n        new_tokens = []\n        while i < len(tokens):\n            if (i < len(tokens) - 1 and \n                tokens[i] == merge[0] and \n                tokens[i+1] == merge[1]):\n                new_tokens.append(merge[0] + merge[1])\n                i += 2\n            else:\n                new_tokens.append(tokens[i])\n                i += 1\n        tokens = new_tokens\n    \n    return tokens\n```\n\n**WordPiece vs BPE:**\n\n**BPE:** Frequency-based\n$$\\text{score}(x, y) = \\text{freq}(x, y)$$\n\n**WordPiece:** Likelihood-based\n$$\\text{score}(x, y) = \\frac{\\text{freq}(xy)}{\\text{freq}(x) \\times \\text{freq}(y)}$$\n\nWordPiece prefers pairs that maximize likelihood.\n\n**Special Tokens:**\n\nEvery tokenizer has special tokens:\n\n- **[PAD]:** Padding (variable length)\n- **[UNK]:** Unknown (OOV fallback)\n- **[CLS]:** Classification (BERT start)\n- **[SEP]:** Separator (sentence boundary)\n- **[MASK]:** Masked token (BERT MLM)\n- **<s>, </s>:** Start/End (GPT, T5)\n\n**Example:**\n```\nBERT: [CLS] Hello world [SEP] How are you? [SEP]\nGPT: <s> Hello world </s>\n```\n\n**Vocabulary Size Trade-off:**\n\n- **Small (1K-5K):** Long sequences, slow\n- **Medium (30K-50K):** Balance ✓\n- **Large (100K+):** Short sequences, large embeddings\n\n**Typical:**\n- BERT: 30K WordPiece\n- GPT-2: 50K BPE\n- T5: 32K SentencePiece",
+    "level3_advanced": "**Unigram Language Model (SentencePiece):**\n\nAlternative to BPE!\n\n**Idea:** Model probability of sentence as product of token probabilities.\n\n$$P(x) = \\prod_{i=1}^{n} P(x_i)$$\n\n**Training:**\n\n1. Start with large vocabulary (all substrings)\n2. Iteratively remove tokens that least increase loss\n3. Use EM algorithm to estimate token probabilities\n\n**Advantage:** Probabilistic framework, principled!\n\n**Tokenization Algorithms Comparison:**\n\n| Algorithm | Used By | Pros | Cons |\n|-----------|---------|------|------|\n| BPE | GPT-2, RoBERTa | Simple, effective | Greedy encoding |\n| WordPiece | BERT, DistilBERT | Likelihood-based | Needs pre-tokenization |\n| SentencePiece | T5, XLNet, ALBERT | Language-agnostic | More complex |\n| Unigram | XLNet, ALBERT | Probabilistic | Slower training |\n\n**Multilingual Tokenization:**\n\n**Challenge:** Different scripts, no spaces (CJK).\n\n**Solutions:**\n\n1. **Shared vocabulary:** All languages → single vocab\n   - mBERT: 104 languages, 110K vocab\n   - Overlap in common tokens ('the', 'is')\n\n2. **Language-specific:** Separate vocabs\n   - Better for distant languages\n   - More parameters\n\n**Normalization:**\n\nBefore tokenization:\n\n```python\n# Lowercase\ntext = text.lower()\n\n# Unicode normalization (NFKC)\nimport unicodedata\ntext = unicodedata.normalize('NFKC', text)\n\n# Remove accents\ntext = ''.join(c for c in text if not unicodedata.combining(c))\n\n# Punctuation handling\ntext = text.replace('.', ' .')\n```\n\n**SentencePiece Features:**\n\n**1. Reversible:**\nOriginal text perfect restore!\n\n```python\ntokens = sp.encode('Hello world')\ntext = sp.decode(tokens)\nassert text == 'Hello world'  # Perfect!\n```\n\n**2. Subword regularization:**\nStochastic tokenization!\n\n```python\n# Same input → different tokenizations\ntokens1 = sp.encode('unbelievable', enable_sampling=True)\ntokens2 = sp.encode('unbelievable', enable_sampling=True)\n# tokens1 ≠ tokens2 (with some probability)\n```\n\nData augmentation for free!\n\n**3. BOS/EOS control:**\n\n```python\nsp.encode('hello', add_bos=True, add_eos=True)\n# → [<s>, 'hello', </s>]\n```",
+    "level4_expert": "**Production Tokenization Pipeline:**\n\n**1. Training Custom Tokenizer:**\n\n```python\nfrom tokenizers import Tokenizer\nfrom tokenizers.models import BPE\nfrom tokenizers.trainers import BpeTrainer\nfrom tokenizers.pre_tokenizers import Whitespace\n\n# Initialize\ntokenizer = Tokenizer(BPE(unk_token=\"[UNK]\"))\ntokenizer.pre_tokenizer = Whitespace()\n\n# Trainer\ntrainer = BpeTrainer(\n    vocab_size=30000,\n    special_tokens=[\"[PAD]\", \"[UNK]\", \"[CLS]\", \"[SEP]\", \"[MASK]\"]\n)\n\n# Train on corpus\nfiles = ['corpus1.txt', 'corpus2.txt']\ntokenizer.train(files, trainer)\n\n# Save\ntokenizer.save('my_tokenizer.json')\n```\n\n**2. Efficient Encoding:**\n\n```python\n# Batch encoding (parallel)\ntexts = ['text1', 'text2', ...]\nencodings = tokenizer.encode_batch(texts)\n\n# With padding/truncation\nencodings = tokenizer.encode_batch(\n    texts,\n    add_special_tokens=True,\n    padding='max_length',\n    truncation=True,\n    max_length=512\n)\n```\n\n**3. Handling Streaming Data:**\n\n```python\ndef stream_tokenize(file_path, tokenizer, batch_size=1000):\n    batch = []\n    with open(file_path) as f:\n        for line in f:\n            batch.append(line.strip())\n            if len(batch) >= batch_size:\n                yield tokenizer.encode_batch(batch)\n                batch = []\n    if batch:\n        yield tokenizer.encode_batch(batch)\n```\n\n**4. Vocabulary Management:**\n\n```python\n# Check token\ntoken_id = tokenizer.token_to_id('hello')\ntoken = tokenizer.id_to_token(42)\n\n# Vocabulary size\nvocab_size = tokenizer.get_vocab_size()\n\n# Add tokens\ntokenizer.add_tokens(['<custom1>', '<custom2>'])\n\n# Get special tokens\npad_id = tokenizer.token_to_id('[PAD]')\n```\n\n**5. Fast Rust Implementation:**\n\nHugging Face Tokenizers (Rust + Python bindings):\n- 10-100x faster than pure Python\n- Parallel processing\n- Production-ready\n\n**Tokenization Metrics:**\n\n**Fertility:** Avg tokens per word\n$$\\text{Fertility} = \\frac{\\text{# tokens}}{\\text{# words}}$$\n\nLower = better (more compact)\n\n**OOV Rate:**\n$$\\text{OOV} = \\frac{\\text{# unknown tokens}}{\\text{# total tokens}}$$\n\nShould be ~0% with subword!\n\n**Compression Ratio:**\n$$\\text{Compression} = \\frac{\\text{# characters}}{\\text{# tokens}}$$\n\nHigher = more compression\n\n**Production Considerations:**\n\n**Memory:**\n- Vocabulary: 50K tokens × 768 dim × 4 bytes = 150 MB\n- Acceptable for most applications\n\n**Speed:**\n- Rust tokenizers: ~1M tokens/sec\n- Batching critical for throughput\n\n**Consistency:**\n- Deterministic by default (reproducible)\n- Subword regularization optional (training augmentation)\n\n**Versioning:**\n- Save tokenizer with model!\n- Vocabulary changes → incompatible\n- Include in model checkpoint\n\n**Edge Cases:**\n\n```python\n# Empty string\ntokens = tokenizer.encode('')  # → []\n\n# Very long text\ntokens = tokenizer.encode(long_text, truncation=True, max_length=512)\n\n# Special characters\ntokens = tokenizer.encode('😀🎉')  # Unicode handling\n\n# Numbers\ntokens = tokenizer.encode('123.45')  # Digit tokenization\n```",
+    "level5_research": "**Research Frontiers:**\n\n**1. Adaptive Tokenization:**\nTask-specific vocabulary learning.\n\n**2. Character-aware Transformers:**\nByT5: Byte-level, no tokenization!\n\n**3. Multilingual Unified Tokenization:**\nSingle tokenizer, all languages, minimal vocabulary overlap.\n\n**4. Dynamic Vocabulary:**\nExpand vocabulary during training (continual learning).\n\n**5. Semantic Tokenization:**\nTokens preserve semantic boundaries.\n\n**Future:**\n- Language-universal tokenization\n- End-to-end learned tokenization\n- Context-aware segmentation"
+  },
+  "whatIsIt": "Tokenization text'i model'in işleyebileceği token'lara ayırır. Subword methods (BPE, WordPiece) kelimeleri parçalara böler: 'running' → ['run', '##ning']. OOV handle, compact vocabulary!",
+  "whyNeeded": "Model sayılarla çalışır, text değil! Tokenization bridge: text → numbers. Subword optimal: character (too long) ile word (OOV) arasında balance. Modern NLP'nin temeli!",
+  "realWorldAnalogy": "Text'i puzzle parçalarına ayırmak gibi. Kelime bazında çok fazla parça (OOV), karakter bazında çok ufak parçalar (slow). Subword optimal parça boyutu: sık kullanılan birleştirmeler!",
+  "mathematics": {
+    "formulas": [
+      "\\text{BPE score}(x, y) = \\text{freq}(x, y)",
+      "\\text{WordPiece score}(x, y) = \\frac{\\text{freq}(xy)}{\\text{freq}(x) \\times \\text{freq}(y)}",
+      "\\text{Fertility} = \\frac{\\text{\\# tokens}}{\\text{\\# words}}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "BPE TRAINING:",
+      "1. Initialize vocabulary with characters",
+      "2. Count word frequencies in corpus",
+      "3. Split words into characters",
+      "4. Loop until vocab_size:",
+      "   a. Count all adjacent pairs",
+      "   b. Find most frequent pair",
+      "   c. Merge pair into new token",
+      "   d. Add to vocabulary",
+      "   e. Update word splits",
+      "5. Save vocabulary and merge rules",
+      "ENCODING:",
+      "1. Start with characters",
+      "2. Apply merge rules in order",
+      "3. Greedy longest match",
+      "4. Return token IDs"
+    ],
+    "complexity": "Training: O(N × V) where N = corpus size, V = vocab size. Encoding: O(L × V) where L = text length. Fast with Rust implementation!"
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Simple BPE from Scratch",
+      "code": "from collections import Counter\nimport re\n\nprint(\"=\"*60)\nprint(\"BPE (BYTE-PAIR ENCODING) FROM SCRATCH\")\nprint(\"=\"*60)\n\nclass SimpleBPE:\n    def __init__(self, vocab_size=100):\n        self.vocab_size = vocab_size\n        self.vocab = set()\n        self.merges = []  # Ordered list of merges\n    \n    def train(self, corpus):\n        \"\"\"Train BPE on corpus\"\"\"\n        print(\"\\n🏋️ Training BPE...\")\n        \n        # Tokenize into words\n        words = corpus.lower().split()\n        \n        # Count word frequencies\n        word_freqs = Counter(words)\n        print(f\"\\nCorpus: {len(words)} words, {len(word_freqs)} unique\")\n        \n        # Initialize: split into characters\n        splits = {word: list(word) + ['</w>'] for word in word_freqs}\n        \n        # Base vocabulary: all characters\n        self.vocab = set()\n        for word in splits:\n            self.vocab.update(splits[word])\n        \n        print(f\"Initial vocab size: {len(self.vocab)}\")\n        \n        # Iteratively merge\n        iteration = 0\n        while len(self.vocab) < self.vocab_size:\n            # Count all pairs\n            pairs = Counter()\n            for word, freq in word_freqs.items():\n                symbols = splits[word]\n                for i in range(len(symbols) - 1):\n                    pair = (symbols[i], symbols[i+1])\n                    pairs[pair] += freq\n            \n            if not pairs:\n                break\n            \n            # Most frequent pair\n            best_pair = max(pairs, key=pairs.get)\n            new_token = ''.join(best_pair)\n            \n            # Add to vocab and merges\n            self.vocab.add(new_token)\n            self.merges.append(best_pair)\n            \n            iteration += 1\n            if iteration <= 5 or iteration % 10 == 0:\n                print(f\"  Iteration {iteration}: Merge {best_pair} → '{new_token}' (freq: {pairs[best_pair]})\")\n            \n            # Update splits\n            new_splits = {}\n            for word in splits:\n                i = 0\n                new_split = []\n                symbols = splits[word]\n                while i < len(symbols):\n                    if (i < len(symbols) - 1 and \n                        symbols[i] == best_pair[0] and \n                        symbols[i+1] == best_pair[1]):\n                        new_split.append(new_token)\n                        i += 2\n                    else:\n                        new_split.append(symbols[i])\n                        i += 1\n                new_splits[word] = new_split\n            splits = new_splits\n        \n        print(f\"\\n✓ Training complete! Final vocab size: {len(self.vocab)}\")\n        return splits\n    \n    def encode(self, text):\n        \"\"\"Encode text using learned merges\"\"\"\n        words = text.lower().split()\n        all_tokens = []\n        \n        for word in words:\n            # Start with characters\n            tokens = list(word) + ['</w>']\n            \n            # Apply merges in order\n            for merge in self.merges:\n                i = 0\n                new_tokens = []\n                while i < len(tokens):\n                    if (i < len(tokens) - 1 and \n                        tokens[i] == merge[0] and \n                        tokens[i+1] == merge[1]):\n                        new_tokens.append(merge[0] + merge[1])\n                        i += 2\n                    else:\n                        new_tokens.append(tokens[i])\n                        i += 1\n                tokens = new_tokens\n            \n            all_tokens.extend(tokens)\n        \n        return all_tokens\n\n# Example corpus\ncorpus = \"\"\"\nlow low low low lowest lower\nhigh high high higher highest\nfast fast faster fastest\nslow slow slower slowest\n\"\"\"\n\nprint(\"\\nTraining corpus:\")\nprint(corpus.strip())\n\n# Train BPE\nbpe = SimpleBPE(vocab_size=50)\nsplits = bpe.train(corpus)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ENCODING EXAMPLES\")\nprint(\"=\"*60)\n\ntest_texts = [\n    'low',\n    'lower',\n    'lowest',\n    'lowering',  # Not in training!\n    'high',\n    'faster'\n]\n\nfor text in test_texts:\n    tokens = bpe.encode(text)\n    print(f\"\\n'{text}' →\")\n    print(f\"  Tokens: {tokens}\")\n    print(f\"  Count: {len(tokens)} tokens\")\n\nprint(\"\\n💡 Observations:\")\nprint(\"   • Common words: fewer tokens (e.g., 'low' → ['low</w>'])\")\nprint(\"   • Rare words: more tokens (e.g., 'lowering' → ['low', 'e', 'r', 'i', 'n', 'g</w>'])\")\nprint(\"   • No OOV! Any word can be encoded (worst case: characters)\")\nprint(\"   • Frequent subwords merged first\")",
+      "explanation": "BPE sıfırdan implementation! Character-level başla, frequent pairs'i iteratively merge et. Greedy encoding. OOV yok!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Hugging Face Tokenizers - Production Ready",
+      "code": "from tokenizers import Tokenizer\nfrom tokenizers.models import BPE, WordPiece\nfrom tokenizers.trainers import BpeTrainer, WordPieceTrainer\nfrom tokenizers.pre_tokenizers import Whitespace\nfrom tokenizers.processors import TemplateProcessing\nimport os\n\nprint(\"=\"*60)\nprint(\"HUGGING FACE TOKENIZERS (PRODUCTION)\")\nprint(\"=\"*60)\n\nprint(\"\\n1️⃣  BPE TOKENIZER\")\nprint(\"=\"*60)\n\n# Initialize BPE\ntokenizer_bpe = Tokenizer(BPE(unk_token=\"[UNK]\"))\ntokenizer_bpe.pre_tokenizer = Whitespace()\n\n# Trainer\ntrainer_bpe = BpeTrainer(\n    vocab_size=1000,\n    special_tokens=[\"[PAD]\", \"[UNK]\", \"[CLS]\", \"[SEP]\", \"[MASK]\"]\n)\n\n# Mock corpus\ncorpus = [\n    \"This is a sample sentence.\",\n    \"Another example for tokenization.\",\n    \"Machine learning and natural language processing.\",\n    \"Tokenization is fundamental for NLP.\"\n] * 100  # Repeat for larger corpus\n\nprint(f\"\\nTraining on {len(corpus)} sentences...\")\n\n# Save to temp file for training\nwith open('/tmp/corpus.txt', 'w') as f:\n    for sent in corpus:\n        f.write(sent + '\\n')\n\n# Train\ntokenizer_bpe.train(['/tmp/corpus.txt'], trainer_bpe)\n\nprint(f\"✓ BPE trained! Vocab size: {tokenizer_bpe.get_vocab_size()}\")\n\n# Post-processor (add special tokens)\ntokenizer_bpe.post_processor = TemplateProcessing(\n    single=\"[CLS] $A [SEP]\",\n    pair=\"[CLS] $A [SEP] $B:1 [SEP]:1\",\n    special_tokens=[\n        (\"[CLS]\", tokenizer_bpe.token_to_id(\"[CLS]\")),\n        (\"[SEP]\", tokenizer_bpe.token_to_id(\"[SEP]\")),\n    ],\n)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"BPE ENCODING EXAMPLES\")\nprint(\"=\"*60)\n\ntest_sentences = [\n    \"Hello world!\",\n    \"Tokenization is important.\",\n    \"supercalifragilisticexpialidocious\"  # Long rare word!\n]\n\nfor sent in test_sentences:\n    encoding = tokenizer_bpe.encode(sent)\n    tokens = encoding.tokens\n    ids = encoding.ids\n    \n    print(f\"\\nText: '{sent}'\")\n    print(f\"  Tokens: {tokens}\")\n    print(f\"  IDs: {ids}\")\n    print(f\"  Length: {len(tokens)} tokens\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  WORDPIECE TOKENIZER (BERT-style)\")\nprint(\"=\"*60)\n\n# Initialize WordPiece\ntokenizer_wp = Tokenizer(WordPiece(unk_token=\"[UNK]\"))\ntokenizer_wp.pre_tokenizer = Whitespace()\n\n# Trainer\ntrainer_wp = WordPieceTrainer(\n    vocab_size=1000,\n    special_tokens=[\"[PAD]\", \"[UNK]\", \"[CLS]\", \"[SEP]\", \"[MASK]\"]\n)\n\n# Train\ntokenizer_wp.train(['/tmp/corpus.txt'], trainer_wp)\n\nprint(f\"✓ WordPiece trained! Vocab size: {tokenizer_wp.get_vocab_size()}\")\n\n# Test\nprint(\"\\nWordPiece encoding:\")\nfor sent in test_sentences[:2]:\n    encoding = tokenizer_wp.encode(sent)\n    tokens = encoding.tokens\n    print(f\"\\n'{sent}' → {tokens}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  BATCH ENCODING (EFFICIENT)\")\nprint(\"=\"*60)\n\nbatch_texts = [\n    \"First sentence.\",\n    \"Second sentence is longer.\",\n    \"Third one is the longest sentence here.\"\n]\n\nprint(\"\\nBatch encoding with padding:\")\nencodings = tokenizer_bpe.encode_batch(batch_texts)\n\nfor i, (text, encoding) in enumerate(zip(batch_texts, encodings)):\n    print(f\"\\n{i+1}. '{text}'\")\n    print(f\"   Tokens: {encoding.tokens}\")\n    print(f\"   Length: {len(encoding.tokens)}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"4️⃣  PADDING & TRUNCATION\")\nprint(\"=\"*60)\n\nfrom tokenizers import processors\n\n# Enable padding\ntokenizer_bpe.enable_padding(\n    pad_id=tokenizer_bpe.token_to_id(\"[PAD]\"),\n    pad_token=\"[PAD]\",\n    length=20  # Fixed length\n)\n\n# Enable truncation\ntokenizer_bpe.enable_truncation(max_length=20)\n\nprint(\"\\nWith padding & truncation (max_length=20):\")\nencodings = tokenizer_bpe.encode_batch(batch_texts)\n\nfor i, (text, encoding) in enumerate(zip(batch_texts, encodings)):\n    print(f\"\\n{i+1}. Length: {len(encoding.tokens)}\")\n    print(f\"   Tokens: {encoding.tokens}\")\n    print(f\"   IDs: {encoding.ids}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"5️⃣  SAVE & LOAD\")\nprint(\"=\"*60)\n\n# Save\ntokenizer_bpe.save('/tmp/my_tokenizer.json')\nprint(\"\\n✓ Tokenizer saved to: /tmp/my_tokenizer.json\")\n\n# Load\ntokenizer_loaded = Tokenizer.from_file('/tmp/my_tokenizer.json')\nprint(\"✓ Tokenizer loaded successfully!\")\n\n# Test loaded tokenizer\ntest_text = \"Test the loaded tokenizer.\"\nencoding = tokenizer_loaded.encode(test_text)\nprint(f\"\\nTest: '{test_text}'\")\nprint(f\"  Tokens: {encoding.tokens}\")\n\nprint(\"\\n💡 Production Features:\")\nprint(\"   ✓ Fast (Rust implementation, 10-100x faster)\")\nprint(\"   ✓ Parallel batch encoding\")\nprint(\"   ✓ Padding & truncation built-in\")\nprint(\"   ✓ Special tokens handling\")\nprint(\"   ✓ Save/load for reproducibility\")\nprint(\"   ✓ Used by: BERT, GPT-2, RoBERTa, etc.\")\n\n# Cleanup\nos.remove('/tmp/corpus.txt')\nos.remove('/tmp/my_tokenizer.json')",
+      "explanation": "Hugging Face Tokenizers production-ready! BPE, WordPiece support. Rust implementation (çok hızlı), batch encoding, padding/truncation, save/load. Industry standard!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Tokenization Comparison & Metrics",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom collections import Counter\n\nprint(\"=\"*60)\nprint(\"TOKENIZATION COMPARISON & METRICS\")\nprint(\"=\"*60)\n\n# Mock tokenizers for comparison\nclass CharTokenizer:\n    def encode(self, text):\n        return list(text.replace(' ', '_'))\n\nclass WordTokenizer:\n    def __init__(self):\n        self.vocab = set()\n    \n    def train(self, corpus):\n        for sent in corpus:\n            self.vocab.update(sent.lower().split())\n    \n    def encode(self, text):\n        tokens = []\n        for word in text.lower().split():\n            if word in self.vocab:\n                tokens.append(word)\n            else:\n                tokens.append('[UNK]')\n        return tokens\n\nclass SubwordTokenizer:\n    def encode(self, text):\n        # Simplified subword (mock)\n        tokens = []\n        for word in text.lower().split():\n            if len(word) <= 3:\n                tokens.append(word)\n            else:\n                # Split into 3-char chunks\n                for i in range(0, len(word), 3):\n                    tokens.append(word[i:i+3])\n        return tokens\n\n# Initialize\nchar_tok = CharTokenizer()\nword_tok = WordTokenizer()\nsubword_tok = SubwordTokenizer()\n\n# Training corpus\ntrain_corpus = [\n    \"machine learning is fun\",\n    \"natural language processing\",\n    \"tokenization is important\"\n]\n\nword_tok.train(train_corpus)\n\n# Test sentences\ntest_sentences = [\n    \"machine learning\",  # In vocab\n    \"deep learning\",  # Partial OOV\n    \"supercalifragilistic\"  # Rare word\n]\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TOKENIZATION COMPARISON\")\nprint(\"=\"*60)\n\nresults = []\n\nfor sent in test_sentences:\n    print(f\"\\nSentence: '{sent}'\")\n    print(\"-\" * 50)\n    \n    # Character\n    char_tokens = char_tok.encode(sent)\n    print(f\"Character:  {char_tokens}\")\n    print(f\"            Length: {len(char_tokens)}\")\n    \n    # Word\n    word_tokens = word_tok.encode(sent)\n    print(f\"Word:       {word_tokens}\")\n    print(f\"            Length: {len(word_tokens)}\")\n    oov_count = word_tokens.count('[UNK]')\n    print(f\"            OOV: {oov_count}/{len(word_tokens)}\")\n    \n    # Subword\n    subword_tokens = subword_tok.encode(sent)\n    print(f\"Subword:    {subword_tokens}\")\n    print(f\"            Length: {len(subword_tokens)}\")\n    \n    results.append({\n        'sentence': sent,\n        'char_len': len(char_tokens),\n        'word_len': len(word_tokens),\n        'subword_len': len(subword_tokens),\n        'word_oov': oov_count\n    })\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"METRICS\")\nprint(\"=\"*60)\n\nprint(\"\\n1️⃣  Sequence Length (fewer is better):\")\nfor r in results:\n    print(f\"\\n  '{r['sentence']}'\")\n    print(f\"    Character: {r['char_len']}\")\n    print(f\"    Word:      {r['word_len']}\")\n    print(f\"    Subword:   {r['subword_len']} ✓ Balance\")\n\nprint(\"\\n2️⃣  OOV Rate (lower is better):\")\nfor r in results:\n    oov_rate = r['word_oov'] / r['word_len'] if r['word_len'] > 0 else 0\n    print(f\"  '{r['sentence']}': {oov_rate:.1%}\")\n\nprint(\"\\n  Subword OOV: 0% (always!) ✓\")\n\nprint(\"\\n3️⃣  Vocabulary Size:\")\nprint(\"    Character: ~100 (small) ✓\")\nprint(\"    Word:      100K+ (large) ❌\")\nprint(\"    Subword:   30K-50K (medium) ✓\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Sequence length comparison\nax = axes[0]\nsentences = [r['sentence'][:15] + '...' if len(r['sentence']) > 15 else r['sentence'] \n             for r in results]\nx = np.arange(len(results))\nwidth = 0.25\n\nax.bar(x - width, [r['char_len'] for r in results], width, label='Character', alpha=0.8)\nax.bar(x, [r['word_len'] for r in results], width, label='Word', alpha=0.8)\nax.bar(x + width, [r['subword_len'] for r in results], width, label='Subword', alpha=0.8)\n\nax.set_xlabel('Sentence', fontsize=12)\nax.set_ylabel('Token Count', fontsize=12)\nax.set_title('Sequence Length Comparison', fontsize=14)\nax.set_xticks(x)\nax.set_xticklabels(sentences, rotation=15, ha='right')\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3, axis='y')\n\n# Trade-offs\nax = axes[1]\ntokenizers = ['Character', 'Word', 'Subword']\nvocab_sizes = [100, 100000, 35000]\nseq_lengths = [50, 10, 15]  # Relative\noov_rates = [0, 15, 0]  # Percentage\n\nax.scatter(vocab_sizes, seq_lengths, s=[1000*(1-o/20) for o in oov_rates], alpha=0.6)\nfor i, tok in enumerate(tokenizers):\n    ax.annotate(tok, (vocab_sizes[i], seq_lengths[i]), \n                fontsize=12, ha='center', va='center')\n\nax.set_xlabel('Vocabulary Size', fontsize=12)\nax.set_ylabel('Avg Sequence Length', fontsize=12)\nax.set_title('Tokenization Trade-offs', fontsize=14)\nax.set_xscale('log')\nax.grid(True, alpha=0.3)\nax.text(35000, 14, 'Subword: Best balance!', fontsize=11, \n        bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.3))\n\nplt.tight_layout()\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SUMMARY\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nCharacter Tokenization:\n  ✓ Small vocab (~100)\n  ✓ No OOV\n  ❌ Very long sequences (slow)\n  ❌ Lost word meaning\n  Use: Simple tasks, small models\n\nWord Tokenization:\n  ✓ Preserves word meaning\n  ✓ Short sequences\n  ❌ Large vocab (100K+)\n  ❌ OOV problem\n  ❌ Morphology lost\n  Use: Limited vocabulary domains\n\nSubword Tokenization (BPE, WordPiece): 🏆\n  ✓ Medium vocab (30K-50K)\n  ✓ No OOV (compose from subwords)\n  ✓ Morphology captured\n  ✓ Rare words handled\n  ✓ Best balance!\n  Use: Modern NLP (BERT, GPT, T5)\n\"\"\")\n\nprint(\"\\n✓ Subword tokenization is the industry standard!\")",
+      "explanation": "Character vs Word vs Subword comparison! Sequence length, OOV rate, vocabulary size trade-offs. Subword best balance → modern NLP standard."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production Tokenization Pipeline",
+      "code": "import json\nimport pickle\nfrom pathlib import Path\nimport hashlib\n\nprint(\"=\"*60)\nprint(\"PRODUCTION TOKENIZATION PIPELINE\")\nprint(\"=\"*60)\n\nclass ProductionTokenizer:\n    \"\"\"\n    Production-ready tokenizer with all bells and whistles\n    \"\"\"\n    def __init__(self, tokenizer, config):\n        self.tokenizer = tokenizer\n        self.config = config\n        self.version = self._compute_version()\n    \n    def _compute_version(self):\n        \"\"\"Compute version hash for reproducibility\"\"\"\n        vocab = json.dumps(self.tokenizer.get_vocab(), sort_keys=True)\n        return hashlib.md5(vocab.encode()).hexdigest()[:8]\n    \n    def encode(self, text, add_special_tokens=True, \n               padding=False, truncation=False, max_length=None):\n        \"\"\"\n        Encode with validation and error handling\n        \"\"\"\n        # Validate input\n        if not isinstance(text, str):\n            raise TypeError(f\"Expected string, got {type(text)}\")\n        \n        if not text.strip():\n            # Empty string\n            return {\n                'input_ids': [],\n                'attention_mask': [],\n                'token_type_ids': []\n            }\n        \n        # Encode\n        try:\n            encoding = self.tokenizer.encode(\n                text,\n                add_special_tokens=add_special_tokens\n            )\n            \n            # Post-process\n            input_ids = encoding.ids\n            attention_mask = [1] * len(input_ids)\n            token_type_ids = [0] * len(input_ids)\n            \n            # Truncation\n            if truncation and max_length:\n                input_ids = input_ids[:max_length]\n                attention_mask = attention_mask[:max_length]\n                token_type_ids = token_type_ids[:max_length]\n            \n            # Padding\n            if padding and max_length:\n                pad_length = max_length - len(input_ids)\n                if pad_length > 0:\n                    pad_id = self.tokenizer.token_to_id('[PAD]')\n                    input_ids += [pad_id] * pad_length\n                    attention_mask += [0] * pad_length\n                    token_type_ids += [0] * pad_length\n            \n            return {\n                'input_ids': input_ids,\n                'attention_mask': attention_mask,\n                'token_type_ids': token_type_ids,\n                'tokens': encoding.tokens\n            }\n        \n        except Exception as e:\n            raise RuntimeError(f\"Encoding failed: {e}\")\n    \n    def decode(self, token_ids, skip_special_tokens=True):\n        \"\"\"Decode with error handling\"\"\"\n        try:\n            text = self.tokenizer.decode(\n                token_ids,\n                skip_special_tokens=skip_special_tokens\n            )\n            return text\n        except Exception as e:\n            raise RuntimeError(f\"Decoding failed: {e}\")\n    \n    def save(self, path):\n        \"\"\"Save tokenizer with metadata\"\"\"\n        path = Path(path)\n        path.mkdir(parents=True, exist_ok=True)\n        \n        # Save tokenizer\n        self.tokenizer.save(str(path / 'tokenizer.json'))\n        \n        # Save metadata\n        metadata = {\n            'version': self.version,\n            'config': self.config,\n            'vocab_size': self.tokenizer.get_vocab_size()\n        }\n        with open(path / 'metadata.json', 'w') as f:\n            json.dump(metadata, f, indent=2)\n        \n        print(f\"✓ Saved to: {path}\")\n        print(f\"  Version: {self.version}\")\n        print(f\"  Vocab size: {metadata['vocab_size']}\")\n    \n    @classmethod\n    def load(cls, path):\n        \"\"\"Load tokenizer with validation\"\"\"\n        path = Path(path)\n        \n        # Load tokenizer\n        from tokenizers import Tokenizer\n        tokenizer = Tokenizer.from_file(str(path / 'tokenizer.json'))\n        \n        # Load metadata\n        with open(path / 'metadata.json') as f:\n            metadata = json.load(f)\n        \n        instance = cls(tokenizer, metadata['config'])\n        \n        # Validate version\n        if instance.version != metadata['version']:\n            print(f\"⚠️  Version mismatch!\")\n            print(f\"   Saved: {metadata['version']}\")\n            print(f\"   Current: {instance.version}\")\n        \n        print(f\"✓ Loaded from: {path}\")\n        return instance\n\nprint(\"\"\"\n1️⃣  ERROR HANDLING\n\"\"\")\n\nprint(\"\"\"\n# Robust encoding\ntry:\n    encoding = tokenizer.encode(text)\nexcept TypeError:\n    # Handle non-string input\n    text = str(text)\n    encoding = tokenizer.encode(text)\nexcept Exception as e:\n    logging.error(f\"Encoding failed: {e}\")\n    # Fallback or alert\n\"\"\")\n\nprint(\"\\n2️⃣  CACHING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nfrom functools import lru_cache\n\n@lru_cache(maxsize=10000)\ndef cached_encode(text: str) -> tuple:\n    encoding = tokenizer.encode(text)\n    return tuple(encoding.ids)  # Immutable for caching\n\n# 100x faster for repeated texts!\n\"\"\")\n\nprint(\"\\n3️⃣  STREAMING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\ndef stream_encode(file_path, batch_size=1000):\n    batch = []\n    with open(file_path) as f:\n        for line in f:\n            batch.append(line.strip())\n            if len(batch) >= batch_size:\n                # Batch encode (parallel)\n                encodings = tokenizer.encode_batch(batch)\n                for enc in encodings:\n                    yield enc.ids\n                batch = []\n    \n    # Final batch\n    if batch:\n        encodings = tokenizer.encode_batch(batch)\n        for enc in encodings:\n            yield enc.ids\n\n# Process large files without loading all into memory\nfor token_ids in stream_encode('large_corpus.txt'):\n    # Process tokens...\n    pass\n\"\"\")\n\nprint(\"\\n4️⃣  VALIDATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\ndef validate_tokenizer(tokenizer, test_cases):\n    issues = []\n    \n    for text in test_cases:\n        # Encode\n        encoding = tokenizer.encode(text)\n        \n        # Decode\n        decoded = tokenizer.decode(encoding.ids)\n        \n        # Check round-trip\n        if text != decoded:\n            issues.append({\n                'text': text,\n                'decoded': decoded,\n                'issue': 'Round-trip mismatch'\n            })\n        \n        # Check vocab\n        for token in encoding.tokens:\n            if token not in tokenizer.get_vocab():\n                issues.append({\n                    'text': text,\n                    'token': token,\n                    'issue': 'Token not in vocab'\n                })\n    \n    return issues\n\ntest_cases = [\n    'Hello world!',\n    '你好世界',  # Chinese\n    '😀🎉',  # Emojis\n    'a' * 1000,  # Very long\n    ''  # Empty\n]\n\nissues = validate_tokenizer(tokenizer, test_cases)\nif issues:\n    print(f\"⚠️  Found {len(issues)} issues!\")\nelse:\n    print(\"✓ All tests passed!\")\n\"\"\")\n\nprint(\"\\n5️⃣  MONITORING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nclass TokenizerMetrics:\n    def __init__(self):\n        self.total_tokens = 0\n        self.total_chars = 0\n        self.oov_count = 0\n        self.unk_id = tokenizer.token_to_id('[UNK]')\n    \n    def update(self, text, encoding):\n        self.total_tokens += len(encoding.ids)\n        self.total_chars += len(text)\n        self.oov_count += encoding.ids.count(self.unk_id)\n    \n    def report(self):\n        return {\n            'avg_tokens_per_char': self.total_tokens / self.total_chars,\n            'oov_rate': self.oov_count / self.total_tokens,\n            'compression_ratio': self.total_chars / self.total_tokens\n        }\n\nmetrics = TokenizerMetrics()\n\nfor text in corpus:\n    encoding = tokenizer.encode(text)\n    metrics.update(text, encoding)\n\nreport = metrics.report()\nprint(f\"Avg tokens/char: {report['avg_tokens_per_char']:.2f}\")\nprint(f\"OOV rate: {report['oov_rate']:.2%}\")\nprint(f\"Compression: {report['compression_ratio']:.2f}x\")\n\"\"\")\n\nprint(\"\\n6️⃣  VERSIONING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nWhy version tokenizers?\n  • Vocabulary changes → incompatible\n  • Must match training tokenizer exactly\n  • Include in model checkpoint!\n\n# Save with model\nmodel_checkpoint = {\n    'model_state': model.state_dict(),\n    'tokenizer_path': 'tokenizer_v1.2.3',\n    'tokenizer_version': tokenizer.version\n}\n\n# Load and validate\nif loaded_tokenizer.version != checkpoint['tokenizer_version']:\n    raise ValueError(\"Tokenizer version mismatch!\")\n\"\"\")\n\nprint(\"\\n✓ Production tokenization checklist complete!\")",
+      "explanation": "Production tokenizer: Error handling, caching (LRU), streaming (memory efficient), validation (round-trip), monitoring (metrics), versioning (reproducibility). Industry-grade implementation!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Subword tokenization'ın word-level'a göre avantajı nedir?",
+      "options": [
+        "Daha hızlıdır",
+        "OOV problemi yok, rare words handle edilir, compact vocabulary",
+        "Daha basittir",
+        "Her zaman word-level'dan iyidir"
+      ],
+      "correct": 1,
+      "explanation": "Subword: OOV yok (herhangi kelime subword'lerden compose edilir), rare words parçalara bölünür, vocabulary 30K-50K (word-level 100K+). Modern NLP standard!"
+    },
+    {
+      "question": "BPE (Byte-Pair Encoding) nasıl çalışır?",
+      "options": [
+        "Random merge",
+        "Most frequent adjacent pair'leri iteratively merge et",
+        "Longest words'ü merge et",
+        "Alfabetik sırayla merge"
+      ],
+      "correct": 1,
+      "explanation": "BPE: Character-level başla, en sık görülen adjacent pair'i bul, merge et, repeat. Greedy algorithm, frequent subwords önce merge edilir!"
+    },
+    {
+      "question": "WordPiece ve BPE'nin farkı nedir?",
+      "options": [
+        "Aynıdır",
+        "WordPiece likelihood-based, BPE frequency-based merge",
+        "WordPiece daha hızlı",
+        "BPE sadece İngilizce için"
+      ],
+      "correct": 1,
+      "explanation": "BPE: freq(x,y) ile merge. WordPiece: freq(xy)/(freq(x)×freq(y)) likelihood ile merge. WordPiece pairs that maximize probability tercih eder!"
+    },
+    {
+      "question": "SentencePiece'in özel özelliği nedir?",
+      "options": [
+        "Daha hızlı",
+        "Language-agnostic, pre-tokenization gerektirmez, raw bytes",
+        "Sadece İngilizce",
+        "Her zaman BPE'den iyi"
+      ],
+      "correct": 1,
+      "explanation": "SentencePiece text'i raw byte stream olarak işler, pre-tokenization (space split) yok! Chinese, Japanese gibi space-less languages için ideal. Language-agnostic!"
+    },
+    {
+      "question": "'##' prefix (WordPiece) ne anlama gelir?",
+      "options": [
+        "Special token",
+        "Continuation token (önceki token'ın devamı)",
+        "Unknown token",
+        "Separator"
+      ],
+      "correct": 1,
+      "explanation": "##: Continuation marker. 'unbelievable' → ['un', '##bel', '##iev', '##able']. ## = bu token öncekinin devamı, ayrı kelime değil!"
+    },
+    {
+      "question": "Vocabulary size ne kadar olmalı?",
+      "options": [
+        "Her zaman 100K+",
+        "30K-50K optimal (balance sequence length vs vocab size)",
+        "Mümkün olduğunca küçük",
+        "Problem-specific değil"
+      ],
+      "correct": 1,
+      "explanation": "30K-50K optimal! Küçük (1K) → long sequences, büyük (100K+) → large embeddings. BERT 30K, GPT-2 50K. Balance!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Training ve inference'da farklı tokenizer kullanmak",
+      "why": "Vocabulary farklı → token IDs mismatch → garbage predictions!",
+      "fix": "Tokenizer'ı model ile birlikte save et, aynısını kullan.",
+      "example": "# YANLIŞ\ntrain_tokenizer = load_tokenizer('v1')\ninference_tokenizer = load_tokenizer('v2')  # ❌ Farklı!\n\n# DOĞRU\ntokenizer = load_tokenizer('v1')\n# Train ve inference'da aynısını kullan ✓"
+    },
+    {
+      "mistake": "Special tokens'ı unutmak",
+      "why": "[CLS], [SEP], [PAD] gibi special tokens gerekli! Unutursan model structure'ı anlamaz.",
+      "fix": "add_special_tokens=True, post-processor tanımla.",
+      "example": "# Special tokens ekle\nencoding = tokenizer.encode(\n    text,\n    add_special_tokens=True  # ✓ [CLS] ... [SEP]\n)"
+    },
+    {
+      "mistake": "Padding/truncation yapmamak (batch processing)",
+      "why": "Batch içinde farklı lengths → tensor shape mismatch!",
+      "fix": "Fixed length ile pad/truncate et.",
+      "example": "# YANLIŞ: Farklı lengths\nbatch = [tokenize(t) for t in texts]  # ❌\n\n# DOĞRU: Fixed length\nencodings = tokenizer.encode_batch(\n    texts,\n    padding='max_length',\n    truncation=True,\n    max_length=512  # ✓\n)"
+    },
+    {
+      "mistake": "Pre-tokenization yapmadan BPE train etmek",
+      "why": "Spaces, punctuation handle edilmez. 'Hello!' ve 'Hello' farklı tokens olur.",
+      "fix": "Pre-tokenizer kullan (Whitespace, Punctuation).",
+      "example": "from tokenizers.pre_tokenizers import Whitespace\n\ntokenizer.pre_tokenizer = Whitespace()  # ✓"
+    },
+    {
+      "mistake": "Character-level tokenization kullanmak (modern models)",
+      "why": "Çok uzun sequences → slow, memory-intensive. Subword daha iyi!",
+      "fix": "Subword (BPE/WordPiece) kullan.",
+      "example": "# Avoid\ntokens = list(text)  # ❌ Character-level\n\n# Use\ntokens = tokenizer.encode(text)  # ✓ Subword"
+    },
+    {
+      "mistake": "Tokenizer'ı save etmemek (reproducibility)",
+      "why": "Model ile tokenizer match etmeli! Save etmezsen reproduce edemezsin.",
+      "fix": "Tokenizer'ı model checkpoint ile birlikte save et.",
+      "example": "# Save together\ncheckpoint = {\n    'model': model.state_dict(),\n    'tokenizer': tokenizer_path\n}\ntorch.save(checkpoint, 'model.pt')\ntokenizer.save('tokenizer.json')  # ✓"
+    },
+    {
+      "mistake": "Multilingual için single-language tokenizer kullanmak",
+      "why": "Her dilin character set'i farklı. Single-language tokenizer diğer dilleri handle edemez.",
+      "fix": "SentencePiece veya multilingual corpus ile train et.",
+      "example": "# Multilingual corpus\ncorpus = ['English text', 'Türkçe metin', '中文文本']\ntokenizer.train(corpus)  # ✓ All languages"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Tokenization nedir?",
+      "back": "Text'i atomik units'lere (tokens) ayırma. Model sayılarla çalışır, text değil! Token → ID mapping. Character, word, subword levels."
+    },
+    {
+      "front": "BPE (Byte-Pair Encoding) algoritması?",
+      "back": "Character-level başla, most frequent adjacent pair'leri iteratively merge et. Greedy algorithm. GPT-2, RoBERTa kullanır. OOV yok!"
+    },
+    {
+      "front": "WordPiece vs BPE?",
+      "back": "BPE: frequency-based merge. WordPiece: likelihood-based (freq(xy)/(freq(x)×freq(y))). WordPiece BERT'te, '##' continuation marker kullanır."
+    },
+    {
+      "front": "SentencePiece'in avantajı?",
+      "back": "Language-agnostic! Pre-tokenization yok, raw bytes. Space-less languages (Chinese, Japanese) handle eder. T5, XLNet kullanır."
+    },
+    {
+      "front": "Subword tokenization neden optimal?",
+      "back": "Balance: Character (too long) ile word (OOV, large vocab) arası. Medium vocab (30K-50K), OOV yok, morphology capture. Modern NLP standard!"
+    },
+    {
+      "front": "Special tokens nedir?",
+      "back": "[PAD], [UNK], [CLS], [SEP], [MASK], <s>, </s>. Model structure için gerekli. Padding, sentence boundary, masking için."
+    },
+    {
+      "front": "Vocabulary size trade-off?",
+      "back": "Small (1K): long sequences. Large (100K+): short sequences, large embeddings. Optimal: 30K-50K. BERT 30K, GPT-2 50K."
+    },
+    {
+      "front": "Production tokenization checklist?",
+      "back": "1) Error handling 2) Caching 3) Streaming 4) Validation (round-trip) 5) Monitoring (metrics) 6) Versioning 7) Save with model!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "animation",
+      "title": "BPE Training Process",
+      "description": "BPE algorithm step-by-step animation. Character init, frequent pair finding, merging, vocabulary growth.",
+      "component": "BPETrainingAnimation"
+    },
+    {
+      "type": "interactive",
+      "title": "Tokenization Comparison",
+      "description": "Character vs Word vs Subword comparison. Interactive text input, sequence length, OOV handling visualization.",
+      "component": "TokenizationComparison"
+    },
+    {
+      "type": "plot",
+      "title": "Vocabulary Size vs Sequence Length",
+      "description": "Trade-off visualization. Small vocab → long sequences, large vocab → short sequences. Optimal region highlighted.",
+      "component": "VocabSizeTradeoff"
+    },
+    {
+      "type": "interactive",
+      "title": "Subword Segmentation Explorer",
+      "description": "Type a word, see how different tokenizers (BPE, WordPiece, SentencePiece) segment it. Rare words handling.",
+      "component": "SubwordSegmentation"
+    }
+  ]
+}

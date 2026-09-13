@@ -1,0 +1,140 @@
+{
+  "id": "eigenvalues-eigenvectors",
+  "title": "Özdeğer ve Özvektörler",
+  "category": "matematik",
+  "level": 2,
+  "description": "PCA, spektral kümeleme ve kovaryans matrislerinin matematiksel temeli",
+  "prerequisites": ["matrices-tensors", "vectors"],
+  "estimatedTime": 45,
+  "content": {
+    "overview": "Özdeğer ve özvektörler, lineer cebirin en önemli kavramlarından biridir. Bir matrisi sadece skaler çarpma ve yön koruyan özel vektörler üzerinden anlamamızı sağlar. PCA, spektral kümeleme, kovaryans matrisleri ve dinamik sistem kararlılığının matematiksel temelidir.",
+    "levels": [
+      {
+        "level": 0,
+        "title": "Temel Kavramlar",
+        "content": "# Özdeğer ve Özvektörler: Giriş\n\nBir **A** matrisi için:\n\n**Av = λv**\n\nBurada:\n- **v**: özvektör (eigenvector)\n- **λ**: özdeğer (eigenvalue)\n\n## Geometrik Yorum\n\nÖzvektörler, matris dönüşümü altında yönü değişmeyen vektörlerdir. Sadece uzunlukları özdeğer kadar ölçeklenir.\n\n## Örnek\n\n```python\nimport numpy as np\n\nA = np.array([[4, 2], [1, 3]])\neigenvalues, eigenvectors = np.linalg.eig(A)\n\nprint(f\"Özdeğerler: {eigenvalues}\")\nprint(f\"Özvektörler:\\n{eigenvectors}\")\n```\n\n## Neden Önemli?\n\n- **PCA**: Varyansı maksimize eden yönleri bulur\n- **Spektral kümeleme**: Graf yapılarını analiz eder\n- **Kararlılık analizi**: Sistem dinamiklerini inceler"
+      },
+      {
+        "level": 1,
+        "title": "Hesaplama Yöntemleri",
+        "content": "# Özdeğer Hesaplama\n\n## Karakteristik Denklem\n\n**det(A - λI) = 0**\n\nBu denklemi çözerek özdeğerleri buluruz.\n\n## Adımlar\n\n1. **(A - λI)** matrisini oluştur\n2. Determinantı hesapla\n3. Karakteristik polinomu çöz\n4. Her özdeğer için özvektörü bul\n\n## Python İmplementasyonu\n\n```python\nimport numpy as np\n\ndef compute_eigenpairs(A):\n    eigenvalues, eigenvectors = np.linalg.eig(A)\n    \n    # Özdeğerlere göre sırala (büyükten küçüğe)\n    idx = eigenvalues.argsort()[::-1]\n    eigenvalues = eigenvalues[idx]\n    eigenvectors = eigenvectors[:, idx]\n    \n    return eigenvalues, eigenvectors\n\n# Test\nA = np.array([[3, 1], [0, 2]])\nevals, evecs = compute_eigenpairs(A)\n\nprint(f\"Özdeğerler: {evals}\")\nprint(f\"Özvektörler:\\n{evecs}\")\n```"
+      },
+      {
+        "level": 2,
+        "title": "PCA'da Kullanımı",
+        "content": "# PCA ve Özdeğerler\n\n## Principal Component Analysis\n\nPCA, veri setindeki en büyük varyansı yakalayan yönleri (ana bileşenleri) bulur.\n\n### Algoritma\n\n1. Veriyi merkezle (mean subtraction)\n2. Kovaryans matrisini hesapla: **C = (1/n)X^T X**\n3. Kovaryans matrisinin özdeğer/özvektörlerini bul\n4. En büyük k özdeğere karşılık gelen özvektörleri seç\n5. Veriyi yeni uzaya projektle\n\n## Python Implementasyonu\n\n```python\nimport numpy as np\nfrom sklearn.decomposition import PCA\nimport matplotlib.pyplot as plt\n\n# Örnek veri\nnp.random.seed(42)\nX = np.random.randn(100, 5)\n\n# PCA uygula\npca = PCA(n_components=2)\nX_reduced = pca.fit_transform(X)\n\nprint(f\"Açıklanan varyans: {pca.explained_variance_ratio_}\")\nprint(f\"Ana bileşenler:\\n{pca.components_}\")\n\n# Özdeğerler = açıklanan varyans\nprint(f\"Özdeğerler: {pca.explained_variance_}\")\n```\n\n## Yorumlama\n\n- İlk özvektör: En çok varyans yönü\n- İlk özdeğer: O yöndeki varyans miktarı\n- Açıklanan varyans oranı: özdeğer / toplam özdeğer"
+      },
+      {
+        "level": 3,
+        "title": "Spektral Analiz",
+        "content": "# Spektral Kümeleme ve Graf Teorisi\n\n## Laplacian Matrisi\n\nGraf için:\n- **D**: Derece matrisi (diagonal)\n- **A**: Komşuluk matrisi\n- **L = D - A**: Laplacian\n\nLaplacian'ın özdeğerleri grafın yapısını ortaya çıkarır.\n\n## Spektral Kümeleme\n\n```python\nimport numpy as np\nfrom sklearn.cluster import SpectralClustering\nimport matplotlib.pyplot as plt\n\n# Örnek veri (iki yarım ay)\nfrom sklearn.datasets import make_moons\nX, y = make_moons(n_samples=200, noise=0.1, random_state=42)\n\n# Spektral kümeleme\nsc = SpectralClustering(n_clusters=2, affinity='nearest_neighbors')\nlabels = sc.fit_predict(X)\n\nplt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis')\nplt.title('Spektral Kümeleme')\nplt.show()\n```\n\n## Graf Bağlantısı\n\n- İkinci en küçük özdeğer: **Fiedler değeri**\n- Sıfıra yakın özdeğer sayısı: Bağlantısız bileşen sayısı\n- Özvektörler: Kümeleme için embedding"
+      },
+      {
+        "level": 4,
+        "title": "İleri Uygulamalar",
+        "content": "# İleri Seviye Konular\n\n## 1. Power Iteration (Güç İterasyonu)\n\nEn büyük özdeğeri bulmak için iteratif yöntem:\n\n```python\ndef power_iteration(A, num_iterations=100):\n    b_k = np.random.rand(A.shape[0])\n    \n    for _ in range(num_iterations):\n        # Matris-vektör çarpımı\n        b_k1 = np.dot(A, b_k)\n        \n        # Normalize et\n        b_k1_norm = np.linalg.norm(b_k1)\n        b_k = b_k1 / b_k1_norm\n    \n    # Rayleigh katsayısı ile özdeğeri hesapla\n    eigenvalue = np.dot(b_k.T, np.dot(A, b_k))\n    \n    return eigenvalue, b_k\n\n# Test\nA = np.array([[4, 2], [1, 3]])\neigenvalue, eigenvector = power_iteration(A)\nprint(f\"En büyük özdeğer: {eigenvalue}\")\nprint(f\"Özvektör: {eigenvector}\")\n```\n\n## 2. Rayleigh Quotient\n\n**R(A, x) = (x^T A x) / (x^T x)**\n\nBir özvektör için Rayleigh quotient karşılık gelen özdeğere eşittir.\n\n## 3. Matris Özellikleri\n\n- **Simetrik matrisler**: Tüm özdeğerler gerçek, özvektörler ortogonal\n- **Pozitif tanımlı**: Tüm özdeğerler > 0\n- **İz (Trace)**: Özdeğerlerin toplamı\n- **Determinant**: Özdeğerlerin çarpımı\n\n## 4. Stabilite Analizi\n\n```python\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Dinamik sistem: dx/dt = Ax\nA = np.array([[-1, 2], [-2, -1]])\n\n# Özdeğerleri hesapla\neigenvalues = np.linalg.eigvals(A)\n\nprint(f\"Özdeğerler: {eigenvalues}\")\n\n# Stabilite:\n# Tüm özdeğerlerin reel kısmı < 0 ise kararlı\nif all(np.real(eigenvalues) < 0):\n    print(\"Sistem kararlı!\")\nelse:\n    print(\"Sistem kararsız!\")\n```"
+      }
+    ]
+  },
+  "quiz": {
+    "questions": [
+      {
+        "question": "Bir matrisin özvektörü nedir?",
+        "options": [
+          "Matris çarpımı altında yönü değişmeyen vektör",
+          "En uzun vektör",
+          "Sıfır vektörü",
+          "Birim vektör"
+        ],
+        "correctAnswer": 0,
+        "explanation": "Özvektör, matris dönüşümü altında yalnızca ölçeklenen (yönü değişmeyen) özel vektördür: Av = λv"
+      },
+      {
+        "question": "PCA'da ana bileşenler neye karşılık gelir?",
+        "options": [
+          "En küçük özdeğerlere sahip özvektörler",
+          "Rastgele vektörler",
+          "En büyük özdeğerlere sahip özvektörler",
+          "Ortalama vektörler"
+        ],
+        "correctAnswer": 2,
+        "explanation": "PCA'da ana bileşenler, kovaryans matrisinin en büyük özdeğerlerine karşılık gelen özvektörlerdir. Bunlar en fazla varyansı yakalayan yönlerdir."
+      },
+      {
+        "question": "Bir matrisin determinantı özdeğerleriyle nasıl ilişkilidir?",
+        "options": [
+          "Özdeğerlerin toplamıdır",
+          "Özdeğerlerin çarpımıdır",
+          "Özdeğerlerin ortalamasıdır",
+          "İlişkisizdir"
+        ],
+        "correctAnswer": 1,
+        "explanation": "Bir matrisin determinantı, o matrisin tüm özdeğerlerinin çarpımına eşittir: det(A) = λ₁ × λ₂ × ... × λₙ"
+      },
+      {
+        "question": "Spektral kümelemede hangi matrisin özdeğerleri kullanılır?",
+        "options": [
+          "Kovaryans matrisi",
+          "Laplacian matrisi",
+          "Birim matris",
+          "Sıfır matris"
+        ],
+        "correctAnswer": 1,
+        "explanation": "Spektral kümeleme, grafın Laplacian matrisinin (L = D - A) özdeğer ve özvektörlerini kullanarak kümeleme yapar."
+      },
+      {
+        "question": "Simetrik bir matrisin özvektörleri hangi özelliğe sahiptir?",
+        "options": [
+          "Hepsi sıfır",
+          "Hepsi paralel",
+          "Hepsi ortogonal",
+          "Hepsi aynı"
+        ],
+        "correctAnswer": 2,
+        "explanation": "Simetrik matrislerin farklı özdeğerlerine karşılık gelen özvektörleri birbirine ortogonaldir (diktir)."
+      }
+    ]
+  },
+  "flashcards": [
+    {
+      "front": "Özdeğer (Eigenvalue) nedir?",
+      "back": "Bir matrisin özvektörünü ölçeklendiren skaler değer: Av = λv denkleminde λ."
+    },
+    {
+      "front": "Özvektör (Eigenvector) nedir?",
+      "back": "Matris dönüşümü altında yönü değişmeyen, sadece ölçeklenen özel vektör."
+    },
+    {
+      "front": "Karakteristik denklem nedir?",
+      "back": "Özdeğerleri bulmak için çözülen denklem: det(A - λI) = 0"
+    },
+    {
+      "front": "PCA'da özvektörler neyi temsil eder?",
+      "back": "Ana bileşenler; veri setindeki maksimum varyans yönleri."
+    },
+    {
+      "front": "Rayleigh Quotient formülü nedir?",
+      "back": "R(A, x) = (x^T A x) / (x^T x) - Bir özvektör için özdeğeri verir."
+    },
+    {
+      "front": "Power Iteration ne işe yarar?",
+      "back": "Bir matrisin en büyük özdeğerini ve özvektörünü iteratif olarak bulur."
+    },
+    {
+      "front": "Laplacian matrisi nasıl hesaplanır?",
+      "back": "L = D - A (D: derece matrisi, A: komşuluk matrisi)"
+    },
+    {
+      "front": "Fiedler değeri nedir?",
+      "back": "Laplacian matrisinin ikinci en küçük özdeğeri; graf bağlantısını ölçer."
+    },
+    {
+      "front": "Trace (iz) ile özdeğerler ilişkisi?",
+      "back": "Bir matrisin izi (diagonal toplamı), özdeğerlerinin toplamına eşittir."
+    },
+    {
+      "front": "Pozitif tanımlı matrisin özdeğerleri?",
+      "back": "Tüm özdeğerleri pozitiftir (λ > 0)."
+    }
+  ]
+}

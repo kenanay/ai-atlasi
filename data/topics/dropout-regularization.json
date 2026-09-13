@@ -1,0 +1,258 @@
+{
+  "id": "dropout-regularization",
+  "title": "Dropout Regularization",
+  "category": "deep-learning",
+  "level": 2,
+  "estimatedTime": 40,
+  "description": "Neural network'lerde overfitting'i önleyen güçlü regularization tekniği. Training'de random olarak neuron'ları devre dışı bırakır, ensemble learning effect yaratır.",
+  "prerequisites": ["neural-networks", "backpropagation", "overfitting"],
+  "tags": ["regularization", "dropout", "overfitting", "deep-learning", "ensemble"],
+  "content": {
+    "level0_basic": "Bir sınava çalışırken hep aynı arkadaşından kopya çekersen, o arkadaş sınava gelmezse ne yaparsın? Hiçbir şey bilemezsin! Neural network'ler de aynı probleme sahip: bazı neuron'lar çok güçlü olur, diğerleri onlara 'güvenir', kendi öğrenmez (co-adaptation). Dropout bu problemi çözer: training sırasında random olarak neuron'ları kapat (%50 vs). Her neuron artık tek başına öğrenmek zorunda, kimseye güvenemez! Test'te hepsini aç. Sonuç: çok daha robust model, overfitting azalır!",
+    "level1_beginner": "Overfitting neural network'lerin en büyük problemi. Model training data'yı ezberler, test data'da kötü perform eder.\n\n**Dropout (Hinton et al., 2012):**\nEn etkili regularization technique'lerinden biri!\n\n**Temel Fikir:**\nTraining sırasında her iteration'da random olarak bir grup neuron'u 'kapat' (output = 0). Bu neuron'lar gradient almaz, update edilmez.\n\n**Matematiksel Formülasyon:**\n\nDropout rate: $p$ (genelde 0.5)\n\n**Training phase:**\nHer neuron için:\n$$r_i \\sim \\text{Bernoulli}(p)$$\n$$\\tilde{h}_i = r_i \\cdot h_i$$\n\n- $h_i$: neuron activation\n- $r_i$: dropout mask (0 veya 1)\n- $\\tilde{h}_i$: dropped activation\n\n**Test phase:**\nTüm neuron'lar aktif ama output'ları scale edilir:\n$$h_{\\text{test}} = p \\cdot h$$\n\nNeden? Training'de ortalama %50 neuron aktifti, test'te %100 → output'ları scale et!\n\n**Inverted Dropout (modern approach):**\nScaling'i training'de yap, test'te yapma (daha efficient!):\n\n**Training:**\n$$\\tilde{h}_i = \\frac{r_i \\cdot h_i}{p}$$\n\n**Test:**\n$$h_{\\text{test}} = h \\quad \\text{(no scaling needed!)}$$\n\n**Neden Çalışır?**\n\n1. **Ensemble Learning:**\nHer iteration farklı sub-network train edilir. $n$ neuron → $2^n$ possible networks! Test'te tüm bu networks'ün ortalaması alınır (implicit ensemble).\n\n2. **Co-adaptation Prevention:**\nNeuron'lar birbirine 'güvenemez', herkes robust features öğrenir.\n\n3. **Noise Injection:**\nStochastic noise model'i more general yapar.",
+    "level2_application": "**Dropout Variants:**\n\n**1. Standard Dropout:**\nFully connected layers için.\n\n**2. Spatial Dropout (Dropout2D):**\nConvolutional layers için!\nEntire feature maps'i drop et (her pixel'i değil).\n\nNeden? Convolutional features spatially correlated → pixel-wise dropout etkisiz.\n\n$$\\text{Drop entire channel}: C \\times H \\times W \\rightarrow 0$$\n\n**3. DropConnect (Wan et al., 2013):**\nNeuron'ları değil, weights'leri drop et!\n\n$$W_{\\text{dropped}} = r \\odot W$$\n\nDaha strong regularization ama daha expensive.\n\n**4. Variational Dropout (Gal & Ghahramani, 2016):**\nAynı dropout mask'i tüm time steps'te kullan (RNN için).\n\n**Dropout Rate Selection:**\n\n**Typical values:**\n- **Fully connected layers:** 0.5 (50% drop)\n- **Input layer:** 0.2 (20% drop) - daha conservative\n- **Convolutional layers:** 0.2-0.3 - features zaten shared\n- **Recurrent layers:** 0.2-0.5 - dikkatli ol, gradient flow'u etkileyebilir\n\n**Rule of thumb:**\n- Büyük layer → yüksek dropout (0.5)\n- Küçük layer → düşük dropout (0.2)\n- Overfit ediyor mu? → dropout arttır\n- Underfit ediyor mu? → dropout azalt\n\n**Batch Normalization vs Dropout:**\n\nBatch Norm popüler olduktan sonra dropout kullanımı azaldı!\n\n**Batch Norm advantages:**\n- Training stabilization\n- Implicit regularization\n- Faster convergence\n\n**When to use what?**\n- **Only Batch Norm:** Convolutional networks (ResNet, VGG)\n- **Dropout + Batch Norm:** Bazı modern architectures\n- **Only Dropout:** Recurrent networks (RNN, LSTM)\n\n**Best practice:** Önce Batch Norm dene, overfit ediyorsa dropout ekle.",
+    "level3_advanced": "**Theoretical Analysis:**\n\n**Dropout as Bayesian Approximation:**\n\nDropout = approximate Bayesian inference! (Gal & Ghahramani, 2016)\n\n**Monte Carlo Dropout:**\nTest'te de dropout aktif tut, multiple predictions al:\n\n$$p(y|x) \\approx \\frac{1}{T}\\sum_{t=1}^{T} p(y|x, W_t)$$\n\n- $W_t$: $t$-th dropout sample\n- $T$: number of samples (genelde 10-100)\n\n**Uncertainty Estimation:**\nPrediction variance → model uncertainty!\n\n$$\\text{Uncertainty} = \\text{Var}[p(y|x, W_t)]$$\n\nYüksek variance → model uncertain → don't trust prediction!\n\n**Applications:**\n- Medical diagnosis: \"I'm 80% sure it's benign, but uncertainty is high → order more tests\"\n- Autonomous driving: High uncertainty → slow down!\n\n**Gradient Flow Analysis:**\n\nDropout gradient flow'u nasıl etkiler?\n\n**Backward pass:**\n$$\\frac{\\partial L}{\\partial h_i} = r_i \\cdot \\frac{\\partial L}{\\partial \\tilde{h}_i}$$\n\nDrop edilen neuron'lar gradient almaz → update edilmez.\n\n**Problem:** Deep networks'te gradient vanishing daha kötü olabilir!\n\n**Çözüm:**\n- Dropout rate'i deep layers'da azalt\n- Skip connections kullan (ResNet)\n- Batch normalization ekle\n\n**Dropout Schedule:**\n\nTraining başında high dropout, sonunda low:\n\n**Scheduled Dropout:**\n$$p(\\text{epoch}) = p_{\\text{max}} - (p_{\\text{max}} - p_{\\text{min}}) \\cdot \\frac{\\text{epoch}}{\\text{total epochs}}$$\n\nErken eğitimde strong regularization, sonunda model'in full capacity'sini kullan.\n\n**Adaptive Dropout (Ba & Frey, 2013):**\nDropout rate'i layer activation'larına göre dynamic ayarla:\n\n$$p_i = \\text{sigmoid}(\\alpha \\cdot ||h_i||)$$\n\nGüçlü activations → yüksek dropout (regularize et!).",
+    "level4_expert": "**Production Implementation:**\n\n**Training vs Inference Mode:**\n\n**Critical:** Dropout training ve inference'da farklı davranır!\n\n```python\nmodel.train()   # Dropout ON\nmodel.eval()    # Dropout OFF\n```\n\nBunu unutmak çok yaygın bug!\n\n**Performance Considerations:**\n\n**Memory:**\nDropout mask store edilmeli (backward pass için):\n- Memory: $\\text{batch size} \\times \\text{layer size} \\times 1 \\text{ bit}$\n\n**Compute:**\n- Forward: Random number generation (cheap)\n- Backward: Mask ile multiply (cheap)\n\nDropout neredeyse hiç overhead eklemez!\n\n**Reproducibility:**\n\nDropout stochastic → results vary!\n\n**Solution:**\n```python\ntorch.manual_seed(42)\nnp.random.seed(42)\n# Now dropout deterministic\n```\n\n**Distributed Training:**\n\nHer GPU farklı dropout mask kullanmalı!\n\n**TensorFlow:**\n```python\nstrategy = tf.distribute.MirroredStrategy()\nwith strategy.scope():\n    model = create_model()  # Her replica farklı seed\n```\n\n**Dropout in Modern Architectures:**\n\n**Transformers (BERT, GPT):**\n- Attention dropout: attention weights'e\n- Hidden dropout: FFN layers'a\n- Embedding dropout: input embeddings'e\n\nGenelde 0.1-0.2 (düşük).\n\n**Vision Transformers (ViT):**\nPath dropout (Stochastic Depth):\nEntire layers'ı random drop et!\n\n$$P(\\text{drop layer } l) = 1 - \\frac{l}{L}$$\n\nDeep layers'ı daha sık drop et.\n\n**Hyperparameter Tuning:**\n\n**Grid Search:**\n```python\ndropout_rates = [0.0, 0.2, 0.3, 0.5, 0.7]\nfor rate in dropout_rates:\n    model = create_model(dropout=rate)\n    val_score = train_and_evaluate(model)\n```\n\n**Early Stopping:**\nOverfitting'e karşı dropout'a alternatif:\n- Dropout: Model complexity ↓\n- Early stopping: Training time ↓\n\nİkisini birlikte kullan!\n\n**Debugging Dropout:**\n\n**Common bugs:**\n1. Test'te dropout açık bırakmak\n2. Inverted dropout scaling'i yanlış yapmak\n3. Spatial dropout yerine standard dropout (CNN'de)\n\n**Check:**\n```python\n# Training\nmodel.train()\nout1 = model(x)\nout2 = model(x)\nassert not torch.equal(out1, out2)  # Should differ!\n\n# Inference\nmodel.eval()\nout1 = model(x)\nout2 = model(x)\nassert torch.equal(out1, out2)  # Should be same!\n```",
+    "level5_research": "**Cutting-edge Research:**\n\n**1. Concrete Dropout (Gal et al., 2017):**\nDropout rate'i learnable parameter yap!\n\n$$p_i = \\text{sigmoid}(\\theta_i)$$\n\nGradient descent ile optimal dropout rate'i öğren.\n\n**2. Targeted Dropout (Gomez et al., 2019):**\nRandom yerine strategically drop et:\n- High gradient neurons → drop (overfit risk!)\n- Low gradient neurons → keep\n\n**3. DropBlock (Ghiasi et al., 2018):**\nConvolutional networks için:\nContiguous regions'ı drop et (not individual pixels).\n\n**4. Cutout / Random Erasing:**\nInput space'te dropout:\nImage'in random patches'ini sil.\n\n**5. Mixup + Dropout:**\nData augmentation ile combine et:\n$$x_{\\text{mixed}} = \\lambda x_1 + (1-\\lambda) x_2$$\nThen apply dropout.\n\n**Future Directions:**\n- Adaptive dropout (per-sample)\n- Neural architecture search for dropout patterns\n- Theoretical guarantees for generalization"
+  },
+  "whatIsIt": "Dropout training sırasında random olarak neuron'ları devre dışı bırakır (genelde %50). Test'te tüm neuron'lar aktif ama scaled. Ensemble learning effect yaratır, overfitting'i önler.",
+  "whyNeeded": "Neural networks kolayca overfit eder. Dropout co-adaptation'ı engeller, her neuron robust features öğrenir. En etkili ve en basit regularization technique!",
+  "realWorldAnalogy": "Bir takım düşün. Eğer bir oyuncu çok dominant olursa diğerleri ona güvenir, kendi yeteneklerini geliştirmez. Ama o oyuncu sakatlansa takım çöker! Dropout her antrenmantta random oyuncuları dinlendirir → herkes gelişir, takım robust olur.",
+  "mathematics": {
+    "formulas": [
+      "\\tilde{h}_i = r_i \\cdot h_i, \\quad r_i \\sim \\text{Bernoulli}(p)",
+      "h_{\\text{test}} = p \\cdot h \\quad \\text{(standard dropout)}",
+      "\\tilde{h}_i = \\frac{r_i \\cdot h_i}{p} \\quad \\text{(inverted dropout)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Training phase - her mini-batch için:",
+      "   a. Her neuron için Bernoulli(p) sample et → mask",
+      "   b. Forward pass: h_dropped = mask * h / p (inverted)",
+      "   c. Backward pass: gradient'ı mask ile multiply et",
+      "   d. Drop edilen neuron'lar update edilmez",
+      "2. Test phase:",
+      "   a. Tüm neuron'ları aktif et (mask = all 1s)",
+      "   b. Forward pass: h_test = h (no scaling with inverted)",
+      "3. Ensemble effect: 2^n farklı sub-network'ün implicit average'ı"
+    ],
+    "complexity": "Forward: O(n) mask generation + multiplication. Backward: O(n) mask multiply. Minimal overhead!"
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Basic Dropout Implementation from Scratch",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"DROPOUT FROM SCRATCH\")\nprint(\"=\"*60)\n\ndef dropout_forward(x, dropout_rate, training=True):\n    \"\"\"\n    Inverted dropout implementation\n    \n    Args:\n        x: Input array\n        dropout_rate: Probability of dropping (0.5 = 50%)\n        training: If True, apply dropout; if False, return x as-is\n    \n    Returns:\n        output: Dropped output\n        mask: Binary mask (for backward pass)\n    \"\"\"\n    if not training:\n        # Test mode: no dropout\n        return x, None\n    \n    # Training mode: apply dropout\n    # Generate random mask\n    mask = np.random.rand(*x.shape) > dropout_rate  # 0 or 1\n    \n    # Apply mask and scale (inverted dropout)\n    keep_prob = 1 - dropout_rate\n    output = (mask * x) / keep_prob\n    \n    return output, mask\n\ndef dropout_backward(dout, mask, dropout_rate):\n    \"\"\"\n    Backward pass for dropout\n    \"\"\"\n    keep_prob = 1 - dropout_rate\n    dx = (mask * dout) / keep_prob\n    return dx\n\n# Test\nprint(\"\\n📊 Testing Dropout\")\nprint(\"=\"*60)\n\n# Input\nx = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])\nprint(f\"\\nOriginal input: {x}\")\nprint(f\"Mean: {x.mean():.2f}\")\n\n# Training mode - multiple passes\nprint(\"\\n🏋️ Training Mode (dropout_rate=0.5):\")\nfor i in range(3):\n    output, mask = dropout_forward(x, dropout_rate=0.5, training=True)\n    print(f\"\\nPass {i+1}:\")\n    print(f\"  Mask:   {mask.astype(int)}\")\n    print(f\"  Output: {output}\")\n    print(f\"  Mean:   {output.mean():.2f} (preserved!)\")\n    print(f\"  Active: {mask.sum()}/{len(mask)} neurons\")\n\n# Test mode\nprint(\"\\n🧪 Test Mode (no dropout):\")\noutput, mask = dropout_forward(x, dropout_rate=0.5, training=False)\nprint(f\"  Output: {output}\")\nprint(f\"  Mean:   {output.mean():.2f} (same as input!)\")\n\n# Visualize\nfig, axes = plt.subplots(1, 3, figsize=(15, 4))\n\nfor i, ax in enumerate(axes):\n    output, mask = dropout_forward(x, dropout_rate=0.5, training=True)\n    \n    ax.bar(range(len(x)), x, alpha=0.3, label='Original', color='blue')\n    ax.bar(range(len(x)), output, alpha=0.7, label='After Dropout', color='red')\n    ax.set_xlabel('Neuron Index')\n    ax.set_ylabel('Activation')\n    ax.set_title(f'Dropout Pass {i+1}')\n    ax.legend()\n    ax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n💡 Key observations:\")\nprint(\"   • Different neurons dropped each pass (stochastic)\")\nprint(\"   • Mean preserved (thanks to scaling by 1/keep_prob)\")\nprint(\"   • Test mode: no dropout, deterministic\")",
+      "explanation": "Dropout'un saf implementasyonu. Inverted dropout kullanıyor: training'de scale et, test'te etme. Mean preservation dikkat et!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch Dropout - Training vs Eval Mode",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nprint(\"=\"*60)\nprint(\"PYTORCH DROPOUT: TRAINING VS EVAL\")\nprint(\"=\"*60)\n\nclass SimpleNet(nn.Module):\n    def __init__(self, dropout_rate=0.5):\n        super().__init__()\n        self.fc1 = nn.Linear(10, 20)\n        self.dropout = nn.Dropout(p=dropout_rate)\n        self.fc2 = nn.Linear(20, 5)\n    \n    def forward(self, x):\n        x = F.relu(self.fc1(x))\n        x = self.dropout(x)  # Dropout applied\n        x = self.fc2(x)\n        return x\n\nmodel = SimpleNet(dropout_rate=0.5)\nprint(\"\\nModel architecture:\")\nprint(model)\n\n# Input\nx = torch.randn(1, 10)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TRAINING MODE (dropout active)\")\nprint(\"=\"*60)\n\nmodel.train()  # Enable dropout\nprint(f\"\\nModel training mode: {model.training}\")\n\noutputs_train = []\nfor i in range(5):\n    output = model(x)\n    outputs_train.append(output)\n    print(f\"\\nPass {i+1}: {output[0, :3].detach().numpy()}...\")\n\nprint(\"\\n💡 Notice: Outputs differ (stochastic dropout!)\")\n\n# Check variance\noutputs_tensor = torch.stack(outputs_train)\nvariance = outputs_tensor.var(dim=0).mean()\nprint(f\"\\nOutput variance: {variance:.6f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"EVAL MODE (dropout disabled)\")\nprint(\"=\"*60)\n\nmodel.eval()  # Disable dropout\nprint(f\"\\nModel training mode: {model.training}\")\n\noutputs_eval = []\nfor i in range(5):\n    with torch.no_grad():  # No gradient tracking in eval\n        output = model(x)\n        outputs_eval.append(output)\n        print(f\"\\nPass {i+1}: {output[0, :3].numpy()}...\")\n\nprint(\"\\n💡 Notice: Outputs identical (deterministic!)\")\n\n# Check equality\nfor i in range(1, len(outputs_eval)):\n    is_equal = torch.equal(outputs_eval[0], outputs_eval[i])\n    print(f\"Pass 1 == Pass {i+1}: {is_equal}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"COMMON BUG: Forgetting to switch modes\")\nprint(\"=\"*60)\n\nprint(\"\\n❌ WRONG:\")\nprint(\"\"\"\nmodel.train()\nfor epoch in range(10):\n    train(model, train_loader)\n    # BUG: Still in train mode!\n    val_loss = evaluate(model, val_loader)  # Dropout still active!\n\"\"\")\n\nprint(\"\\n✓ CORRECT:\")\nprint(\"\"\"\nfor epoch in range(10):\n    model.train()  # Training mode\n    train(model, train_loader)\n    \n    model.eval()   # Evaluation mode\n    val_loss = evaluate(model, val_loader)  # Dropout disabled\n\"\"\")\n\nprint(\"\\n💡 Always remember:\")\nprint(\"   • model.train() → Dropout ON\")\nprint(\"   • model.eval() → Dropout OFF\")\nprint(\"   • Forgetting this = incorrect evaluation!\")",
+      "explanation": "PyTorch'ta dropout training vs eval mode'da farklı davranır! model.train() ve model.eval() kullanmayı unutmak çok yaygın bug."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Dropout Rate Comparison - Overfitting Prevention",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\n\nprint(\"=\"*60)\nprint(\"DROPOUT RATE COMPARISON\")\nprint(\"=\"*60)\n\n# Generate dataset\nX, y = make_classification(\n    n_samples=500, n_features=20, n_informative=10,\n    n_redundant=5, random_state=42\n)\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.3, random_state=42\n)\n\n# Convert to tensors\nX_train = torch.FloatTensor(X_train)\ny_train = torch.LongTensor(y_train)\nX_test = torch.FloatTensor(X_test)\ny_test = torch.LongTensor(y_test)\n\nprint(f\"\\nDataset:\")\nprint(f\"  Train: {X_train.shape}\")\nprint(f\"  Test:  {X_test.shape}\")\n\nclass Net(nn.Module):\n    def __init__(self, dropout_rate):\n        super().__init__()\n        self.fc1 = nn.Linear(20, 128)\n        self.dropout1 = nn.Dropout(dropout_rate)\n        self.fc2 = nn.Linear(128, 128)\n        self.dropout2 = nn.Dropout(dropout_rate)\n        self.fc3 = nn.Linear(128, 2)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = self.dropout1(x)\n        x = torch.relu(self.fc2(x))\n        x = self.dropout2(x)\n        x = self.fc3(x)\n        return x\n\ndef train_model(dropout_rate, epochs=100):\n    model = Net(dropout_rate)\n    criterion = nn.CrossEntropyLoss()\n    optimizer = optim.Adam(model.parameters(), lr=0.001)\n    \n    train_losses = []\n    test_losses = []\n    \n    for epoch in range(epochs):\n        # Training\n        model.train()\n        optimizer.zero_grad()\n        outputs = model(X_train)\n        loss = criterion(outputs, y_train)\n        loss.backward()\n        optimizer.step()\n        train_losses.append(loss.item())\n        \n        # Evaluation\n        model.eval()\n        with torch.no_grad():\n            outputs = model(X_test)\n            test_loss = criterion(outputs, y_test)\n            test_losses.append(test_loss.item())\n    \n    return train_losses, test_losses\n\nprint(\"\\n🏋️ Training models with different dropout rates...\")\n\ndropout_rates = [0.0, 0.2, 0.5, 0.7]\nresults = {}\n\nfor rate in dropout_rates:\n    print(f\"\\n  Dropout = {rate}...\", end=\" \")\n    train_loss, test_loss = train_model(rate, epochs=100)\n    results[rate] = {'train': train_loss, 'test': test_loss}\n    print(f\"✓ Train: {train_loss[-1]:.4f}, Test: {test_loss[-1]:.4f}\")\n\n# Plot\nfig, axes = plt.subplots(2, 2, figsize=(14, 10))\naxes = axes.flatten()\n\nfor idx, rate in enumerate(dropout_rates):\n    ax = axes[idx]\n    \n    train_loss = results[rate]['train']\n    test_loss = results[rate]['test']\n    \n    ax.plot(train_loss, label='Train Loss', linewidth=2)\n    ax.plot(test_loss, label='Test Loss', linewidth=2)\n    \n    # Highlight overfitting\n    gap = test_loss[-1] - train_loss[-1]\n    \n    ax.set_title(f'Dropout = {rate} (Gap: {gap:.4f})', fontsize=14)\n    ax.set_xlabel('Epoch')\n    ax.set_ylabel('Loss')\n    ax.legend()\n    ax.grid(True, alpha=0.3)\n    \n    # Annotation\n    if rate == 0.0:\n        ax.annotate('Overfitting!', xy=(50, test_loss[50]), \n                   xytext=(60, test_loss[50]+0.2),\n                   arrowprops=dict(arrowstyle='->', color='red'),\n                   fontsize=12, color='red')\n\nplt.tight_layout()\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ANALYSIS\")\nprint(\"=\"*60)\n\nprint(\"\\nTrain-Test Gap (overfitting indicator):\")\nfor rate in dropout_rates:\n    train_final = results[rate]['train'][-1]\n    test_final = results[rate]['test'][-1]\n    gap = test_final - train_final\n    print(f\"  Dropout {rate}: {gap:+.4f} {'✓ Good' if gap < 0.1 else '⚠️  Overfitting'}\")\n\nprint(\"\\n💡 Observations:\")\nprint(\"   • Dropout=0.0: Large train-test gap → overfitting\")\nprint(\"   • Dropout=0.5: Smaller gap → better generalization\")\nprint(\"   • Dropout=0.7: May underfit (too much regularization)\")\nprint(\"   • Sweet spot: Usually 0.3-0.5 for fully connected layers\")",
+      "explanation": "Farklı dropout rate'ler train-test gap'i nasıl etkiler? 0.0 = overfit, 0.5 = good balance, 0.7 = maybe underfit. Experiment gerekli!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Spatial Dropout for CNN",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nprint(\"=\"*60)\nprint(\"SPATIAL DROPOUT (Dropout2D) FOR CNN\")\nprint(\"=\"*60)\n\nprint(\"\\n🔍 Why Spatial Dropout?\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nStandard Dropout: Drop individual neurons\n  ❌ In CNN: Features are spatially correlated\n  ❌ Dropping random pixels → still have nearby pixels with same info\n  ❌ Not effective regularization!\n\nSpatial Dropout: Drop entire feature maps (channels)\n  ✓ If channel is dropped, entire spatial map is dropped\n  ✓ Forces network to learn diverse features\n  ✓ More effective for convolutional layers\n\"\"\")\n\nclass CNNWithDropout(nn.Module):\n    \"\"\"Standard dropout - NOT recommended for CNN!\"\"\"\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)\n        self.dropout = nn.Dropout(0.5)  # ❌ Wrong for CNN!\n        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)\n    \n    def forward(self, x):\n        x = F.relu(self.conv1(x))\n        x = self.dropout(x)  # Drops random positions\n        x = F.relu(self.conv2(x))\n        return x\n\nclass CNNWithSpatialDropout(nn.Module):\n    \"\"\"Spatial dropout - CORRECT for CNN!\"\"\"\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)\n        self.dropout = nn.Dropout2d(0.3)  # ✓ Spatial dropout!\n        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)\n    \n    def forward(self, x):\n        x = F.relu(self.conv1(x))\n        x = self.dropout(x)  # Drops entire channels\n        x = F.relu(self.conv2(x))\n        return x\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"COMPARISON\")\nprint(\"=\"*60)\n\n# Input: [batch=1, channels=3, height=32, width=32]\nx = torch.randn(1, 3, 32, 32)\n\nprint(f\"\\nInput shape: {x.shape}\")\nprint(\"  [batch, channels, height, width]\")\n\n# Standard dropout\nmodel_standard = CNNWithDropout()\nmodel_standard.train()\n\nprint(\"\\n1️⃣  Standard Dropout:\")\nwith torch.no_grad():\n    out = model_standard.conv1(x)\n    print(f\"   After conv1: {out.shape}\")\n    out_dropped = model_standard.dropout(out)\n    print(f\"   After dropout: {out_dropped.shape}\")\n    \n    # Check how many elements are dropped\n    dropped = (out_dropped == 0).float().mean()\n    print(f\"   Dropped elements: {dropped:.1%}\")\n    print(f\"   Pattern: Random individual positions\")\n\n# Spatial dropout\nmodel_spatial = CNNWithSpatialDropout()\nmodel_spatial.train()\n\nprint(\"\\n2️⃣  Spatial Dropout:\")\nwith torch.no_grad():\n    out = model_spatial.conv1(x)\n    print(f\"   After conv1: {out.shape}\")\n    out_dropped = model_spatial.dropout(out)\n    print(f\"   After dropout: {out_dropped.shape}\")\n    \n    # Check channel-wise\n    for c in range(min(5, out.shape[1])):\n        channel_zero = (out_dropped[0, c] == 0).all().item()\n        status = \"✗ Entire channel dropped\" if channel_zero else \"✓ Channel kept\"\n        print(f\"   Channel {c}: {status}\")\n    \n    dropped_channels = sum([\n        (out_dropped[0, c] == 0).all().item() \n        for c in range(out.shape[1])\n    ])\n    print(f\"\\n   Dropped channels: {dropped_channels}/{out.shape[1]}\")\n    print(f\"   Pattern: Entire feature maps dropped\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"RECOMMENDATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nFor Convolutional Layers:\n  ✓ Use nn.Dropout2d (spatial dropout)\n  ✓ Rate: 0.2-0.3 (lower than fully connected)\n  ✓ Apply after pooling or early conv layers\n\nFor Fully Connected Layers:\n  ✓ Use nn.Dropout (standard)\n  ✓ Rate: 0.5 (higher rate OK)\n  ✓ Apply before final classifier\n\nExample Architecture:\n  Conv → ReLU → Dropout2d(0.2) → Pool\n  Conv → ReLU → Dropout2d(0.2) → Pool\n  Flatten\n  FC → ReLU → Dropout(0.5)\n  FC → Output\n\"\"\")",
+      "explanation": "CNN'lerde standard dropout etkisiz! Spatial Dropout (Dropout2d) entire feature maps'i drop eder. Conv layers için Dropout2d, FC layers için Dropout kullan."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Monte Carlo Dropout - Uncertainty Estimation",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"MONTE CARLO DROPOUT: UNCERTAINTY ESTIMATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n💡 Idea: Dropout at test time → Bayesian approximation!\n\nNormal inference:\n  model.eval() → Dropout OFF → deterministic prediction\n\nMC Dropout:\n  model.train() at test time → Dropout ON\n  Multiple forward passes → distribution of predictions\n  Mean = prediction, Std = uncertainty\n\"\"\")\n\nclass BayesianNet(nn.Module):\n    def __init__(self, input_dim=1, hidden_dim=128, dropout_rate=0.1):\n        super().__init__()\n        self.fc1 = nn.Linear(input_dim, hidden_dim)\n        self.dropout1 = nn.Dropout(dropout_rate)\n        self.fc2 = nn.Linear(hidden_dim, hidden_dim)\n        self.dropout2 = nn.Dropout(dropout_rate)\n        self.fc3 = nn.Linear(hidden_dim, 1)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = self.dropout1(x)\n        x = torch.relu(self.fc2(x))\n        x = self.dropout2(x)\n        x = self.fc3(x)\n        return x\n    \n    def predict_with_uncertainty(self, x, n_samples=100):\n        \"\"\"\n        Monte Carlo Dropout: Multiple forward passes\n        Returns: mean, std (epistemic uncertainty)\n        \"\"\"\n        self.train()  # Keep dropout active!\n        \n        predictions = []\n        with torch.no_grad():\n            for _ in range(n_samples):\n                pred = self.forward(x)\n                predictions.append(pred)\n        \n        predictions = torch.stack(predictions)  # [n_samples, batch, 1]\n        mean = predictions.mean(dim=0)\n        std = predictions.std(dim=0)\n        \n        return mean, std\n\n# Generate toy data: y = sin(x) + noise\nnp.random.seed(42)\nX_train = np.random.uniform(-3, 3, 100).reshape(-1, 1)\ny_train = np.sin(X_train) + np.random.normal(0, 0.1, X_train.shape)\n\nX_train = torch.FloatTensor(X_train)\ny_train = torch.FloatTensor(y_train)\n\nprint(\"\\n🏋️ Training model...\")\nmodel = BayesianNet(dropout_rate=0.1)\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\ncriterion = nn.MSELoss()\n\n# Train\nmodel.train()\nfor epoch in range(1000):\n    optimizer.zero_grad()\n    pred = model(X_train)\n    loss = criterion(pred, y_train)\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 200 == 0:\n        print(f\"  Epoch {epoch+1}: Loss = {loss.item():.6f}\")\n\nprint(\"✓ Training complete!\")\n\n# Test with uncertainty\nprint(\"\\n\" + \"=\"*60)\nprint(\"PREDICTIONS WITH UNCERTAINTY\")\nprint(\"=\"*60)\n\nX_test = torch.FloatTensor(np.linspace(-5, 5, 200).reshape(-1, 1))\n\nprint(\"\\n1️⃣  Standard Inference (dropout OFF):\")\nmodel.eval()\nwith torch.no_grad():\n    pred_standard = model(X_test)\nprint(f\"   Predictions: deterministic\")\nprint(f\"   Uncertainty: None\")\n\nprint(\"\\n2️⃣  MC Dropout (dropout ON, multiple passes):\")\nmean_pred, std_pred = model.predict_with_uncertainty(X_test, n_samples=100)\nprint(f\"   Predictions: {mean_pred.shape}\")\nprint(f\"   Uncertainty: {std_pred.shape}\")\nprint(f\"   Min uncertainty: {std_pred.min():.6f}\")\nprint(f\"   Max uncertainty: {std_pred.max():.6f}\")\n\n# Plot\nfig, axes = plt.subplots(1, 2, figsize=(16, 6))\n\n# Standard prediction\nax = axes[0]\nax.scatter(X_train.numpy(), y_train.numpy(), alpha=0.5, label='Training data', s=20)\nax.plot(X_test.numpy(), pred_standard.numpy(), 'r-', linewidth=2, label='Prediction')\nax.plot(X_test.numpy(), np.sin(X_test.numpy()), 'g--', linewidth=2, label='True function')\nax.set_xlabel('x', fontsize=12)\nax.set_ylabel('y', fontsize=12)\nax.set_title('Standard Inference (No Uncertainty)', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\n# MC Dropout with uncertainty\nax = axes[1]\nax.scatter(X_train.numpy(), y_train.numpy(), alpha=0.5, label='Training data', s=20)\nax.plot(X_test.numpy(), mean_pred.numpy(), 'r-', linewidth=2, label='Mean prediction')\nax.fill_between(\n    X_test.numpy().ravel(),\n    (mean_pred - 2*std_pred).numpy().ravel(),\n    (mean_pred + 2*std_pred).numpy().ravel(),\n    alpha=0.3, color='red', label='±2σ (95% confidence)'\n)\nax.plot(X_test.numpy(), np.sin(X_test.numpy()), 'g--', linewidth=2, label='True function')\nax.set_xlabel('x', fontsize=12)\nax.set_ylabel('y', fontsize=12)\nax.set_title('MC Dropout (With Uncertainty)', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"INTERPRETATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n💡 Uncertainty increases where:\n  • Far from training data (extrapolation)\n  • Sparse training data\n  • Model is uncertain\n\nApplications:\n  • Medical diagnosis: \"I'm 70% sure, but uncertainty is high → order more tests\"\n  • Autonomous driving: High uncertainty → slow down or alert driver\n  • Active learning: Sample high-uncertainty points for labeling\n\nEpistemic Uncertainty:\n  • Model uncertainty (can be reduced with more data)\n  • MC Dropout captures this!\n\nAleatoric Uncertainty:\n  • Data noise (irreducible)\n  • Need to model explicitly (heteroscedastic regression)\n\"\"\")\n\nprint(\"\\n✓ MC Dropout: Free uncertainty estimation!\")",
+      "explanation": "MC Dropout test'te de dropout aktif tutar, multiple forward passes yapar. Mean = prediction, std = uncertainty! Bayesian approximation - free uncertainty estimation."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production Checklist - Dropout Best Practices",
+      "code": "import torch\nimport torch.nn as nn\n\nprint(\"=\"*60)\nprint(\"PRODUCTION DROPOUT CHECKLIST\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n✓ 1. ALWAYS use model.train() and model.eval()\n\"\"\")\n\nclass ProductionModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 64, 3)\n        self.dropout_conv = nn.Dropout2d(0.2)  # Spatial for conv\n        self.fc1 = nn.Linear(64 * 30 * 30, 128)\n        self.dropout_fc = nn.Dropout(0.5)  # Standard for FC\n        self.fc2 = nn.Linear(128, 10)\n    \n    def forward(self, x):\n        x = torch.relu(self.conv1(x))\n        x = self.dropout_conv(x)\n        x = x.view(x.size(0), -1)\n        x = torch.relu(self.fc1(x))\n        x = self.dropout_fc(x)\n        x = self.fc2(x)\n        return x\n\nmodel = ProductionModel()\n\nprint(\"\"\"\n✓ 2. Training loop\n\"\"\")\n\nprint(\"\"\"\ndef train_epoch(model, train_loader, optimizer, criterion):\n    model.train()  # ✓ Enable dropout\n    \n    for batch_idx, (data, target) in enumerate(train_loader):\n        optimizer.zero_grad()\n        output = model(data)\n        loss = criterion(output, target)\n        loss.backward()\n        optimizer.step()\n    \n    return loss.item()\n\"\"\")\n\nprint(\"\"\"\n✓ 3. Validation loop\n\"\"\")\n\nprint(\"\"\"\ndef validate(model, val_loader, criterion):\n    model.eval()  # ✓ Disable dropout\n    \n    total_loss = 0\n    with torch.no_grad():  # No gradients needed\n        for data, target in val_loader:\n            output = model(data)\n            loss = criterion(output, target)\n            total_loss += loss.item()\n    \n    return total_loss / len(val_loader)\n\"\"\")\n\nprint(\"\"\"\n✓ 4. Inference\n\"\"\")\n\nprint(\"\"\"\ndef predict(model, x):\n    model.eval()  # ✓ Disable dropout\n    with torch.no_grad():\n        return model(x)\n\"\"\")\n\nprint(\"\"\"\n✓ 5. Save/Load model state\n\"\"\")\n\nprint(\"\"\"\n# Save\ntorch.save({\n    'model_state_dict': model.state_dict(),\n    'optimizer_state_dict': optimizer.state_dict(),\n    'epoch': epoch,\n}, 'checkpoint.pth')\n\n# Load\ncheckpoint = torch.load('checkpoint.pth')\nmodel.load_state_dict(checkpoint['model_state_dict'])\nmodel.eval()  # ✓ Set to eval mode after loading\n\"\"\")\n\nprint(\"\"\"\n✓ 6. Distributed training\n\"\"\")\n\nprint(\"\"\"\n# Each GPU should have different dropout mask!\n# PyTorch handles this automatically\n\nmodel = nn.DataParallel(model)  # Multi-GPU\nmodel = nn.parallel.DistributedDataParallel(model)  # Distributed\n# Different random seeds per process → different dropout\n\"\"\")\n\nprint(\"\"\"\n✓ 7. Debugging dropout\n\"\"\")\n\nprint(\"\"\"\ndef test_dropout_behavior(model, x):\n    # Test 1: Training mode produces different outputs\n    model.train()\n    out1 = model(x)\n    out2 = model(x)\n    assert not torch.allclose(out1, out2, atol=1e-6), \"Dropout not working!\"\n    \n    # Test 2: Eval mode produces same output\n    model.eval()\n    out1 = model(x)\n    out2 = model(x)\n    assert torch.allclose(out1, out2), \"Eval mode not deterministic!\"\n    \n    print(\"✓ Dropout working correctly!\")\n\"\"\")\n\nprint(\"\"\"\n✓ 8. Hyperparameter selection\n\"\"\")\n\nprint(\"\"\"\nTypical values:\n  • Input layer: 0.2 (conservative)\n  • Conv layers: 0.2-0.3 (use Dropout2d!)\n  • FC layers: 0.5 (aggressive)\n  • RNN/LSTM: 0.2-0.3 (careful with gradient flow)\n  • Transformer: 0.1 (modern architectures use lower)\n\nTuning:\n  • Overfitting? → Increase dropout\n  • Underfitting? → Decrease dropout\n  • Grid search: [0.0, 0.2, 0.5, 0.7]\n\"\"\")\n\nprint(\"\"\"\n✓ 9. Alternative: Early stopping\n\"\"\")\n\nprint(\"\"\"\nfrom torch.optim.lr_scheduler import ReduceLROnPlateau\n\nbest_val_loss = float('inf')\npatience_counter = 0\npatience = 10\n\nfor epoch in range(max_epochs):\n    train_loss = train_epoch(model, train_loader, optimizer, criterion)\n    val_loss = validate(model, val_loader, criterion)\n    \n    if val_loss < best_val_loss:\n        best_val_loss = val_loss\n        patience_counter = 0\n        torch.save(model.state_dict(), 'best_model.pth')\n    else:\n        patience_counter += 1\n    \n    if patience_counter >= patience:\n        print(\"Early stopping!\")\n        break\n\"\"\")\n\nprint(\"\"\"\n✓ 10. Common pitfalls to avoid\n\"\"\")\n\nprint(\"\"\"\n❌ Forgetting model.eval() during validation\n❌ Using standard Dropout for conv layers (use Dropout2d!)\n❌ Too high dropout on small networks (underfit)\n❌ Dropout on final layer (usually not needed)\n❌ Not using torch.no_grad() in eval (memory waste)\n❌ Mixing Batch Norm + high dropout (may conflict)\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SUMMARY\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n✓ Dropout is simple but powerful regularization\n✓ Always remember train() vs eval() modes\n✓ Use Dropout2d for conv, Dropout for FC\n✓ Typical rates: 0.2-0.5\n✓ Can estimate uncertainty with MC Dropout\n✓ Modern architectures use lower dropout (0.1)\n✓ Combine with early stopping for best results\n\"\"\")",
+      "explanation": "Production'da dropout kullanımı için complete checklist. train/eval modes, layer types, hyperparameters, debugging, common pitfalls. Her production model için!/"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Dropout training ve test phase'de nasıl farklı davranır?",
+      "options": [
+        "Training: dropout OFF, Test: dropout ON",
+        "Training: random neuron'ları drop et, Test: tüm neuron'lar aktif (scaled)",
+        "Her ikisinde de aynı davranır",
+        "Test'te dropout rate 2 katına çıkar"
+      ],
+      "correct": 1,
+      "explanation": "Training: Random neuron'ları drop et (p probability). Test: Tüm neuron'lar aktif, ama output'lar p ile scale edilir (veya inverted dropout ile training'de scale et, test'te etme)."
+    },
+    {
+      "question": "Inverted dropout'un avantajı nedir?",
+      "options": [
+        "Daha iyi accuracy",
+        "Test time'da scaling gerekmiyor (training'de scale edilir)",
+        "Daha az memory kullanır",
+        "Avantajı yok, standard dropout ile aynı"
+      ],
+      "correct": 1,
+      "explanation": "Inverted dropout training'de scale eder (h_dropped = mask * h / keep_prob), test'te scaling yok (h_test = h). Production'da test latency için kritik!"
+    },
+    {
+      "question": "CNN'lerde neden standard Dropout yerine Spatial Dropout (Dropout2d) kullanılır?",
+      "options": [
+        "Daha hızlıdır",
+        "Conv features spatially correlated, entire feature maps drop edilmeli",
+        "Daha az memory kullanır",
+        "Sadece isim farklı, işlev aynı"
+      ],
+      "correct": 1,
+      "explanation": "Convolutional features spatially correlated. Random pixels drop etmek etkisiz çünkü nearby pixels aynı info taşır. Spatial dropout entire channels'ı drop eder!"
+    },
+    {
+      "question": "Dropout neden ensemble learning effect yaratır?",
+      "options": [
+        "Multiple model train edilir",
+        "Her iteration farklı sub-network train edilir, test'te implicit ensemble",
+        "Ensemble learning ile ilgisi yok",
+        "Sadece büyük dataset'lerde ensemble effect var"
+      ],
+      "correct": 1,
+      "explanation": "n neuron → 2^n possible sub-networks. Her iteration'da farklı subset aktif → farklı sub-network train edilir. Test'te tüm neuron'lar aktif → tüm sub-networks'ün ortalaması (implicit ensemble)!"
+    },
+    {
+      "question": "Monte Carlo Dropout ne için kullanılır?",
+      "options": [
+        "Training'i hızlandırmak için",
+        "Test time'da uncertainty estimation için (dropout ON tutulur)",
+        "Overfitting'i önlemek için",
+        "Model compression için"
+      ],
+      "correct": 1,
+      "explanation": "MC Dropout: Test'te dropout ON tut, multiple forward passes yap. Mean = prediction, std = epistemic uncertainty. Bayesian approximation!"
+    },
+    {
+      "question": "Dropout rate tipik olarak ne kadar seçilir?",
+      "options": [
+        "Her zaman 0.5",
+        "Input: 0.2, Conv: 0.2-0.3, FC: 0.5",
+        "Her zaman 0.9 (maximum regularization)",
+        "Random seç"
+      ],
+      "correct": 1,
+      "explanation": "Input layer: 0.2 (conservative), Conv: 0.2-0.3 (spatial dropout), FC: 0.5 (aggressive). Modern architectures (Transformer): 0.1. Experiment ile optimize et!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Test/validation sırasında dropout'u kapatmayı unutmak",
+      "why": "En yaygın bug! Validation'da dropout aktifse results stochastic ve yanıltıcı olur. Model underperform eder.",
+      "fix": "Her zaman model.eval() kullan validation/test'te, model.train() training'de.",
+      "example": "# YANLIŞ\nfor epoch in range(10):\n    train(model, train_loader)  # model.train() içinde\n    val_loss = validate(model, val_loader)  # Dropout hala ON!\n\n# DOĞRU\nfor epoch in range(10):\n    model.train()\n    train(model, train_loader)\n    model.eval()  # ✓ Dropout OFF\n    val_loss = validate(model, val_loader)"
+    },
+    {
+      "mistake": "CNN'de standard Dropout kullanmak",
+      "why": "Convolutional features spatially correlated. Random pixels drop etmek etkisiz, nearby pixels aynı info taşır!",
+      "fix": "Conv layers için nn.Dropout2d (spatial dropout) kullan, FC layers için nn.Dropout.",
+      "example": "# YANLIŞ\nself.conv1 = nn.Conv2d(3, 64, 3)\nself.dropout = nn.Dropout(0.5)  # ❌ Conv için yanlış!\n\n# DOĞRU\nself.conv1 = nn.Conv2d(3, 64, 3)\nself.dropout = nn.Dropout2d(0.2)  # ✓ Spatial dropout"
+    },
+    {
+      "mistake": "Dropout rate'i çok yüksek seçmek (0.9+)",
+      "why": "Çok fazla neuron drop edilirse model underfit eder, öğrenemez. Information flow kesilir.",
+      "fix": "0.2-0.5 arası kullan. FC layers için 0.5, conv için 0.2-0.3 tipik.",
+      "example": "# Çok yüksek dropout\nself.dropout = nn.Dropout(0.95)  # ❌ Too much!\n# Model hiçbir şey öğrenemez\n\n# Uygun dropout\nself.dropout = nn.Dropout(0.5)  # ✓ Reasonable"
+    },
+    {
+      "mistake": "Inverted dropout scaling'i yanlış yapmak",
+      "why": "Training'de scale etmeyi unutursan test'te output'lar farklı magnitude'de olur → yanıltıcı results.",
+      "fix": "PyTorch/TensorFlow dropout layers zaten inverted dropout implement eder, manual implement etme!",
+      "example": "# Manual (dikkatli ol!)\nmask = (torch.rand_like(x) > dropout_rate).float()\nx_dropped = mask * x / (1 - dropout_rate)  # ✓ Scale!\n\n# PyTorch (auto)\nx_dropped = F.dropout(x, p=dropout_rate, training=True)  # ✓ Preferred"
+    },
+    {
+      "mistake": "RNN'de her time step'te farklı dropout mask kullanmak",
+      "why": "Variational dropout gerekli: aynı mask tüm time steps'te kullanılmalı. Yoksa temporal consistency bozulur.",
+      "fix": "Variational dropout implementation kullan veya dropout'u RNN çıkışına uygula.",
+      "example": "# YANLIŞ\nfor t in range(seq_len):\n    h_t = rnn_cell(x_t, h_prev)\n    h_t = dropout(h_t)  # ❌ Her step farklı mask!\n\n# DOĞRU\nmask = generate_dropout_mask()\nfor t in range(seq_len):\n    h_t = rnn_cell(x_t, h_prev)\n    h_t = apply_mask(h_t, mask)  # ✓ Same mask"
+    },
+    {
+      "mistake": "Batch Normalization ile çok yüksek dropout birlikte kullanmak",
+      "why": "Batch Norm zaten regularization sağlıyor. High dropout + Batch Norm → underfit, training instability.",
+      "fix": "Batch Norm kullanıyorsan dropout'u azalt veya kaldır. Modern CNN'ler genelde sadece Batch Norm kullanır.",
+      "example": "# Redundant\nself.bn = nn.BatchNorm2d(64)\nself.dropout = nn.Dropout2d(0.7)  # ❌ Too much with BN!\n\n# Better\nself.bn = nn.BatchNorm2d(64)\nself.dropout = nn.Dropout2d(0.1)  # ✓ Low or none"
+    },
+    {
+      "mistake": "Model save/load sonrası eval mode'u kontrol etmemek",
+      "why": "Model load edildiğinde training mode'da olabilir. Inference'da yanlış results!",
+      "fix": "Load sonrası her zaman model.eval() çağır.",
+      "example": "# Load model\nmodel.load_state_dict(torch.load('model.pth'))\n# model.training = ?  Unknown!\n\n# Safe\nmodel.load_state_dict(torch.load('model.pth'))\nmodel.eval()  # ✓ Ensure eval mode"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Dropout nedir ve nasıl çalışır?",
+      "back": "Training'de random neuron'ları devre dışı bırakır (genelde p=0.5). Test'te tüm neuron'lar aktif, output scaled. Overfitting'i önler, ensemble effect yaratır."
+    },
+    {
+      "front": "Inverted dropout nedir?",
+      "back": "Scaling'i training'de yap (h_drop = mask * h / keep_prob), test'te yapma (h_test = h). Modern framework'ler bunu kullanır. Test latency için önemli!"
+    },
+    {
+      "front": "Dropout neden ensemble learning gibi davranır?",
+      "back": "n neuron → 2^n sub-networks. Her iteration farklı sub-network train edilir. Test'te tüm neuron'lar aktif → implicit ensemble of all sub-networks!"
+    },
+    {
+      "front": "Spatial Dropout (Dropout2d) nedir?",
+      "back": "CNN için! Entire feature maps (channels) drop eder, individual pixels değil. Conv features spatially correlated olduğu için standard dropout etkisiz."
+    },
+    {
+      "front": "Monte Carlo Dropout nedir?",
+      "back": "Test'te dropout ON tut, multiple passes yap. Mean = prediction, std = uncertainty. Bayesian approximation, free uncertainty estimation!"
+    },
+    {
+      "front": "Dropout rate tipik değerleri?",
+      "back": "Input: 0.2, Conv: 0.2-0.3 (Dropout2d), FC: 0.5, RNN: 0.2-0.3, Transformer: 0.1. Overfit → arttır, underfit → azalt."
+    },
+    {
+      "front": "Dropout vs Batch Normalization?",
+      "back": "Batch Norm implicit regularization sağlar. Modern CNN'ler genelde sadece BN kullanır. Dropout + BN birlikte kullanılabilir ama dropout düşük tut (0.1)."
+    },
+    {
+      "front": "model.train() vs model.eval()?",
+      "back": "train(): Dropout ON, stochastic. eval(): Dropout OFF, deterministic. Training'de train(), validation/test'te eval() kullan! En yaygın bug!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "Dropout Training Visualization",
+      "description": "Neural network'te dropout'un nasıl çalıştığını interaktif görün. Her iteration'da farklı neuron'lar drop edilir.",
+      "component": "DropoutVisualization"
+    },
+    {
+      "type": "plot",
+      "title": "Dropout Rate vs Overfitting",
+      "description": "Farklı dropout rate'lerde train-test loss curves. 0.0 = overfit, 0.5 = good, 0.9 = underfit.",
+      "component": "DropoutRateComparison"
+    },
+    {
+      "type": "animation",
+      "title": "Ensemble Effect of Dropout",
+      "description": "Dropout'un nasıl 2^n sub-networks train ettiğini ve test'te ensemble'ı animate eder.",
+      "component": "DropoutEnsemble"
+    },
+    {
+      "type": "interactive",
+      "title": "MC Dropout Uncertainty",
+      "description": "Monte Carlo Dropout ile uncertainty estimation. Farklı regions'ta uncertainty'yi interaktif keşfet.",
+      "component": "MCDropoutUncertainty"
+    }
+  ]
+}

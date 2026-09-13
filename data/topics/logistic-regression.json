@@ -1,0 +1,294 @@
+{
+  "id": "logistic-regression",
+  "title": "Logistic Regression",
+  "category": "supervised-learning",
+  "level": 1,
+  "estimatedTime": 50,
+  "description": "Logistic Regression: Binary classification! Despite name: Classification, not regression. Linear model + sigmoid activation. Formula: P(y=1|x) = σ(w·x + b) = 1/(1+e^(-z)). Output: Probability [0,1]. Decision: P > 0.5 → class 1, else class 0. Training: Maximum likelihood (minimize cross-entropy loss). Gradient descent optimization. Extensions: Multinomial (multi-class), regularization (L1/L2). Interpretable: Coefficients show feature importance. Fast training & inference. Use cases: Medical diagnosis, spam detection, credit scoring. Foundation for neural networks (single neuron = logistic regression!). Simple but powerful baseline.",
+  "content": {
+    "level0_basic": "Logistic Regression: Binary classification (yes/no, 0/1)! Example: Email spam? Tumor benign/malignant? How: (1) Linear combination: z = w₁x₁ + w₂x₂ + b. (2) Sigmoid function: Convert z to probability. σ(z) = 1/(1+e^(-z)). Output always 0-1! (3) Decision: If P(spam) > 0.5 → spam, else not spam. Training: Adjust weights w to maximize correct predictions. Loss: Cross-entropy (penalize wrong predictions). Optimization: Gradient descent. Why 'regression' name? Historical. Actually classification! Advantages: (1) Simple, fast. (2) Interpretable (see weights). (3) Probabilistic output. (4) Works well with linearly separable data. Foundation: Neural network with 1 neuron = logistic regression!",
+    "level1_beginner": "**Sigmoid Function:**\n\n```\nσ(z) = 1 / (1 + e^(-z))\n\nProperties:\n- Maps (-∞, +∞) → (0, 1)\n- σ(0) = 0.5\n- σ(large positive) ≈ 1\n- σ(large negative) ≈ 0\n- S-shaped curve\n\nPerfect for probability!\n```\n\n**Model:**\n\n```\nInput: x = [x₁, x₂, ..., xₙ]\nWeights: w = [w₁, w₂, ..., wₙ]\nBias: b\n\nLinear: z = w·x + b = Σ wᵢxᵢ + b\nSigmoid: P(y=1|x) = σ(z)\nDecision: ŷ = 1 if P > 0.5 else 0\n```\n\n**Loss Function (Binary Cross-Entropy):**\n\n```\nFor one sample:\n  L = -[y·log(p) + (1-y)·log(1-p)]\n  \n  If y=1: L = -log(p)\n    → Minimize: Want p close to 1\n  If y=0: L = -log(1-p)\n    → Minimize: Want p close to 0\n\nTotal loss: Average over all samples\n```\n\n**Training (Gradient Descent):**\n\n```\n1. Initialize w, b randomly\n2. For each iteration:\n   a. Compute predictions: ŷ = σ(w·x + b)\n   b. Compute loss: L = -[y·log(ŷ) + (1-y)·log(1-ŷ)]\n   c. Compute gradients: ∂L/∂w, ∂L/∂b\n   d. Update: w = w - α·∂L/∂w\n             b = b - α·∂L/∂b\n3. Repeat until convergence\n```",
+    "level2_application": "**Complete Implementation:**\n\n```python\nimport numpy as np\n\nclass LogisticRegression:\n    def __init__(self, learning_rate=0.01, iterations=1000):\n        self.lr = learning_rate\n        self.iterations = iterations\n        self.weights = None\n        self.bias = None\n    \n    def sigmoid(self, z):\n        return 1 / (1 + np.exp(-z))\n    \n    def fit(self, X, y):\n        n_samples, n_features = X.shape\n        \n        # Initialize\n        self.weights = np.zeros(n_features)\n        self.bias = 0\n        \n        # Gradient descent\n        for _ in range(self.iterations):\n            # Forward\n            z = np.dot(X, self.weights) + self.bias\n            y_pred = self.sigmoid(z)\n            \n            # Gradients\n            dw = (1/n_samples) * np.dot(X.T, (y_pred - y))\n            db = (1/n_samples) * np.sum(y_pred - y)\n            \n            # Update\n            self.weights -= self.lr * dw\n            self.bias -= self.lr * db\n    \n    def predict_proba(self, X):\n        z = np.dot(X, self.weights) + self.bias\n        return self.sigmoid(z)\n    \n    def predict(self, X):\n        probas = self.predict_proba(X)\n        return (probas >= 0.5).astype(int)\n\n# Usage\nX = np.array([[1, 2], [2, 3], [3, 1], [4, 3]])\ny = np.array([0, 0, 1, 1])\n\nmodel = LogisticRegression()\nmodel.fit(X, y)\npredictions = model.predict(X)\nprint(f'Predictions: {predictions}')\n```",
+    "level3_advanced": "**Regularized Logistic Regression:**\n\n```python\nclass RegularizedLogisticRegression:\n    def __init__(self, learning_rate=0.01, iterations=1000, \n                 regularization='l2', lambda_=0.01):\n        self.lr = learning_rate\n        self.iterations = iterations\n        self.reg = regularization\n        self.lambda_ = lambda_\n    \n    def fit(self, X, y):\n        n_samples, n_features = X.shape\n        self.weights = np.zeros(n_features)\n        self.bias = 0\n        \n        for _ in range(self.iterations):\n            z = np.dot(X, self.weights) + self.bias\n            y_pred = self.sigmoid(z)\n            \n            # Gradients with regularization\n            dw = (1/n_samples) * np.dot(X.T, (y_pred - y))\n            \n            if self.reg == 'l2':\n                dw += (self.lambda_ / n_samples) * self.weights\n            elif self.reg == 'l1':\n                dw += (self.lambda_ / n_samples) * np.sign(self.weights)\n            \n            db = (1/n_samples) * np.sum(y_pred - y)\n            \n            self.weights -= self.lr * dw\n            self.bias -= self.lr * db\n```",
+    "level4_expert": "**Multinomial Logistic Regression (Softmax):**\n\n```python\nclass MultinomialLogisticRegression:\n    \"\"\"Multi-class logistic regression\"\"\"\n    def __init__(self, learning_rate=0.01, iterations=1000):\n        self.lr = learning_rate\n        self.iterations = iterations\n    \n    def softmax(self, z):\n        exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))\n        return exp_z / np.sum(exp_z, axis=1, keepdims=True)\n    \n    def fit(self, X, y, num_classes):\n        n_samples, n_features = X.shape\n        \n        # One weight vector per class\n        self.W = np.zeros((n_features, num_classes))\n        self.b = np.zeros(num_classes)\n        \n        # One-hot encode y\n        y_onehot = np.eye(num_classes)[y]\n        \n        for _ in range(self.iterations):\n            # Forward\n            z = np.dot(X, self.W) + self.b\n            y_pred = self.softmax(z)\n            \n            # Gradients\n            dW = (1/n_samples) * np.dot(X.T, (y_pred - y_onehot))\n            db = (1/n_samples) * np.sum(y_pred - y_onehot, axis=0)\n            \n            # Update\n            self.W -= self.lr * dW\n            self.b -= self.lr * db\n    \n    def predict(self, X):\n        z = np.dot(X, self.W) + self.b\n        probas = self.softmax(z)\n        return np.argmax(probas, axis=1)\n```"
+  },
+  "whatIsIt": "Logistic Regression: Binary classification algorithm using linear model + sigmoid activation. Model: P(y=1|x) = σ(wᵀx + b) where σ(z) = 1/(1+e^(-z)). Linear decision boundary in feature space. Output: Probability [0,1]. Training: Maximum likelihood estimation = minimize binary cross-entropy loss. Optimization: Gradient descent. Extensions: (1) Multinomial: Multi-class via softmax. (2) Regularization: L1 (sparsity), L2 (smoothness). Interpretable: Weight magnitude = feature importance. Sign = positive/negative effect. Probabilistic: Outputs confidence, not just class. Foundation: Single-layer neural network!",
+  "whyNeeded": "Why use? (1) Simplicity: Easy to understand, implement, debug. (2) Speed: Fast training & inference (linear time). (3) Interpretability: See which features matter! Medical diagnosis: Need explainability. (4) Probabilistic: Get confidence scores. (5) Baseline: Always try before complex models. (6) Works well: Linearly separable data → excellent performance. (7) Regularization: Built-in overfitting prevention. Use cases: (1) Medical: Disease diagnosis from symptoms. (2) Finance: Credit approval, fraud detection. (3) Marketing: Customer churn prediction. (4) NLP: Spam detection, sentiment (simple cases). When NOT to use: Non-linear boundaries (use kernel methods, neural nets). But: Often surprisingly effective! Always try as baseline.",
+  "realWorldAnalogy": "Logistic Regression = Weighted voting! Each feature votes for class. Example: Email spam detection. Features: 'money' (weight +0.8), 'meeting' (weight -0.5), 'free' (weight +0.6). Email: 'free money!' → 'free'×0.6 + 'money'×0.8 = 1.4 (positive!). Sigmoid: Convert score to probability. 1.4 → 80% spam. Threshold: >50% → spam! Training = Learning correct weights. See 1000 emails, adjust votes to maximize accuracy. Interpretable: 'money' has +0.8 → strong spam indicator! See reasoning. Compare: Neural network = black box. Logistic regression = glass box (see inside). Perfect for: When you need to explain decision (medicine, finance, law).",
+  "mathematics": {
+    "formulas": [
+      "\\text{Sigmoid: } \\sigma(z) = \\frac{1}{1 + e^{-z}}",
+      "\\text{Model: } P(y=1|x) = \\sigma(w^T x + b)",
+      "\\text{Loss: } L = -\\frac{1}{n}\\sum_{i=1}^n [y_i \\log(\\hat{y}_i) + (1-y_i)\\log(1-\\hat{y}_i)]",
+      "\\text{Gradient: } \\frac{\\partial L}{\\partial w} = \\frac{1}{n}X^T(\\hat{y} - y)",
+      "\\text{Decision boundary: } w^T x + b = 0"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Training:",
+      "1. Initialize weights w and bias b to zeros",
+      "2. For each iteration:",
+      "   a. Compute linear: z = wᵀx + b",
+      "   b. Apply sigmoid: ŷ = σ(z)",
+      "   c. Compute loss: L = -[y·log(ŷ) + (1-y)·log(1-ŷ)]",
+      "   d. Compute gradients: ∂L/∂w, ∂L/∂b",
+      "   e. Update: w -= α·∂L/∂w, b -= α·∂L/∂b",
+      "3. Repeat until convergence",
+      "Prediction:",
+      "1. Compute z = wᵀx + b",
+      "2. Compute probability: p = σ(z)",
+      "3. Classify: y = 1 if p ≥ 0.5 else 0"
+    ],
+    "complexity": "Training: O(n·d·k) where n=samples, d=features, k=iterations. Typically k=100-1000. Prediction: O(d) per sample. Memory: O(d) for weights. Very efficient! Scales to millions of samples."
+  },
+  "prerequisites": [
+    "linear-regression",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "support-vector-machines",
+    "decision-trees",
+    "neural-networks"
+  ],
+  "relatedTopics": [
+    "linear-regression",
+    "gradient-descent",
+    "perceptron"
+  ],
+  "tags": [
+    "logistic-regression",
+    "classification",
+    "supervised-learning",
+    "binary-classification",
+    "sigmoid"
+  ],
+  "codeExamples": [
+    {
+      "title": "Simple Logistic Regression",
+      "language": "python",
+      "code": "import numpy as np\n\ndef sigmoid(z):\n    return 1 / (1 + np.exp(-z))\n\n# Training data\nX = np.array([[1, 2], [2, 3], [3, 1], [4, 3]])\ny = np.array([0, 0, 1, 1])\n\n# Initialize\nw = np.zeros(2)\nb = 0\nlr = 0.1\n\n# Train\nfor _ in range(1000):\n    z = np.dot(X, w) + b\n    y_pred = sigmoid(z)\n    \n    # Update\n    w -= lr * np.dot(X.T, y_pred - y) / len(y)\n    b -= lr * np.mean(y_pred - y)\n\nprint(f'Weights: {w}, Bias: {b}')",
+      "level": 1,
+      "explanation": "Simple Logistic Regression code"
+    },
+    {
+      "title": "Scikit-learn Implementation",
+      "language": "python",
+      "code": "from sklearn.linear_model import LogisticRegression\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\n\n# Generate data\nX, y = make_classification(n_samples=1000, n_features=20, n_classes=2)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)\n\n# Train\nmodel = LogisticRegression(max_iter=1000)\nmodel.fit(X_train, y_train)\n\n# Evaluate\naccuracy = model.score(X_test, y_test)\nprint(f'Accuracy: {accuracy:.3f}')\n\n# Predictions with probability\nproba = model.predict_proba(X_test)\nprint(f'Probabilities: {proba[:5]}')",
+      "level": 1,
+      "explanation": "Scikit-learn Implementation code"
+    },
+    {
+      "title": "With Regularization",
+      "language": "python",
+      "code": "from sklearn.linear_model import LogisticRegression\n\n# L2 regularization (Ridge)\nmodel_l2 = LogisticRegression(penalty='l2', C=1.0)  # C = 1/λ\nmodel_l2.fit(X_train, y_train)\n\n# L1 regularization (Lasso, feature selection)\nmodel_l1 = LogisticRegression(penalty='l1', C=1.0, solver='liblinear')\nmodel_l1.fit(X_train, y_train)\n\nprint(f'L2 accuracy: {model_l2.score(X_test, y_test):.3f}')\nprint(f'L1 accuracy: {model_l1.score(X_test, y_test):.3f}')\nprint(f'L1 non-zero weights: {np.sum(model_l1.coef_ != 0)}')",
+      "level": 2,
+      "explanation": "With Regularization code"
+    },
+    {
+      "title": "Multi-class Classification",
+      "language": "python",
+      "code": "from sklearn.linear_model import LogisticRegression\nfrom sklearn.datasets import load_iris\n\n# Load iris (3 classes)\nX, y = load_iris(return_X_y=True)\n\n# Multi-class logistic regression (one-vs-rest)\nmodel = LogisticRegression(multi_class='ovr', max_iter=1000)\nmodel.fit(X, y)\n\n# Predictions\npredictions = model.predict(X[:5])\nprint(f'Predictions: {predictions}')\n\n# Probabilities for each class\nproba = model.predict_proba(X[:5])\nprint(f'Probabilities:\\n{proba}')",
+      "level": 2,
+      "explanation": "Multi-class Classification code"
+    },
+    {
+      "title": "Feature Importance",
+      "language": "python",
+      "code": "import matplotlib.pyplot as plt\n\n# Train model\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\n\n# Get coefficients\ncoefficients = model.coef_[0]\nfeature_names = [f'Feature {i}' for i in range(len(coefficients))]\n\n# Sort by absolute value\nimportances = np.abs(coefficients)\nsorted_idx = np.argsort(importances)[::-1]\n\n# Plot\nplt.figure(figsize=(10, 6))\nplt.bar(range(len(importances)), importances[sorted_idx])\nplt.xticks(range(len(importances)), np.array(feature_names)[sorted_idx], rotation=90)\nplt.title('Feature Importances')\nplt.ylabel('Absolute Coefficient Value')\nplt.tight_layout()\nplt.show()\n\nprint('Top 5 features:')\nfor i in sorted_idx[:5]:\n    print(f'{feature_names[i]}: {coefficients[i]:.3f}')",
+      "level": 3,
+      "explanation": "Feature Importance code"
+    },
+    {
+      "title": "Custom Training Loop",
+      "language": "python",
+      "code": "def train_logistic_regression(X, y, lr=0.01, epochs=1000):\n    n, d = X.shape\n    w = np.zeros(d)\n    b = 0\n    \n    losses = []\n    \n    for epoch in range(epochs):\n        # Forward\n        z = np.dot(X, w) + b\n        y_pred = 1 / (1 + np.exp(-z))\n        \n        # Loss\n        loss = -np.mean(y * np.log(y_pred + 1e-8) + (1 - y) * np.log(1 - y_pred + 1e-8))\n        losses.append(loss)\n        \n        # Gradients\n        dw = np.dot(X.T, (y_pred - y)) / n\n        db = np.mean(y_pred - y)\n        \n        # Update\n        w -= lr * dw\n        b -= lr * db\n        \n        if epoch % 100 == 0:\n            print(f'Epoch {epoch}, Loss: {loss:.4f}')\n    \n    return w, b, losses\n\nw, b, losses = train_logistic_regression(X_train, y_train)\n\nimport matplotlib.pyplot as plt\nplt.plot(losses)\nplt.xlabel('Epoch')\nplt.ylabel('Loss')\nplt.title('Training Loss')\nplt.show()",
+      "level": 3,
+      "explanation": "Custom Training Loop code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Logistic Regression neden 'regression' adı taşır ama classification yapar?",
+      "options": [
+        "Hatalı isimlendirme",
+        "Historical: Uses regression (linear model) but predicts probability for classification",
+        "Hem regression hem classification yapar",
+        "Sadece binary regression"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Historical naming! 'Regression' because uses linear regression formula (w·x + b). But: Applies sigmoid to get probability → binary classification! Confused students for decades. More accurate name: 'Logistic Classification'. Why stuck: Published papers, tradition. Remember: Despite name, it's classification! Multi-class variant: 'Multinomial logistic regression' (also classification)."
+    },
+    {
+      "question": "Sigmoid function'ın görevi nedir?",
+      "options": [
+        "Feature scaling",
+        "Map (-∞,+∞) → (0,1): Convert linear output to probability!",
+        "Regularization",
+        "Gradient computation"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Sigmoid: σ(z) = 1/(1+e^(-z)). Maps ANY real number → probability [0,1]! Why needed: Linear model (w·x+b) outputs (-∞,+∞). Need probability! Sigmoid properties: (1) S-shaped curve. (2) σ(0)=0.5. (3) σ(large)≈1, σ(small)≈0. (4) Differentiable (enables gradient descent). Perfect for binary classification! Interpret: Output 0.8 = 80% confidence class 1."
+    },
+    {
+      "question": "Binary cross-entropy loss neden kullanılır?",
+      "options": [
+        "Fast computation",
+        "Maximum likelihood: Maximize probability of correct predictions!",
+        "Regularization",
+        "Sadece convention"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Cross-entropy = Maximum Likelihood! Formula: L = -[y·log(p) + (1-y)·log(1-p)]. If y=1: Minimize -log(p) → maximize p (want p→1). If y=0: Minimize -log(1-p) → maximize 1-p (want p→0). Intuition: Penalize wrong predictions heavily! p=0.01 for y=1 → huge loss. Differentiable: Enables gradient descent. MSE doesn't work well (non-convex, slow convergence for classification)."
+    },
+    {
+      "question": "Decision boundary lineer olur. Bu ne demek?",
+      "options": [
+        "Model can only learn simple patterns",
+        "Separates classes with straight line/plane: w·x+b=0",
+        "Training is linear",
+        "Linear time complexity"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Decision boundary: Points where P(y=1|x)=0.5 → w·x+b=0. Linear equation! 2D: Straight line. 3D: Plane. N-D: Hyperplane. Means: Logistic regression can only separate linearly separable classes. Example: XOR problem → can't solve! Solution: (1) Feature engineering (add x₁·x₂). (2) Kernel methods (SVM). (3) Neural networks (multiple layers). But: Many real problems ARE linearly separable (or close)!"
+    },
+    {
+      "question": "Regularization (L1/L2) neden eklenir?",
+      "options": [
+        "Speed",
+        "Prevent overfitting: Penalize large weights!",
+        "Improve accuracy always",
+        "Required for convergence"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Regularization: Add penalty for large weights! L2 (Ridge): penalty = λ·Σwᵢ². L1 (Lasso): penalty = λ·Σ|wᵢ|. Effect: Prefers smaller weights → simpler model → less overfitting! L2: All features kept, smoothed. L1: Some weights → 0 (feature selection!). When to use: High-dimensional data, small datasets, many irrelevant features. Trade-off: Bias (regularization) vs variance (overfitting). Tune λ via cross-validation!"
+    },
+    {
+      "question": "Multinomial logistic regression softmax'ı nasıl kullanır?",
+      "options": [
+        "Multiple binary classifiers",
+        "Softmax: Generalize sigmoid to K classes, output K probabilities!",
+        "Sadece 3 class için",
+        "Sigmoid per class"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Multinomial: Multi-class logistic regression! Softmax: P(y=k|x) = exp(zₖ)/Σexp(zⱼ) for K classes. Generalizes sigmoid (K=2 → softmax=sigmoid). Properties: (1) Outputs K probabilities. (2) Sum to 1. (3) Differentiable. Training: Cross-entropy loss for K classes. Result: One model for multi-class (vs K binary classifiers). Used in: Neural network final layer! Logistic regression = single neuron with softmax."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Logistic Regression",
+      "back": "**Task:** Binary classification\n\n**Model:**\nP(y=1|x) = σ(w·x + b)\n\n**σ:** Sigmoid function\n\n**Output:** Probability [0,1]\n\n**Decision:** >0.5 → class 1\n\nLinear boundary! 📊"
+    },
+    {
+      "front": "Sigmoid Function",
+      "back": "**Formula:**\nσ(z) = 1/(1+e^(-z))\n\n**Maps:**\n(-∞,+∞) → (0,1)\n\n**Properties:**\n- σ(0) = 0.5\n- S-shaped\n- Differentiable\n\nPerfect for probability! 📈"
+    },
+    {
+      "front": "Cross-Entropy Loss",
+      "back": "**Formula:**\nL = -[y·log(p) + (1-y)·log(1-p)]\n\n**Meaning:**\nMaximize likelihood\nPenalize wrong predictions\n\n**Gradient descent:**\nMinimize loss → learn weights\n\nOptimal for classification! 🎯"
+    },
+    {
+      "front": "Decision Boundary",
+      "back": "**Equation:**\nw·x + b = 0\n\n**Geometric:**\n- 2D: Line\n- 3D: Plane\n- ND: Hyperplane\n\n**Linear separation!**\n\nLimitation: XOR not solvable 📐"
+    },
+    {
+      "front": "L1 vs L2 Regularization",
+      "back": "**L2 (Ridge):**\nλ·Σwᵢ² → Smooth weights\n\n**L1 (Lasso):**\nλ·Σ|wᵢ| → Sparse (feature selection!)\n\n**Both:**\nPrevent overfitting\n\nTune λ! ⚖️"
+    },
+    {
+      "front": "Advantages",
+      "back": "✓ Simple & fast\n✓ Interpretable\n✓ Probabilistic output\n✓ Good baseline\n✓ Regularizable\n\n**Perfect start!** 🚀"
+    },
+    {
+      "front": "Softmax (Multi-class)",
+      "back": "**Generalize sigmoid:**\nK classes\n\n**Formula:**\nP(k) = exp(zₖ)/Σexp(zⱼ)\n\n**Properties:**\n- K probabilities\n- Sum = 1\n\n**Used in:** NN output! 🎲"
+    },
+    {
+      "front": "When to Use",
+      "back": "**Good for:**\n✓ Linear separation\n✓ Need interpretability\n✓ Fast inference\n✓ Baseline\n\n**Not for:**\n✗ Complex boundaries\n✗ XOR-like problems\n\nTry first! 🎯"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Not normalizing features",
+      "why": "Features different scales → gradient descent slow/unstable! Feature1: [0-1], Feature2: [0-1000] → updates dominated by large scale.",
+      "fix": "Always normalize/standardize! StandardScaler: (x-μ)/σ. Or MinMaxScaler: (x-min)/(max-min). Result: All features [0,1] or standard normal. Faster convergence, better performance!"
+    },
+    {
+      "mistake": "Using MSE loss instead of cross-entropy",
+      "why": "MSE for classification: Non-convex, slow convergence, bad gradients. Designed for regression!",
+      "fix": "Always use cross-entropy for classification! Binary: BCE. Multi-class: Categorical cross-entropy. Why: Maximum likelihood, convex, good gradients. MSE: Only for regression!"
+    },
+    {
+      "mistake": "Wrong threshold (not always 0.5)",
+      "why": "0.5 threshold assumes equal class importance! Imbalanced classes or different costs → suboptimal.",
+      "fix": "Tune threshold! Cancer detection: False negative costly → lower threshold (0.3). Spam: False positive annoying → higher (0.7). Use ROC curve, F1-score to find optimal. Default 0.5: Only for balanced problems!"
+    },
+    {
+      "mistake": "Ignoring class imbalance",
+      "why": "99% class 0, 1% class 1 → Model predicts all 0, gets 99% accuracy but useless!",
+      "fix": "Handle imbalance: (1) Class weights (penalize minority errors more). (2) Oversampling minority (SMOTE). (3) Undersampling majority. (4) Adjust threshold. (5) Use F1-score, not accuracy. Scikit-learn: class_weight='balanced'."
+    },
+    {
+      "mistake": "Not using regularization",
+      "why": "High-dimensional data → overfitting! Model memorizes training, fails on test.",
+      "fix": "Add regularization! L2 (most cases), L1 (feature selection needed). Tune λ via cross-validation. Especially: d>n (more features than samples) or many irrelevant features. Regularization = insurance against overfitting!"
+    },
+    {
+      "mistake": "Expecting it to work on non-linear data",
+      "why": "Linear decision boundary! XOR, circles, complex patterns → fails.",
+      "fix": "Check: Plot decision boundary (2D), confusion matrix. If non-linear: (1) Feature engineering (interactions, polynomials). (2) Kernel SVM. (3) Neural networks. But try first: Often works better than expected! If fails: Switch algorithm."
+    },
+    {
+      "mistake": "Not checking convergence",
+      "why": "Iterations too few → not converged! Weights still changing, performance suboptimal.",
+      "fix": "Monitor: Loss curve. Should plateau. Increase max_iter if needed. Scikit-learn warning: 'Failed to converge' → increase iterations or learning rate. Also check: Normalization (helps convergence)!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "function",
+      "title": "Sigmoid Function",
+      "description": "Interactive plot: σ(z) = 1/(1+e^(-z)). Shows S-curve, z→-∞: σ→0, z→+∞: σ→1. Horizontal lines at 0, 0.5, 1."
+    },
+    {
+      "type": "geometry",
+      "title": "Decision Boundary",
+      "description": "2D scatter plot: Two classes, linear boundary. Slider: Rotate/shift boundary, see how classification changes. Shows w·x+b=0 line."
+    },
+    {
+      "type": "comparison",
+      "title": "With vs Without Regularization",
+      "description": "Side-by-side: No regularization (overfits, complex boundary) vs L2 (smooth, generalizes). Training/test accuracy shown."
+    },
+    {
+      "type": "metric",
+      "title": "Threshold Effect on Precision/Recall",
+      "description": "Interactive: Slider for threshold 0-1. Shows how precision, recall, F1 change. ROC curve displayed. Find optimal point."
+    }
+  ],
+  "references": [
+    {
+      "title": "The Elements of Statistical Learning",
+      "authors": "Hastie, Tibshirani, Friedman",
+      "year": 2009,
+      "link": "https://web.stanford.edu/~hastie/ElemStatLearn/",
+      "type": "book"
+    },
+    {
+      "title": "Scikit-learn Logistic Regression",
+      "authors": "Scikit-learn Team",
+      "year": 2023,
+      "link": "https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression",
+      "type": "documentation"
+    },
+    {
+      "title": "Pattern Recognition and Machine Learning",
+      "authors": "Christopher Bishop",
+      "year": 2006,
+      "link": "https://www.microsoft.com/en-us/research/people/cmbishop/",
+      "type": "book"
+    }
+  ]
+}

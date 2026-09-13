@@ -1,0 +1,294 @@
+{
+  "id": "loss-functions",
+  "title": "Kayıp Fonksiyonları (Loss Functions)",
+  "category": "neural-networks",
+  "level": 2,
+  "estimatedTime": 40,
+  "content": {
+    "level0_basic": "Kayıp fonksiyonu, modelin ne kadar 'yanlış' yaptığını ölçer. Bir okçu hedefi vurmaya çalışıyor: Ok hedefin tam ortasına gitmişse kayıp=0, kenara gitmişse kayıp=büyük sayı. Model bu kaybı minimize etmeye çalışır. Tahmin ile gerçek değer arasındaki farkı sayısal olarak ifade eder.",
+    "level1_beginner": "Loss function (kayıp/maliyet fonksiyonu), modelin tahminleri ile gerçek değerler arasındaki hatayı ölçen fonksiyondur. Neural network training'in temel prensibi: Loss'u minimize et!\n\n**Neden Gerekli?**\n'İyi' veya 'kötü' modeliniz var mı bilmeniz gerek. Loss bu soruya sayısal cevap verir.\n\n**Popüler Loss Fonksiyonları:**\n\n1. **Mean Squared Error (MSE)** - Regresyon\n   - Hata karelerinin ortalaması\n   - Büyük hatalar daha çok cezalandırılır\n   - Örnek: Ev fiyatı tahmini\n\n2. **Binary Cross-Entropy** - İkili Sınıflandırma\n   - Kedi mi değil mi?\n   - Sigmoid output ile kullanılır\n   - Log-loss olarak da bilinir\n\n3. **Cross-Entropy (Categorical)** - Çok Sınıflı\n   - 10 rakam tanıma (0-9)\n   - Softmax output ile kullanılır\n   - En popüler classification loss\n\n4. **Mean Absolute Error (MAE)**\n   - Mutlak hataların ortalaması\n   - MSE'den daha robust (outlier'lara karşı)\n\nHer task için uygun loss seçmek kritiktir!",
+    "level2_application": "Loss fonksiyonu training loop'un kalbidir:\n\n```python\nfor epoch in range(num_epochs):\n    predictions = model(inputs)\n    loss = loss_function(predictions, targets)\n    loss.backward()  # Gradient hesapla\n    optimizer.step()  # Ağırlıkları güncelle\n```\n\n**Task'a Göre Loss Seçimi:**\n\n**1. Regression (Sayı Tahmini)**\n```python\nloss = nn.MSELoss()  # veya nn.L1Loss() (MAE)\n# Örnek: Ev fiyatı, sıcaklık tahmini\n```\n\n**2. Binary Classification**\n```python\nloss = nn.BCEWithLogitsLoss()  # Sigmoid + BCE (numerically stable)\n# Örnek: Spam detection, kedi vs köpek\n```\n\n**3. Multi-class Classification**\n```python\nloss = nn.CrossEntropyLoss()  # Softmax + NLL (built-in)\n# Örnek: MNIST (10 sınıf), ImageNet (1000 sınıf)\n```\n\n**4. Multi-label Classification**\n```python\nloss = nn.BCEWithLogitsLoss()  # Her label için ayrı\n# Örnek: Resimde birden fazla obje (kedi + köpek + araba)\n```\n\n**Özel Loss Fonksiyonları:**\n- **Focal Loss**: Imbalanced data için (az örnekli sınıflar)\n- **Huber Loss**: MSE + MAE hybrid (outlier-robust regression)\n- **Contrastive Loss**: Metric learning (benzer/farklı örnekler)\n- **Triplet Loss**: Face recognition, embedding learning\n\n**Loss Reduction:**\n- `reduction='mean'`: Batch'teki tüm örneklerin ortalaması (default)\n- `reduction='sum'`: Batch'teki tüm örneklerin toplamı\n- `reduction='none'`: Her örnek için ayrı loss (custom weighting için)",
+    "level3_advanced": "Loss fonksiyonlarının matematiksel tanımları:\n\n**1. Mean Squared Error (L2 Loss):**\n$$\\text{MSE} = \\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2$$\n\nGradient:\n$$\\frac{\\partial \\text{MSE}}{\\partial \\hat{y}_i} = -\\frac{2}{n}(y_i - \\hat{y}_i)$$\n\n**2. Mean Absolute Error (L1 Loss):**\n$$\\text{MAE} = \\frac{1}{n} \\sum_{i=1}^{n} |y_i - \\hat{y}_i|$$\n\nGradient:\n$$\\frac{\\partial \\text{MAE}}{\\partial \\hat{y}_i} = -\\frac{1}{n} \\text{sign}(y_i - \\hat{y}_i)$$\n\nL1 outlier'lara daha robust (gradient sabit).\n\n**3. Binary Cross-Entropy:**\n$$\\text{BCE} = -\\frac{1}{n} \\sum_{i=1}^{n} [y_i \\log(\\hat{y}_i) + (1-y_i) \\log(1-\\hat{y}_i)]$$\n\nBurada $\\hat{y}_i \\in [0,1]$ (sigmoid output).\n\n**4. Cross-Entropy (Multi-class):**\n$$\\text{CE} = -\\frac{1}{n} \\sum_{i=1}^{n} \\sum_{c=1}^{C} y_{i,c} \\log(\\hat{y}_{i,c})$$\n\n$y_{i,c}$ one-hot encoded (0 veya 1), $\\hat{y}_{i,c}$ softmax output.\n\n**5. KL Divergence:**\n$$D_{KL}(P||Q) = \\sum_{x} P(x) \\log\\frac{P(x)}{Q(x)}$$\n\nİki olasılık dağılımı arasındaki fark. Variational inference'da kullanılır.\n\n**6. Focal Loss (Imbalanced Data):**\n$$\\text{FL}(p_t) = -(1-p_t)^\\gamma \\log(p_t)$$\n\n$\\gamma$ focusing parameter. Kolay örneklerin loss'unu azaltır, zor örneklere odaklanır.\n\n**7. Huber Loss (Robust Regression):**\n$$L_\\delta(y, \\hat{y}) = \\begin{cases}\n\\frac{1}{2}(y - \\hat{y})^2 & \\text{if } |y - \\hat{y}| \\leq \\delta \\\\\n\\delta |y - \\hat{y}| - \\frac{1}{2}\\delta^2 & \\text{otherwise}\n\\end{cases}$$\n\nKüçük hatalarda MSE, büyük hatalarda MAE gibi davranır.",
+    "level4_expert": "Production ve optimizasyon detayları:\n\n**1. Numerical Stability:**\n\nKötü:\n```python\nsigmoid = torch.sigmoid(logits)\nloss = F.binary_cross_entropy(sigmoid, targets)  # Unstable!\n```\n\nİyi:\n```python\nloss = F.binary_cross_entropy_with_logits(logits, targets)  # Stable\n```\n\nSebep: Log-sum-exp trick, overflow/underflow önler.\n\n**2. Label Smoothing:**\nHard labels (0, 1) yerine soft labels (0.1, 0.9):\n```python\nsmoothing = 0.1\ntargets = targets * (1 - smoothing) + smoothing / num_classes\n```\n\nAvanajı: Overconfidence önler, generalization iyileşir.\n\n**3. Class Weighting (Imbalanced Data):**\n```python\nclass_weights = torch.tensor([1.0, 10.0])  # Sınıf 1 10x önemli\nloss_fn = nn.CrossEntropyLoss(weight=class_weights)\n```\n\n**4. Custom Loss Implementation:**\n```python\nclass CustomLoss(nn.Module):\n    def forward(self, pred, target):\n        # Vectorized operations kullan\n        loss = ... # PyTorch ops\n        return loss.mean()\n```\n\nDikkat: Tüm operasyonlar differentiable olmalı!\n\n**5. Mixed Precision Training:**\n```python\nwith torch.cuda.amp.autocast():\n    output = model(input)\n    loss = loss_fn(output, target)  # Float16'da hesaplanır\n\nscaler.scale(loss).backward()  # Gradient scaling\n```\n\n**6. Gradient Accumulation:**\nBüyük effective batch size için:\n```python\nfor i, (input, target) in enumerate(dataloader):\n    loss = loss_fn(model(input), target) / accumulation_steps\n    loss.backward()\n    \n    if (i + 1) % accumulation_steps == 0:\n        optimizer.step()\n        optimizer.zero_grad()\n```\n\n**7. Loss Landscape Analysis:**\n```python\n# Loss'un gradient norm'u\ngrad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\nif grad_norm > 10.0:  # Exploding gradient\n    print(\"Warning: Large gradient!\")\n```\n\n**8. Multi-task Learning:**\n```python\nloss = lambda1 * loss_task1 + lambda2 * loss_task2\n# lambda'ları dynamic adjust et (uncertainty weighting)\n```\n\n**Benchmark (A100, batch=256):**\n- MSELoss: 0.02ms\n- BCEWithLogitsLoss: 0.05ms\n- CrossEntropyLoss: 0.08ms\n- Custom complex loss: 0.15-1.0ms",
+    "level1_beginner_extra": "Görsel olarak:\n\n**MSE (Regresyon):**\nGerçek: 100, Tahmin: 90 → Hata: 10 → Hata²: 100\nGerçek: 100, Tahmin: 50 → Hata: 50 → Hata²: 2500\nBüyük hatalar çok daha fazla ceza alır!\n\n**Cross-Entropy (Classification):**\nGerçek: Kedi, Tahmin: %90 kedi → Loss: düşük (iyi)\nGerçek: Kedi, Tahmin: %10 kedi → Loss: yüksek (kötü)\nModel ne kadar emin yanlış yaparsa, loss o kadar büyür."
+  },
+  "whatIsIt": "Loss function (kayıp fonksiyonu), model tahminleri ile gerçek değerler arasındaki farkı sayısal olarak ölçer. Training sırasında bu değeri minimize etmeye çalışırız. Regression için MSE, classification için Cross-Entropy en popülerleridir. Loss düşükse model iyi, yüksekse kötü performans gösteriyor demektir.",
+  "whyNeeded": "Loss olmadan model nasıl öğrenecek? Hangi yönde ilerleyeceğini nereden bilecek? Loss fonksiyonu 'harita' gibidir: Hangi yön iyi (loss azalır) hangi yön kötü (loss artar) gösterir. Gradient descent loss'un gradientini takip eder. Doğru loss seçmek model başarısının %50'sidir.",
+  "realWorldAnalogy": "Okçuluk yarışması düşünün. Her atıştan sonra hakem puan verir (loss): Tam merkez = 0 puan kaybı (mükemmel!), kenara yakın = büyük kayıp. Okçu bu geri bildirimi kullanarak kendini düzeltir: Sağa mı kaydı? Sola düzelt. MSE gibi: Hedeften ne kadar uzaksan o kadar çok ceza. Cross-Entropy daha farklı: 'Eminim sağ!' deyip sol tarafı vurursan çok büyük ceza alırsın (overconfident wrong).",
+  "mathematics": {
+    "formulas": [
+      "\\text{MSE} = \\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2",
+      "\\text{MAE} = \\frac{1}{n} \\sum_{i=1}^{n} |y_i - \\hat{y}_i|",
+      "\\text{BCE} = -\\frac{1}{n} \\sum_{i=1}^{n} [y_i \\log(\\hat{y}_i) + (1-y_i) \\log(1-\\hat{y}_i)]",
+      "\\text{CE} = -\\frac{1}{n} \\sum_{i=1}^{n} \\sum_{c=1}^{C} y_{i,c} \\log(\\hat{y}_{i,c})",
+      "\\text{Huber}(\\delta) = \\begin{cases} \\frac{1}{2}(y - \\hat{y})^2 & |y - \\hat{y}| \\leq \\delta \\\\ \\delta |y - \\hat{y}| - \\frac{\\delta^2}{2} & \\text{otherwise} \\end{cases}",
+      "\\text{Focal Loss} = -(1-p_t)^\\gamma \\log(p_t)",
+      "D_{KL}(P||Q) = \\sum_{x} P(x) \\log\\frac{P(x)}{Q(x)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Forward Pass: Model prediction yap → ŷ = model(x)",
+      "2. Loss Hesaplama: loss = loss_fn(ŷ, y_true)",
+      "3. Backward Pass: loss.backward() → Gradient hesapla",
+      "4. Optimizer Step: optimizer.step() → Ağırlıkları güncelle",
+      "5. Tekrarla: Loss minimize olana kadar"
+    ],
+    "complexity": "O(n) - Batch içindeki n örnek için linear. GPU'da parallel hesaplanır."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Loss Nedir?",
+      "code": "Gerçek değer: 100\nTahmin: 90\nHata: 100 - 90 = 10\n\nMSE (Mean Squared Error):\nHata² = 10² = 100\n\nMAE (Mean Absolute Error):\n|Hata| = |10| = 10\n\nLoss küçük → Model iyi!\nLoss büyük → Model kötü!",
+      "explanation": "Loss, model hatasını sayısal olarak ifade eder. Training sırasında bu sayıyı minimize ederiz."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Manuel Loss Hesaplama",
+      "code": "import numpy as np\n\n# Gerçek değerler vs Tahminler\ny_true = np.array([100, 200, 150, 300])\ny_pred = np.array([110, 190, 160, 280])\n\n# MSE (Mean Squared Error)\nmse = np.mean((y_true - y_pred) ** 2)\nprint(f\"MSE: {mse:.2f}\")  # 125.0\n\n# MAE (Mean Absolute Error)\nmae = np.mean(np.abs(y_true - y_pred))\nprint(f\"MAE: {mae:.2f}\")  # 10.0\n\n# RMSE (Root Mean Squared Error)\nrmse = np.sqrt(mse)\nprint(f\"RMSE: {rmse:.2f}\")  # 11.18\n\nprint(\"\\nHangi loss daha iyi?\")\nprint(\"MSE: Büyük hataları daha çok cezalandırır\")\nprint(\"MAE: Tüm hatalara eşit davranır\")",
+      "explanation": "MSE büyük hataları cezalandırır (kare alındığı için), MAE tüm hatalara eşit davranır."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch Loss Functions - Regression",
+      "code": "import torch\nimport torch.nn as nn\n\n# Regression (sayı tahmini)\ny_true = torch.tensor([100.0, 200.0, 150.0, 300.0])\ny_pred = torch.tensor([110.0, 190.0, 160.0, 280.0])\n\n# MSE Loss\nmse_loss = nn.MSELoss()\nloss_mse = mse_loss(y_pred, y_true)\nprint(f\"MSE Loss: {loss_mse.item():.2f}\")  # 125.0\n\n# MAE Loss (L1Loss)\nmae_loss = nn.L1Loss()\nloss_mae = mae_loss(y_pred, y_true)\nprint(f\"MAE Loss: {loss_mae.item():.2f}\")  # 10.0\n\n# Smooth L1 Loss (Huber)\nsmooth_l1 = nn.SmoothL1Loss()\nloss_smooth = smooth_l1(y_pred, y_true)\nprint(f\"Smooth L1 Loss: {loss_smooth.item():.2f}\")\n\nprint(\"\\n📊 Ne zaman hangisi?\")\nprint(\"MSE: Outlier yok, standart regression\")\nprint(\"MAE: Outlier var, robust gerekli\")\nprint(\"Smooth L1: İkisinin hybrid'i\")",
+      "explanation": "Regression için en yaygın loss'lar MSE ve MAE. MSE daha yaygın ama outlier'lara hassas."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Binary Classification Loss",
+      "code": "import torch\nimport torch.nn as nn\n\n# Binary classification (0 veya 1)\ny_true = torch.tensor([1., 0., 1., 0., 1.])  # Gerçek etiketler\n\n# Model çıktısı (logits - ham skorlar)\nlogits = torch.tensor([2.5, -1.0, 0.5, -3.0, 4.0])\n\n# BCEWithLogitsLoss (Numerically stable)\n# Sigmoid + BCE birleşik (daha güvenli)\nloss_fn = nn.BCEWithLogitsLoss()\nloss = loss_fn(logits, y_true)\nprint(f\"BCE Loss: {loss.item():.4f}\")\n\n# Manuel (eğitim amaçlı)\nprobs = torch.sigmoid(logits)\nmanual_bce = -(y_true * torch.log(probs) + (1 - y_true) * torch.log(1 - probs))\nprint(f\"Manuel BCE (ortalama): {manual_bce.mean().item():.4f}\")\n\nprint(\"\\n💡 BCEWithLogitsLoss kullanın!\")\nprint(\"Sigmoid + BCE ayrı yapmak numerical instability yaratır.\")",
+      "explanation": "Binary classification için BCEWithLogitsLoss kullan. Sigmoid'i içinde yapar, daha stabil."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Multi-class Classification Loss",
+      "code": "import torch\nimport torch.nn as nn\n\n# Multi-class (örnek: 5 sınıf)\nbatch_size = 4\nnum_classes = 5\n\n# Model output (logits)\nlogits = torch.randn(batch_size, num_classes)\n\n# Gerçek etiketler (sınıf indeksleri)\ntargets = torch.tensor([0, 2, 1, 4])  # Her örnek için sınıf\n\n# CrossEntropyLoss (Softmax + NLLLoss built-in)\nloss_fn = nn.CrossEntropyLoss()\nloss = loss_fn(logits, targets)\n\nprint(f\"Cross-Entropy Loss: {loss.item():.4f}\")\nprint(f\"\\nLogits shape: {logits.shape}\")  # (4, 5)\nprint(f\"Targets shape: {targets.shape}\")  # (4,)\n\n# Prediction'ları görmek için\nprobs = torch.softmax(logits, dim=1)\npredicted_classes = torch.argmax(probs, dim=1)\n\nprint(f\"\\nTahmin edilen sınıflar: {predicted_classes}\")\nprint(f\"Gerçek sınıflar: {targets}\")\nprint(f\"Doğruluk: {(predicted_classes == targets).float().mean():.2%}\")",
+      "explanation": "CrossEntropyLoss en popüler multi-class loss. Softmax otomatik uygulanır, target'lar sınıf indeksleri olmalı (one-hot değil!)."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Training Loop ile Loss Kullanımı",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\n# Basit model\nmodel = nn.Sequential(\n    nn.Linear(10, 20),\n    nn.ReLU(),\n    nn.Linear(20, 1)\n)\n\n# Loss ve optimizer\nloss_fn = nn.MSELoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Dummy data\nX_train = torch.randn(100, 10)\ny_train = torch.randn(100, 1)\n\n# Training loop\nnum_epochs = 10\nfor epoch in range(num_epochs):\n    # Forward pass\n    predictions = model(X_train)\n    loss = loss_fn(predictions, y_train)\n    \n    # Backward pass\n    optimizer.zero_grad()  # Gradient'leri sıfırla\n    loss.backward()         # Gradient hesapla\n    optimizer.step()        # Ağırlıkları güncelle\n    \n    if (epoch + 1) % 2 == 0:\n        print(f\"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}\")\n\nprint(\"\\n✓ Training tamamlandı!\")\nprint(\"Loss düştü mü kontrol et - düştüyse model öğreniyor!\")",
+      "explanation": "Standard training loop: forward → loss → backward → optimizer step. Loss her epoch'ta düşmeli."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Class Weighting (Imbalanced Data)",
+      "code": "import torch\nimport torch.nn as nn\n\n# Imbalanced dataset\n# Sınıf 0: 900 örnek, Sınıf 1: 100 örnek (9:1 oranı)\n\n# Class weights hesaplama\ntotal_samples = 1000\nclass_0_samples = 900\nclass_1_samples = 100\n\n# Inverse frequency weighting\nweight_0 = total_samples / (2 * class_0_samples)  # 0.556\nweight_1 = total_samples / (2 * class_1_samples)  # 5.0\n\nclass_weights = torch.tensor([weight_0, weight_1])\n\nprint(\"Class weights:\", class_weights)\nprint(\"Sınıf 1 (az örnekli) 9x daha önemli!\\n\")\n\n# Weighted Cross-Entropy\nloss_fn = nn.CrossEntropyLoss(weight=class_weights)\n\n# Örnek\nlogits = torch.randn(4, 2)  # 4 örnek, 2 sınıf\ntargets = torch.tensor([0, 1, 0, 1])\n\nloss = loss_fn(logits, targets)\nprint(f\"Weighted Loss: {loss.item():.4f}\")\n\n# Weighted olmadan\nloss_fn_normal = nn.CrossEntropyLoss()\nloss_normal = loss_fn_normal(logits, targets)\nprint(f\"Normal Loss: {loss_normal.item():.4f}\")\n\nprint(\"\\n💡 Imbalanced data'da class weighting zorunlu!\")",
+      "explanation": "Imbalanced dataset'lerde az örnekli sınıfların loss'u daha fazla ağırlıklandırılmalı. Aksi halde model çoğunluk sınıfını tahmin eder."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Label Smoothing",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass LabelSmoothingCrossEntropy(nn.Module):\n    \"\"\"Label smoothing ile cross-entropy\"\"\"\n    def __init__(self, smoothing=0.1):\n        super().__init__()\n        self.smoothing = smoothing\n    \n    def forward(self, pred, target):\n        # pred: (batch, num_classes) logits\n        # target: (batch,) class indices\n        \n        num_classes = pred.size(-1)\n        log_probs = F.log_softmax(pred, dim=-1)\n        \n        # One-hot to soft labels\n        with torch.no_grad():\n            true_dist = torch.zeros_like(log_probs)\n            true_dist.fill_(self.smoothing / (num_classes - 1))\n            true_dist.scatter_(1, target.unsqueeze(1), 1.0 - self.smoothing)\n        \n        return torch.mean(torch.sum(-true_dist * log_probs, dim=-1))\n\n# Test\nsmoothing_loss = LabelSmoothingCrossEntropy(smoothing=0.1)\nnormal_loss = nn.CrossEntropyLoss()\n\nlogits = torch.randn(4, 10)  # 4 samples, 10 classes\ntargets = torch.tensor([0, 3, 7, 2])\n\nloss_smooth = smoothing_loss(logits, targets)\nloss_normal = normal_loss(logits, targets)\n\nprint(f\"Normal Cross-Entropy: {loss_normal.item():.4f}\")\nprint(f\"With Label Smoothing: {loss_smooth.item():.4f}\")\nprint(\"\\nLabel smoothing overconfidence'ı önler\")\nprint(\"Generalization iyileşir!\")",
+      "explanation": "Label smoothing hard labels (0, 1) yerine soft labels kullanır. Model aşırı emin olmaz, generalization iyileşir."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Custom Loss Function",
+      "code": "import torch\nimport torch.nn as nn\n\nclass FocalLoss(nn.Module):\n    \"\"\"Focal Loss - Imbalanced data için\n    \n    FL(p_t) = -(1-p_t)^gamma * log(p_t)\n    \n    gamma=0: Standard cross-entropy\n    gamma>0: Kolay örneklerin loss'unu azaltır\n    \"\"\"\n    def __init__(self, alpha=1.0, gamma=2.0):\n        super().__init__()\n        self.alpha = alpha\n        self.gamma = gamma\n    \n    def forward(self, inputs, targets):\n        # inputs: (batch, num_classes) logits\n        # targets: (batch,) class indices\n        \n        ce_loss = F.cross_entropy(inputs, targets, reduction='none')\n        p_t = torch.exp(-ce_loss)  # Probability of true class\n        \n        focal_loss = self.alpha * (1 - p_t) ** self.gamma * ce_loss\n        \n        return focal_loss.mean()\n\n# Test\nfocal = FocalLoss(gamma=2.0)\nce = nn.CrossEntropyLoss()\n\nlogits = torch.randn(8, 10)\ntargets = torch.tensor([0, 0, 0, 0, 9, 9, 1, 1])  # 0 sınıfı baskın\n\nloss_focal = focal(logits, targets)\nloss_ce = ce(logits, targets)\n\nprint(f\"Cross-Entropy Loss: {loss_ce.item():.4f}\")\nprint(f\"Focal Loss (γ=2): {loss_focal.item():.4f}\")\nprint(\"\\n💡 Focal Loss zor örneklere odaklanır\")\nprint(\"Object detection'da çok kullanılır (YOLO, RetinaNet)\")",
+      "explanation": "Custom loss fonksiyonları özel problemler için. Focal Loss imbalanced data'da kolay örnekleri down-weight eder."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Multi-Task Learning Loss",
+      "code": "import torch\nimport torch.nn as nn\n\nclass MultiTaskModel(nn.Module):\n    \"\"\"2 task: Classification + Regression\"\"\"\n    def __init__(self):\n        super().__init__()\n        self.shared = nn.Sequential(\n            nn.Linear(100, 50),\n            nn.ReLU()\n        )\n        self.classifier = nn.Linear(50, 10)  # Classification head\n        self.regressor = nn.Linear(50, 1)    # Regression head\n    \n    def forward(self, x):\n        features = self.shared(x)\n        cls_output = self.classifier(features)\n        reg_output = self.regressor(features)\n        return cls_output, reg_output\n\n# Multi-task loss\nclass MultiTaskLoss(nn.Module):\n    \"\"\"Uncertainty-based weighting\"\"\"\n    def __init__(self):\n        super().__init__()\n        # Learnable task uncertainties (log variance)\n        self.log_var_cls = nn.Parameter(torch.zeros(1))\n        self.log_var_reg = nn.Parameter(torch.zeros(1))\n        \n        self.cls_loss_fn = nn.CrossEntropyLoss()\n        self.reg_loss_fn = nn.MSELoss()\n    \n    def forward(self, cls_pred, reg_pred, cls_target, reg_target):\n        # Classification loss\n        cls_loss = self.cls_loss_fn(cls_pred, cls_target)\n        \n        # Regression loss\n        reg_loss = self.reg_loss_fn(reg_pred, reg_target)\n        \n        # Weighted combination\n        # weight = 1 / (2 * sigma^2), penalty = log(sigma^2)\n        total_loss = (cls_loss / (2 * torch.exp(self.log_var_cls)) + self.log_var_cls / 2 +\n                      reg_loss / (2 * torch.exp(self.log_var_reg)) + self.log_var_reg / 2)\n        \n        return total_loss, cls_loss, reg_loss\n\n# Test\nmodel = MultiTaskModel()\nloss_fn = MultiTaskLoss()\n\nx = torch.randn(4, 100)\ncls_target = torch.tensor([0, 1, 2, 3])\nreg_target = torch.randn(4, 1)\n\ncls_pred, reg_pred = model(x)\ntotal_loss, cls_loss, reg_loss = loss_fn(cls_pred, reg_pred, cls_target, reg_target)\n\nprint(f\"Total Loss: {total_loss.item():.4f}\")\nprint(f\"Classification Loss: {cls_loss.item():.4f}\")\nprint(f\"Regression Loss: {reg_loss.item():.4f}\")\nprint(f\"\\nLearned weights:\")\nprint(f\"  Classification: {torch.exp(-loss_fn.log_var_cls).item():.4f}\")\nprint(f\"  Regression: {torch.exp(-loss_fn.log_var_reg).item():.4f}\")",
+      "explanation": "Multi-task learning'de task'ların loss'ları birleştirilir. Uncertainty-based weighting otomatik olarak task ağırlıklarını öğrenir."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "loss-curves",
+      "type": "interactive",
+      "title": "Loss Fonksiyonları Karşılaştırma",
+      "description": "MSE, MAE, Huber loss grafiklerini interaktif görün"
+    },
+    {
+      "id": "training-loss",
+      "type": "animation",
+      "title": "Training Loss Animasyonu",
+      "description": "Epoch'lar boyunca loss'un nasıl düştüğünü görün"
+    },
+    {
+      "id": "class-imbalance",
+      "type": "diagram",
+      "title": "Class Weighting Etkisi",
+      "description": "Weighted vs unweighted loss karşılaştırması"
+    }
+  ],
+  "prerequisites": [
+    "activation-functions"
+  ],
+  "nextTopics": [
+    "backpropagation",
+    "optimizers",
+    "regularization"
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Yanlış loss fonksiyonu seçmek",
+      "why": "Regression'da CrossEntropy, classification'da MSE kullanmak model öğrenemez.",
+      "fix": "Regression → MSE/MAE, Binary → BCEWithLogitsLoss, Multi-class → CrossEntropyLoss"
+    },
+    {
+      "mistake": "Sigmoid + BCE ayrı kullanmak",
+      "why": "Numerical instability: log(0) → -inf, overflow/underflow.",
+      "fix": "BCEWithLogitsLoss kullan (sigmoid built-in, stable)"
+    },
+    {
+      "mistake": "Imbalanced data'yı göz ardı etmek",
+      "why": "Model çoğunluk sınıfını tahmin eder (%90 sınıf 0 → hep 0 tahmin et = %90 accuracy!).",
+      "fix": "Class weighting veya Focal Loss kullan"
+    },
+    {
+      "mistake": "Loss'u monitor etmemek",
+      "why": "Loss artıyorsa learning rate yüksek, sabit kalıyorsa model convergence'a ulaşmış.",
+      "fix": "Her epoch loss'u print et, grafik çiz, TensorBoard kullan"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Regression (sayı tahmini) için hangi loss fonksiyonu kullanılır?",
+      "options": [
+        "Cross-Entropy",
+        "MSE (Mean Squared Error)",
+        "Softmax",
+        "Binary Cross-Entropy"
+      ],
+      "explanation": "Regression için MSE en yaygındır. Tahmin ile gerçek değer arasındaki farkın karesi alınır. MAE de kullanılabilir (outlier'lara robust).",
+      "type": "multiple-choice",
+      "difficulty": 2,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q2",
+      "question": "Binary classification (evet/hayır) için hangi loss kullanılır?",
+      "options": [
+        "MSELoss",
+        "CrossEntropyLoss",
+        "BCEWithLogitsLoss",
+        "L1Loss"
+      ],
+      "explanation": "Binary classification: BCEWithLogitsLoss. Sigmoid + BCE birleşik, numerically stable. 0/1 tahmin eder.",
+      "type": "multiple-choice",
+      "difficulty": 2,
+      "correctAnswer": 2
+    },
+    {
+      "id": "q3",
+      "question": "CrossEntropyLoss ne yapar?",
+      "options": [
+        "Sadece MSE hesaplar",
+        "Softmax uygular ve NLL loss hesaplar (built-in)",
+        "Sigmoid uygular",
+        "Gradient'leri sıfırlar"
+      ],
+      "explanation": "CrossEntropyLoss = Softmax + Negative Log-Likelihood. Multi-class classification için. Softmax'ı kendisi uygular, model çıktısında softmax gerekmez!",
+      "type": "multiple-choice",
+      "difficulty": 2,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q4",
+      "question": "Imbalanced dataset'te (örnek: %90 sınıf 0, %10 sınıf 1) ne yapmalısınız?",
+      "options": [
+        "Hiçbir şey, normal loss yeterli",
+        "Class weighting veya Focal Loss kullan",
+        "Daha fazla layer ekle",
+        "Learning rate'i artır"
+      ],
+      "explanation": "Imbalanced data'da az örnekli sınıflar göz ardı edilir. Class weighting ile az sınıfı ağırlıklandır veya Focal Loss kullan (zor örneklere odaklanır).",
+      "type": "multiple-choice",
+      "difficulty": 2,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q5",
+      "question": "Training sırasında loss artıyorsa ne yapmalısınız?",
+      "options": [
+        "Learning rate'i düşür",
+        "Learning rate'i artır",
+        "Daha fazla epoch çalıştır",
+        "Hiçbir şey, normal"
+      ],
+      "explanation": "Loss artıyorsa learning rate çok yüksek demektir. Model optimumdan uzaklaşıyor (diverge). Learning rate'i düşür veya optimizer değiştir.",
+      "type": "multiple-choice",
+      "difficulty": 2,
+      "correctAnswer": 0
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "MSE ne zaman kullanılır?",
+      "back": "Regression (sayı tahmini) için.\n\nMSE = Mean Squared Error\nFormül: Σ(y - ŷ)² / n\n\nBüyük hatalar daha çok cezalandırılır."
+    },
+    {
+      "id": "fc2",
+      "front": "BCEWithLogitsLoss nedir?",
+      "back": "Binary classification loss.\n\nSigmoid + BCE birleşik.\nNumerically stable.\nOutput: 0 veya 1\n\nDirekt logits alır, sigmoid gerekmez!"
+    },
+    {
+      "id": "fc3",
+      "front": "CrossEntropyLoss ne yapar?",
+      "back": "Multi-class classification.\n\nSoftmax + NLL Loss built-in.\nTarget: Class indices (not one-hot!)\nOutput: Probability distribution\n\nEn popüler classification loss!"
+    },
+    {
+      "id": "fc4",
+      "front": "Class weighting neden gerekli?",
+      "back": "Imbalanced data için.\n\nÖrnek: %90 sınıf 0, %10 sınıf 1\nWeighting olmadan: Model hep 0 tahmin eder\n\nÇözüm: Az sınıfı ağırlıklandır"
+    },
+    {
+      "id": "fc5",
+      "front": "Label smoothing nedir?",
+      "back": "Hard labels → Soft labels\n\n[1, 0, 0] → [0.9, 0.05, 0.05]\n\nAmaç: Overconfidence'ı önler\nSonuç: Generalization iyileşir"
+    }
+  ],
+  "references": [
+    {
+      "title": "PyTorch Loss Functions",
+      "url": "https://pytorch.org/docs/stable/nn.html#loss-functions",
+      "type": "documentation"
+    },
+    {
+      "title": "Cross-Entropy Explained",
+      "url": "https://ml-cheatsheet.readthedocs.io/en/latest/loss_functions.html",
+      "type": "tutorial"
+    },
+    {
+      "title": "Focal Loss Paper",
+      "url": "https://arxiv.org/abs/1708.02002",
+      "type": "paper"
+    },
+    {
+      "title": "Label Smoothing",
+      "url": "https://arxiv.org/abs/1512.00567",
+      "type": "paper"
+    }
+  ],
+  "tags": [
+    "loss-function",
+    "mse",
+    "cross-entropy",
+    "bce",
+    "regression",
+    "classification",
+    "training",
+    "optimization",
+    "focal-loss",
+    "label-smoothing"
+  ]
+}

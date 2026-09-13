@@ -1,0 +1,245 @@
+{
+  "id": "probability-statistics",
+  "title": "Probability & Statistics Fundamentals",
+  "category": "fundamentals",
+  "level": 1,
+  "estimatedTime": 50,
+  "description": "Machine learning'in matematiksel temeli: probability distributions, Bayes theorem, statistical inference, hypothesis testing. Expected value, variance, correlation.",
+  "prerequisites": ["linear-algebra"],
+  "tags": ["probability", "statistics", "distributions", "bayes", "inference", "hypothesis-testing"],
+  "content": {
+    "level0_basic": "Bir zar atıyorsun, 6 gelme olasılığı 1/6. Bu probability! İki zar atarsan toplam 7 gelme olasılığı en yüksek (6/36). Statistics data'dan pattern bulur: 100 kişinin boy ortalaması, maaş dağılımı. Machine learning tamamen probability & statistics üzerine kurulu! Model predictions probabilistic, loss functions statistical, Naive Bayes Bayes theorem kullanır. Uncertainty modeling, confidence intervals, A/B testing - hepsi statistics!",
+    "level1_beginner": "**Probability Temelleri:**\n\n**Probability:** Bir event'in gerçekleşme olasılığı.\n\n$$P(A) = \\frac{\\text{# favorable outcomes}}{\\text{# total outcomes}}$$\n\n**Örnek:** Zar atmak\n- P(6 gelmesi) = 1/6\n- P(çift sayı) = 3/6 = 1/2\n\n**Axioms:**\n1. $0 \\leq P(A) \\leq 1$\n2. $P(\\Omega) = 1$ (kesin event)\n3. $P(A \\cup B) = P(A) + P(B)$ (disjoint events)\n\n**Conditional Probability:**\n\nA olduğunu biliyorsan B'nin olasılığı:\n\n$$P(B|A) = \\frac{P(A \\cap B)}{P(A)}$$\n\n**Chain Rule:**\n$$P(A \\cap B) = P(B|A) \\cdot P(A)$$\n\n**Independence:**\nA ve B independent ise:\n$$P(A \\cap B) = P(A) \\cdot P(B)$$\n$$P(B|A) = P(B)$$\n\n**Bayes' Theorem:**\n\nEn önemli formül!\n\n$$P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}$$\n\n- $P(A)$: Prior (önceden bilinen)\n- $P(B|A)$: Likelihood (data verdiğinde)\n- $P(A|B)$: Posterior (data'dan sonra)\n- $P(B)$: Evidence (normalization)\n\n**Örnek: Medical Test**\n- Disease prevalence: P(Disease) = 0.01 (1%)\n- Test accuracy: P(Positive|Disease) = 0.99\n- False positive: P(Positive|Healthy) = 0.05\n\nPositive test sonrası gerçekten hasta olma:\n\n$$P(Disease|Positive) = \\frac{P(Positive|Disease) \\cdot P(Disease)}{P(Positive)}$$\n\n$$= \\frac{0.99 \\times 0.01}{0.99 \\times 0.01 + 0.05 \\times 0.99} \\approx 0.166$$\n\nSadece %16.6! Çünkü hastalık nadir.\n\n**Random Variables:**\n\n**Discrete:** Finite values (zar: 1,2,3,4,5,6)\n\n**Probability Mass Function (PMF):**\n$$P(X = x)$$\n\n**Continuous:** Infinite values (boy, ağırlık)\n\n**Probability Density Function (PDF):**\n$$P(a \\leq X \\leq b) = \\int_a^b f(x) dx$$\n\n**Expected Value (Mean):**\n\n$$\\mathbb{E}[X] = \\sum_x x \\cdot P(X=x) \\quad \\text{(discrete)}$$\n\n$$\\mathbb{E}[X] = \\int x \\cdot f(x) dx \\quad \\text{(continuous)}$$\n\n**Variance:**\n\n$$\\text{Var}(X) = \\mathbb{E}[(X - \\mu)^2] = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2$$\n\n**Standard Deviation:**\n$$\\sigma = \\sqrt{\\text{Var}(X)}$$",
+    "level2_application": "**Common Distributions:**\n\n**1. Bernoulli (coin flip):**\n$$P(X=1) = p, \\quad P(X=0) = 1-p$$\n\n**2. Binomial (n coin flips):**\n$$P(X=k) = \\binom{n}{k} p^k (1-p)^{n-k}$$\n\nExample: 10 flips, 7 heads\n\n**3. Uniform:**\n$$f(x) = \\frac{1}{b-a}, \\quad x \\in [a, b]$$\n\nEqual probability everywhere.\n\n**4. Normal (Gaussian):** 🏆 Most important!\n\n$$f(x) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$$\n\n- $\\mu$: mean\n- $\\sigma^2$: variance\n- Bell curve, symmetric\n- 68-95-99.7 rule\n\n**Central Limit Theorem:**\nSample means → Normal distribution!\n\n$$\\bar{X} \\sim \\mathcal{N}\\left(\\mu, \\frac{\\sigma^2}{n}\\right)$$\n\n**5. Exponential (waiting time):**\n$$f(x) = \\lambda e^{-\\lambda x}, \\quad x \\geq 0$$\n\n**6. Poisson (count events):**\n$$P(X=k) = \\frac{\\lambda^k e^{-\\lambda}}{k!}$$\n\nExample: # emails per hour\n\n**Joint Probability:**\n\nTwo variables X, Y:\n$$P(X=x, Y=y)$$\n\n**Marginal:**\n$$P(X=x) = \\sum_y P(X=x, Y=y)$$\n\n**Covariance:**\n\n$$\\text{Cov}(X, Y) = \\mathbb{E}[(X-\\mu_X)(Y-\\mu_Y)]$$\n\n- Positive: X↑ when Y↑\n- Negative: X↓ when Y↑\n- Zero: Uncorrelated\n\n**Correlation:**\n\n$$\\rho(X, Y) = \\frac{\\text{Cov}(X,Y)}{\\sigma_X \\sigma_Y}$$\n\n- $-1 \\leq \\rho \\leq 1$\n- $\\rho = 1$: Perfect positive\n- $\\rho = -1$: Perfect negative\n- $\\rho = 0$: Uncorrelated\n\n**Statistical Inference:**\n\n**Point Estimation:**\n- Sample mean: $\\bar{x} = \\frac{1}{n}\\sum x_i$\n- Sample variance: $s^2 = \\frac{1}{n-1}\\sum(x_i - \\bar{x})^2$\n\n**Confidence Interval:**\n\n95% CI for mean:\n$$\\bar{x} \\pm 1.96 \\frac{s}{\\sqrt{n}}$$\n\n\"95% confident true mean in this interval\"\n\n**Hypothesis Testing:**\n\n**Null Hypothesis ($H_0$):** Default assumption\n**Alternative ($H_1$):** What we want to prove\n\n**p-value:** Probability of observing data if $H_0$ true.\n\n- $p < 0.05$: Reject $H_0$ (significant!)\n- $p \\geq 0.05$: Fail to reject $H_0$\n\n**Example: A/B Test**\n- $H_0$: Version A = Version B\n- $H_1$: Version A ≠ Version B\n- Collect data, compute p-value\n- If p < 0.05 → significant difference!",
+    "level3_advanced": "**Maximum Likelihood Estimation (MLE):**\n\n**Idea:** Find parameters that maximize likelihood of observed data.\n\n$$\\hat{\\theta}_{MLE} = \\arg\\max_{\\theta} P(\\text{data} | \\theta)$$\n\n**Example: Coin flip**\n\nObserved: 7 heads, 3 tails\n\nLikelihood:\n$$L(p) = \\binom{10}{7} p^7 (1-p)^3$$\n\nLog-likelihood:\n$$\\ell(p) = \\log L(p) = \\text{const} + 7\\log p + 3\\log(1-p)$$\n\nMaximize:\n$$\\frac{d\\ell}{dp} = \\frac{7}{p} - \\frac{3}{1-p} = 0$$\n\nSolution: $\\hat{p} = 0.7$\n\n**Maximum A Posteriori (MAP):**\n\nMLE with prior!\n\n$$\\hat{\\theta}_{MAP} = \\arg\\max_{\\theta} P(\\theta | \\text{data})$$\n\n$$= \\arg\\max_{\\theta} P(\\text{data} | \\theta) \\cdot P(\\theta)$$\n\nBayes theorem ile:\n- Prior $P(\\theta)$: belief before data\n- Posterior $P(\\theta|\\text{data})$: after data\n\n**Information Theory:**\n\n**Entropy:**\nUncertainty measure!\n\n$$H(X) = -\\sum_x P(x) \\log P(x)$$\n\n- High entropy: Uncertain (uniform)\n- Low entropy: Certain (peaked)\n\n**Cross-Entropy:**\n\n$$H(p, q) = -\\sum_x p(x) \\log q(x)$$\n\nUsed in classification loss!\n\n**KL Divergence:**\n\n$$D_{KL}(p||q) = \\sum_x p(x) \\log \\frac{p(x)}{q(x)}$$\n\nMeasures distance between distributions.\n- $D_{KL} \\geq 0$\n- $D_{KL}(p||q) = 0$ iff $p = q$\n- Not symmetric!\n\n**Multiple Testing:**\n\nProblem: Test 100 hypotheses, α=0.05 → 5 false positives expected!\n\n**Bonferroni Correction:**\n$$\\alpha_{\\text{new}} = \\frac{\\alpha}{m}$$\n\nFor m=100 tests: $\\alpha = 0.05/100 = 0.0005$\n\nConservative but controls family-wise error rate.\n\n**Statistical Power:**\n\nProbability of rejecting $H_0$ when $H_1$ true.\n\n- Type I error (α): False positive (reject $H_0$ when true)\n- Type II error (β): False negative (fail reject when $H_1$ true)\n- Power = 1 - β\n\nTypical: α=0.05, power=0.8\n\n**Effect Size:**\n\nMagnitude of difference (not just significance).\n\n**Cohen's d:**\n$$d = \\frac{\\mu_1 - \\mu_2}{\\sigma}$$\n\n- Small: 0.2\n- Medium: 0.5\n- Large: 0.8\n\nStatistical significance ≠ practical significance!",
+    "level4_expert": "**Bayesian Statistics:**\n\n**Philosophy:** Probability = degree of belief (not frequency).\n\n**Bayesian Inference:**\n\n$$P(\\theta | D) = \\frac{P(D | \\theta) \\cdot P(\\theta)}{P(D)}$$\n\n- Prior: $P(\\theta)$\n- Likelihood: $P(D|\\theta)$\n- Posterior: $P(\\theta|D)$\n- Evidence: $P(D) = \\int P(D|\\theta)P(\\theta)d\\theta$\n\n**Conjugate Priors:**\n\nPrior + Likelihood = Same family posterior!\n\n**Examples:**\n- Beta + Binomial = Beta\n- Normal + Normal = Normal\n- Gamma + Poisson = Gamma\n\n**Example: Beta-Binomial**\n\nPrior: $\\theta \\sim \\text{Beta}(\\alpha, \\beta)$\n\nData: k successes, n-k failures\n\nPosterior: $\\theta | D \\sim \\text{Beta}(\\alpha + k, \\beta + n - k)$\n\nUpdate beliefs with data!\n\n**Markov Chain Monte Carlo (MCMC):**\n\nSample from complex posteriors.\n\n**Gibbs Sampling:**\nSample each variable conditional on others.\n\n**Metropolis-Hastings:**\nPropose, accept/reject based on ratio.\n\n**Bootstrapping:**\n\nResample data with replacement!\n\n**Algorithm:**\n1. Resample n samples from data (with replacement)\n2. Compute statistic (mean, median, etc.)\n3. Repeat B times (e.g., 1000)\n4. Distribution of statistics → confidence interval\n\n**Permutation Test:**\n\nNon-parametric hypothesis testing!\n\n**Algorithm:**\n1. Compute test statistic on original data\n2. Permute labels randomly\n3. Compute statistic on permuted data\n4. Repeat many times\n5. p-value = fraction where permuted ≥ original\n\n**Survival Analysis:**\n\n**Kaplan-Meier:**\nEstimate survival function with censored data.\n\n**Cox Proportional Hazards:**\nModel hazard rate:\n$$h(t|X) = h_0(t) \\exp(\\beta^T X)$$\n\n**Causal Inference:**\n\n**Correlation ≠ Causation!**\n\n**Randomized Controlled Trial (RCT):**\nGold standard. Random assignment → causal.\n\n**Observational Studies:**\n- Confounding variables\n- Propensity score matching\n- Instrumental variables\n\n**Production Statistics:**\n\n**A/B Testing:**\n\n```python\nfrom scipy.stats import ttest_ind\n\n# Control vs Treatment\ncontrol_conversions = [0, 1, 0, 1, ...]  # Binary\ntreatment_conversions = [1, 1, 0, 1, ...]\n\n# T-test\nt_stat, p_value = ttest_ind(control_conversions, treatment_conversions)\n\nif p_value < 0.05:\n    print(\"Significant difference!\")\nelse:\n    print(\"No significant difference\")\n```\n\n**Sample Size Calculation:**\n\n$$n = \\frac{2(z_{\\alpha/2} + z_{\\beta})^2 \\sigma^2}{(\\mu_1 - \\mu_2)^2}$$\n\n- α: Type I error (0.05)\n- β: Type II error (0.2, power=0.8)\n- Effect size: $\\mu_1 - \\mu_2$",
+    "level5_research": "**Advanced Topics:**\n\n**1. Bayesian Deep Learning:**\nUncertainty in neural networks.\n\n**2. Probabilistic Programming:**\nPyMC3, Stan, Edward.\n\n**3. Causal Machine Learning:**\nLearn causal graphs from data.\n\n**4. Time Series Analysis:**\nARIMA, GARCH, state space models.\n\n**5. Spatial Statistics:**\nGaussian processes, kriging.\n\n**6. Robust Statistics:**\nOutlier-resistant methods."
+  },
+  "whatIsIt": "Probability quantifies uncertainty (coin flip = 0.5). Statistics infers from data (sample → population). Bayes theorem updates beliefs. Distributions model randomness. Hypothesis testing validates claims.",
+  "whyNeeded": "ML is probabilistic! Loss functions (cross-entropy), model uncertainty (confidence intervals), Naive Bayes, A/B testing, confidence scores - hepsi probability & statistics!",
+  "realWorldAnalogy": "Zar atmak: Her sayı 1/6 probability. 100 kere at, statistics ile pattern bulursun (mean, variance). Hava tahmini probabilistic: %70 yağmur → uncertainty modeling!",
+  "mathematics": {
+    "formulas": [
+      "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}",
+      "\\mathbb{E}[X] = \\sum_x x \\cdot P(X=x)",
+      "\\text{Var}(X) = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2",
+      "\\mathcal{N}(x|\\mu,\\sigma^2) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "HYPOTHESIS TESTING:",
+      "1. Define null hypothesis H₀ and alternative H₁",
+      "2. Choose significance level α (typically 0.05)",
+      "3. Collect data samples",
+      "4. Compute test statistic (t-test, chi-square, etc.)",
+      "5. Calculate p-value",
+      "6. If p < α: Reject H₀ (significant!)",
+      "7. If p ≥ α: Fail to reject H₀",
+      "8. Report effect size (not just significance)"
+    ],
+    "complexity": "Most operations O(n) where n = sample size. Sorting O(n log n). Bootstrap/permutation O(B×n) where B = iterations."
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Probability Basics & Bayes Theorem",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom scipy.stats import binom, norm\n\nprint(\"=\"*60)\nprint(\"PROBABILITY BASICS\")\nprint(\"=\"*60)\n\nprint(\"\\n1️⃣  BAYES' THEOREM - Medical Test Example\")\nprint(\"=\"*60)\n\n# Disease test\nP_disease = 0.01  # 1% prevalence\nP_positive_given_disease = 0.99  # Test sensitivity\nP_positive_given_healthy = 0.05  # False positive rate\n\n# P(Positive)\nP_positive = (P_positive_given_disease * P_disease + \n              P_positive_given_healthy * (1 - P_disease))\n\n# Bayes' Theorem: P(Disease | Positive)\nP_disease_given_positive = (\n    P_positive_given_disease * P_disease / P_positive\n)\n\nprint(f\"\\nScenario:\")\nprint(f\"  Disease prevalence: {P_disease*100:.1f}%\")\nprint(f\"  Test sensitivity: {P_positive_given_disease*100:.1f}%\")\nprint(f\"  False positive rate: {P_positive_given_healthy*100:.1f}%\")\n\nprint(f\"\\nQuestion: If test positive, actually diseased?\")\nprint(f\"\\nIntuition says: ~99% (test accurate!)\")\nprint(f\"Bayes says: {P_disease_given_positive*100:.1f}% ⚠️\")\n\nprint(f\"\\nWhy so low?\")\nprint(f\"  Disease is RARE (1%)\")\nprint(f\"  False positives outnumber true positives!\")\nprint(f\"  Out of 10000 people:\")\nprint(f\"    - 100 diseased → 99 test positive\")\nprint(f\"    - 9900 healthy → 495 test positive (false!)\")\nprint(f\"    - P(Disease|Positive) = 99/(99+495) = {99/(99+495):.1%}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  BINOMIAL DISTRIBUTION - Coin Flips\")\nprint(\"=\"*60)\n\nn = 10  # Number of flips\np = 0.5  # Fair coin\n\nprint(f\"\\n{n} coin flips, fair coin (p={p})\")\nprint(f\"\\nProbability of exactly k heads:\")\n\nfor k in range(n+1):\n    prob = binom.pmf(k, n, p)\n    bar = '█' * int(prob * 50)\n    print(f\"  {k:2d} heads: {prob:.4f}  {bar}\")\n\n# Expected value and variance\nmean = n * p\nvar = n * p * (1 - p)\nstd = np.sqrt(var)\n\nprint(f\"\\nExpected value: {mean}\")\nprint(f\"Variance: {var}\")\nprint(f\"Std deviation: {std:.2f}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  NORMAL DISTRIBUTION - Bell Curve\")\nprint(\"=\"*60)\n\nmu = 170  # Mean height (cm)\nsigma = 10  # Std deviation\n\nprint(f\"\\nHeight distribution: μ={mu}, σ={sigma}\")\n\n# 68-95-99.7 rule\nprint(f\"\\n68-95-99.7 Rule:\")\nprint(f\"  68% within 1σ: [{mu-sigma}, {mu+sigma}] = [160, 180] cm\")\nprint(f\"  95% within 2σ: [{mu-2*sigma}, {mu+2*sigma}] = [150, 190] cm\")\nprint(f\"  99.7% within 3σ: [{mu-3*sigma}, {mu+3*sigma}] = [140, 200] cm\")\n\n# Probability calculations\nprint(f\"\\nProbabilities:\")\nP_tall = 1 - norm.cdf(180, mu, sigma)\nprint(f\"  P(height > 180): {P_tall:.2%}\")\n\nP_range = norm.cdf(180, mu, sigma) - norm.cdf(160, mu, sigma)\nprint(f\"  P(160 < height < 180): {P_range:.2%}\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Binomial\nax = axes[0]\nk_vals = np.arange(0, n+1)\nprobs = binom.pmf(k_vals, n, p)\nax.bar(k_vals, probs, alpha=0.7, edgecolor='black')\nax.set_xlabel('Number of Heads', fontsize=12)\nax.set_ylabel('Probability', fontsize=12)\nax.set_title(f'Binomial Distribution (n={n}, p={p})', fontsize=14)\nax.grid(True, alpha=0.3, axis='y')\n\n# Normal\nax = axes[1]\nx = np.linspace(mu - 4*sigma, mu + 4*sigma, 1000)\ny = norm.pdf(x, mu, sigma)\nax.plot(x, y, 'b-', linewidth=2, label=f'μ={mu}, σ={sigma}')\nax.fill_between(x, y, alpha=0.3)\nax.axvline(mu, color='r', linestyle='--', linewidth=2, label='Mean')\nax.axvline(mu+sigma, color='g', linestyle='--', alpha=0.7, label='±1σ')\nax.axvline(mu-sigma, color='g', linestyle='--', alpha=0.7)\nax.set_xlabel('Height (cm)', fontsize=12)\nax.set_ylabel('Density', fontsize=12)\nax.set_title('Normal Distribution', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n💡 Key Takeaways:\")\nprint(\"   • Bayes theorem: Update beliefs with evidence\")\nprint(\"   • Binomial: Discrete (coin flips, yes/no)\")\nprint(\"   • Normal: Continuous (heights, weights, errors)\")\nprint(\"   • Central Limit Theorem: Sample means → Normal!\")",
+      "explanation": "Probability fundamentals: Bayes theorem (medical test), Binomial (coin flips), Normal (bell curve). 68-95-99.7 rule, probability calculations."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Statistical Inference - Confidence Intervals & Hypothesis Testing",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom scipy import stats\nimport seaborn as sns\n\nprint(\"=\"*60)\nprint(\"STATISTICAL INFERENCE\")\nprint(\"=\"*60)\n\nnp.random.seed(42)\n\nprint(\"\\n1️⃣  CONFIDENCE INTERVALS\")\nprint(\"=\"*60)\n\n# Sample data (heights in cm)\nsample = np.random.normal(170, 10, size=30)\n\nsample_mean = np.mean(sample)\nsample_std = np.std(sample, ddof=1)  # ddof=1 for sample std\nn = len(sample)\n\n# 95% Confidence Interval\nconfidence = 0.95\nalpha = 1 - confidence\nt_critical = stats.t.ppf(1 - alpha/2, df=n-1)  # t-distribution\n\nmargin_error = t_critical * sample_std / np.sqrt(n)\nci_lower = sample_mean - margin_error\nci_upper = sample_mean + margin_error\n\nprint(f\"\\nSample size: {n}\")\nprint(f\"Sample mean: {sample_mean:.2f} cm\")\nprint(f\"Sample std: {sample_std:.2f} cm\")\nprint(f\"\\n95% Confidence Interval: [{ci_lower:.2f}, {ci_upper:.2f}]\")\nprint(f\"\\nInterpretation:\")\nprint(f\"  We are 95% confident that the true population mean\")\nprint(f\"  lies between {ci_lower:.2f} and {ci_upper:.2f} cm\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  HYPOTHESIS TESTING - T-Test\")\nprint(\"=\"*60)\n\n# Two groups: Treatment vs Control\ncontrol = np.random.normal(100, 15, size=50)  # Control group\ntreatment = np.random.normal(110, 15, size=50)  # Treatment (higher!)\n\nprint(f\"\\nScenario: Does treatment increase scores?\")\nprint(f\"\\nControl group:\")\nprint(f\"  Mean: {np.mean(control):.2f}\")\nprint(f\"  Std: {np.std(control, ddof=1):.2f}\")\nprint(f\"  N: {len(control)}\")\n\nprint(f\"\\nTreatment group:\")\nprint(f\"  Mean: {np.mean(treatment):.2f}\")\nprint(f\"  Std: {np.std(treatment, ddof=1):.2f}\")\nprint(f\"  N: {len(treatment)}\")\n\n# Independent t-test\nt_stat, p_value = stats.ttest_ind(treatment, control)\n\nprint(f\"\\nHypothesis Test:\")\nprint(f\"  H₀: μ_treatment = μ_control (no effect)\")\nprint(f\"  H₁: μ_treatment ≠ μ_control (there is effect)\")\nprint(f\"  Significance level: α = 0.05\")\nprint(f\"\\nResults:\")\nprint(f\"  t-statistic: {t_stat:.4f}\")\nprint(f\"  p-value: {p_value:.4f}\")\n\nif p_value < 0.05:\n    print(f\"\\n  ✓ REJECT H₀ (p < 0.05)\")\n    print(f\"  Conclusion: Treatment has SIGNIFICANT effect!\")\nelse:\n    print(f\"\\n  ✗ FAIL TO REJECT H₀ (p ≥ 0.05)\")\n    print(f\"  Conclusion: No significant difference\")\n\n# Effect size (Cohen's d)\nmean_diff = np.mean(treatment) - np.mean(control)\npooled_std = np.sqrt((np.var(treatment, ddof=1) + np.var(control, ddof=1)) / 2)\ncohens_d = mean_diff / pooled_std\n\nprint(f\"\\nEffect Size (Cohen's d): {cohens_d:.3f}\")\nif abs(cohens_d) < 0.2:\n    print(f\"  Small effect\")\nelif abs(cohens_d) < 0.5:\n    print(f\"  Medium effect\")\nelse:\n    print(f\"  Large effect ✓\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  BOOTSTRAP CONFIDENCE INTERVAL\")\nprint(\"=\"*60)\n\nprint(\"\\nNon-parametric method (no distribution assumption!)\")\n\n# Bootstrap\nboot_means = []\nn_bootstrap = 1000\n\nfor _ in range(n_bootstrap):\n    boot_sample = np.random.choice(sample, size=len(sample), replace=True)\n    boot_means.append(np.mean(boot_sample))\n\nboot_means = np.array(boot_means)\n\n# Bootstrap CI\nboot_ci_lower = np.percentile(boot_means, 2.5)\nboot_ci_upper = np.percentile(boot_means, 97.5)\n\nprint(f\"\\nBootstrap (B={n_bootstrap}):\")\nprint(f\"  Mean of means: {np.mean(boot_means):.2f}\")\nprint(f\"  Std of means: {np.std(boot_means):.2f}\")\nprint(f\"  95% CI: [{boot_ci_lower:.2f}, {boot_ci_upper:.2f}]\")\n\nprint(f\"\\nCompare to t-CI: [{ci_lower:.2f}, {ci_upper:.2f}]\")\nprint(f\"Very similar! ✓\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\n# T-test\nax = axes[0]\nax.boxplot([control, treatment], labels=['Control', 'Treatment'])\nax.set_ylabel('Score', fontsize=12)\nax.set_title(f'T-Test: p = {p_value:.4f}', fontsize=14)\nax.grid(True, alpha=0.3, axis='y')\nif p_value < 0.05:\n    ax.text(1.5, ax.get_ylim()[1]*0.95, '✓ Significant', \n           fontsize=12, ha='center',\n           bbox=dict(boxstyle='round', facecolor='lightgreen'))\n\n# Bootstrap distribution\nax = axes[1]\nax.hist(boot_means, bins=50, edgecolor='black', alpha=0.7)\nax.axvline(sample_mean, color='r', linestyle='--', linewidth=2, label='Sample mean')\nax.axvline(boot_ci_lower, color='g', linestyle='--', linewidth=2, label='95% CI')\nax.axvline(boot_ci_upper, color='g', linestyle='--', linewidth=2)\nax.set_xlabel('Bootstrap Sample Means', fontsize=12)\nax.set_ylabel('Frequency', fontsize=12)\nax.set_title(f'Bootstrap Distribution (B={n_bootstrap})', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n💡 Key Points:\")\nprint(\"   • CI: Range where true parameter likely is\")\nprint(\"   • p-value: Probability of data if H₀ true\")\nprint(\"   • p < 0.05: Statistically significant\")\nprint(\"   • Effect size: Magnitude matters too!\")\nprint(\"   • Bootstrap: Distribution-free method\")",
+      "explanation": "Statistical inference: Confidence intervals (t-distribution), hypothesis testing (t-test), p-values, effect size (Cohen's d), bootstrap CI. Complete workflow!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "A/B Testing - Production Example",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom scipy import stats\nimport pandas as pd\n\nprint(\"=\"*60)\nprint(\"A/B TESTING - PRODUCTION SCENARIO\")\nprint(\"=\"*60)\n\nnp.random.seed(42)\n\nprint(\"\\nScenario: Website button color test\")\nprint(\"  Version A (Control): Blue button\")\nprint(\"  Version B (Treatment): Red button\")\nprint(\"  Metric: Conversion rate (click → purchase)\")\n\n# Simulate A/B test data\nn_visitors_A = 1000\nn_visitors_B = 1000\n\n# True conversion rates (unknown in practice)\ntrue_rate_A = 0.10  # 10%\ntrue_rate_B = 0.12  # 12% (2% lift!)\n\n# Observed conversions (Bernoulli)\nconversions_A = np.random.binomial(1, true_rate_A, n_visitors_A)\nconversions_B = np.random.binomial(1, true_rate_B, n_visitors_B)\n\n# Sample statistics\nrate_A = np.mean(conversions_A)\nrate_B = np.mean(conversions_B)\nlift = (rate_B - rate_A) / rate_A\n\nprint(f\"\\n\" + \"=\"*60)\nprint(\"OBSERVED DATA\")\nprint(\"=\"*60)\n\nprint(f\"\\nVersion A (Control):\")\nprint(f\"  Visitors: {n_visitors_A:,}\")\nprint(f\"  Conversions: {np.sum(conversions_A)}\")\nprint(f\"  Rate: {rate_A:.2%}\")\n\nprint(f\"\\nVersion B (Treatment):\")\nprint(f\"  Visitors: {n_visitors_B:,}\")\nprint(f\"  Conversions: {np.sum(conversions_B)}\")\nprint(f\"  Rate: {rate_B:.2%}\")\n\nprint(f\"\\nObserved lift: {lift:+.1%}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"STATISTICAL TEST\")\nprint(\"=\"*60)\n\n# Chi-square test (for proportions)\ncontingency_table = np.array([\n    [np.sum(conversions_A), n_visitors_A - np.sum(conversions_A)],\n    [np.sum(conversions_B), n_visitors_B - np.sum(conversions_B)]\n])\n\nchi2, p_value, dof, expected = stats.chi2_contingency(contingency_table)\n\nprint(f\"\\nHypothesis Test:\")\nprint(f\"  H₀: Conversion_A = Conversion_B\")\nprint(f\"  H₁: Conversion_A ≠ Conversion_B\")\nprint(f\"  α = 0.05\")\n\nprint(f\"\\nResults:\")\nprint(f\"  χ² statistic: {chi2:.4f}\")\nprint(f\"  p-value: {p_value:.4f}\")\n\nif p_value < 0.05:\n    print(f\"\\n  ✓ SIGNIFICANT! (p < 0.05)\")\n    print(f\"  Decision: Deploy version B!\")\nelse:\n    print(f\"\\n  ✗ NOT SIGNIFICANT (p ≥ 0.05)\")\n    print(f\"  Decision: Keep version A\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"CONFIDENCE INTERVAL FOR LIFT\")\nprint(\"=\"*60)\n\n# Standard error for proportion difference\nse_A = np.sqrt(rate_A * (1 - rate_A) / n_visitors_A)\nse_B = np.sqrt(rate_B * (1 - rate_B) / n_visitors_B)\nse_diff = np.sqrt(se_A**2 + se_B**2)\n\n# 95% CI for difference\nz_critical = 1.96  # For 95%\nci_lower = (rate_B - rate_A) - z_critical * se_diff\nci_upper = (rate_B - rate_A) + z_critical * se_diff\n\nprint(f\"\\n95% CI for lift:\")\nprint(f\"  Point estimate: {rate_B - rate_A:+.2%}\")\nprint(f\"  Interval: [{ci_lower:+.2%}, {ci_upper:+.2%}]\")\n\nif ci_lower > 0:\n    print(f\"\\n  ✓ CI excludes 0 → B is better!\")\nelse:\n    print(f\"\\n  ⚠️ CI includes 0 → Uncertain\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SAMPLE SIZE CALCULATION\")\nprint(\"=\"*60)\n\nprint(\"\\nQuestion: How many visitors needed to detect 2% lift?\")\n\n# Parameters\nbaseline_rate = 0.10\nminimum_detectable_effect = 0.02  # 2% absolute\nalpha = 0.05\npower = 0.80  # 80% power\n\n# Z-scores\nz_alpha = stats.norm.ppf(1 - alpha/2)\nz_beta = stats.norm.ppf(power)\n\n# Sample size formula (per group)\np1 = baseline_rate\np2 = baseline_rate + minimum_detectable_effect\np_pooled = (p1 + p2) / 2\n\nn_required = (\n    (z_alpha * np.sqrt(2 * p_pooled * (1 - p_pooled)) +\n     z_beta * np.sqrt(p1 * (1 - p1) + p2 * (1 - p2)))**2 /\n    (p2 - p1)**2\n)\n\nprint(f\"\\nParameters:\")\nprint(f\"  Baseline rate: {baseline_rate:.0%}\")\nprint(f\"  Target rate: {p2:.0%} ({minimum_detectable_effect:+.0%} lift)\")\nprint(f\"  Significance: α = {alpha}\")\nprint(f\"  Power: {power:.0%}\")\n\nprint(f\"\\nRequired sample size:\")\nprint(f\"  Per group: {int(np.ceil(n_required)):,} visitors\")\nprint(f\"  Total: {int(np.ceil(n_required * 2)):,} visitors\")\n\nprint(f\"\\nCurrent sample: {n_visitors_A + n_visitors_B:,} visitors ✓\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\n# Conversion rates comparison\nax = axes[0]\nversions = ['A\\n(Control)', 'B\\n(Treatment)']\nrates = [rate_A, rate_B]\nerrors = [se_A * 1.96, se_B * 1.96]  # 95% CI\n\ncolors = ['blue', 'red']\nax.bar(versions, rates, yerr=errors, capsize=10, alpha=0.7, \n       color=colors, edgecolor='black', linewidth=2)\nax.set_ylabel('Conversion Rate', fontsize=12)\nax.set_title(f'A/B Test Results (p = {p_value:.4f})', fontsize=14)\nax.grid(True, alpha=0.3, axis='y')\n\nif p_value < 0.05:\n    ax.text(0.5, max(rates)*1.1, '✓ Significant', \n           fontsize=13, ha='center',\n           bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8))\n\n# Power analysis\nax = axes[1]\neffect_sizes = np.linspace(0.005, 0.05, 50)\nsample_sizes = []\n\nfor mde in effect_sizes:\n    p2_temp = baseline_rate + mde\n    p_pooled_temp = (baseline_rate + p2_temp) / 2\n    n_temp = (\n        (z_alpha * np.sqrt(2 * p_pooled_temp * (1 - p_pooled_temp)) +\n         z_beta * np.sqrt(baseline_rate * (1 - baseline_rate) + \n                         p2_temp * (1 - p2_temp)))**2 /\n        mde**2\n    )\n    sample_sizes.append(n_temp)\n\nax.plot(effect_sizes * 100, sample_sizes, linewidth=2)\nax.axhline(n_visitors_A, color='r', linestyle='--', \n          label=f'Current sample: {n_visitors_A:,}')\nax.set_xlabel('Minimum Detectable Effect (%)', fontsize=12)\nax.set_ylabel('Required Sample Size (per group)', fontsize=12)\nax.set_title('Sample Size vs Effect Size', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"DECISION FRAMEWORK\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n✓ Statistical Significance: p < 0.05\n✓ Practical Significance: Lift ≥ 2%\n✓ Confidence Interval: Excludes 0\n✓ Sample Size: Adequate power\n\n→ DEPLOY VERSION B!\n\nMonitoring:\n  • Track conversion rate over time\n  • Watch for novelty effect\n  • A/A test for sanity check\n  • Segment analysis (mobile vs desktop)\n\"\"\")",
+      "explanation": "Production A/B testing: Conversion rate comparison, chi-square test, confidence intervals, sample size calculation, power analysis. Complete framework!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Bayesian Inference & MCMC",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom scipy import stats\n\nprint(\"=\"*60)\nprint(\"BAYESIAN INFERENCE\")\nprint(\"=\"*60)\n\nnp.random.seed(42)\n\nprint(\"\\n1️⃣  BETA-BINOMIAL CONJUGATE PRIOR\")\nprint(\"=\"*60)\n\nprint(\"\\nScenario: Coin flip, estimate P(heads)\")\n\n# Prior belief: Beta(α, β)\nalpha_prior = 2\nbeta_prior = 2\n\nprint(f\"\\nPrior: Beta({alpha_prior}, {beta_prior})\")\nprint(f\"  Prior mean: {alpha_prior/(alpha_prior + beta_prior):.2f}\")\nprint(f\"  (Weak prior: slightly favor fair coin)\")\n\n# Observed data\nn_flips = 20\nn_heads = 14  # More heads than tails!\n\nprint(f\"\\nData: {n_flips} flips, {n_heads} heads\")\nprint(f\"  MLE estimate: {n_heads/n_flips:.2f}\")\n\n# Posterior: Beta(α + heads, β + tails)\nalpha_post = alpha_prior + n_heads\nbeta_post = beta_prior + (n_flips - n_heads)\n\nprint(f\"\\nPosterior: Beta({alpha_post}, {beta_post})\")\npost_mean = alpha_post / (alpha_post + beta_post)\npost_mode = (alpha_post - 1) / (alpha_post + beta_post - 2)\n\nprint(f\"  Posterior mean: {post_mean:.3f}\")\nprint(f\"  Posterior mode: {post_mode:.3f}\")\n\n# Credible interval (Bayesian CI)\nci_lower = stats.beta.ppf(0.025, alpha_post, beta_post)\nci_upper = stats.beta.ppf(0.975, alpha_post, beta_post)\n\nprint(f\"  95% Credible Interval: [{ci_lower:.3f}, {ci_upper:.3f}]\")\nprint(f\"\\n  Interpretation: P(heads) is between {ci_lower:.3f} and {ci_upper:.3f}\")\nprint(f\"  with 95% probability (given the data)\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\n# Prior vs Posterior\nax = axes[0]\ntheta = np.linspace(0, 1, 1000)\nprior_pdf = stats.beta.pdf(theta, alpha_prior, beta_prior)\npost_pdf = stats.beta.pdf(theta, alpha_post, beta_post)\n\nax.plot(theta, prior_pdf, 'b-', linewidth=2, label=f'Prior: Beta({alpha_prior},{beta_prior})')\nax.plot(theta, post_pdf, 'r-', linewidth=2, label=f'Posterior: Beta({alpha_post},{beta_post})')\nax.axvline(n_heads/n_flips, color='g', linestyle='--', linewidth=2, label='MLE')\nax.fill_between(theta, 0, post_pdf, alpha=0.3, color='red')\nax.set_xlabel('θ (P(heads))', fontsize=12)\nax.set_ylabel('Density', fontsize=12)\nax.set_title('Bayesian Updating', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  SEQUENTIAL UPDATING\")\nprint(\"=\"*60)\n\nprint(\"\\nBayesian learning: Update beliefs as data arrives!\")\n\n# Simulate sequential flips\nall_flips = np.random.binomial(1, 0.7, 50)  # True p=0.7\n\nalphas = [alpha_prior]\nbetas = [beta_prior]\nmeans = [alpha_prior / (alpha_prior + beta_prior)]\n\nfor flip in all_flips:\n    if flip == 1:  # Heads\n        alphas.append(alphas[-1] + 1)\n        betas.append(betas[-1])\n    else:  # Tails\n        alphas.append(alphas[-1])\n        betas.append(betas[-1] + 1)\n    means.append(alphas[-1] / (alphas[-1] + betas[-1]))\n\n# Plot evolution\nax = axes[1]\nax.plot(means, linewidth=2)\nax.axhline(0.7, color='r', linestyle='--', linewidth=2, label='True p=0.7')\nax.axhline(0.5, color='gray', linestyle=':', alpha=0.5, label='Fair coin')\nax.set_xlabel('Number of Observations', fontsize=12)\nax.set_ylabel('Posterior Mean', fontsize=12)\nax.set_title('Sequential Bayesian Learning', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(f\"\\nAfter {len(all_flips)} flips:\")\nprint(f\"  Posterior mean: {means[-1]:.3f}\")\nprint(f\"  True p: 0.700\")\nprint(f\"  Converged! ✓\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  METROPOLIS-HASTINGS MCMC\")\nprint(\"=\"*60)\n\nprint(\"\\nComplex posteriors → No closed form!\")\nprint(\"Solution: Sample with MCMC\")\n\ndef target_distribution(x):\n    \"\"\"Example: Mixture of Gaussians\"\"\"\n    return (0.3 * stats.norm.pdf(x, -2, 0.5) + \n            0.7 * stats.norm.pdf(x, 2, 1.0))\n\n# Metropolis-Hastings\ndef metropolis_hastings(target, n_samples, initial=0, proposal_std=1.0):\n    samples = [initial]\n    current = initial\n    accepted = 0\n    \n    for _ in range(n_samples):\n        # Propose new sample\n        proposal = current + np.random.normal(0, proposal_std)\n        \n        # Acceptance ratio\n        ratio = target(proposal) / target(current)\n        \n        # Accept or reject\n        if np.random.rand() < ratio:\n            current = proposal\n            accepted += 1\n        \n        samples.append(current)\n    \n    return np.array(samples), accepted / n_samples\n\nprint(\"\\nRunning Metropolis-Hastings...\")\nsamples, acceptance_rate = metropolis_hastings(target_distribution, 10000)\n\nprint(f\"  Samples: {len(samples):,}\")\nprint(f\"  Acceptance rate: {acceptance_rate:.1%}\")\nprint(f\"  Mean: {np.mean(samples):.2f}\")\nprint(f\"  Std: {np.std(samples):.2f}\")\n\n# Visualize\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\n# MCMC samples vs true distribution\nax = axes[0]\nx = np.linspace(-5, 5, 1000)\nax.hist(samples[1000:], bins=50, density=True, alpha=0.6, \n       label='MCMC samples', edgecolor='black')\nax.plot(x, target_distribution(x), 'r-', linewidth=2, label='True distribution')\nax.set_xlabel('x', fontsize=12)\nax.set_ylabel('Density', fontsize=12)\nax.set_title('Metropolis-Hastings Sampling', fontsize=14)\nax.legend(fontsize=11)\nax.grid(True, alpha=0.3)\n\n# Trace plot\nax = axes[1]\nax.plot(samples[:500], linewidth=0.5, alpha=0.7)\nax.set_xlabel('Iteration', fontsize=12)\nax.set_ylabel('Sample Value', fontsize=12)\nax.set_title('MCMC Trace Plot (first 500)', fontsize=14)\nax.grid(True, alpha=0.3)\n\nplt.tight_layout()\n\nprint(\"\\n💡 Bayesian vs Frequentist:\")\nprint(\"\"\"\n  Frequentist:\n    • Parameters are fixed (unknown)\n    • Probability = long-run frequency\n    • CI: \"95% of such intervals contain true parameter\"\n  \n  Bayesian:\n    • Parameters are random (with distributions)\n    • Probability = degree of belief\n    • Credible Interval: \"95% probability parameter in interval\"\n    • Incorporates prior knowledge\n    • Natural for sequential learning\n\"\"\")",
+      "explanation": "Bayesian inference: Beta-Binomial conjugate prior, posterior updating, sequential learning, credible intervals, MCMC (Metropolis-Hastings). Bayesian vs Frequentist!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Bayes' Theorem formülü nedir?",
+      "options": [
+        "P(A|B) = P(A) × P(B)",
+        "P(A|B) = P(B|A) × P(A) / P(B)",
+        "P(A|B) = P(A) + P(B)",
+        "P(A|B) = P(A) / P(B)"
+      ],
+      "correct": 1,
+      "explanation": "Bayes: P(A|B) = P(B|A)×P(A)/P(B). Prior P(A) × Likelihood P(B|A) / Evidence P(B) = Posterior P(A|B). Update beliefs with evidence!"
+    },
+    {
+      "question": "Normal distribution'da 68-95-99.7 rule nedir?",
+      "options": [
+        "68% data μ±1σ içinde, 95% μ±2σ içinde, 99.7% μ±3σ içinde",
+        "Her zaman bu oranlar",
+        "Sadece sample size büyükse",
+        "Uniform distribution için"
+      ],
+      "correct": 0,
+      "explanation": "Normal distribution için: 68% data μ±1σ, 95% μ±2σ, 99.7% μ±3σ içinde. Empirical rule, bell curve symmetric!"
+    },
+    {
+      "question": "p-value neyi ölçer?",
+      "options": [
+        "H₁'in doğru olma olasılığı",
+        "H₀ doğruyken gözlemlenen data (veya daha extreme) olasılığı",
+        "Effect size",
+        "Sample size"
+      ],
+      "correct": 1,
+      "explanation": "p-value: H₀ doğruyken bu data (veya daha extreme) görme probability. p<0.05 → H₀ reject (unlikely under null). p≥0.05 → fail to reject."
+    },
+    {
+      "question": "Type I ve Type II error nedir?",
+      "options": [
+        "Aynı şey",
+        "Type I (α): False positive (H₀ reject ama true). Type II (β): False negative (H₀ accept ama false)",
+        "Type I büyük, Type II küçük",
+        "Sadece küçük sample'da"
+      ],
+      "correct": 1,
+      "explanation": "Type I (α): False positive - H₀ true ama reject (yanlış alarm). Type II (β): False negative - H₀ false ama fail reject (miss). Power = 1-β."
+    },
+    {
+      "question": "Confidence Interval vs Credible Interval farkı?",
+      "options": [
+        "Aynıdır",
+        "CI (Frequentist): Procedure property. Credible (Bayesian): Parameter property",
+        "CI her zaman daha büyük",
+        "Sadece normal distribution'da farklı"
+      ],
+      "correct": 1,
+      "explanation": "CI (Frequentist): '95% of such intervals contain parameter' (procedure). Credible (Bayesian): '95% probability parameter in interval' (parameter distribution). Philosophy farklı!"
+    },
+    {
+      "question": "Central Limit Theorem ne söyler?",
+      "options": [
+        "Tüm distributions normal",
+        "Sample means → Normal distribution (n büyükse), original distribution ne olursa olsun",
+        "Sadece normal data için",
+        "Mean her zaman 0"
+      ],
+      "correct": 1,
+      "explanation": "CLT: n büyükse (tipik n≥30), sample means ≈ Normal(μ, σ²/n), original distribution ne olursa olsun! Fundamental theorem, inference'ın temeli."
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "p-value'yu H₁'in doğru olma olasılığı olarak yorumlamak",
+      "why": "p-value H₀ altında data olasılığı, H₁ olasılığı değil! Çok yaygın yanlış anlama.",
+      "fix": "p-value: 'H₀ doğruyken bu kadar extreme data görme probability'",
+      "example": "# YANLIŞ\nif p_value < 0.05:\n    print(\"H₁ %95 doğru\")  # ❌ YAN LIŞ!\n\n# DOĞRU\nif p_value < 0.05:\n    print(\"H₀ reject, data H₀ ile inconsistent\")  # ✓"
+    },
+    {
+      "mistake": "Statistical significance = practical significance",
+      "why": "p<0.05 ama effect size çok küçük olabilir! Büyük sample'da trivial effects significant olur.",
+      "fix": "Effect size (Cohen's d) de rapor et, sadece p-value değil.",
+      "example": "# Sadece p-value yetmez\nif p_value < 0.05:\n    if cohens_d > 0.5:  # ✓ Effect size check\n        print(\"Significant AND meaningful\")"
+    },
+    {
+      "mistake": "Multiple testing correction yapmamak",
+      "why": "100 test yap, α=0.05 → 5 false positive bekle! Family-wise error rate explode eder.",
+      "fix": "Bonferroni correction: α_new = α/m",
+      "example": "# Multiple tests\nm = 100  # Number of tests\nalpha_corrected = 0.05 / m  # ✓ Bonferroni\nif p_value < alpha_corrected:\n    print(\"Significant (corrected)\")"
+    },
+    {
+      "mistake": "Sample size yetersizken inference yapmak",
+      "why": "Küçük sample → large variance → unreliable estimates. Power düşük → Type II error risk!",
+      "fix": "A priori power analysis yap, required sample size hesapla.",
+      "example": "# Too small\nn = 10  # ❌ Probably insufficient\n\n# Power analysis first\nn_required = power_analysis(effect_size, alpha, power)\nprint(f\"Need {n_required} samples\")  # ✓"
+    },
+    {
+      "mistake": "Independence assumption'ı violate etmek",
+      "why": "t-test, ANOVA independence varsayar. Repeated measures, clustered data → violation!",
+      "fix": "Paired t-test, mixed models, cluster-robust SE kullan.",
+      "example": "# YANLIŞ: Aynı kişinin measurements\nttest_ind(before, after)  # ❌ Not independent!\n\n# DOĞRU: Paired test\nttest_rel(before, after)  # ✓ Paired"
+    },
+    {
+      "mistake": "Outliers'ı ignore etmek",
+      "why": "Mean, variance outliers'a çok sensitive! Sonuçlar misleading olabilir.",
+      "fix": "Robust statistics (median, IQR), outlier detection, transformation.",
+      "example": "# Check for outliers\nfrom scipy import stats\nz_scores = np.abs(stats.zscore(data))\noutliers = data[z_scores > 3]  # ✓ Check\nprint(f\"Found {len(outliers)} outliers\")"
+    },
+    {
+      "mistake": "Correlation → causation",
+      "why": "Correlation sadece association gösterir, causation değil! Confounding variables olabilir.",
+      "fix": "Causal inference için: RCT, instrumental variables, DAG analysis.",
+      "example": "# Ice cream sales ↑, drowning ↑\n# Correlation: Yes!\n# Causation: No! (Confound: summer heat)"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Bayes' Theorem?",
+      "back": "P(A|B) = P(B|A)×P(A)/P(B). Update beliefs: Prior×Likelihood/Evidence = Posterior. Medical test, spam filter, Naive Bayes hepsi kullanır!"
+    },
+    {
+      "front": "Normal distribution özellikleri?",
+      "back": "Bell curve, symmetric, μ (mean), σ (std). 68-95-99.7 rule: 68% μ±1σ, 95% μ±2σ, 99.7% μ±3σ. Central Limit Theorem: sample means → Normal!"
+    },
+    {
+      "front": "p-value nedir?",
+      "back": "H₀ doğruyken observed data (veya daha extreme) probability. p<0.05 → reject H₀ (significant). p≥0.05 → fail to reject. H₁'in probability değil!"
+    },
+    {
+      "front": "Confidence Interval?",
+      "back": "Frequentist: Parameter için interval estimate. 95% CI: '95% of such intervals contain true parameter'. Mean±1.96×SE/√n (normal)."
+    },
+    {
+      "front": "Type I vs Type II error?",
+      "back": "Type I (α): False positive (H₀ reject ama true). Type II (β): False negative (H₀ accept ama false). Power = 1-β. Balance α and β!"
+    },
+    {
+      "front": "Central Limit Theorem?",
+      "back": "n büyükse (≥30), sample means ≈ Normal(μ, σ²/n), original distribution ne olursa olsun! Inference'ın temeli, confidence intervals possible!"
+    },
+    {
+      "front": "Bayesian vs Frequentist?",
+      "back": "Frequentist: Parameters fixed, probability=frequency. Bayesian: Parameters random, probability=belief. Prior+Data→Posterior. Philosophy farklı!"
+    },
+    {
+      "front": "Effect size neden önemli?",
+      "back": "p<0.05 statistical significance, ama practical? Effect size (Cohen's d) magnitude gösterir: 0.2 small, 0.5 medium, 0.8 large. Report both!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "Bayes' Theorem Interactive",
+      "description": "Prior, likelihood, posterior interactive visualization. Sliders ile parameters değiştir, posterior'ın nasıl update edildiğini gör.",
+      "component": "BayesTheoremViz"
+    },
+    {
+      "type": "plot",
+      "title": "Common Distributions Gallery",
+      "description": "Normal, Binomial, Exponential, Poisson distributions. Parameters ile shape değişimi, use cases.",
+      "component": "DistributionsGallery"
+    },
+    {
+      "type": "interactive",
+      "title": "Hypothesis Testing Simulator",
+      "description": "H₀ vs H₁, α selection, sample size effect, p-value distribution, Type I/II errors visualization.",
+      "component": "HypothesisTestSimulator"
+    },
+    {
+      "type": "animation",
+      "title": "Central Limit Theorem",
+      "description": "Uniform/exponential distribution'dan samples al, sample means distribution'ının Normal'e converge etmesini animate et.",
+      "component": "CentralLimitTheoremAnimation"
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "id": "diffusion-models",
+  "title": "Diffusion Models & Stable Diffusion",
+  "category": "generative-models",
+  "level": 4,
+  "estimatedTime": 90,
+  "description": "Diffusion Models: State-of-the-art image generation! Stable Diffusion, DALL-E 2, Midjourney'in arkasındaki teknoloji. Process: (1) Forward Diffusion: Clean image → Gradually add noise → Pure noise. (2) Reverse Diffusion: Pure noise → Gradually denoise → Clean image! Learn reverse process with neural network. Math: Markov chain, Gaussian noise, score matching. Architecture: U-Net + attention, timestep embedding, conditioning (text→image via CLIP). Training: Denoise images at different noise levels. Sampling: Start from random noise, iteratively denoise (50-1000 steps). Advantages vs GANs: Training stability, mode coverage, controllability. Applications: Text-to-image (Stable Diffusion), inpainting, super-resolution, image editing. Latent diffusion: Work in compressed latent space (faster!). Real-world: Stable Diffusion XL, DALL-E 2, Imagen, Midjourney.",
+  "content": {
+    "level0_basic": "Diffusion Models: Reverse engineering of noise! Analogy: Video backwards: Clear image → blur → static noise. Then learn to reverse: Static → gradually sharper → clear image! Process: (1) Training: Take image, add noise gradually (1000 steps). Learn to predict: 'What was previous less-noisy version?' (2) Generation: Start random noise, repeatedly ask 'less noisy version?' → Final: Real-looking image! Text-to-image: Add text guidance. 'Cat wearing sunglasses' → conditions denoising process → generates that image! Why better than GANs? (1) Training more stable. (2) Higher quality. (3) Better diversity. (4) Controllability via guidance. Models: Stable Diffusion (open-source), DALL-E 2 (OpenAI), Midjourney (commercial). Speed: ~5-50 seconds per image (vs GAN's instant). Quality: Photorealistic! Revolutionary for AI art!",
+    "level1_beginner": "**Diffusion Process:**\n\n```\nForward (Destroy):\n  x₀ (clean) → x₁ → x₂ → ... → xₜ (noise)\n  Gradually add Gaussian noise\n  \nReverse (Generate):\n  xₜ (noise) → ... → x₂ → x₁ → x₀ (clean)\n  Trained neural net removes noise\n```\n\n**Training:**\n\n```python\n# 1. Take clean image x₀\n# 2. Sample timestep t (1 to 1000)\n# 3. Add noise: xₜ = √(αₜ)·x₀ + √(1-αₜ)·ε\n#    where ε ~ N(0,I) is noise\n# 4. Train model to predict ε from xₜ and t\n# 5. Loss: ||ε - ε_predicted||²\n```\n\n**Generation:**\n\n```python\n# Start: x₁₀₀₀ ~ N(0,I)  # Random noise\n# Iterate: t = 1000 → 0\nfor t in reversed(range(1000)):\n    # Predict noise\n    ε = model(xₜ, t)\n    # Denoise one step\n    xₜ₋₁ = denoise(xₜ, ε, t)\n# Result: x₀ is generated image!\n```\n\n**Stable Diffusion Architecture:**\n\n```\nInput: Noisy image xₜ + timestep t + text prompt\n\n1. Text → CLIP embedding\n2. xₜ → VAE encoder → Latent zₜ\n3. U-Net(zₜ, t, text_embedding) → Predicted noise\n4. Denoise: zₜ₋₁ = zₜ - noise\n5. After 50 steps: z₀ → VAE decoder → Image!\n\nKey: Work in latent space (512×512 → 64×64 latent)\n     Much faster! 'Latent Diffusion'\n```\n\n**Text Conditioning (Classifier-Free Guidance):**\n\n```\nUnconditional: ε = model(xₜ, t, empty)\nConditional: ε_cond = model(xₜ, t, \"cat\")\n\nGuided: ε = ε + scale·(ε_cond - ε)\nScale (CFG): 7-15 typical\n  Low → diverse but less accurate\n  High → accurate but less creative\n```",
+    "level2_application": "**Simplified Diffusion Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass SimpleDiffusion:\n    def __init__(self, timesteps=1000):\n        self.timesteps = timesteps\n        # Variance schedule (linear)\n        self.betas = torch.linspace(1e-4, 0.02, timesteps)\n        self.alphas = 1 - self.betas\n        self.alphas_cumprod = torch.cumprod(self.alphas, 0)\n    \n    def forward_diffusion(self, x0, t):\n        \"\"\"Add noise to x0 at timestep t\"\"\"\n        noise = torch.randn_like(x0)\n        sqrt_alpha = torch.sqrt(self.alphas_cumprod[t])\n        sqrt_one_minus_alpha = torch.sqrt(1 - self.alphas_cumprod[t])\n        \n        # xt = √(ᾱₜ)·x₀ + √(1-ᾱₜ)·ε\n        xt = sqrt_alpha * x0 + sqrt_one_minus_alpha * noise\n        return xt, noise\n    \n    def train_step(self, model, x0):\n        \"\"\"One training step\"\"\"\n        # Random timestep\n        t = torch.randint(0, self.timesteps, (x0.shape[0],))\n        \n        # Add noise\n        xt, noise = self.forward_diffusion(x0, t)\n        \n        # Predict noise\n        predicted_noise = model(xt, t)\n        \n        # Loss\n        loss = nn.MSELoss()(noise, predicted_noise)\n        return loss\n    \n    @torch.no_grad()\n    def sample(self, model, shape):\n        \"\"\"Generate images\"\"\"\n        # Start from noise\n        x = torch.randn(shape)\n        \n        # Iteratively denoise\n        for t in reversed(range(self.timesteps)):\n            # Predict noise\n            t_tensor = torch.full((shape[0],), t)\n            predicted_noise = model(x, t_tensor)\n            \n            # Denoise\n            alpha = self.alphas[t]\n            alpha_cumprod = self.alphas_cumprod[t]\n            beta = self.betas[t]\n            \n            # DDPM sampling formula\n            if t > 0:\n                noise = torch.randn_like(x)\n            else:\n                noise = 0\n            \n            x = (1 / torch.sqrt(alpha)) * (\n                x - ((1 - alpha) / torch.sqrt(1 - alpha_cumprod)) * predicted_noise\n            ) + torch.sqrt(beta) * noise\n        \n        return x\n\n# Usage\ndiffusion = SimpleDiffusion(timesteps=1000)\ngenerated_images = diffusion.sample(model, shape=(4, 3, 64, 64))\n```",
+    "level3_advanced": "**U-Net with Attention for Diffusion:**\n\n```python\nimport torch.nn as nn\n\nclass AttentionBlock(nn.Module):\n    def __init__(self, channels):\n        super().__init__()\n        self.norm = nn.GroupNorm(32, channels)\n        self.qkv = nn.Conv2d(channels, channels * 3, 1)\n        self.proj = nn.Conv2d(channels, channels, 1)\n    \n    def forward(self, x):\n        B, C, H, W = x.shape\n        h = self.norm(x)\n        qkv = self.qkv(h).reshape(B, 3, C, H*W)\n        q, k, v = qkv.unbind(1)\n        \n        # Attention\n        attn = (q @ k.transpose(-2, -1)) / (C ** 0.5)\n        attn = attn.softmax(-1)\n        h = (attn @ v).reshape(B, C, H, W)\n        \n        return x + self.proj(h)\n\nclass DiffusionUNet(nn.Module):\n    def __init__(self, in_channels=3, model_channels=128):\n        super().__init__()\n        \n        # Timestep embedding\n        self.time_embed = nn.Sequential(\n            nn.Linear(model_channels, model_channels * 4),\n            nn.SiLU(),\n            nn.Linear(model_channels * 4, model_channels * 4)\n        )\n        \n        # Encoder\n        self.down1 = nn.Conv2d(in_channels, model_channels, 3, padding=1)\n        self.down2 = nn.Conv2d(model_channels, model_channels*2, 3, padding=1)\n        self.attn = AttentionBlock(model_channels*2)\n        \n        # Bottleneck\n        self.mid = nn.Conv2d(model_channels*2, model_channels*2, 3, padding=1)\n        \n        # Decoder\n        self.up1 = nn.Conv2d(model_channels*4, model_channels, 3, padding=1)\n        self.up2 = nn.Conv2d(model_channels*2, in_channels, 3, padding=1)\n    \n    def forward(self, x, t):\n        # Get timestep embedding\n        t_emb = self.get_timestep_embedding(t, 128)\n        t_emb = self.time_embed(t_emb)\n        \n        # Encoder\n        h1 = self.down1(x)\n        h2 = self.down2(h1)\n        h2 = self.attn(h2)\n        \n        # Bottleneck (add time embedding)\n        h = self.mid(h2) + t_emb[..., None, None]\n        \n        # Decoder (with skip connections)\n        h = self.up1(torch.cat([h, h2], 1))\n        h = self.up2(torch.cat([h, h1], 1))\n        \n        return h\n```",
+    "level4_expert": "**Classifier-Free Guidance Implementation:**\n\n```python\nclass ConditionedDiffusion:\n    def __init__(self, model, clip_model):\n        self.model = model\n        self.clip = clip_model\n        self.null_embedding = torch.zeros(512)  # Unconditional\n    \n    @torch.no_grad()\n    def sample_cfg(self, prompt, guidance_scale=7.5, steps=50):\n        # Encode text\n        text_emb = self.clip.encode_text(prompt)\n        \n        # DDIM sampling (faster than DDPM)\n        x = torch.randn(1, 3, 512, 512)\n        timesteps = torch.linspace(999, 0, steps).long()\n        \n        for t in timesteps:\n            # Conditional prediction\n            noise_cond = self.model(x, t, text_emb)\n            \n            # Unconditional prediction\n            noise_uncond = self.model(x, t, self.null_embedding)\n            \n            # Classifier-free guidance\n            noise = noise_uncond + guidance_scale * (noise_cond - noise_uncond)\n            \n            # DDIM update\n            x = self.ddim_step(x, noise, t, timesteps)\n        \n        return x\n\n# Latent Diffusion (Stable Diffusion)\nclass LatentDiffusion:\n    def __init__(self, vae, unet, clip):\n        self.vae = vae  # AutoencoderKL\n        self.unet = unet\n        self.clip = clip\n    \n    def generate(self, prompt, height=512, width=512):\n        # Text embedding\n        text_emb = self.clip.encode_text(prompt)\n        \n        # Latent space (8× smaller)\n        latent_h, latent_w = height // 8, width // 8\n        latent = torch.randn(1, 4, latent_h, latent_w)\n        \n        # Diffusion in latent space (much faster!)\n        for t in reversed(range(50)):\n            noise = self.unet(latent, t, text_emb)\n            latent = self.denoise_step(latent, noise, t)\n        \n        # Decode to pixel space\n        image = self.vae.decode(latent)\n        return image\n```"
+  },
+  "whatIsIt": "Diffusion Models: Generative models via iterative denoising! Forward process: Clean image → gradually add Gaussian noise (1000 steps) → pure noise. Reverse process: Neural network learns to reverse. Start from noise → predict 'less noisy version' → iterate → clean image! Key: Markov chain (each step depends only on previous). Math: p(xₜ|xₜ₋₁) = N(√αₜ·xₜ₋₁, (1-αₜ)I). Training objective: Predict added noise ε. Architecture: U-Net with attention, timestep embedding, optional text conditioning (CLIP). Sampling: 50-1000 denoising steps. Classifier-Free Guidance (CFG): Amplify conditional vs unconditional prediction → better text alignment. Latent Diffusion: Work in VAE latent space (8× compression) → faster. State-of-the-art for image generation!",
+  "whyNeeded": "Why Diffusion > GANs? (1) Training Stability: GANs notoriously unstable (mode collapse, discriminator-generator balance). Diffusion: Just denoise! Simple, stable objective. (2) Quality: Photorealistic images (Stable Diffusion, DALL-E 2). (3) Mode Coverage: GANs miss modes (some image types). Diffusion: Better diversity. (4) Controllability: Text-to-image (conditioning), inpainting, editing. GANs harder to control. Applications: (1) Art Generation: Midjourney, Stable Diffusion XL. (2) Inpainting: Remove/add objects. (3) Super-resolution: Upscale images. (4) Image-to-image: Style transfer, editing. (5) Video generation: Extend to temporal dimension. Why slow? Iterative process (50-1000 steps vs GAN's 1 forward pass). Trade-off: Quality vs speed. Recent work: Faster samplers (DDIM, DPM-Solver). Latent diffusion: Speed up via smaller latent space. Revolutionary impact on generative AI!",
+  "realWorldAnalogy": "Diffusion = Sculptor chipping marble! Start: Marble block (random noise). Process: Gradually remove unnecessary parts (denoise). Each chip (denoising step): Reveal more of final sculpture. Sculptor's skill (trained model): Knows what to remove at each stage. Text prompt: Blueprint! 'Make a cat statue' guides which parts to keep/remove. Why better than painter (GAN)? Painter: One stroke → might fail, hard to fix. Sculptor: Iterative refinement, always can adjust. Training: Watch sculptor work backwards! Sculpture → add clay randomly → blob. Learn reverse. Speed trade-off: Painting (GAN) = instant. Sculpting (Diffusion) = 50 careful steps, but better quality! Stable Diffusion = Sculpting miniature (latent space) then enlarging → faster!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Forward: } q(x_t|x_{t-1}) = \\mathcal{N}(x_t; \\sqrt{1-\\beta_t}x_{t-1}, \\beta_t I)",
+      "\\text{Closed form: } x_t = \\sqrt{\\bar{\\alpha}_t}x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\epsilon, \\quad \\epsilon \\sim \\mathcal{N}(0,I)",
+      "\\text{Loss: } L = \\mathbb{E}_{x_0,\\epsilon,t}[||\\epsilon - \\epsilon_\\theta(x_t, t)||^2]",
+      "\\text{Reverse: } p_\\theta(x_{t-1}|x_t) = \\mathcal{N}(x_{t-1}; \\mu_\\theta(x_t,t), \\Sigma_\\theta(x_t,t))",
+      "\\text{CFG: } \\tilde{\\epsilon} = \\epsilon_{\\emptyset} + s \\cdot (\\epsilon_c - \\epsilon_{\\emptyset})"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Training:",
+      "1. Take clean image x₀",
+      "2. Sample random timestep t ~ Uniform(1, T)",
+      "3. Sample noise ε ~ N(0, I)",
+      "4. Create noisy image: xₜ = √(ᾱₜ)·x₀ + √(1-ᾱₜ)·ε",
+      "5. Predict noise: ε̂ = model(xₜ, t)",
+      "6. Loss: MSE(ε, ε̂)",
+      "7. Backprop, update model",
+      "Sampling:",
+      "1. Start: x_T ~ N(0, I)",
+      "2. For t = T down to 1:",
+      "3.   Predict noise: ε̂ = model(xₜ, t)",
+      "4.   Denoise: xₜ₋₁ = 1/√αₜ · (xₜ - ((1-αₜ)/√(1-ᾱₜ))·ε̂) + σₜ·z",
+      "5. Return: x₀"
+    ],
+    "complexity": "Training: O(T) per image (T timesteps). Sampling: O(T·model_forward). Model forward: U-Net O(H·W·C²). Typical: T=1000, H=W=64 (latent), 50-100 steps sampling. DDIM: Reduce steps to 50. Real-time: Not yet (vs GAN's instant)."
+  },
+  "prerequisites": [
+    "generative-adversarial-networks",
+    "autoencoders-vae",
+    "attention-mechanisms"
+  ],
+  "nextTopics": [
+    "video-generation",
+    "3d-generation"
+  ],
+  "relatedTopics": [
+    "generative-adversarial-networks",
+    "autoencoders-vae"
+  ],
+  "tags": [
+    "diffusion",
+    "generative",
+    "stable-diffusion",
+    "dall-e",
+    "text-to-image",
+    "denoising",
+    "latent-diffusion"
+  ],
+  "codeExamples": [
+    {
+      "title": "Forward Diffusion (Add Noise)",
+      "language": "python",
+      "code": "import torch\n\ndef forward_diffusion(x0, t, alphas_cumprod):\n    \"\"\"Add noise to x0 at timestep t\"\"\"\n    noise = torch.randn_like(x0)\n    sqrt_alpha = torch.sqrt(alphas_cumprod[t])\n    sqrt_one_minus = torch.sqrt(1 - alphas_cumprod[t])\n    \n    xt = sqrt_alpha * x0 + sqrt_one_minus * noise\n    return xt, noise\n\n# Example\nx0 = torch.randn(1, 3, 64, 64)  # Clean image\nbetas = torch.linspace(0.0001, 0.02, 1000)\nalphas_cumprod = torch.cumprod(1 - betas, 0)\n\nxt, noise = forward_diffusion(x0, t=500, alphas_cumprod=alphas_cumprod)\nprint(f'Added noise at t=500: {xt.shape}')",
+      "level": 1,
+      "explanation": "Forward Diffusion (Add Noise) code"
+    },
+    {
+      "title": "Training Loop",
+      "language": "python",
+      "code": "def train_diffusion(model, dataloader, timesteps=1000):\n    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)\n    betas = torch.linspace(1e-4, 0.02, timesteps)\n    alphas_cumprod = torch.cumprod(1 - betas, 0)\n    \n    for epoch in range(100):\n        for x0 in dataloader:\n            # Random timestep\n            t = torch.randint(0, timesteps, (x0.shape[0],))\n            \n            # Add noise\n            noise = torch.randn_like(x0)\n            sqrt_alpha = torch.sqrt(alphas_cumprod[t])[:, None, None, None]\n            sqrt_one_minus = torch.sqrt(1 - alphas_cumprod[t])[:, None, None, None]\n            xt = sqrt_alpha * x0 + sqrt_one_minus * noise\n            \n            # Predict noise\n            pred_noise = model(xt, t)\n            \n            # Loss\n            loss = nn.MSELoss()(noise, pred_noise)\n            \n            optimizer.zero_grad()\n            loss.backward()\n            optimizer.step()\n        \n        print(f'Epoch {epoch}, Loss: {loss.item():.4f}')",
+      "level": 2,
+      "explanation": "Training Loop code"
+    },
+    {
+      "title": "DDPM Sampling",
+      "language": "python",
+      "code": "@torch.no_grad()\ndef ddpm_sample(model, shape, timesteps=1000):\n    betas = torch.linspace(1e-4, 0.02, timesteps)\n    alphas = 1 - betas\n    alphas_cumprod = torch.cumprod(alphas, 0)\n    \n    # Start from noise\n    x = torch.randn(shape)\n    \n    for t in reversed(range(timesteps)):\n        # Predict noise\n        t_tensor = torch.full((shape[0],), t)\n        pred_noise = model(x, t_tensor)\n        \n        # Coefficients\n        alpha = alphas[t]\n        alpha_cumprod = alphas_cumprod[t]\n        beta = betas[t]\n        \n        # Denoise\n        if t > 0:\n            noise = torch.randn_like(x)\n        else:\n            noise = 0\n        \n        x = (1 / torch.sqrt(alpha)) * (\n            x - ((1 - alpha) / torch.sqrt(1 - alpha_cumprod)) * pred_noise\n        ) + torch.sqrt(beta) * noise\n    \n    return x\n\ngenerated = ddpm_sample(model, (4, 3, 64, 64))",
+      "level": 3,
+      "explanation": "DDPM Sampling code"
+    },
+    {
+      "title": "Classifier-Free Guidance",
+      "language": "python",
+      "code": "@torch.no_grad()\ndef sample_with_cfg(model, text_embedding, guidance_scale=7.5, steps=50):\n    \"\"\"Generate with text conditioning\"\"\"\n    null_emb = torch.zeros_like(text_embedding)  # Unconditional\n    x = torch.randn(1, 4, 64, 64)  # Latent\n    \n    timesteps = torch.linspace(999, 0, steps).long()\n    \n    for t in timesteps:\n        # Conditional\n        noise_cond = model(x, t, text_embedding)\n        \n        # Unconditional\n        noise_uncond = model(x, t, null_emb)\n        \n        # Guidance\n        noise = noise_uncond + guidance_scale * (noise_cond - noise_uncond)\n        \n        # Denoise\n        x = denoise_step(x, noise, t)\n    \n    return x\n\n# Usage\ntext_emb = clip_model.encode('A cat wearing sunglasses')\nimage = sample_with_cfg(model, text_emb, guidance_scale=7.5)",
+      "level": 4,
+      "explanation": "Classifier-Free Guidance code"
+    },
+    {
+      "title": "DDIM Sampling (Faster)",
+      "language": "python",
+      "code": "@torch.no_grad()\ndef ddim_sample(model, shape, steps=50):\n    \"\"\"DDIM: Deterministic, fewer steps\"\"\"\n    x = torch.randn(shape)\n    timesteps = torch.linspace(999, 0, steps).long()\n    \n    for i, t in enumerate(timesteps[:-1]):\n        pred_noise = model(x, t)\n        \n        # Predict x0\n        alpha_t = alphas_cumprod[t]\n        x0_pred = (x - torch.sqrt(1 - alpha_t) * pred_noise) / torch.sqrt(alpha_t)\n        \n        # Next timestep\n        t_next = timesteps[i + 1]\n        alpha_next = alphas_cumprod[t_next]\n        \n        # DDIM update (deterministic!)\n        x = torch.sqrt(alpha_next) * x0_pred + torch.sqrt(1 - alpha_next) * pred_noise\n    \n    return x\n\n# 50 steps vs 1000! Much faster\ngenerated = ddim_sample(model, (1, 3, 64, 64), steps=50)",
+      "level": 4,
+      "explanation": "DDIM Sampling (Faster) code"
+    },
+    {
+      "title": "Using Stable Diffusion",
+      "language": "python",
+      "code": "from diffusers import StableDiffusionPipeline\nimport torch\n\n# Load model\npipe = StableDiffusionPipeline.from_pretrained(\n    'stabilityai/stable-diffusion-2-1',\n    torch_dtype=torch.float16\n).to('cuda')\n\n# Generate\nprompt = 'A beautiful landscape with mountains and lake, sunset, photorealistic'\nimage = pipe(\n    prompt,\n    num_inference_steps=50,\n    guidance_scale=7.5,\n    height=512,\n    width=512\n).images[0]\n\nimage.save('generated.png')\nprint('Image generated!')",
+      "level": 2,
+      "explanation": "Using Stable Diffusion code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Diffusion models'in temel prensibi nedir?",
+      "options": [
+        "Discriminator ile adversarial training",
+        "Iteratively denoise: Noise → gradually remove → image",
+        "Autoencoder ile compression",
+        "Style transfer"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Diffusion: Iterative denoising process! Forward: Image → add noise gradually → pure noise. Reverse (generation): Noise → trained model removes noise step by step → image. Unlike GANs (1 step generation) or VAE (encode-decode). Key: Learn to reverse noise addition process. Training: Predict added noise at random timesteps. Sampling: Start from random noise, denoise T times."
+    },
+    {
+      "question": "Classifier-Free Guidance (CFG) ne işe yarar?",
+      "options": [
+        "Training speed artırır",
+        "Amplify conditional vs unconditional: Better text-image alignment",
+        "Model size küçültür",
+        "Sadece debugging için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "CFG: Guidance without classifier! Formula: ε̃ = ε_uncond + scale·(ε_cond - ε_uncond). Amplifies difference between conditional ('cat') and unconditional (empty) predictions. Effect: Stronger text alignment, more accurate to prompt. Scale 7-15 typical. Low (1-3): More creative, less accurate. High (15-20): Accurate but less diverse. Training: Randomly drop conditioning (50%) to learn both. Critical for text-to-image quality!"
+    },
+    {
+      "question": "Latent Diffusion (Stable Diffusion) neden daha hızlı?",
+      "options": [
+        "Daha az timesteps",
+        "Work in compressed latent space (8× smaller): Much faster!",
+        "Daha küçük model",
+        "GPU optimization"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Latent Diffusion: Diffusion in VAE latent space! Instead of 512×512 pixels → 64×64 latent (8× compression). Benefits: (1) 64× fewer pixels to process → much faster! (2) Similar quality. (3) Lower memory. Process: Image → VAE encode → latent → diffusion → VAE decode → image. Stable Diffusion = Latent Diffusion + CLIP text conditioning. Breakthrough for practical text-to-image!"
+    },
+    {
+      "question": "Diffusion vs GAN: En önemli avantaj?",
+      "options": [
+        "Hızlı generation",
+        "Training stability & mode coverage: More reliable, diverse",
+        "Daha küçük model",
+        "Real-time inference"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Diffusion > GAN: (1) Training Stability: GANs notoriously unstable (mode collapse, balance issues). Diffusion: Simple denoising objective, stable! (2) Mode Coverage: GANs miss some image types. Diffusion: Better diversity. (3) Quality: State-of-the-art (Stable Diffusion, DALL-E 2). Disadvantage: Speed (50-1000 steps vs GAN's 1). Trade-off: Quality & stability vs speed. Use case: When quality matters more than speed!"
+    },
+    {
+      "question": "DDIM vs DDPM sampling farkı nedir?",
+      "options": [
+        "Farklı loss function",
+        "DDIM: Deterministic, fewer steps (50 vs 1000), faster!",
+        "DDIM daha accurate",
+        "Sadece training için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "DDPM: Original sampling. Stochastic (random noise each step), needs ~1000 steps. DDIM: Deterministic sampling! Same noise → same image. Fewer steps (50) with similar quality. How: Directly predict x₀, then jump to next timestep (skip intermediate). Benefits: 20× faster, consistent outputs, can invert images. Use: Default in Stable Diffusion. DDPM: When you need stochasticity/exploration."
+    },
+    {
+      "question": "Text-to-image diffusion'da text nasıl kullanılır?",
+      "options": [
+        "Direct input to U-Net",
+        "CLIP text embedding → Cross-attention in U-Net: Conditions each denoising step",
+        "Separate text decoder",
+        "Post-processing"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Text Conditioning: (1) Encode text via CLIP → embedding vector. (2) U-Net has cross-attention layers: Image features attend to text embedding. (3) Each denoising step conditioned on text. (4) CFG amplifies text influence. Process: Text guides what to denoise into! 'Cat' → model removes noise to reveal cat features. Without text: Random generation. With text: Controlled generation. CLIP: Trained to align text-image → perfect for conditioning!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Diffusion Process",
+      "back": "**Forward:** Image → gradually add noise → pure noise\n\n**Reverse (Generate):**\nNoise → iteratively denoise → image\n\n**Key:** Learn to reverse noise!\n\n**Training:** Predict added noise\n**Sampling:** Start noise, denoise T times\n\nIterative refinement! 🎨"
+    },
+    {
+      "front": "DDPM vs DDIM",
+      "back": "**DDPM:**\n- Stochastic\n- ~1000 steps\n- Original\n\n**DDIM:**\n- Deterministic\n- ~50 steps (20× faster!)\n- Same quality\n- Default in SD\n\nSpeed without quality loss! ⚡"
+    },
+    {
+      "front": "Classifier-Free Guidance",
+      "back": "**Formula:**\nε̃ = ε_∅ + scale·(ε_cond - ε_∅)\n\n**Effect:**\nStronger text-image alignment\n\n**Scale:**\n- Low (3): Creative\n- High (15): Accurate\n\n**Default:** 7-7.5\n\nBetter prompt following! 🎯"
+    },
+    {
+      "front": "Latent Diffusion",
+      "back": "**Idea:** Diffusion in VAE latent\n\n**Flow:**\nImage → VAE → 64×64 latent\n→ Diffusion → VAE decode\n\n**Benefits:**\n- 64× faster\n- Lower memory\n- Same quality\n\n**Stable Diffusion = LD!** 🚀"
+    },
+    {
+      "front": "Why Diffusion > GAN?",
+      "back": "**Advantages:**\n✓ Training stability\n✓ Better mode coverage\n✓ Higher quality\n✓ Controllability\n\n**Disadvantage:**\n✗ Slower (50+ steps)\n\n**Trade-off:**\nQuality vs Speed\n\nState-of-the-art generation! 🏆"
+    },
+    {
+      "front": "Text Conditioning",
+      "back": "**Process:**\n1. Text → CLIP embedding\n2. U-Net cross-attention\n3. Guide each denoising step\n4. CFG amplifies\n\n**Effect:**\nText controls generation!\n\n'Cat' → Denoise toward cat\n\nCLIP alignment critical! 📝"
+    },
+    {
+      "front": "Training Objective",
+      "back": "**Goal:** Predict added noise\n\n**Loss:**\nL = ||ε - ε_θ(xₜ, t)||²\n\n**Process:**\n1. Sample t, add noise\n2. Model predicts ε\n3. MSE loss\n\nSimple, stable! ✅"
+    },
+    {
+      "front": "Real-World Models",
+      "back": "**Stable Diffusion:**\n- Open-source\n- Latent diffusion\n- Text-to-image\n\n**DALL-E 2:**\n- OpenAI\n- High quality\n\n**Midjourney:**\n- Commercial\n- Artistic\n\nAll use diffusion! 🎨"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Using too few sampling steps",
+      "why": "10-20 steps → blurry, low quality images. Model needs time to progressively refine! Each step adds details.",
+      "fix": "Use 50+ steps for quality. DDIM: 50 steps good balance. DDPM: 1000 steps. Trade-off: Quality vs speed. For fast preview: 25 steps OK. For final: 50-100 steps. Don't go below 20!"
+    },
+    {
+      "mistake": "Wrong CFG scale",
+      "why": "Scale = 1 → ignores text prompt! Scale = 30 → oversaturated, artifacts. Too much guidance = instability.",
+      "fix": "Optimal CFG scale: 7-7.5 for most prompts. Artistic: 5-7. Photorealistic: 7-9. Highly detailed: 9-12. Never >20. Experiment per use case. Scale affects: Text alignment (higher → more accurate), diversity (lower → more variety), artifacts (too high → issues)."
+    },
+    {
+      "mistake": "Not using latent diffusion for large images",
+      "why": "Diffusion on 512×512 pixels → very slow! High memory. Impractical for real-time.",
+      "fix": "Use Latent Diffusion (Stable Diffusion)! Diffusion in 64×64 latent space → 8× compression → 64× speed improvement. Same quality. Essential for practical applications. Pixel-space diffusion: Only for small images (<128×128) or research."
+    },
+    {
+      "mistake": "Training without variance schedule tuning",
+      "why": "Linear β schedule [1e-4, 0.02] → suboptimal for some data. Too much/little noise at timesteps.",
+      "fix": "Tune variance schedule! Linear: Good start. Cosine: Often better (stable late timesteps). Quadratic: Some cases. Monitor: Noise levels at different t. Too noisy early → increase β. Not noisy enough late → decrease. Critical for training stability and quality!"
+    },
+    {
+      "mistake": "Forgetting timestep embedding",
+      "why": "Model doesn't know which timestep → can't denoise appropriately! Different denoising needed at t=100 vs t=900.",
+      "fix": "Always include timestep embedding! Sinusoidal encoding (like Transformer). Inject into model (usually after attention). Formula: embed(t) = [sin(ωₖ·t), cos(ωₖ·t)] for k frequencies. Crucial: Model must know noise level to denoise correctly!"
+    },
+    {
+      "mistake": "No unconditional training for CFG",
+      "why": "Training only conditional → can't do CFG! Need unconditional ε_∅ for formula: ε̃ = ε_∅ + scale·(ε_c - ε_∅).",
+      "fix": "Train with random conditioning dropout! 10-20% of time: Replace text embedding with null/empty. Model learns both: Conditional (with text) and unconditional (without). During inference: Can do CFG. Essential for text-to-image quality!"
+    },
+    {
+      "mistake": "Using wrong noise schedule",
+      "why": "Too aggressive schedule → training unstable. Too gentle → slow convergence. Affects generation quality!",
+      "fix": "Start with proven schedules: Linear [1e-4, 0.02] (good default), Cosine (better for high-res), Sigmoid (some cases). Monitor: Loss curve, generated quality. Adjust: If unstable → reduce max β. If slow → increase. Don't create from scratch without reason!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "animation",
+      "title": "Forward & Reverse Diffusion Process",
+      "description": "Animation: Clean image → gradually add noise (1000 steps) → pure noise. Then reverse: Noise → iteratively denoise → clean image. Side-by-side visualization."
+    },
+    {
+      "type": "comparison",
+      "title": "DDPM vs DDIM vs GAN Speed-Quality",
+      "description": "Chart: X=Speed, Y=Quality. DDPM (slow, high quality), DDIM (medium, high quality), GAN (fast, good quality). Latent Diffusion: Sweet spot!"
+    },
+    {
+      "type": "interactive",
+      "title": "CFG Scale Effect",
+      "description": "Slider: CFG scale 1-20. Shows same prompt with different scales. Low: Creative, diverse. High: Accurate, less variety. Artifacts at extremes."
+    },
+    {
+      "type": "architecture",
+      "title": "Stable Diffusion Architecture",
+      "description": "Diagram: Text → CLIP → Embedding. Image → VAE → Latent. U-Net(latent, timestep, text) → Denoised. VAE decoder → Final image. Full pipeline!"
+    }
+  ],
+  "references": [
+    {
+      "title": "Denoising Diffusion Probabilistic Models",
+      "authors": "Ho et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/2006.11239",
+      "type": "paper"
+    },
+    {
+      "title": "Denoising Diffusion Implicit Models (DDIM)",
+      "authors": "Song et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/2010.02502",
+      "type": "paper"
+    },
+    {
+      "title": "High-Resolution Image Synthesis with Latent Diffusion Models",
+      "authors": "Rombach et al.",
+      "year": 2022,
+      "link": "https://arxiv.org/abs/2112.10752",
+      "type": "paper"
+    },
+    {
+      "title": "Classifier-Free Diffusion Guidance",
+      "authors": "Ho & Salimans",
+      "year": 2022,
+      "link": "https://arxiv.org/abs/2207.12598",
+      "type": "paper"
+    },
+    {
+      "title": "Stable Diffusion",
+      "authors": "Stability AI",
+      "year": 2023,
+      "link": "https://github.com/Stability-AI/stablediffusion",
+      "type": "code"
+    }
+  ]
+}

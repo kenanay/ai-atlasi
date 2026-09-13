@@ -1,0 +1,330 @@
+{
+  "id": "object-detection",
+  "title": "Object Detection (YOLO, Faster R-CNN)",
+  "category": "computer-vision",
+  "level": 3,
+  "estimatedTime": 80,
+  "description": "Object Detection: Görüntüde nesneleri tespit et ve sınıflandır! Bounding box + class prediction. R-CNN family (R-CNN, Fast R-CNN, Faster R-CNN), YOLO (You Only Look Once) - real-time detection!, RetinaNet (Focal Loss), modern detectors. Two-stage vs one-stage. Applications: Self-driving cars, surveillance, face detection. Anchor boxes, IoU, NMS, mAP metrics.",
+  "content": {
+    "level0_basic": "Object Detection: Görüntüde nesnelerin yerini (bounding box) VE ne olduğunu (class) bulma! Image Classification'dan fark: Sadece 'kedi var mı?' değil, 'nerede ve kaç tane kedi var?' sorusuna cevap. Output: Her nesne için [x, y, width, height, class, confidence]. Approaches: (1) Two-Stage (Faster R-CNN): Önce proposal'lar bul, sonra classify et. Accurate ama yavaş. (2) One-Stage (YOLO): Tek pass'ta hem lokasyon hem class. Hızlı! Real-time (30+ FPS). Key concepts: Bounding box regression, Anchor boxes (predefined sizes), IoU (Intersection over Union - overlap measure), NMS (Non-Maximum Suppression - duplicate removal), mAP (mean Average Precision - performance metric). Applications: Self-driving cars (pedestrians, cars detect), Surveillance (intrusion detection), Retail (product counting), Medical imaging (tumor detection). Modern detectors: YOLOv8, DETR (transformer-based), EfficientDet.",
+    "level1_beginner": "**Object Detection Problem:**\n\n```\nInput: Image (e.g., street scene)\nOutput: Multiple detections\n  Detection 1: [x=100, y=50, w=80, h=120, class='person', conf=0.95]\n  Detection 2: [x=300, y=100, w=150, h=200, class='car', conf=0.88]\n  Detection 3: [x=500, y=80, w=60, h=100, class='bike', conf=0.92]\n```\n\n**vs Image Classification:**\n\n```\nClassification:\n  Input: Image\n  Output: 'dog' (single label)\n  \nObject Detection:\n  Input: Image\n  Output: \n    - Dog at (x=100, y=200, w=150, h=180)\n    - Cat at (x=400, y=150, w=120, h=140)\n    - Person at (x=50, y=50, w=100, h=300)\n```\n\n**Two Major Approaches:**\n\n**1. Two-Stage Detectors (Faster R-CNN):**\n\n```\nStage 1: Region Proposal Network (RPN)\n  Input: Image\n  Output: ~2000 candidate boxes\n  \"Where might objects be?\"\n\nStage 2: Classification & Refinement\n  Input: Proposed regions\n  Output: Final detections with classes\n  \"What are these objects?\"\n\nAdvantages:\n  ✓ High accuracy\n  ✓ Better for small objects\n  \nDisadvantages:\n  ✗ Slow (~5-10 FPS)\n  ✗ Complex architecture\n```\n\n**2. One-Stage Detectors (YOLO):**\n\n```\nSingle Network:\n  Input: Image\n  Output: All detections at once!\n  \nProcess:\n  1. Divide image into grid (e.g., 13×13)\n  2. Each cell predicts:\n     - Multiple bounding boxes\n     - Class probabilities\n  3. Filter by confidence\n  4. Apply NMS\n\nAdvantages:\n  ✓ Very fast (30-100+ FPS)\n  ✓ Real-time capable\n  ✓ Simple architecture\n  \nDisadvantages:\n  ✗ Slightly lower accuracy\n  ✗ Struggles with small objects\n```\n\n**Key Concepts:**\n\n**Bounding Box:**\n```\n(x, y): Top-left corner coordinates\n(w, h): Width and height\n\nFormats:\n  - COCO: [x, y, w, h]\n  - Pascal VOC: [xmin, ymin, xmax, ymax]\n  - YOLO: [x_center, y_center, w, h] (normalized 0-1)\n```\n\n**IoU (Intersection over Union):**\n```\nIoU = Area of Overlap / Area of Union\n\nExample:\n  Ground truth box: [100, 100, 200, 200]\n  Predicted box:    [120, 120, 220, 220]\n  \n  Intersection: 80 × 80 = 6,400\n  Union: (200×200) + (200×200) - 6,400 = 73,600\n  IoU = 6,400 / 73,600 = 0.087\n\nThresholds:\n  IoU > 0.5: Good detection\n  IoU > 0.7: Great detection\n  IoU > 0.9: Excellent detection\n```\n\n**Anchor Boxes:**\n```\nPredefined box templates (different sizes/ratios):\n  Small:  [30×30, 40×60, 60×40]\n  Medium: [60×60, 80×120, 120×80]\n  Large:  [120×120, 160×240, 240×160]\n\nEach grid cell predicts offset from anchors:\n  Prediction = Anchor + Offset\n  \nBenefit: Easier to learn small adjustments\n         than absolute coordinates!\n```\n\n**NMS (Non-Maximum Suppression):**\n```\nProblem: Multiple detections for same object!\n  Detection 1: person, conf=0.95, box=[100,100,50,80]\n  Detection 2: person, conf=0.88, box=[105,98,48,82]\n  Detection 3: person, conf=0.92, box=[102,101,49,81]\n  → All same person!\n\nNMS Algorithm:\n  1. Sort detections by confidence (highest first)\n  2. Keep highest confidence detection\n  3. Remove all overlapping boxes (IoU > threshold)\n  4. Repeat for remaining boxes\n  \nResult: One detection per object!\n```\n\n**mAP (mean Average Precision):**\n```\nPerformance metric:\n  \n  For each class:\n    Compute Average Precision (AP)\n      - Precision-Recall curve\n      - Area under curve\n  \n  mAP = Average of all class APs\n  \nBenchmarks:\n  mAP@0.5: IoU threshold 0.5\n  mAP@[.5:.95]: Average over IoU 0.5 to 0.95\n  \nGood scores:\n  mAP > 50%: Decent detector\n  mAP > 70%: Good detector\n  mAP > 80%: State-of-art!\n```",
+    "level2_application": "**YOLO Architecture (YOLOv3 style):**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass YOLOv3(nn.Module):\n    def __init__(self, num_classes=80):\n        super().__init__()\n        self.num_classes = num_classes\n        \n        # Backbone: Feature extractor (Darknet-53)\n        self.backbone = self._make_darknet53()\n        \n        # Detection heads at 3 scales\n        self.detect_small = self._make_detection_head(256, num_classes)\n        self.detect_medium = self._make_detection_head(512, num_classes)\n        self.detect_large = self._make_detection_head(1024, num_classes)\n        \n        # 3 anchors per scale, 3 scales\n        self.num_anchors = 3\n    \n    def _make_detection_head(self, in_channels, num_classes):\n        # Each anchor predicts: [x, y, w, h, obj_conf, class_probs]\n        out_channels = self.num_anchors * (5 + num_classes)\n        \n        return nn.Sequential(\n            nn.Conv2d(in_channels, in_channels * 2, 3, padding=1),\n            nn.BatchNorm2d(in_channels * 2),\n            nn.LeakyReLU(0.1),\n            nn.Conv2d(in_channels * 2, out_channels, 1)\n        )\n    \n    def forward(self, x):\n        # x: (B, 3, 416, 416)\n        \n        # Backbone features at different scales\n        small_feat = self.backbone.layer1(x)   # (B, 256, 52, 52)\n        medium_feat = self.backbone.layer2(small_feat)  # (B, 512, 26, 26)\n        large_feat = self.backbone.layer3(medium_feat)  # (B, 1024, 13, 13)\n        \n        # Detections at 3 scales\n        small = self.detect_small(small_feat)   # Fine-grained (small objects)\n        medium = self.detect_medium(medium_feat)  # Medium objects\n        large = self.detect_large(large_feat)   # Coarse (large objects)\n        \n        return small, medium, large\n\n# Output format for each scale:\n# Shape: (B, num_anchors, grid_h, grid_w, 5+num_classes)\n# [tx, ty, tw, th, obj_conf, class1_prob, class2_prob, ...]\n```\n\n**YOLO Prediction Decoding:**\n\n```python\ndef decode_yolo_predictions(predictions, anchors, stride, num_classes):\n    \"\"\"\n    Convert YOLO network output to bounding boxes\n    \n    predictions: (B, num_anchors, grid_h, grid_w, 5+num_classes)\n    anchors: [(w1, h1), (w2, h2), (w3, h3)]\n    stride: downsampling factor (8, 16, or 32)\n    \"\"\"\n    B, num_anchors, grid_h, grid_w, _ = predictions.shape\n    \n    # Extract components\n    tx = torch.sigmoid(predictions[..., 0])  # x offset\n    ty = torch.sigmoid(predictions[..., 1])  # y offset\n    tw = predictions[..., 2]  # width\n    th = predictions[..., 3]  # height\n    obj_conf = torch.sigmoid(predictions[..., 4])  # objectness\n    class_probs = torch.sigmoid(predictions[..., 5:])  # class probs\n    \n    # Grid offsets\n    grid_x = torch.arange(grid_w).repeat(grid_h, 1).view(1, 1, grid_h, grid_w)\n    grid_y = torch.arange(grid_h).repeat(grid_w, 1).t().view(1, 1, grid_h, grid_w)\n    \n    # Anchor dimensions\n    anchor_w = torch.tensor([a[0] for a in anchors]).view(1, num_anchors, 1, 1)\n    anchor_h = torch.tensor([a[1] for a in anchors]).view(1, num_anchors, 1, 1)\n    \n    # Convert to absolute coordinates\n    bx = (tx + grid_x) * stride\n    by = (ty + grid_y) * stride\n    bw = torch.exp(tw) * anchor_w\n    bh = torch.exp(th) * anchor_h\n    \n    # Final boxes: [x, y, w, h, conf, class_probs]\n    boxes = torch.cat([\n        bx.unsqueeze(-1),\n        by.unsqueeze(-1),\n        bw.unsqueeze(-1),\n        bh.unsqueeze(-1),\n        obj_conf.unsqueeze(-1),\n        class_probs\n    ], dim=-1)\n    \n    return boxes\n```\n\n**Non-Maximum Suppression (NMS):**\n\n```python\ndef nms(boxes, scores, iou_threshold=0.5):\n    \"\"\"\n    Non-Maximum Suppression\n    \n    boxes: (N, 4) [x1, y1, x2, y2]\n    scores: (N,) confidence scores\n    \"\"\"\n    if len(boxes) == 0:\n        return []\n    \n    # Sort by score (highest first)\n    indices = torch.argsort(scores, descending=True)\n    \n    keep = []\n    while len(indices) > 0:\n        # Keep highest score box\n        current = indices[0]\n        keep.append(current.item())\n        \n        if len(indices) == 1:\n            break\n        \n        # Compute IoU with remaining boxes\n        current_box = boxes[current]\n        remaining_boxes = boxes[indices[1:]]\n        \n        ious = compute_iou(current_box.unsqueeze(0), remaining_boxes)\n        \n        # Keep only boxes with IoU < threshold\n        indices = indices[1:][ious < iou_threshold]\n    \n    return keep\n\ndef compute_iou(box1, boxes2):\n    \"\"\"Compute IoU between box1 and multiple boxes2\"\"\"\n    # box1: (1, 4), boxes2: (N, 4)\n    # Format: [x1, y1, x2, y2]\n    \n    # Intersection\n    x1 = torch.max(box1[:, 0], boxes2[:, 0])\n    y1 = torch.max(box1[:, 1], boxes2[:, 1])\n    x2 = torch.min(box1[:, 2], boxes2[:, 2])\n    y2 = torch.min(box1[:, 3], boxes2[:, 3])\n    \n    intersection = torch.clamp(x2 - x1, min=0) * torch.clamp(y2 - y1, min=0)\n    \n    # Areas\n    area1 = (box1[:, 2] - box1[:, 0]) * (box1[:, 3] - box1[:, 1])\n    area2 = (boxes2[:, 2] - boxes2[:, 0]) * (boxes2[:, 3] - boxes2[:, 1])\n    \n    # Union\n    union = area1 + area2 - intersection\n    \n    # IoU\n    iou = intersection / (union + 1e-6)\n    \n    return iou\n```",
+    "level3_advanced": "**Faster R-CNN Architecture:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torchvision\n\nclass FasterRCNN(nn.Module):\n    def __init__(self, num_classes=91, backbone='resnet50'):\n        super().__init__()\n        \n        # Backbone (feature extractor)\n        if backbone == 'resnet50':\n            resnet = torchvision.models.resnet50(pretrained=True)\n            self.backbone = nn.Sequential(*list(resnet.children())[:-2])\n            backbone_out_channels = 2048\n        \n        # Region Proposal Network (RPN)\n        self.rpn = RegionProposalNetwork(\n            in_channels=backbone_out_channels,\n            num_anchors=9  # 3 scales × 3 ratios\n        )\n        \n        # RoI Pooling\n        self.roi_pool = torchvision.ops.RoIPool(\n            output_size=(7, 7),\n            spatial_scale=1/16  # Downsample factor\n        )\n        \n        # Detection Head\n        self.fc1 = nn.Linear(backbone_out_channels * 7 * 7, 1024)\n        self.fc2 = nn.Linear(1024, 1024)\n        \n        # Classification branch\n        self.cls_score = nn.Linear(1024, num_classes)\n        \n        # Bounding box regression branch\n        self.bbox_pred = nn.Linear(1024, num_classes * 4)\n    \n    def forward(self, images, targets=None):\n        # Feature extraction\n        features = self.backbone(images)\n        \n        # Region proposals\n        proposals, rpn_scores = self.rpn(features)\n        \n        # RoI pooling\n        rois = self.roi_pool(features, proposals)\n        \n        # Flatten\n        rois = rois.view(rois.size(0), -1)\n        \n        # Detection head\n        x = torch.relu(self.fc1(rois))\n        x = torch.relu(self.fc2(x))\n        \n        # Classification\n        class_logits = self.cls_score(x)\n        \n        # Box regression\n        box_deltas = self.bbox_pred(x)\n        \n        if self.training:\n            return self.compute_loss(class_logits, box_deltas, targets)\n        else:\n            return self.post_process(class_logits, box_deltas, proposals)\n\nclass RegionProposalNetwork(nn.Module):\n    def __init__(self, in_channels, num_anchors=9):\n        super().__init__()\n        \n        # Shared conv\n        self.conv = nn.Conv2d(in_channels, 512, 3, padding=1)\n        \n        # Objectness score (is there an object?)\n        self.cls_logits = nn.Conv2d(512, num_anchors * 2, 1)\n        \n        # Box regression (where is the object?)\n        self.bbox_pred = nn.Conv2d(512, num_anchors * 4, 1)\n    \n    def forward(self, features):\n        x = torch.relu(self.conv(features))\n        \n        # Objectness\n        objectness = self.cls_logits(x)\n        \n        # Box deltas\n        box_deltas = self.bbox_pred(x)\n        \n        # Generate proposals\n        proposals = self.generate_proposals(box_deltas, objectness)\n        \n        return proposals, objectness\n```\n\n**Focal Loss (RetinaNet):**\n\n```python\nimport torch.nn.functional as F\n\ndef focal_loss(predictions, targets, alpha=0.25, gamma=2.0):\n    \"\"\"\n    Focal Loss: Addresses class imbalance in one-stage detectors\n    \n    FL(pt) = -α(1-pt)^γ log(pt)\n    \n    Focus on hard examples:\n      - Easy examples (pt → 1): Loss → 0\n      - Hard examples (pt → 0): Loss large\n    \"\"\"\n    # BCE loss\n    bce_loss = F.binary_cross_entropy_with_logits(\n        predictions, targets, reduction='none'\n    )\n    \n    # Probability\n    pt = torch.exp(-bce_loss)\n    \n    # Focal term\n    focal_term = (1 - pt) ** gamma\n    \n    # Alpha weighting\n    alpha_term = alpha * targets + (1 - alpha) * (1 - targets)\n    \n    # Final loss\n    loss = alpha_term * focal_term * bce_loss\n    \n    return loss.mean()\n```",
+    "level4_expert": "**YOLOv8 Modern Implementation:**\n\n```python\n# YOLOv8 uses anchor-free detection!\n# No predefined anchor boxes, direct prediction\n\nclass YOLOv8Head(nn.Module):\n    def __init__(self, num_classes=80, reg_max=16):\n        super().__init__()\n        self.num_classes = num_classes\n        self.reg_max = reg_max\n        \n        # DFL (Distribution Focal Loss) for boxes\n        self.box_predictor = nn.Conv2d(in_channels, 4 * reg_max, 1)\n        \n        # Classification\n        self.cls_predictor = nn.Conv2d(in_channels, num_classes, 1)\n    \n    def forward(self, x):\n        # Box prediction (distribution)\n        box_dist = self.box_predictor(x)\n        box_dist = box_dist.reshape(-1, 4, self.reg_max)\n        box_dist = F.softmax(box_dist, dim=-1)\n        \n        # Convert distribution to box\n        boxes = self.distribution_to_box(box_dist)\n        \n        # Classification\n        cls = self.cls_predictor(x)\n        \n        return boxes, cls\n\n# DETR (DEtection TRansformer)\nclass DETR(nn.Module):\n    def __init__(self, num_classes=91, num_queries=100):\n        super().__init__()\n        \n        # CNN backbone\n        self.backbone = resnet50()\n        \n        # Transformer\n        self.transformer = nn.Transformer(\n            d_model=256,\n            nhead=8,\n            num_encoder_layers=6,\n            num_decoder_layers=6\n        )\n        \n        # Learnable object queries\n        self.query_embed = nn.Embedding(num_queries, 256)\n        \n        # Prediction heads\n        self.class_embed = nn.Linear(256, num_classes + 1)\n        self.bbox_embed = nn.Linear(256, 4)\n    \n    def forward(self, x):\n        # Features\n        features = self.backbone(x)\n        \n        # Positional encoding\n        pos = self.position_encoding(features)\n        \n        # Transformer\n        hs = self.transformer(\n            self.flatten(features + pos),\n            self.query_embed.weight\n        )\n        \n        # Predictions\n        outputs_class = self.class_embed(hs)\n        outputs_coord = self.bbox_embed(hs).sigmoid()\n        \n        return outputs_class, outputs_coord\n```"
+  },
+  "whatIsIt": "Object Detection: Görüntüde nesnelerin yerini (bounding box coordinates) VE sınıfını bulma! Output: [(x,y,w,h, class, confidence), ...]. Two approaches: (1) Two-stage (Faster R-CNN): RPN proposals → classify/refine. Accurate (~40 mAP) ama yavaş (~5-10 FPS). (2) One-stage (YOLO): Tek network, tüm predictions at once. Hızlı (30-100+ FPS) ama slightly lower accuracy. Key: Anchor boxes (predefined templates), IoU (overlap measure), NMS (duplicate removal), mAP (performance metric). Modern: YOLOv8 (anchor-free), DETR (transformer), EfficientDet. Applications: Self-driving, surveillance, retail, medical.",
+  "whyNeeded": "Image classification sadece 'ne var?' sorusuna cevap - 'dog' veya 'cat'. But real-world'de: (1) Multiple objects (kedi + köpek + insan), (2) Locations matter (nerede?), (3) Counts matter (kaç tane?). Object Detection çözüyor! Self-driving cars: Pedestrian nerede? Car ne kadar uzakta? Traffic light detection. Surveillance: Intrusion detection, people counting. Retail: Product recognition, inventory. Medical: Tumor localization. Face detection first step for recognition. Industrial: Defect detection. Two-stage accurate ama yavaş (offline). One-stage fast, real-time apps (online). Modern detectors 50+ FPS, 80+ mAP - both speed AND accuracy!",
+  "realWorldAnalogy": "Object Detection security guard gibidir. Image Classification = guard sadece 'burada insan var mı?' check ediyor (yes/no). Object Detection = guard HER kişiyi takip ediyor: (1) Nerede? (x,y coordinates), (2) Kim? (employee, visitor, unauthorized), (3) Kaç kişi? (count), (4) Ne kadar güvenilir? (confidence). Two-stage detector = careful guard: Önce suspicious activity check (proposals), sonra detailed investigation (classify). Yavaş ama thorough. One-stage detector (YOLO) = quick guard: Tek bakışta (You Only Look Once!) tüm durumu assess eder. Çok hızlı, real-time reaction. Both valuable, different scenarios!",
+  "mathematics": {
+    "formulas": [
+      "\\text{IoU} = \\frac{\\text{Area of Overlap}}{\\text{Area of Union}} = \\frac{A \\cap B}{A \\cup B}",
+      "\\text{Objectness Loss} = -\\log p(\\text{object}) \\text{ if object, else } -\\log(1-p(\\text{object}))",
+      "\\text{Box Loss} = \\sum_{i \\in \\{x,y,w,h\\}} (\\hat{b}_i - b_i)^2",
+      "\\text{Focal Loss} = -\\alpha(1-p_t)^\\gamma \\log(p_t)",
+      "\\text{mAP} = \\frac{1}{N} \\sum_{i=1}^{N} AP_i",
+      "\\text{Anchor offset: } b_x = \\sigma(t_x) + c_x, \\quad b_w = p_w e^{t_w}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Preprocess image (resize to fixed size, normalize)",
+      "2. Forward pass through backbone (extract features)",
+      "3. Two-stage: RPN generates proposals → RoI pool → classify",
+      "   One-stage: Direct prediction from grid cells",
+      "4. Decode predictions (anchors + offsets → boxes)",
+      "5. Apply confidence threshold (remove low-confidence)",
+      "6. NMS (remove duplicate detections per class)",
+      "7. Post-process: scale boxes back to original image size",
+      "8. Output: List of [x, y, w, h, class, confidence]"
+    ],
+    "complexity": "Faster R-CNN: O(n²) for RPN + O(k) for RoI (k proposals). YOLO: O(n²) single pass, much faster. Inference: Faster R-CNN ~100-200ms, YOLO ~10-30ms per image."
+  },
+  "prerequisites": [
+    "convolutional-neural-networks",
+    "resnet-skip-connections",
+    "transfer-learning"
+  ],
+  "nextTopics": [
+    "image-segmentation",
+    "instance-segmentation",
+    "tracking"
+  ],
+  "relatedTopics": [
+    "cnn",
+    "transfer-learning",
+    "data-augmentation"
+  ],
+  "tags": [
+    "object-detection",
+    "yolo",
+    "faster-rcnn",
+    "computer-vision",
+    "bounding-box",
+    "anchor-boxes",
+    "nms",
+    "iou",
+    "map",
+    "real-time-detection"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Object Detection: Two-Stage vs One-Stage",
+      "code": "TWO-STAGE DETECTOR (Faster R-CNN):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nStage 1: Region Proposal Network\n  Image → CNN → RPN → ~2000 proposals\n  \"Where might objects be?\"\n  \nStage 2: Classification & Refinement\n  Proposals → RoI Pool → FC → Classes + Refined boxes\n  \"What are these objects exactly?\"\n  \nSpeed: ~5-10 FPS (slow)\nAccuracy: High (mAP ~40-45%)\nUse: Offline, accuracy-critical\n\nONE-STAGE DETECTOR (YOLO):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSingle Network:\n  Image → CNN → Predictions (all at once!)\n  \n  Grid: 13×13 cells\n  Each cell predicts:\n    - 3 bounding boxes\n    - Class probabilities\n    - Confidence scores\n  \nSpeed: 30-100+ FPS (fast!)\nAccuracy: Good (mAP ~35-40%)\nUse: Real-time applications\n\nKEY DIFFERENCE:\n  Faster R-CNN: Look carefully, twice\n  YOLO: You Only Look Once!",
+      "explanation": "Two-stage accurate ama yavaş. One-stage (YOLO) hızlı, real-time! Trade-off: accuracy vs speed."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "IoU & NMS Implementation",
+      "code": "import torch\n\ndef compute_iou(box1, box2):\n    \"\"\"Compute IoU between two boxes\n    Format: [x1, y1, x2, y2]\n    \"\"\"\n    # Intersection\n    x1 = max(box1[0], box2[0])\n    y1 = max(box1[1], box2[1])\n    x2 = min(box1[2], box2[2])\n    y2 = min(box1[3], box2[3])\n    \n    inter_area = max(0, x2 - x1) * max(0, y2 - y1)\n    \n    # Union\n    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])\n    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])\n    union_area = box1_area + box2_area - inter_area\n    \n    iou = inter_area / (union_area + 1e-6)\n    return iou\n\ndef nms(boxes, scores, iou_threshold=0.5):\n    \"\"\"Non-Maximum Suppression\"\"\"\n    indices = torch.argsort(scores, descending=True)\n    keep = []\n    \n    while len(indices) > 0:\n        current = indices[0]\n        keep.append(current.item())\n        \n        if len(indices) == 1:\n            break\n        \n        # Compute IoU with remaining\n        ious = torch.tensor([\n            compute_iou(boxes[current], boxes[i])\n            for i in indices[1:]\n        ])\n        \n        # Keep only low IoU boxes\n        indices = indices[1:][ious < iou_threshold]\n    \n    return keep\n\n# Example\nboxes = torch.tensor([\n    [100, 100, 200, 200],  # Box 1\n    [105, 98, 205, 202],   # Box 2 (overlaps with 1)\n    [300, 300, 400, 400],  # Box 3 (separate)\n])\nscores = torch.tensor([0.95, 0.88, 0.92])\n\nkeep = nms(boxes, scores, iou_threshold=0.5)\nprint(f\"Keep indices: {keep}\")  # [0, 2]\nprint(\"✓ Duplicate removed!\")",
+      "explanation": "IoU overlap ölçer. NMS duplicate detections remove eder. Essential post-processing!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "YOLO Detection Head",
+      "code": "import torch\nimport torch.nn as nn\n\nclass YOLODetectionHead(nn.Module):\n    def __init__(self, in_channels, num_classes=80, num_anchors=3):\n        super().__init__()\n        self.num_classes = num_classes\n        self.num_anchors = num_anchors\n        \n        # Each anchor predicts: [x, y, w, h, obj, class_probs]\n        out_channels = num_anchors * (5 + num_classes)\n        \n        self.conv = nn.Sequential(\n            nn.Conv2d(in_channels, in_channels * 2, 3, padding=1),\n            nn.BatchNorm2d(in_channels * 2),\n            nn.LeakyReLU(0.1),\n            nn.Conv2d(in_channels * 2, out_channels, 1)\n        )\n    \n    def forward(self, x):\n        # x: (B, C, H, W)\n        out = self.conv(x)\n        \n        # Reshape to (B, num_anchors, H, W, 5+num_classes)\n        B, _, H, W = out.shape\n        out = out.view(B, self.num_anchors, -1, H, W)\n        out = out.permute(0, 1, 3, 4, 2).contiguous()\n        \n        return out\n\n# Example\nhead = YOLODetectionHead(in_channels=256, num_classes=80)\nfeatures = torch.randn(2, 256, 13, 13)\noutput = head(features)\n\nprint(f\"Output shape: {output.shape}\")  # (2, 3, 13, 13, 85)\nprint(f\"Predictions per image: {3 * 13 * 13} = 507\")\nprint(\"✓ Each predicts [x,y,w,h,obj,80 classes]\")",
+      "explanation": "YOLO head: Grid cells × anchors → thousands of predictions! Filter by confidence + NMS."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Complete YOLO Inference",
+      "code": "def yolo_inference(model, image, conf_thresh=0.5, iou_thresh=0.5):\n    \"\"\"\n    Complete YOLO inference pipeline\n    \"\"\"\n    # 1. Preprocess\n    img_tensor = preprocess_image(image)  # (1, 3, 416, 416)\n    \n    # 2. Forward pass\n    with torch.no_grad():\n        predictions = model(img_tensor)  # Multiple scales\n    \n    # 3. Decode predictions\n    all_boxes = []\n    all_scores = []\n    all_classes = []\n    \n    for pred in predictions:\n        boxes, scores, classes = decode_predictions(pred)\n        all_boxes.append(boxes)\n        all_scores.append(scores)\n        all_classes.append(classes)\n    \n    # Concatenate all scales\n    boxes = torch.cat(all_boxes, dim=0)\n    scores = torch.cat(all_scores, dim=0)\n    classes = torch.cat(all_classes, dim=0)\n    \n    # 4. Filter by confidence\n    mask = scores > conf_thresh\n    boxes = boxes[mask]\n    scores = scores[mask]\n    classes = classes[mask]\n    \n    # 5. NMS per class\n    final_boxes = []\n    final_scores = []\n    final_classes = []\n    \n    for c in classes.unique():\n        c_mask = classes == c\n        c_boxes = boxes[c_mask]\n        c_scores = scores[c_mask]\n        \n        keep = nms(c_boxes, c_scores, iou_thresh)\n        \n        final_boxes.append(c_boxes[keep])\n        final_scores.append(c_scores[keep])\n        final_classes.append(torch.full((len(keep),), c))\n    \n    # 6. Combine results\n    detections = {\n        'boxes': torch.cat(final_boxes),\n        'scores': torch.cat(final_scores),\n        'classes': torch.cat(final_classes)\n    }\n    \n    return detections",
+      "explanation": "Complete pipeline: Preprocess → Forward → Decode → Filter → NMS → Output. Production-ready!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Faster R-CNN RPN",
+      "code": "import torch.nn as nn\n\nclass RegionProposalNetwork(nn.Module):\n    def __init__(self, in_channels=512, num_anchors=9):\n        super().__init__()\n        \n        # Shared conv\n        self.conv = nn.Conv2d(in_channels, 512, 3, padding=1)\n        \n        # Binary classification: object or not?\n        self.cls_logits = nn.Conv2d(512, num_anchors * 2, 1)\n        \n        # Bounding box regression\n        self.bbox_pred = nn.Conv2d(512, num_anchors * 4, 1)\n        \n    def forward(self, features):\n        # features: (B, 512, H, W)\n        x = F.relu(self.conv(features))\n        \n        # Objectness scores\n        objectness = self.cls_logits(x)\n        objectness = objectness.view(-1, 2)  # (B*H*W*num_anchors, 2)\n        \n        # Box deltas\n        box_deltas = self.bbox_pred(x)\n        box_deltas = box_deltas.view(-1, 4)  # (B*H*W*num_anchors, 4)\n        \n        # Generate proposals\n        proposals = self.generate_proposals(\n            box_deltas, objectness, features.shape\n        )\n        \n        # Top-K by objectness\n        scores = F.softmax(objectness, dim=1)[:, 1]\n        top_k = torch.topk(scores, k=2000)\n        proposals = proposals[top_k.indices]\n        \n        return proposals, objectness\n\n# RPN generates ~2000 proposals\n# Then RoI pooling + classification stage",
+      "explanation": "RPN: First stage of Faster R-CNN. Proposes regions, then stage 2 classifies. Two-stage detector!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Focal Loss (RetinaNet)",
+      "code": "import torch.nn.functional as F\n\ndef focal_loss(inputs, targets, alpha=0.25, gamma=2.0):\n    \"\"\"\n    Focal Loss for addressing class imbalance\n    \n    FL(pt) = -α(1-pt)^γ log(pt)\n    \n    Focus on hard examples!\n    Easy examples (high confidence): Low loss\n    Hard examples (low confidence): High loss\n    \"\"\"\n    # Compute BCE\n    bce_loss = F.binary_cross_entropy_with_logits(\n        inputs, targets, reduction='none'\n    )\n    \n    # Convert to probability\n    pt = torch.exp(-bce_loss)\n    \n    # Focal term: (1-pt)^gamma\n    # When pt→1 (easy): (1-pt)^γ→0, loss→0\n    # When pt→0 (hard): (1-pt)^γ→1, loss high\n    focal_term = (1 - pt) ** gamma\n    \n    # Alpha balancing\n    alpha_t = alpha * targets + (1 - alpha) * (1 - targets)\n    \n    # Final loss\n    loss = alpha_t * focal_term * bce_loss\n    \n    return loss.mean()\n\n# Example: Imbalanced dataset\n# 1000 background, 10 objects\npreds = torch.randn(1010, 80)  # Logits\ntargets = torch.zeros(1010, 80)\ntargets[:10] = 1  # Only 10 positive\n\nloss = focal_loss(preds, targets)\nprint(f\"Focal Loss: {loss.item():.4f}\")\nprint(\"✓ Focuses on hard examples!\")",
+      "explanation": "Focal Loss: Easy examples downweighted. Hard examples emphasized. Solves class imbalance! RetinaNet innovation."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Object Detection ve Image Classification arasındaki temel fark nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Hiç fark yok",
+        "Detection: Nesnelerin yerini (bounding box) VE sınıfını bulur. Classification: Sadece sınıf",
+        "Detection daha yavaş, o kadar",
+        "Classification daha accurate"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Detection outputs: [(x,y,w,h, class, confidence), ...]. Classification: Single class label. Detection harder: locate + classify!",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "IoU (Intersection over Union) ne ölçer?",
+      "type": "multiple-choice",
+      "options": [
+        "Model accuracy'sini",
+        "İki bounding box arasındaki overlap: Area of Overlap / Area of Union",
+        "Training speed'i",
+        "Class confidence'ı"
+      ],
+      "correctAnswer": 1,
+      "explanation": "IoU = Intersection / Union. IoU>0.5 good detection, IoU>0.7 great! Used for evaluation and NMS.",
+      "difficulty": 1
+    },
+    {
+      "id": "q3",
+      "question": "NMS (Non-Maximum Suppression) neden gerekli?",
+      "type": "multiple-choice",
+      "options": [
+        "Training'i hızlandırır",
+        "Aynı nesne için multiple duplicate detections remove eder",
+        "Accuracy'yi artırır",
+        "Memory'yi azaltır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Single object için 10+ detections olabilir! NMS: Highest confidence'ı keep et, overlapping ones remove et. Essential post-processing!",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Two-stage vs One-stage detectors trade-off'u nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Two-stage: Accurate ama slow. One-stage: Fast ama slightly lower accuracy",
+        "Hiç fark yok",
+        "One-stage her zaman better",
+        "Two-stage her zaman better"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Faster R-CNN (two-stage): ~40 mAP, ~5-10 FPS. YOLO (one-stage): ~35 mAP, 30-100+ FPS. Trade-off: accuracy vs speed!",
+      "difficulty": 2
+    },
+    {
+      "id": "q5",
+      "question": "Anchor boxes neden kullanılır?",
+      "type": "multiple-choice",
+      "options": [
+        "Memory save etmek için",
+        "Predefined templates, network learns offsets. Easier than absolute coords!",
+        "Training'i yavaşlatmak için",
+        "Gereksiz, modern detectors kullanmıyor"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Anchor boxes: Predefined sizes/ratios. Network predicts small adjustments (offsets). Easier optimization! Modern (YOLOv8) anchor-free.",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Focal Loss'un (RetinaNet) avantajı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Training'i hızlandırır",
+        "Easy examples downweight, hard examples emphasize. Class imbalance çözümü!",
+        "Sadece aesthetic",
+        "Overfitting önler"
+      ],
+      "correctAnswer": 1,
+      "explanation": "FL(pt) = -α(1-pt)^γ log(pt). Easy examples (pt→1): Loss→0. Hard examples (pt→0): Loss high. Addresses background/foreground imbalance!",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "Object Detection nedir?",
+      "back": "Görüntüde nesneleri:\n1. Lokalize et (bounding box)\n2. Sınıflandır (class)\n\nOutput:\n[(x,y,w,h, class, conf), ...]\n\nvs Classification:\n• Single label\n• No localization\n\nApplications:\n• Self-driving cars\n• Surveillance\n• Retail analytics\n• Medical imaging"
+    },
+    {
+      "id": "fc2",
+      "front": "Two-Stage Detectors?",
+      "back": "Faster R-CNN:\n\nStage 1: RPN\n• Region proposals\n• ~2000 candidates\n\nStage 2: Classify\n• RoI pooling\n• Classification + refine\n\nPros:\n✓ High accuracy\n✓ Good for small objects\n\nCons:\n✗ Slow (~5-10 FPS)\n\nUse: Offline, accuracy-critical"
+    },
+    {
+      "id": "fc3",
+      "front": "One-Stage Detectors?",
+      "back": "YOLO (You Only Look Once):\n\nSingle pass:\n• Grid cells\n• Multiple anchors per cell\n• Direct prediction\n\nPros:\n✓ Fast (30-100+ FPS)\n✓ Real-time\n✓ Simple\n\nCons:\n✗ Slightly lower accuracy\n\nUse: Real-time apps"
+    },
+    {
+      "id": "fc4",
+      "front": "IoU formula & meaning?",
+      "back": "IoU = Overlap / Union\n\nIoU = (A ∩ B) / (A ∪ B)\n\nThresholds:\n• IoU > 0.5: Good\n• IoU > 0.7: Great\n• IoU > 0.9: Excellent\n\nUses:\n1. Evaluation metric\n2. NMS threshold\n3. Proposal matching\n\nCritical for detection!"
+    },
+    {
+      "id": "fc5",
+      "front": "NMS Algorithm?",
+      "back": "Non-Maximum Suppression:\n\n1. Sort by confidence\n2. Keep highest\n3. Remove overlapping\n   (IoU > threshold)\n4. Repeat\n\nRemoves duplicates!\n\nBefore: 10+ detections\nAfter: 1 detection\n\nPer-class NMS:\nSeparate for each class\n\nThreshold: 0.5 typical"
+    },
+    {
+      "id": "fc6",
+      "front": "Anchor Boxes?",
+      "back": "Predefined templates:\n\nSizes:\n• Small: 30×30\n• Medium: 60×60\n• Large: 120×120\n\nRatios:\n• 1:1 (square)\n• 1:2 (tall)\n• 2:1 (wide)\n\nPrediction:\nAnchor + Offset\n\nBenefit:\nEasier learning!\n\nModern: Anchor-free\n(YOLOv8, FCOS)"
+    },
+    {
+      "id": "fc7",
+      "front": "mAP Metric?",
+      "back": "mean Average Precision:\n\nPer class:\n1. Precision-Recall curve\n2. Area under curve (AP)\n\nmAP = Average all classes\n\nVariants:\n• mAP@0.5: IoU threshold\n• mAP@[.5:.95]: Range\n\nGood scores:\n• 50%+: Decent\n• 70%+: Good\n• 80%+: State-of-art!\n\nStandard evaluation"
+    },
+    {
+      "id": "fc8",
+      "front": "Focal Loss?",
+      "back": "RetinaNet innovation:\n\nFL(pt) = -α(1-pt)^γ log(pt)\n\nγ=2, α=0.25 typical\n\nEffect:\n• Easy (pt→1): Loss→0\n• Hard (pt→0): Loss↑\n\nProblem solved:\nClass imbalance!\n(1000 bg, 10 fg)\n\nDownweight easy examples\nFocus on hard ones!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "NMS yapmayı unutmak",
+      "why": "Single object için 10-50 duplicate detections! Görsel olarak messy, downstream tasks'lerde problem.",
+      "fix": "MUTLAKA NMS apply et! Per-class NMS: Her class için ayrı. IoU threshold 0.5 typical. torchvision.ops.nms() veya custom implementation."
+    },
+    {
+      "mistake": "Confidence threshold çok high/low",
+      "why": "Too high (0.9): Many objects missed! Too low (0.1): Too many false positives, NMS slow.",
+      "fix": "Start 0.5, tune based on application. Precision-critical: 0.7+. Recall-critical: 0.3-0.4. Visualize detections, iterate!"
+    },
+    {
+      "mistake": "IoU threshold mAP'te yanlış anlamak",
+      "why": "mAP@0.5 ≠ mAP@0.75! 0.5 loose (easier), 0.75 strict. COCO uses mAP@[.5:.95] (average 0.5 to 0.95).",
+      "fix": "Report both mAP@0.5 and mAP@0.5:0.95! Compare with same metric. Know which benchmark (COCO, Pascal VOC) using!"
+    },
+    {
+      "mistake": "Anchor boxes dataset'e uygunsuz",
+      "why": "Default anchors ImageNet için. Farklı dataset (medical, satellite): Object sizes çok farklı! Poor anchor match → low recall.",
+      "fix": "K-means clustering on your dataset boxes! Compute optimal anchor sizes/ratios. YOLOv5/v8: Auto anchor check, optimize if mismatch."
+    },
+    {
+      "mistake": "Input resolution'ı training vs inference'da farklı",
+      "why": "Train: 416×416. Inference: 608×608. Anchor scales mismatch, performance drop! Bounding box coords wrong scale.",
+      "fix": "SAME resolution train and inference! Or multi-scale training (320, 416, 512, 608). Test time: Use trained resolution for best results."
+    },
+    {
+      "mistake": "Class imbalance'ı ignore etmek",
+      "why": "1000 background boxes, 10 object boxes. Standard loss: Background dominates, model learns 'everything is background'!",
+      "fix": "Focal Loss (RetinaNet)! Or online hard example mining (OHEM). Balance positive/negative samples. Adjust loss weights per class."
+    },
+    {
+      "mistake": "Two-stage detector real-time app'te kullanmak",
+      "why": "Faster R-CNN ~100-200ms per image. 30 FPS için 33ms gerekli! Real-time impossible.",
+      "fix": "Real-time apps: One-stage (YOLO, SSD, EfficientDet). Offline/accuracy-critical: Faster R-CNN OK. Know your requirements!"
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "detection-demo",
+      "type": "interactive",
+      "title": "Live Object Detection Demo",
+      "description": "Upload image, see detections with bounding boxes, classes, confidence scores."
+    },
+    {
+      "id": "nms-visualization",
+      "type": "animation",
+      "title": "NMS Process",
+      "description": "Visualize how NMS removes duplicate detections step by step."
+    },
+    {
+      "id": "anchor-boxes",
+      "type": "diagram",
+      "title": "Anchor Box Mechanism",
+      "description": "Show predefined anchors and how offsets are predicted."
+    },
+    {
+      "id": "two-stage-pipeline",
+      "type": "diagram",
+      "title": "Faster R-CNN Pipeline",
+      "description": "RPN → RoI Pooling → Classification flow visualization."
+    }
+  ],
+  "references": [
+    {
+      "title": "Faster R-CNN: Towards Real-Time Object Detection",
+      "url": "https://arxiv.org/abs/1506.01497",
+      "type": "paper",
+      "author": "Ren et al., 2015"
+    },
+    {
+      "title": "You Only Look Once (YOLO)",
+      "url": "https://arxiv.org/abs/1506.02640",
+      "type": "paper",
+      "author": "Redmon et al., 2015"
+    },
+    {
+      "title": "Focal Loss for Dense Object Detection (RetinaNet)",
+      "url": "https://arxiv.org/abs/1708.02002",
+      "type": "paper",
+      "author": "Lin et al., 2017"
+    },
+    {
+      "title": "YOLOv3: An Incremental Improvement",
+      "url": "https://arxiv.org/abs/1804.02767",
+      "type": "paper",
+      "author": "Redmon & Farhadi, 2018"
+    }
+  ]
+}

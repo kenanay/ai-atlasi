@@ -1,0 +1,340 @@
+{
+  "id": "regularization",
+  "title": "Regularization Techniques",
+  "category": "optimization",
+  "level": 2,
+  "estimatedTime": 50,
+  "description": "Overfitting'i önleme teknikleri: L1/L2 regularization, Dropout, Early stopping, Data augmentation, Batch normalization. Model generalization için gerekli!",
+  "content": {
+    "level0_basic": "Regularization, overfitting'i önleyen tekniklerdir. Overfitting: Model training data'yı ezberliyor, test'te kötü! Training accuracy %99, test accuracy %60 → Overfitting var. Regularization bunu çözer: (1) L2 (Weight decay): Weights'i küçük tut, (2) Dropout: Training'de random nöronları kapat, (3) Early stopping: Validation loss artınca dur, (4) Data augmentation: Daha fazla training data yarat (flip, rotate, crop), (5) Batch Normalization: Normalize eder, regularization effect'i var. Hangisini kullan? Hepsini! Modern training: L2 + Dropout + Data augmentation + Early stopping. Balance: Too much regularization → Underfitting, too little → Overfitting.",
+    "level1_beginner": "**Overfitting vs Underfitting:**\n\n```\nUnderfitting:\n  Train accuracy: Düşük (60%)\n  Test accuracy: Düşük (58%)\n  Problem: Model yeterince karmaşık değil\n  Çözüm: Bigger model, more epochs, less regularization\n\nGood Fit:\n  Train accuracy: Yüksek (95%)\n  Test accuracy: Yüksek (93%)\n  Perfect! Small gap is OK.\n\nOverfitting:\n  Train accuracy: Çok yüksek (99%)\n  Test accuracy: Düşük (70%)\n  Problem: Model ezberliyor, generalize edemiyor\n  Çözüm: REGULARIZATION!\n```\n\n**Major Regularization Techniques:**\n\n**1. L2 Regularization (Weight Decay):**\n```\nLoss = Original Loss + λ × Σ(weights²)\n```\nWeights'i küçük tutmaya zorla. Büyük weights penalty alır.\nλ (lambda): Regularization strength (0.01, 0.001 tipik)\n\n**2. L1 Regularization:**\n```\nLoss = Original Loss + λ × Σ|weights|\n```\nSparsity yaratır: Bazı weights tam 0 olur (feature selection!).\n\n**3. Dropout:**\nTraining'de random nöronları kapat (p=0.5):\n- Her forward pass'te farklı nöronlar kapalı\n- Network ensemble gibi davranır\n- Inference'da tüm nöronlar aktif\n\n**4. Early Stopping:**\nValidation loss artmaya başlayınca dur!\n```\nEpoch 1: val_loss = 0.5\nEpoch 2: val_loss = 0.3\nEpoch 3: val_loss = 0.25\nEpoch 4: val_loss = 0.26 ← Start overfitting\nEpoch 5: val_loss = 0.28\n→ Stop at epoch 3, use those weights!\n```\n\n**5. Data Augmentation:**\nOrijinal data'dan yeni örnekler yarat:\n- Images: Flip, rotate, crop, color jitter\n- Text: Synonym replacement, back-translation\n- Audio: Time stretch, pitch shift\n\nDataset effectively 10x büyür!\n\n**6. Batch Normalization:**\nPrimary amacı normalization ama regularization effect'i var:\n- Mini-batch noise regularization gibi\n- Dropout ile benzer etki",
+    "level2_application": "**PyTorch Regularization:**\n\n```python\nimport torch.nn as nn\nimport torch.optim as optim\n\n# 1. L2 Regularization (Weight Decay)\noptimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)\n# weight_decay = λ (regularization strength)\n\n# 2. L1 Regularization (Manual)\nloss = criterion(output, target)\nl1_lambda = 0.001\nl1_norm = sum(p.abs().sum() for p in model.parameters())\nloss = loss + l1_lambda * l1_norm\n\n# 3. Dropout\nmodel = nn.Sequential(\n    nn.Linear(784, 256),\n    nn.ReLU(),\n    nn.Dropout(0.5),  # 50% neurons dropped\n    nn.Linear(256, 10)\n)\n\n# 4. Early Stopping\nbest_val_loss = float('inf')\npatience = 10\npatience_counter = 0\n\nfor epoch in range(max_epochs):\n    train()\n    val_loss = validate()\n    \n    if val_loss < best_val_loss:\n        best_val_loss = val_loss\n        torch.save(model.state_dict(), 'best_model.pth')\n        patience_counter = 0\n    else:\n        patience_counter += 1\n        if patience_counter >= patience:\n            print(\"Early stopping!\")\n            break\n\n# 5. Data Augmentation (torchvision)\nfrom torchvision import transforms\n\ntransform = transforms.Compose([\n    transforms.RandomHorizontalFlip(),\n    transforms.RandomRotation(10),\n    transforms.ColorJitter(brightness=0.2, contrast=0.2),\n    transforms.RandomCrop(32, padding=4),\n    transforms.ToTensor(),\n    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))\n])\n```\n\n**Dropout Best Practices:**\n```python\n# Training mode: Dropout active\nmodel.train()\noutput = model(x)  # Random neurons dropped\n\n# Eval mode: Dropout inactive\nmodel.eval()\nwith torch.no_grad():\n    output = model(x)  # All neurons active\n```\n\n**When to Use Which:**\n\n- **L2 (Weight Decay):** Always! Default 0.01, tune if needed\n- **Dropout:** Dense layers'da (0.5), CNN'de daha az (0.2-0.3)\n- **Early Stopping:** Always monitor! Patience=10-20 epoch\n- **Data Augmentation:** Computer vision'da must! NLP'de dikkatli\n- **Batch Norm:** Modern networks'te standard\n- **L1:** Feature selection istiyorsan (sparse weights)",
+    "level3_advanced": "**Mathematiksel Formülasyonlar:**\n\n**L2 Regularization (Ridge):**\n$$L(\\theta) = L_0(\\theta) + \\lambda \\sum_{i} \\theta_i^2$$\n\nGradient:\n$$\\frac{\\partial L}{\\partial \\theta_i} = \\frac{\\partial L_0}{\\partial \\theta_i} + 2\\lambda \\theta_i$$\n\nUpdate:\n$$\\theta_i \\leftarrow \\theta_i - \\alpha(\\frac{\\partial L_0}{\\partial \\theta_i} + 2\\lambda \\theta_i)$$\n$$= (1 - 2\\alpha\\lambda)\\theta_i - \\alpha\\frac{\\partial L_0}{\\partial \\theta_i}$$\n\n→ Weights decay towards zero!\n\n**L1 Regularization (Lasso):**\n$$L(\\theta) = L_0(\\theta) + \\lambda \\sum_{i} |\\theta_i|$$\n\nGradient (subgradient):\n$$\\frac{\\partial L}{\\partial \\theta_i} = \\frac{\\partial L_0}{\\partial \\theta_i} + \\lambda \\cdot \\text{sign}(\\theta_i)$$\n\nSparsity: Bazı weights tam 0 olur!\n\n**Elastic Net (L1 + L2):**\n$$L(\\theta) = L_0(\\theta) + \\lambda_1 \\sum_{i} |\\theta_i| + \\lambda_2 \\sum_{i} \\theta_i^2$$\n\n**Dropout:**\n\nTraining:\n$$y = \\text{Dropout}(Wx + b, p)$$\n$$= (Wx + b) \\odot m, \\quad m_i \\sim \\text{Bernoulli}(1-p)$$\n\nInference (scale correction):\n$$y = (1-p) \\cdot (Wx + b)$$\n\nYa da inverted dropout (modern):\n$$y_{train} = \\frac{1}{1-p}(Wx + b) \\odot m$$\n$$y_{test} = Wx + b$$\n\n**DropConnect:**\nNöronları değil, weights'leri drop et:\n$$y = (W \\odot M)x + b, \\quad M_{ij} \\sim \\text{Bernoulli}(1-p)$$\n\n**Label Smoothing:**\nOne-hot yerine soft labels:\n$$y_{smooth} = (1 - \\epsilon)y + \\frac{\\epsilon}{K}$$\n\nK: number of classes, ε: smoothing factor (0.1 tipik)\n\n**Mixup:**\nİki örneği karıştır:\n$$\\tilde{x} = \\lambda x_i + (1-\\lambda)x_j$$\n$$\\tilde{y} = \\lambda y_i + (1-\\lambda)y_j$$\n\n$\\lambda \\sim \\text{Beta}(\\alpha, \\alpha)$, tipik $\\alpha=0.2$\n\n**Cutout (Image Augmentation):**\nRandom rectangles'ı mask'le:\n$$x_{cutout}[i:i+h, j:j+w] = 0$$\n\n**DropBlock (CNN için):**\nContiguous regions drop et:\n- Dropout: Random pixels\n- DropBlock: Random blocks (more effective for CNNs!)",
+    "level4_expert": "**Advanced Regularization Techniques:**\n\n**1. Spectral Normalization (GANs):**\nWeights'i spectral norm ile normalize et:\n$$\\bar{W} = \\frac{W}{\\sigma(W)}$$\n\n$\\sigma(W)$: Largest singular value\n\n```python\nfrom torch.nn.utils import spectral_norm\n\nlayer = spectral_norm(nn.Linear(256, 256))\n```\n\n**2. Gradient Penalty (Wasserstein GAN):**\n$$\\lambda \\mathbb{E}_{\\hat{x}}[(||\\nabla_{\\hat{x}} D(\\hat{x})||_2 - 1)^2]$$\n\n**3. Manifold Mixup:**\nHidden representations'ı mix et:\n$$h_{mixed} = \\lambda h_i + (1-\\lambda)h_j$$\n\n**4. CutMix:**\nMixup + Cutout kombinasyonu:\n- Patch cut from image j\n- Paste to image i\n- Labels: Area ratio'ya göre mix\n\n**5. Stochastic Depth:**\nRandom layers'ı skip et:\n```python\nif self.training and random.random() < drop_prob:\n    return x  # Skip this layer!\nelse:\n    return x + self.layer(x)\n```\n\n**6. Shake-Shake Regularization:**\nMultiple branches'ı random weights ile mix:\n$$x_{forward} = \\alpha x_1 + (1-\\alpha)x_2$$\n$$x_{backward} = \\beta x_1 + (1-\\beta)x_2$$\n\n$\\alpha, \\beta$ random!\n\n**7. AutoAugment:**\nReinforcement learning ile optimal augmentation policy bul.\n\n**8. Consistency Regularization (Semi-supervised):**\n$$L_{consistency} = ||f(x) - f(\\text{augment}(x))||^2$$\n\nModel augmented ve non-augmented'a aynı output vermeli!\n\n**Production Regularization Stack:**\n\n```python\nclass ProductionModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        \n        # Architecture with regularization\n        self.features = nn.Sequential(\n            nn.Linear(784, 512),\n            nn.BatchNorm1d(512),  # BN regularization\n            nn.ReLU(),\n            nn.Dropout(0.5),  # Dropout\n            \n            nn.Linear(512, 256),\n            nn.BatchNorm1d(256),\n            nn.ReLU(),\n            nn.Dropout(0.3),\n            \n            nn.Linear(256, 10)\n        )\n    \n    def forward(self, x):\n        return self.features(x)\n\n# Training with multiple regularization\nmodel = ProductionModel()\n\n# L2 regularization\noptimizer = torch.optim.AdamW(\n    model.parameters(), \n    lr=0.001, \n    weight_decay=0.01  # L2\n)\n\n# Label smoothing\ncriterion = nn.CrossEntropyLoss(label_smoothing=0.1)\n\n# Data augmentation\ntransform = transforms.Compose([\n    transforms.RandomHorizontalFlip(),\n    transforms.RandomRotation(15),\n    transforms.ColorJitter(0.2, 0.2),\n    transforms.ToTensor()\n])\n\n# Early stopping\nearly_stopping = EarlyStopping(patience=15, delta=0.001)\n\n# Mixup (optional)\nalpha = 0.2\nlam = np.random.beta(alpha, alpha)\n```\n\n**Regularization Strength Tuning:**\n\nGrid search:\n```python\nweight_decays = [0, 0.0001, 0.001, 0.01, 0.1]\ndropout_rates = [0, 0.2, 0.5, 0.7]\n\nfor wd in weight_decays:\n    for dr in dropout_rates:\n        model = create_model(dropout=dr)\n        optimizer = optim.Adam(model.parameters(), weight_decay=wd)\n        val_acc = train_and_evaluate(model, optimizer)\n        # Track best combination\n```"
+  },
+  "whatIsIt": "Regularization, overfitting'i önleyen ve model generalization'ını artıran tekniklerdir. Model training data'yı ezberlemek yerine pattern'leri öğrenmeli! Major techniques: (1) L1/L2 regularization (weights'i penalty'le), (2) Dropout (random nöronları kapat), (3) Early stopping (val loss artınca dur), (4) Data augmentation (daha fazla data yarat), (5) Batch normalization (normalize et). Modern training hepsini combine eder. Balance gerekli: Too much → underfitting, too little → overfitting.",
+  "whyNeeded": "Overfitting büyük problem! Model training set'i ezberlemiş, test'te kötü. Train acc %99, test acc %60 → Kullanılamaz! Özellikle: (1) Limited data'da, (2) Complex model'lerde, (3) Noisy data'da. Regularization generalization'ı zorlar: Model specific examples'ı değil, general pattern'leri öğrenmeli. L2 weights'i küçük tutar, dropout ensemble effect verir, data augmentation effective dataset size'ı artırır. Modern deep learning regularization olmadan impossible! GPT, ResNet hepsi heavy regularization kullanır.",
+  "realWorldAnalogy": "Regularization sınavda kopya çekmeyi engellemek gibidir. Overfitting = Öğrenci tüm sınav sorularını ezber yapmış (training data), yeni soruya cevap veremiyor (test data)! Regularization: (1) L2 = Çok detaylı ezber yapma (weights büyümesin), genel kavramları öğren. (2) Dropout = Her seferinde farklı arkadaşlarla çalış (nöronlar), tek başına da düşünebilmelisin. (3) Early stopping = Fazla ezber yapma, yeter! (4) Data augmentation = Farklı kaynaklardan çalış, çeşitli örnekler gör. Sonuç: Gerçek öğrenme, ezber değil!",
+  "mathematics": {
+    "formulas": [
+      "\\text{L2: } L(\\theta) = L_0(\\theta) + \\lambda \\sum_i \\theta_i^2",
+      "\\text{L1: } L(\\theta) = L_0(\\theta) + \\lambda \\sum_i |\\theta_i|",
+      "\\text{Elastic Net: } L(\\theta) = L_0 + \\lambda_1 \\sum_i |\\theta_i| + \\lambda_2 \\sum_i \\theta_i^2",
+      "\\text{Dropout: } y = (Wx+b) \\odot m, \\quad m_i \\sim \\text{Bernoulli}(1-p)",
+      "\\text{Label Smoothing: } y_{smooth} = (1-\\epsilon)y + \\frac{\\epsilon}{K}",
+      "\\text{Mixup: } \\tilde{x} = \\lambda x_i + (1-\\lambda)x_j"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Detect Overfitting: Train acc >> Test acc → Problem!",
+      "2. Apply Regularization:",
+      "   a. L2: optimizer = Adam(..., weight_decay=0.01)",
+      "   b. Dropout: Add nn.Dropout(0.5) after activations",
+      "   c. Data Augmentation: RandomFlip, Rotate, Crop",
+      "   d. Batch Normalization: Add nn.BatchNorm layers",
+      "3. Early Stopping: Monitor validation loss, save best model",
+      "4. Tune Regularization Strength:",
+      "   - Start λ=0.01 for L2",
+      "   - Start p=0.5 for Dropout",
+      "   - Grid search if needed",
+      "5. Balance: Too much regularization → Underfitting",
+      "6. Validate: Check train/test gap reduced"
+    ],
+    "complexity": "L2/L1: O(P) extra computation (P: parameters). Dropout: No extra compute (just masking). Data augmentation: O(N) preprocessing. Overall: Minimal overhead!"
+  },
+  "prerequisites": [
+    "neural-networks",
+    "gradient-descent",
+    "backpropagation"
+  ],
+  "nextTopics": [
+    "batch-normalization",
+    "data-augmentation-advanced",
+    "transfer-learning",
+    "ensemble-methods"
+  ],
+  "relatedTopics": [
+    "optimizers",
+    "overfitting-underfitting",
+    "cross-validation"
+  ],
+  "tags": [
+    "regularization",
+    "overfitting",
+    "dropout",
+    "l2-regularization",
+    "weight-decay",
+    "early-stopping",
+    "data-augmentation",
+    "generalization",
+    "pytorch"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Overfitting vs Regularization",
+      "code": "OVERFITTING (Problem):\n━━━━━━━━━━━━━━━━━━━━━\nEpoch  Train Acc  Test Acc   Gap\n  1      60%        58%       2%   ✓ Good start\n  5      85%        82%       3%   ✓ Still good\n 10      95%        88%       7%   ⚠ Gap growing\n 15      98%        85%      13%   ❌ Overfitting!\n 20      99.5%      82%      17%   ❌ Worse!\n\nModel ezberliyor, generalize edemiyor!\n\nWITH REGULARIZATION (Solution):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTechniques: L2 + Dropout + Data Aug + Early Stop\n\nEpoch  Train Acc  Test Acc   Gap\n  1      58%        57%       1%\n  5      82%        80%       2%\n 10      91%        89%       2%   ✓ Small gap!\n 15      93%        91%       2%   ✓ Stable\n 20      94%        92%       2%   ✓ Great!\n\nModel pattern'leri öğreniyor, generalize ediyor!\n\nREGULARIZATION TOOLBOX:\n✓ L2 (Weight Decay): Weights'i küçük tut\n✓ Dropout: Random nöronları kapat\n✓ Early Stopping: Val loss artınca dur\n✓ Data Augmentation: Daha fazla data\n✓ Batch Normalization: Normalize + regularize",
+      "explanation": "Overfitting'in teşhisi: Train-test gap! Regularization gap'i küçültür, model generalize eder. Modern training hepsini combine eder."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "L1 vs L2 Regularization",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Simple model\nclass SimpleModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc = nn.Linear(10, 1)\n    \n    def forward(self, x):\n        return self.fc(x)\n\ndef train_with_regularization(reg_type='none', lambda_reg=0.01, num_epochs=100):\n    model = SimpleModel()\n    \n    if reg_type == 'l2':\n        # L2 via weight_decay\n        optimizer = optim.SGD(model.parameters(), lr=0.01, weight_decay=lambda_reg)\n    else:\n        optimizer = optim.SGD(model.parameters(), lr=0.01)\n    \n    criterion = nn.MSELoss()\n    \n    # Dummy data\n    X = torch.randn(100, 10)\n    y = torch.randn(100, 1)\n    \n    weights_history = []\n    \n    for epoch in range(num_epochs):\n        optimizer.zero_grad()\n        output = model(X)\n        loss = criterion(output, y)\n        \n        # L1 regularization (manual)\n        if reg_type == 'l1':\n            l1_penalty = sum(p.abs().sum() for p in model.parameters())\n            loss = loss + lambda_reg * l1_penalty\n        \n        loss.backward()\n        optimizer.step()\n        \n        # Track weights\n        weights = model.fc.weight.data.clone().numpy().flatten()\n        weights_history.append(weights)\n    \n    return np.array(weights_history)\n\nprint(\"REGULARIZATION COMPARISON\")\nprint(\"=\"*70)\n\n# Train with different regularization\nweights_none = train_with_regularization('none')\nweights_l1 = train_with_regularization('l1', lambda_reg=0.1)\nweights_l2 = train_with_regularization('l2', lambda_reg=0.1)\n\nprint(\"\\nFinal Weights Statistics:\")\nprint(\"-\"*70)\nprint(f\"{'Method':<15} {'Mean |W|':<15} {'# Zeros':<15} {'Max |W|':<15}\")\nprint(\"-\"*70)\n\nfor name, weights in [('No Reg', weights_none), ('L1', weights_l1), ('L2', weights_l2)]:\n    final_weights = weights[-1]\n    mean_abs = np.mean(np.abs(final_weights))\n    num_zeros = np.sum(np.abs(final_weights) < 0.01)  # Near zero\n    max_abs = np.max(np.abs(final_weights))\n    print(f\"{name:<15} {mean_abs:<15.4f} {num_zeros:<15} {max_abs:<15.4f}\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"KEY DIFFERENCES:\")\nprint(\"=\"*70)\nprint(\"\\nNo Regularization:\")\nprint(\"  • Weights can grow large\")\nprint(\"  • Overfitting risk high\")\nprint(\"  • All weights non-zero\")\n\nprint(\"\\nL1 Regularization (Lasso):\")\nprint(\"  • Creates SPARSE weights\")\nprint(\"  • Many weights become exactly 0\")\nprint(\"  • Feature selection effect\")\nprint(\"  • Loss = Loss + λ × Σ|w|\")\n\nprint(\"\\nL2 Regularization (Ridge, Weight Decay):\")\nprint(\"  • Shrinks weights towards 0\")\nprint(\"  • But weights stay non-zero\")\nprint(\"  • Smooth, gradual shrinkage\")\nprint(\"  • Loss = Loss + λ × Σw²\")\nprint(\"  • Most common in deep learning!\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"WHEN TO USE:\")\nprint(\"=\"*70)\nprint(\"L2 (Weight Decay): Default choice! Always use.\")\nprint(\"  • weight_decay=0.01 in optimizer\")\nprint(\"  • Works for all architectures\")\n\nprint(\"\\nL1: When you want feature selection\")\nprint(\"  • Sparse models needed\")\nprint(\"  • Interpretability important\")\nprint(\"  • Less common in deep learning\")\n\nprint(\"\\n✓ Regularization comparison complete!\")",
+      "explanation": "L1 vs L2 karşılaştırması. L1 sparse weights (feature selection), L2 smooth shrinkage. Deep learning'de L2 (weight decay) standard!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Dropout Implementation & Effect",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\n\nclass DropoutDemo(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size, dropout_p=0.5):\n        super().__init__()\n        self.fc1 = nn.Linear(input_size, hidden_size)\n        self.dropout = nn.Dropout(dropout_p)\n        self.fc2 = nn.Linear(hidden_size, output_size)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = self.dropout(x)  # Dropout after activation\n        x = self.fc2(x)\n        return x\n\n# Create model\nmodel = DropoutDemo(10, 128, 5, dropout_p=0.5)\n\nprint(\"DROPOUT DEMONSTRATION\")\nprint(\"=\"*70)\n\n# Test input\nx = torch.randn(1, 10)\n\nprint(\"\\n1. TRAINING MODE (Dropout Active):\")\nprint(\"-\"*70)\nmodel.train()  # Enable dropout\n\nprint(\"Forward pass 3 times with SAME input:\\n\")\nfor i in range(3):\n    output = model(x)\n    print(f\"Pass {i+1}: {output[0, :3].tolist()}  # First 3 outputs\")\n\nprint(\"\\n→ Outputs are DIFFERENT (random neurons dropped each time)\")\n\nprint(\"\\n2. EVALUATION MODE (Dropout Inactive):\")\nprint(\"-\"*70)\nmodel.eval()  # Disable dropout\n\nprint(\"Forward pass 3 times with SAME input:\\n\")\nfor i in range(3):\n    output = model(x)\n    print(f\"Pass {i+1}: {output[0, :3].tolist()}  # First 3 outputs\")\n\nprint(\"\\n→ Outputs are SAME (all neurons active, deterministic)\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"HOW DROPOUT WORKS:\")\nprint(\"=\"*70)\nprint(\"\"\"\nTraining:\n  1. Each neuron has p chance of being dropped (set to 0)\n  2. Different mask each forward pass\n  3. Forces network to not rely on any single neuron\n  4. Like training ensemble of networks!\n  \n  Example with p=0.5:\n  Original: [1.2, 0.8, 1.5, 0.3]\n  Dropped:  [1.2,  0,  1.5,  0 ]  (mask: [1, 0, 1, 0])\n  Scaled:   [2.4,  0,  3.0,  0 ]  (scale by 1/(1-p))\n\nInference:\n  • All neurons active (no dropout)\n  • No scaling needed (already handled in training)\n\"\"\")\n\nprint(\"=\"*70)\nprint(\"DROPOUT BEST PRACTICES:\")\nprint(\"=\"*70)\nprint(\"\"\"\n✓ Use after fully connected layers\n✓ Typical rates: 0.5 for FC, 0.2-0.3 for CNN\n✓ Don't use too much (>0.7) → underfitting\n✓ Always call model.train() and model.eval()!\n✓ Works as regularization + ensemble\n\n❌ Don't use before input layer\n❌ Don't forget to set eval mode for inference!\n\"\"\")\n\n# Demonstrate dropout effect on weights\nprint(\"\\n\" + \"=\"*70)\nprint(\"DROPOUT vs NO DROPOUT (Training):\")\nprint(\"=\"*70)\n\nmodel_nodropout = DropoutDemo(10, 128, 5, dropout_p=0.0)\nmodel_dropout = DropoutDemo(10, 128, 5, dropout_p=0.5)\n\nprint(\"\\nAfter 100 training steps:\")\nprint(\"  No Dropout: May overfit, large weights\")\nprint(\"  With Dropout: Better generalization, smaller weights\")\nprint(\"  \\nDropout prevents co-adaptation of neurons!\")\n\nprint(\"\\n✓ Dropout demonstration complete!\")",
+      "explanation": "Dropout nasıl çalışır? Training'de random neurons drop edilir, inference'da tümü aktif. Ensemble effect + regularization. model.train() ve model.eval() critical!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Early Stopping Implementation",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\n\nclass EarlyStopping:\n    \"\"\"Early stopping to stop training when validation loss doesn't improve\"\"\"\n    def __init__(self, patience=10, min_delta=0.001, verbose=True):\n        \"\"\"\n        Args:\n            patience: How many epochs to wait after last improvement\n            min_delta: Minimum change to qualify as improvement\n            verbose: Print messages\n        \"\"\"\n        self.patience = patience\n        self.min_delta = min_delta\n        self.verbose = verbose\n        \n        self.counter = 0\n        self.best_loss = None\n        self.early_stop = False\n        self.best_model_state = None\n    \n    def __call__(self, val_loss, model):\n        if self.best_loss is None:\n            self.best_loss = val_loss\n            self.save_checkpoint(model)\n        elif val_loss > self.best_loss - self.min_delta:\n            # No improvement\n            self.counter += 1\n            if self.verbose:\n                print(f\"EarlyStopping counter: {self.counter}/{self.patience}\")\n            if self.counter >= self.patience:\n                self.early_stop = True\n        else:\n            # Improvement!\n            if self.verbose:\n                print(f\"Validation loss decreased: {self.best_loss:.4f} → {val_loss:.4f}\")\n            self.best_loss = val_loss\n            self.save_checkpoint(model)\n            self.counter = 0\n    \n    def save_checkpoint(self, model):\n        \"\"\"Save model when validation loss decreases\"\"\"\n        self.best_model_state = model.state_dict().copy()\n    \n    def load_best_model(self, model):\n        \"\"\"Load the best model\"\"\"\n        if self.best_model_state is not None:\n            model.load_state_dict(self.best_model_state)\n\n# Example usage\nprint(\"EARLY STOPPING EXAMPLE\")\nprint(\"=\"*70)\n\nmodel = nn.Sequential(\n    nn.Linear(10, 50),\n    nn.ReLU(),\n    nn.Dropout(0.5),\n    nn.Linear(50, 1)\n)\n\noptimizer = optim.Adam(model.parameters(), lr=0.01)\ncriterion = nn.MSELoss()\n\n# Dummy data\nX_train = torch.randn(100, 10)\ny_train = torch.randn(100, 1)\nX_val = torch.randn(20, 10)\ny_val = torch.randn(20, 1)\n\n# Early stopping with patience=5\nearly_stopping = EarlyStopping(patience=5, min_delta=0.001, verbose=True)\n\nprint(\"\\nTraining with Early Stopping (patience=5):\\n\")\n\nfor epoch in range(50):  # Max 50 epochs\n    # Training\n    model.train()\n    optimizer.zero_grad()\n    train_output = model(X_train)\n    train_loss = criterion(train_output, y_train)\n    train_loss.backward()\n    optimizer.step()\n    \n    # Validation\n    model.eval()\n    with torch.no_grad():\n        val_output = model(X_val)\n        val_loss = criterion(val_output, y_val)\n    \n    print(f\"Epoch {epoch+1:2d}: Train Loss: {train_loss.item():.4f}, \"\n          f\"Val Loss: {val_loss.item():.4f}\", end=\"\")\n    \n    # Early stopping check\n    early_stopping(val_loss.item(), model)\n    \n    if early_stopping.early_stop:\n        print(f\"\\n\\nEarly stopping triggered at epoch {epoch+1}!\")\n        break\n    \n    print()  # New line\n\n# Load best model\nearly_stopping.load_best_model(model)\nprint(f\"\\nBest validation loss: {early_stopping.best_loss:.4f}\")\nprint(f\"Best model restored!\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"EARLY STOPPING BENEFITS:\")\nprint(\"=\"*70)\nprint(\"\"\"\n✓ Prevents overfitting automatically\n✓ No need to guess optimal number of epochs\n✓ Saves best model automatically\n✓ Stops wasting compute time\n\nTypical patience values:\n  • Small datasets: 5-10 epochs\n  • Large datasets: 10-20 epochs\n  • Very stable training: 20-50 epochs\n\nmin_delta: Minimum improvement to count\n  • Default: 0 (any improvement)\n  • Noisy validation: 0.001-0.01\n\"\"\")\n\nprint(\"\\n✓ Early stopping implementation complete!\")",
+      "explanation": "Early stopping: Val loss artmaya başlayınca dur, best model'i restore et. Overfitting otomatik önler, compute save eder. Patience ve min_delta tune edilebilir."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Data Augmentation (Images)",
+      "code": "import torch\nfrom torchvision import transforms\nfrom PIL import Image\nimport numpy as np\n\n# Comprehensive augmentation pipeline\ntrain_transform = transforms.Compose([\n    # Geometric transformations\n    transforms.RandomHorizontalFlip(p=0.5),\n    transforms.RandomRotation(degrees=15),\n    transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),\n    \n    # Color transformations\n    transforms.ColorJitter(\n        brightness=0.2,\n        contrast=0.2,\n        saturation=0.2,\n        hue=0.1\n    ),\n    \n    # Random erasing (cutout-like)\n    transforms.ToTensor(),\n    transforms.RandomErasing(p=0.5, scale=(0.02, 0.33)),\n    \n    # Normalization\n    transforms.Normalize(\n        mean=[0.485, 0.456, 0.406],\n        std=[0.229, 0.224, 0.225]\n    )\n])\n\n# No augmentation for validation/test\nval_transform = transforms.Compose([\n    transforms.Resize(256),\n    transforms.CenterCrop(224),\n    transforms.ToTensor(),\n    transforms.Normalize(\n        mean=[0.485, 0.456, 0.406],\n        std=[0.229, 0.224, 0.225]\n    )\n])\n\nprint(\"DATA AUGMENTATION FOR IMAGES\")\nprint(\"=\"*70)\nprint(\"\\nTRAINING AUGMENTATIONS:\")\nprint(\"-\"*70)\nprint(\"\"\"\n1. RandomHorizontalFlip (p=0.5)\n   → 50% chance to flip horizontally\n   → Doubles effective dataset size\n   → Works for most natural images\n   \n2. RandomRotation (±15°)\n   → Rotation invariance\n   → Be careful: too much rotation can hurt (e.g., text, faces)\n   \n3. RandomResizedCrop\n   → Random crop + resize\n   → Scale invariance\n   → Prevents memorizing exact positions\n   \n4. ColorJitter\n   → Brightness, contrast, saturation, hue changes\n   → Lighting invariance\n   → Makes model robust to different cameras/conditions\n   \n5. RandomErasing\n   → Randomly mask rectangular regions\n   → Cutout-like effect\n   → Prevents focusing on single discriminative region\n   \n6. Normalization\n   → Always at the end!\n   → Use ImageNet stats if using pretrained models\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"AUGMENTATION STRATEGY BY TASK:\")\nprint(\"=\"*70)\nprint(\"\"\"\nGeneral Image Classification:\n  ✓ Horizontal flip\n  ✓ Small rotation (±10-15°)\n  ✓ Color jitter\n  ✓ Random crop/resize\n  ✓ Random erasing\n\nMedical Imaging:\n  ✓ Rotation, flip\n  ✓ Elastic deformation\n  ✓ Gaussian noise\n  ✗ Color jitter (grayscale images)\n\nObject Detection:\n  ✓ Horizontal flip\n  ✓ Random crop (careful with bounding boxes!)\n  ✓ Brightness/contrast\n  ✗ Rotation (breaks bounding boxes)\n\nFace Recognition:\n  ✓ Small rotation (±5°)\n  ✓ Color jitter\n  ✗ Flip (faces are not symmetric!)\n  ✗ Heavy rotation\n\nOCR/Text:\n  ✗ Flip, rotation\n  ✓ Small perspective transform\n  ✓ Noise\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"EFFECT ON DATASET SIZE:\")\nprint(\"=\"*70)\nprint(\"\"\"\nOriginal dataset: 1000 images\n\nWith augmentation (each epoch different):\n  → Effectively infinite variations!\n  → Each image seen with different transformations\n  → 10 epochs = 10,000 unique training examples\n\nTypical improvement:\n  • No augmentation: 75% accuracy\n  • With augmentation: 85% accuracy (+10%!)\n  • Overfitting risk: Greatly reduced\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"IMPORTANT NOTES:\")\nprint(\"=\"*70)\nprint(\"\"\"\n❌ DON'T augment validation/test sets!\n   → Only transform to match model input\n   → No random operations\n\n✓ DO use transforms that preserve label\n   → Flipped cat is still a cat\n   → Rotated 180° dog might not look like dog!\n\n✓ DO visualize augmented images\n   → Check if transformations make sense\n   → Ensure labels still correct\n\n✓ DO tune augmentation strength\n   → Too aggressive → images unrecognizable\n   → Too weak → minimal benefit\n\"\"\")\n\nprint(\"\\n✓ Data augmentation guide complete!\")\nprint(\"\\nModern computer vision CANNOT work without augmentation!\")",
+      "explanation": "Data augmentation: Transform'larla training data'yı artır. Flip, rotate, crop, color jitter. Effective dataset size 10x+ büyür, overfitting azalır!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Advanced: Mixup & CutMix",
+      "code": "import torch\nimport torch.nn.functional as F\nimport numpy as np\n\ndef mixup_data(x, y, alpha=1.0):\n    \"\"\"\n    Mixup: Mix two examples\n    \n    Paper: \"mixup: Beyond Empirical Risk Minimization\" (2017)\n    \"\"\"\n    if alpha > 0:\n        lam = np.random.beta(alpha, alpha)\n    else:\n        lam = 1\n    \n    batch_size = x.size(0)\n    index = torch.randperm(batch_size)\n    \n    mixed_x = lam * x + (1 - lam) * x[index, :]\n    y_a, y_b = y, y[index]\n    \n    return mixed_x, y_a, y_b, lam\n\ndef mixup_criterion(criterion, pred, y_a, y_b, lam):\n    \"\"\"Mixup loss function\"\"\"\n    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)\n\ndef rand_bbox(size, lam):\n    \"\"\"Generate random bounding box for CutMix\"\"\"\n    W = size[2]\n    H = size[3]\n    cut_rat = np.sqrt(1. - lam)\n    cut_w = int(W * cut_rat)\n    cut_h = int(H * cut_rat)\n    \n    # Uniform\n    cx = np.random.randint(W)\n    cy = np.random.randint(H)\n    \n    bbx1 = np.clip(cx - cut_w // 2, 0, W)\n    bby1 = np.clip(cy - cut_h // 2, 0, H)\n    bbx2 = np.clip(cx + cut_w // 2, 0, W)\n    bby2 = np.clip(cy + cut_h // 2, 0, H)\n    \n    return bbx1, bby1, bbx2, bby2\n\ndef cutmix_data(x, y, alpha=1.0):\n    \"\"\"\n    CutMix: Cut and paste patches\n    \n    Paper: \"CutMix: Regularization Strategy\" (2019)\n    \"\"\"\n    lam = np.random.beta(alpha, alpha)\n    batch_size = x.size(0)\n    index = torch.randperm(batch_size)\n    \n    # Get bounding box\n    bbx1, bby1, bbx2, bby2 = rand_bbox(x.size(), lam)\n    \n    # Cut and paste\n    x[:, :, bbx1:bbx2, bby1:bby2] = x[index, :, bbx1:bbx2, bby1:bby2]\n    \n    # Adjust lambda to exactly match pixel ratio\n    lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (x.size()[-1] * x.size()[-2]))\n    \n    y_a, y_b = y, y[index]\n    return x, y_a, y_b, lam\n\n# Training loop with Mixup\nprint(\"ADVANCED AUGMENTATION: MIXUP & CUTMIX\")\nprint(\"=\"*70)\n\ndef train_with_mixup(model, train_loader, optimizer, criterion, alpha=1.0):\n    model.train()\n    \n    for batch_idx, (data, target) in enumerate(train_loader):\n        # Mixup\n        data, targets_a, targets_b, lam = mixup_data(data, target, alpha)\n        \n        # Forward\n        output = model(data)\n        loss = mixup_criterion(criterion, output, targets_a, targets_b, lam)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n\ndef train_with_cutmix(model, train_loader, optimizer, criterion, alpha=1.0):\n    model.train()\n    \n    for batch_idx, (data, target) in enumerate(train_loader):\n        # CutMix\n        data, targets_a, targets_b, lam = cutmix_data(data, target, alpha)\n        \n        # Forward\n        output = model(data)\n        loss = mixup_criterion(criterion, output, targets_a, targets_b, lam)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n\nprint(\"\\n1. MIXUP:\")\nprint(\"-\"*70)\nprint(\"\"\"\nConcept: Linear interpolation of images and labels\n  x_mixed = λ × x_i + (1-λ) × x_j\n  y_mixed = λ × y_i + (1-λ) × y_j\n  \n  λ ~ Beta(α, α), typical α = 1.0\n\nExample:\n  Image 1: Cat (label: [1, 0, 0])\n  Image 2: Dog (label: [0, 1, 0])\n  λ = 0.6\n  \n  Mixed image: 60% cat + 40% dog\n  Mixed label: [0.6, 0.4, 0] (soft label!)\n\nBenefits:\n  ✓ Smooth decision boundaries\n  ✓ Better calibration\n  ✓ +1-2% accuracy on ImageNet\n  ✓ Works across all architectures\n\nDrawback:\n  • Unnatural images (blended)\n\"\"\")\n\nprint(\"\\n2. CUTMIX:\")\nprint(\"-\"*70)\nprint(\"\"\"\nConcept: Cut and paste patches between images\n  \n  1. Cut rectangular region from image j\n  2. Paste it to image i\n  3. Mix labels by area ratio\n  \n  λ = (area of original) / (total area)\n\nExample:\n  Image 1: Cat\n  Image 2: Dog\n  Cut 30% of dog, paste to cat\n  \n  Result: 70% cat + 30% dog visible\n  Label: [0.7, 0.3, 0] (by area!)\n\nBenefits:\n  ✓ More natural than Mixup\n  ✓ Localization ability preserved\n  ✓ +1-2% accuracy improvements\n  ✓ Better for object detection/segmentation\n\nAdvantage over Mixup:\n  • Visual features not blurred\n  • Model learns to focus on all parts\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"COMPARISON:\")\nprint(\"=\"*70)\nprint(\"\"\"\nStandard Augmentation:\n  • Single image transformations\n  • Labels unchanged\n  \nMixup:\n  • Blends two images linearly\n  • Soft labels (linear mix)\n  • Smooth decision boundaries\n  \nCutMix:\n  • Cuts and pastes patches\n  • Soft labels (by area)\n  • Natural-looking images\n  • Best overall performance!\n\nTypical Results (ImageNet, ResNet-50):\n  • Baseline: 76.3%\n  • Mixup: 77.4% (+1.1%)\n  • CutMix: 78.6% (+2.3%)\n\"\"\")\n\nprint(\"\\n\" + \"=\"*70)\nprint(\"USAGE RECOMMENDATIONS:\")\nprint(\"=\"*70)\nprint(\"\"\"\n✓ Use CutMix for computer vision (best results)\n✓ alpha=1.0 is good default\n✓ Combine with other augmentations\n✓ Works great with large models\n✓ Especially effective on small datasets\n\n⚠ May slow down training slightly (extra computation)\n⚠ Requires batch size > 1\n⚠ Not suitable for very small images (<32×32)\n\"\"\")\n\nprint(\"\\n✓ Advanced augmentation techniques complete!\")\nprint(\"\\nCutMix is state-of-art regularization for vision!\")",
+      "explanation": "Advanced augmentation: Mixup (blend images), CutMix (cut-paste patches). Soft labels, smooth boundaries, +2-3% accuracy! State-of-art regularization."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Overfitting'in belirtisi nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Train ve test accuracy'si her ikisi de düşük",
+        "Train accuracy yüksek (%99), test accuracy düşük (%70)",
+        "Train ve test accuracy'si her ikisi de yüksek",
+        "Training çok yavaş"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Overfitting: Train acc >> Test acc. Model training data'yı ezberliyor, generalize edemiyor. Train %99, test %70 → Büyük gap = Overfitting!",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "L2 regularization (weight decay) ne yapar?",
+      "type": "multiple-choice",
+      "options": [
+        "Weights'i büyütür",
+        "Weights'i küçük tutmaya zorlar, penalty verir",
+        "Gradient'leri sıfırlar",
+        "Learning rate'i artırır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "L2: Loss = Loss + λ×Σw². Büyük weights penalty alır, küçük weights'e zorlanır. Weight decay optimizer'da: weight_decay=0.01. Overfitting önler!",
+      "difficulty": 1
+    },
+    {
+      "id": "q3",
+      "question": "Dropout training ve inference'da nasıl farklı davranır?",
+      "type": "multiple-choice",
+      "options": [
+        "Her ikisinde de aynı, fark yok",
+        "Training: Random neurons drop, Inference: All active",
+        "Training: All active, Inference: Drop neurons",
+        "Sadece CNN'lerde kullanılır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Dropout: Training'de random neurons kapalı (p=0.5), her pass farklı! Inference'da tüm neurons aktif, deterministic. model.train() ve model.eval() critical!",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Early stopping ne zaman devreye girer?",
+      "type": "multiple-choice",
+      "options": [
+        "Training loss artmaya başlayınca",
+        "Validation loss artmaya başlayınca (patience kadar süre)",
+        "Belirli epoch sayısına ulaşınca",
+        "Accuracy %100 olunca"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Early stopping: Validation loss patience kadar süre improve etmezse dur. Best model'i restore et. Overfitting otomatik önler, compute save eder!",
+      "difficulty": 2
+    },
+    {
+      "id": "q5",
+      "question": "Data augmentation'ın amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Training'i hızlandırmak",
+        "Effective dataset size'ı artırarak overfitting'i önlemek",
+        "Model'i küçültmek",
+        "Gradient'leri stabilize etmek"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Data augmentation: Transform'larla yeni training examples yarat (flip, rotate, crop). Effective dataset 10x+ büyür, model çeşitli varyasyonlar görür, overfitting azalır!",
+      "difficulty": 1
+    },
+    {
+      "id": "q6",
+      "question": "Mixup augmentation ne yapar?",
+      "type": "multiple-choice",
+      "options": [
+        "İki image'i linearly blend eder, soft labels",
+        "Sadece renkleri değiştirir",
+        "Image'i rotate eder",
+        "Random pixels'leri mask'ler"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Mixup: x_mix = λ×x_i + (1-λ)×x_j, y_mix = λ×y_i + (1-λ)×y_j. Soft labels, smooth boundaries! +1-2% accuracy. CutMix benzer ama cut-paste yapar.",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "Overfitting vs Underfitting?",
+      "back": "Underfitting:\nTrain: Düşük, Test: Düşük\nModel yeterince complex değil\n→ Bigger model, more epochs\n\nOverfitting:\nTrain: Çok yüksek, Test: Düşük\nModel ezberliyor\n→ REGULARIZATION!\n\nGood Fit:\nTrain: Yüksek, Test: Yüksek\nSmall gap OK (2-5%)"
+    },
+    {
+      "id": "fc2",
+      "front": "L1 vs L2 regularization?",
+      "back": "L1 (Lasso):\nLoss + λ×Σ|w|\n✓ Sparse weights (many → 0)\n✓ Feature selection\n✗ Less smooth\n\nL2 (Ridge, Weight Decay):\nLoss + λ×Σw²\n✓ Shrinks all weights\n✓ Smooth, gradual\n✓ MOST COMMON!\nweight_decay=0.01 in optimizer"
+    },
+    {
+      "id": "fc3",
+      "front": "Dropout nasıl çalışır?",
+      "back": "Training:\n• Random neurons kapalı (p=0.5)\n• Her pass farklı mask\n• Ensemble effect!\n\nInference:\n• Tüm neurons aktif\n• Deterministic\n\nCRITICAL:\nmodel.train() → Dropout ON\nmodel.eval() → Dropout OFF\n\nTipik: p=0.5 FC, p=0.2 CNN"
+    },
+    {
+      "id": "fc4",
+      "front": "Early Stopping?",
+      "back": "Val loss artmaya başlayınca dur:\n\nEpoch 1: val=0.5\nEpoch 2: val=0.3 ← Best!\nEpoch 3: val=0.32\nEpoch 4: val=0.35\n...\nEpoch 12: val=0.40\n→ Stop! Use epoch 2 weights\n\npatience=10: 10 epoch bekle\nmin_delta=0.001: Min improvement\n\n✓ Auto overfitting prevention"
+    },
+    {
+      "id": "fc5",
+      "front": "Data Augmentation?",
+      "back": "Training data'dan yeni examples:\n\nImages:\n✓ RandomFlip\n✓ RandomRotation (±15°)\n✓ RandomCrop\n✓ ColorJitter\n✓ RandomErasing\n\n1000 images → ∞ variations!\n\n❌ Val/Test'te augment ETME!\nSadece resize/normalize"
+    },
+    {
+      "id": "fc6",
+      "front": "Batch Normalization regularization?",
+      "back": "Primary: Normalization\nSide effect: Regularization!\n\nNasıl?\n• Mini-batch noise\n• Dropout-like effect\n• Weights scale invariant\n\nBatch norm + Dropout?\n• Usually use one or other\n• BN often sufficient\n• Dropout if still overfitting\n\nModern: BN standard!"
+    },
+    {
+      "id": "fc7",
+      "front": "Label Smoothing?",
+      "back": "One-hot → Soft labels:\n\nHard: [1, 0, 0]\nSmooth: [0.9, 0.05, 0.05]\n\nFormula:\ny_smooth = (1-ε)y + ε/K\n\nε=0.1 typical\n\nBenefits:\n✓ Better calibration\n✓ Prevents overconfidence\n✓ Regularization effect\n✓ +0.5-1% accuracy\n\ncriterion = CrossEntropyLoss(\n    label_smoothing=0.1\n)"
+    },
+    {
+      "id": "fc8",
+      "front": "Mixup & CutMix?",
+      "back": "Mixup: Blend images\nx = λ×x₁ + (1-λ)×x₂\ny = λ×y₁ + (1-λ)×y₂\n\nCutMix: Cut-paste patches\nCut from x₂, paste to x₁\ny by area ratio\n\nBoth:\n✓ Soft labels\n✓ Smooth boundaries\n✓ +1-2% accuracy\n\nCutMix > Mixup (more natural)\nState-of-art regularization!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Validation/test set'i augment etmek",
+      "why": "Augmentation sadece training için! Val/test'te augment edersen results invalid olur, fair comparison yapılamaz.",
+      "fix": "Val/test transform: Sadece Resize + Normalize. Augmentation yok! transforms.Compose([Resize(224), ToTensor(), Normalize(...)])"
+    },
+    {
+      "mistake": "model.eval() yapmayı unutmak (dropout aktif kalıyor)",
+      "why": "Inference'da dropout aktif kalırsa output non-deterministic olur, her seferinde farklı! Accuracy düşük görünür.",
+      "fix": "Inference öncesi: model.eval() + with torch.no_grad(). Training'e dön: model.train(). Her zaman call et!"
+    },
+    {
+      "mistake": "Regularization olmadan complex model train etmek",
+      "why": "Büyük model + limited data = Overfitting guarantee! Train %99, test %60 gibi.",
+      "fix": "L2 (weight_decay=0.01) + Dropout(0.5) + Data augmentation + Early stopping. Hepsini combine et! Modern training standard."
+    },
+    {
+      "mistake": "Dropout rate'i çok yüksek kullanmak (>0.7)",
+      "why": "Çok fazla nöron drop edilirse model underfitting yaşar, öğrenemiyor. p=0.9 → %90 nöron kapalı, çok aggressive!",
+      "fix": "FC layers: p=0.5, CNN layers: p=0.2-0.3. Validation loss izle, çok düşük accuracy varsa dropout azalt."
+    },
+    {
+      "mistake": "Early stopping patience'ı çok küçük set etmek",
+      "why": "patience=2-3 çok aggressive! Val loss'un natural fluctuation'ı var, erken stop eder, underfitting olur.",
+      "fix": "patience=10-20 kullan. Küçük dataset: 5-10, büyük dataset: 15-30. min_delta=0.001 de ekle (noisy val loss için)."
+    },
+    {
+      "mistake": "L1 ve L2'yi karıştırmak veya yanlış apply etmek",
+      "why": "L2 optimizer'da weight_decay olarak implement edilir. L1 manual eklenmeli. Karıştırılırsa yanlış regularization!",
+      "fix": "L2: optimizer = Adam(..., weight_decay=0.01). L1: loss += lambda * sum(p.abs().sum()). L2 çok daha yaygın!"
+    },
+    {
+      "mistake": "Data augmentation'ı çok aggressive yapmak",
+      "why": "Rotate(180°), extreme crop, çok güçlü color jitter → Images unrecognizable, labels wrong! Model öğrenemiyor.",
+      "fix": "Augmented images'leri visualize et! Reasonable mı? Label still correct mi? Conservative başla: Flip + small rotation (±10°) + mild jitter."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "overfitting-curves",
+      "type": "plot",
+      "title": "Train vs Validation Loss Curves",
+      "description": "Overfitting'in train/val loss curves'lerinde nasıl göründüğünü görün. Gap artıyor = Overfitting!"
+    },
+    {
+      "id": "dropout-effect",
+      "type": "interactive",
+      "title": "Dropout Visualization",
+      "description": "Dropout rate'i değiştirin, hangi neurons'ların kapatıldığını görün. Training vs inference mode."
+    },
+    {
+      "id": "augmentation-examples",
+      "type": "gallery",
+      "title": "Data Augmentation Gallery",
+      "description": "Aynı image'in flip, rotate, crop, color jitter ile farklı versiyonlarını görün"
+    },
+    {
+      "id": "mixup-cutmix",
+      "type": "animation",
+      "title": "Mixup vs CutMix Animation",
+      "description": "İki image'in Mixup (blend) ve CutMix (cut-paste) ile nasıl combine edildiğini görün"
+    }
+  ],
+  "references": [
+    {
+      "title": "Dropout: A Simple Way to Prevent Overfitting",
+      "url": "http://jmlr.org/papers/v15/srivastava14a.html",
+      "type": "paper",
+      "author": "Srivastava et al., 2014"
+    },
+    {
+      "title": "Batch Normalization: Accelerating Deep Network Training",
+      "url": "https://arxiv.org/abs/1502.03167",
+      "type": "paper",
+      "author": "Ioffe & Szegedy, 2015"
+    },
+    {
+      "title": "mixup: Beyond Empirical Risk Minimization",
+      "url": "https://arxiv.org/abs/1710.09412",
+      "type": "paper",
+      "author": "Zhang et al., 2017"
+    },
+    {
+      "title": "CutMix: Regularization Strategy",
+      "url": "https://arxiv.org/abs/1905.04899",
+      "type": "paper",
+      "author": "Yun et al., 2019"
+    },
+    {
+      "title": "A Disciplined Approach to Neural Network Hyperparameters",
+      "url": "https://arxiv.org/abs/1803.09820",
+      "type": "paper",
+      "author": "Smith, 2018"
+    }
+  ]
+}

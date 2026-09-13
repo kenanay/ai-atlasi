@@ -1,0 +1,246 @@
+{
+  "id": "weight-initialization",
+  "title": "Weight Initialization (Xavier, He, Kaiming)",
+  "category": "deep-learning",
+  "level": 2,
+  "estimatedTime": 40,
+  "description": "Neural network ağırlıklarının doğru başlangıç değerleri. Xavier/Glorot, He/Kaiming initialization ve gradient flow için kritik önemi.",
+  "prerequisites": ["neural-networks", "backpropagation", "activation-functions"],
+  "tags": ["initialization", "xavier", "he", "kaiming", "gradient-flow", "deep-learning"],
+  "content": {
+    "level0_basic": "Neural network training başlatırken weights'leri nasıl initialize edersen çok önemli! Hepsini 0 yaparsan hiçbir şey öğrenemez (symmetry breaking problemi). Çok büyük random değerler verirsen activations explode eder. Çok küçük verirsen gradient vanishing! Xavier/He initialization bu problemi çözer: layer size'ına göre optimal range'de random değerler verir. Activasyon ReLU mu? He init! Tanh/sigmoid mi? Xavier init! Doğru initialization training'i 10x hızlandırabilir!",
+    "level1_beginner": "Weight initialization deep learning'in en kritik ama en az konuşulan konusu!\n\n**Problem: Naive Initialization**\n\n**1. All Zeros:**\n$$W = 0$$\n\n❌ Her neuron aynı gradient alır → symmetry breaking olmaz → hiçbir şey öğrenemez!\n\n**2. Too Large Random:**\n$$W \\sim \\mathcal{N}(0, 1)  \\quad \\text{(std=1)}$$\n\n❌ Activations explode eder → gradients explode → training diverge!\n\n**3. Too Small Random:**\n$$W \\sim \\mathcal{N}(0, 0.001)  \\quad \\text{(std=0.001)}$$\n\n❌ Activations vanish → gradients vanish → learning çok yavaş!\n\n**Goal:**\nVariance'ı preserve et! Input variance ≈ Output variance.\n\n**Xavier/Glorot Initialization (2010):**\n\nTanh ve sigmoid activations için!\n\n**Uniform distribution:**\n$$W \\sim \\mathcal{U}\\left(-\\sqrt{\\frac{6}{n_{\\text{in}} + n_{\\text{out}}}}, \\sqrt{\\frac{6}{n_{\\text{in}} + n_{\\text{out}}}}\\right)$$\n\n**Normal distribution:**\n$$W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{n_{\\text{in}} + n_{\\text{out}}}}\\right)$$\n\n- $n_{\\text{in}}$: input neurons\n- $n_{\\text{out}}$: output neurons\n\n**Idea:**\nForward ve backward pass'te variance'ı preserve et!\n\n**He/Kaiming Initialization (2015):**\n\nReLU activations için!\n\nReLU half of neurons'ları kill eder (negative → 0), variance yarıya düşer. Bunu compensate et:\n\n**Normal distribution:**\n$$W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{n_{\\text{in}}}}\\right)$$\n\n**Uniform distribution:**\n$$W \\sim \\mathcal{U}\\left(-\\sqrt{\\frac{6}{n_{\\text{in}}}}, \\sqrt{\\frac{6}{n_{\\text{in}}}}\\right)$$\n\nXavier'den fark: Sadece $n_{\\text{in}}$ kullan, $\\sqrt{2}$ factor (ReLU compensation).\n\n**Which Init?**\n- **ReLU, LeakyReLU, PReLU:** He initialization\n- **Tanh, Sigmoid:** Xavier initialization\n- **SELU:** LeCun initialization\n- **Modern default:** He (çünkü ReLU dominant)",
+    "level2_application": "**Derivation: Xavier Initialization**\n\n**Assumptions:**\n1. Linear activation veya tanh (symmetric around 0)\n2. Inputs mean = 0\n3. Weights, inputs independent\n\n**Forward pass:**\n$$y = Wx + b$$\n$$\\text{Var}(y_i) = n_{\\text{in}} \\cdot \\text{Var}(w) \\cdot \\text{Var}(x)$$\n\nVariance preserve etmek için:\n$$n_{\\text{in}} \\cdot \\text{Var}(w) = 1$$\n$$\\text{Var}(w) = \\frac{1}{n_{\\text{in}}}$$\n\n**Backward pass:**\nGradient variance preserve için:\n$$\\text{Var}(w) = \\frac{1}{n_{\\text{out}}}$$\n\n**Compromise:** Her ikisini tatmin et\n$$\\text{Var}(w) = \\frac{2}{n_{\\text{in}} + n_{\\text{out}}}$$\n\nBu Xavier initialization!\n\n**Derivation: He Initialization**\n\n**ReLU effect:**\nReLU half of activations'ı kill eder.\n\n$$\\text{ReLU}(z) = \\max(0, z)$$\n$$\\mathbb{E}[\\text{ReLU}(z)^2] = \\frac{1}{2}\\mathbb{E}[z^2]  \\quad \\text{(for } z \\sim \\mathcal{N}(0, \\sigma^2)\\text{)}$$\n\nVariance yarıya düşer! Compensate et:\n$$\\text{Var}(w) = \\frac{2}{n_{\\text{in}}}$$\n\nBu He initialization!\n\n**Practical Variants:**\n\n**1. He Normal (most common):**\n```python\nstd = sqrt(2 / n_in)\nW ~ N(0, std^2)\n```\n\n**2. He Uniform:**\n```python\nlimit = sqrt(6 / n_in)\nW ~ U(-limit, +limit)\n```\n\n**3. Xavier Normal:**\n```python\nstd = sqrt(2 / (n_in + n_out))\nW ~ N(0, std^2)\n```\n\n**4. Xavier Uniform (Glorot Uniform):**\n```python\nlimit = sqrt(6 / (n_in + n_out))\nW ~ U(-limit, +limit)\n```\n\n**Bias Initialization:**\nGenelde sıfır!\n$$b = 0$$\n\nBazı özel durumlar:\n- **ReLU:** Bazen küçük positive (0.01) → \"dead ReLU\" önler\n- **LSTM forget gate:** 1 veya büyük positive → long-term dependencies\n- **Output layer (classification):** 0 veya class priors based",
+    "level3_advanced": "**Layer-wise Analysis:**\n\n**Batch Normalization Effect:**\n\nBatch Norm kullanınca initialization덜 önemli!\n\nNeden? BN normalization yapar:\n$$\\hat{x} = \\frac{x - \\mu}{\\sqrt{\\sigma^2 + \\epsilon}}$$\n\nVariance exploding/vanishing'i prevent eder.\n\n**Ama yine de:**\n- İlk birkaç iteration için init önemli\n- BN olmayan layers için kritik\n- Training başlangıcı stabilization\n\n**Residual Connections (ResNet):**\n\nSkip connections variance dynamics'i değiştirir!\n\n$$y = F(x) + x$$\n\n**Problem:** Standard He init ile variance accumulate eder (depth ile artar).\n\n**Solution:**\nResidual branch'i scale et:\n$$y = \\alpha F(x) + x$$\n\n- Fixup init: $\\alpha = 0$ başlangıç\n- ReZero: Learnable $\\alpha$\n\n**Orthogonal Initialization:**\n\nRNN'ler için!\n\nWeight matrix'i orthogonal yap:\n$$W^T W = I$$\n\nGradient flow preserve eder, vanishing/exploding önler.\n\n**Implementation:**\n```python\nW = numpy.linalg.qr(numpy.random.randn(n, n))[0]\n```\n\n**LSTM/GRU Initialization:**\n\n**Forget gate bias:**\nBüyük positive (1.0 veya daha fazla)!\n\nNeden? Başlangıçta long-term memory preserve et.\n\n**Other gates:**\nStandard Xavier/He.\n\n**Transformer Initialization:**\n\n**Attention weights:**\nXavier init (softmax kullanıldığı için).\n\n**Feed-forward:**\nHe init (ReLU/GELU kullanıldığı için).\n\n**Scaling factor:**\nDeeper transformers için:\n$$W_{\\text{init}} \\sim \\mathcal{N}\\left(0, \\frac{\\sigma^2}{\\sqrt{\\text{n_layers}}}\\right)$$\n\n**Adaptive Initialization:**\n\n**LSUV (Layer-wise Sequential Unit Variance):**\n1. Initialize with orthogonal\n2. Forward pass mini-batch\n3. Normalize layer output to unit variance\n4. Repeat for all layers\n\nData-driven initialization!",
+    "level4_expert": "**Advanced Initialization Strategies:**\n\n**1. Fixup Initialization (2019):**\n\nResNets'i Batch Norm olmadan train et!\n\n**Key ideas:**\n- Residual branches: Scale to 0 initially\n- Biases: Carefully tuned per layer\n- Final layer: Scale by depth\n\n$$W_L \\sim \\mathcal{N}\\left(0, \\frac{1}{L^2}\\right)$$\n\n**2. MetaInit:**\n\nMeta-learning ile optimal init öğren!\n\n**3. Data-Dependent Initialization:**\n\n**Layer-wise Pre-training:**\n```python\nfor layer in layers:\n    # Mini-batch forward\n    activations = layer(data_batch)\n    # Compute variance\n    var = activations.var()\n    # Scale weights to target variance\n    layer.weight *= sqrt(target_var / var)\n```\n\n**4. Knowledge Distillation Init:**\n\nTeacher network'ten initialize et!\n\n**Production Considerations:**\n\n**Reproducibility:**\n```python\n# Seed everything!\ntorch.manual_seed(42)\nnp.random.seed(42)\nrandom.seed(42)\ntorch.backends.cudnn.deterministic = True\ntorch.backends.cudnn.benchmark = False\n```\n\n**Distributed Training:**\n\nTüm workers aynı init'i kullanmalı!\n\n```python\n# Broadcast weights from rank 0\nif dist.get_rank() == 0:\n    # Initialize\n    initialize_model(model)\n\n# Broadcast to all workers\nfor param in model.parameters():\n    dist.broadcast(param.data, src=0)\n```\n\n**Mixed Precision Training:**\n\nFP16'da initialization:\n```python\n# Initialize in FP32\nmodel = Model().float()\ninitialize_weights(model)\n\n# Convert to FP16\nmodel = model.half()\n\n# Use loss scaling\nscaler = torch.cuda.amp.GradScaler()\n```\n\n**Transfer Learning:**\n\n**Scenario:** Pre-trained body + new head\n\n```python\n# Load pre-trained\nmodel.load_state_dict(pretrained_weights, strict=False)\n\n# Initialize new layers\nfor module in model.new_layers:\n    if isinstance(module, nn.Linear):\n        nn.init.kaiming_normal_(module.weight)\n        nn.init.zeros_(module.bias)\n```\n\n**Fine-tuning Learning Rates:**\n```python\noptimizer = torch.optim.Adam([\n    {'params': model.pretrained_params, 'lr': 1e-5},\n    {'params': model.new_params, 'lr': 1e-3}  # Higher LR for fresh init\n])\n```\n\n**Debugging Init:**\n\n**Activation Statistics:**\n```python\ndef check_activation_stats(model, data):\n    hooks = []\n    stats = {}\n    \n    def hook_fn(module, input, output, name):\n        stats[name] = {\n            'mean': output.mean().item(),\n            'std': output.std().item(),\n            'min': output.min().item(),\n            'max': output.max().item()\n        }\n    \n    # Register hooks\n    for name, module in model.named_modules():\n        if isinstance(module, (nn.Linear, nn.Conv2d)):\n            hooks.append(\n                module.register_forward_hook(\n                    lambda m, i, o, n=name: hook_fn(m, i, o, n)\n                )\n            )\n    \n    # Forward pass\n    model(data)\n    \n    # Remove hooks\n    for hook in hooks:\n        hook.remove()\n    \n    return stats\n```\n\n**Gradient Flow Check:**\n```python\ndef check_gradient_flow(model):\n    ave_grads = []\n    max_grads = []\n    layers = []\n    \n    for name, param in model.named_parameters():\n        if param.requires_grad and \"bias\" not in name:\n            layers.append(name)\n            ave_grads.append(param.grad.abs().mean().item())\n            max_grads.append(param.grad.abs().max().item())\n    \n    return layers, ave_grads, max_grads\n```",
+    "level5_research": "**Research Frontiers:**\n\n**1. Neural Architecture Search for Init:**\nOptimal init scheme'i architecture ile jointly search et.\n\n**2. Lottery Ticket Hypothesis:**\nRandom init içinde \"winning tickets\" var!\nPruning sonrası original init'ten retrain → aynı performance.\n\n**3. Dynamic Isometry:**\nDeep networks'te signal propagation theory.\nOrthogonal init + careful scaling → arbitrarily deep networks.\n\n**4. Mean Field Theory:**\nInfinite-width networks için initialization theory.\n\n**5. Edge of Chaos:**\nCritical initialization: chaotic ve ordered regimes arasında.\n\n**Future Directions:**\n- Automated init tuning\n- Hardware-aware initialization\n- Task-specific init schemes"
+  },
+  "whatIsIt": "Weight initialization neural network'ü train etmeye başlamadan önce ağırlıklara verilen ilk değerlerdir. Xavier/He init layer size'ına göre optimal variance sağlar, gradient flow'u preserve eder.",
+  "whyNeeded": "Kötü init → gradient vanishing/exploding, slow training, poor convergence. İyi init (Xavier/He) → stable training, 10x faster convergence, better final performance!",
+  "realWorldAnalogy": "Bir top yuvarlamaya benzer: Tepeye çok yakın başlatırsan (too small init) hareket etmez (vanishing). Çok aşağıdan başlatırsan (too large) kontrolsüz hızlanır (exploding). Optimal noktadan başlatırsan (Xavier/He) smooth olarak hedefe ulaşır!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Xavier: } W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{n_{\\text{in}} + n_{\\text{out}}}}\\right)",
+      "\\text{He: } W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{n_{\\text{in}}}}\\right)",
+      "\\text{Var}(y_i) = n_{\\text{in}} \\cdot \\text{Var}(w) \\cdot \\text{Var}(x)"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Activation function'ı belirle:",
+      "   - ReLU/LeakyReLU → He initialization",
+      "   - Tanh/Sigmoid → Xavier initialization",
+      "2. Her layer için fan_in ve fan_out hesapla",
+      "3. Variance hesapla:",
+      "   - He: var = 2 / fan_in",
+      "   - Xavier: var = 2 / (fan_in + fan_out)",
+      "4. Weights'i sample et: W ~ N(0, var)",
+      "5. Biases'i initialize et: b = 0 (genelde)",
+      "6. Batch Norm varsa scale/shift parameters: γ=1, β=0",
+      "7. İlk mini-batch'te activation stats kontrol et"
+    ],
+    "complexity": "O(total_parameters) - her weight bir kez initialize edilir. Very fast, one-time operation."
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Weight Initialization Comparison - Visualize Effect",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"WEIGHT INITIALIZATION COMPARISON\")\nprint(\"=\"*60)\n\nclass SimpleNet(nn.Module):\n    def __init__(self, init_method='he'):\n        super().__init__()\n        self.fc1 = nn.Linear(100, 100)\n        self.fc2 = nn.Linear(100, 100)\n        self.fc3 = nn.Linear(100, 100)\n        self.fc4 = nn.Linear(100, 1)\n        \n        # Initialize\n        self.init_method = init_method\n        self._initialize_weights()\n    \n    def _initialize_weights(self):\n        for module in self.modules():\n            if isinstance(module, nn.Linear):\n                if self.init_method == 'zeros':\n                    nn.init.zeros_(module.weight)\n                elif self.init_method == 'ones':\n                    nn.init.ones_(module.weight)\n                elif self.init_method == 'large':\n                    nn.init.normal_(module.weight, 0, 1.0)  # std=1\n                elif self.init_method == 'small':\n                    nn.init.normal_(module.weight, 0, 0.001)  # std=0.001\n                elif self.init_method == 'xavier':\n                    nn.init.xavier_normal_(module.weight)\n                elif self.init_method == 'he':\n                    nn.init.kaiming_normal_(module.weight)\n                \n                nn.init.zeros_(module.bias)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = torch.relu(self.fc2(x))\n        x = torch.relu(self.fc3(x))\n        x = self.fc4(x)\n        return x\n\n# Test different initializations\ninit_methods = ['zeros', 'large', 'small', 'xavier', 'he']\nresults = {}\n\n# Input\nx = torch.randn(32, 100)  # batch_size=32, features=100\n\nprint(\"\\nTesting different initializations...\\n\")\nprint(\"=\"*60)\n\nfor method in init_methods:\n    model = SimpleNet(init_method=method)\n    \n    with torch.no_grad():\n        output = model(x)\n    \n    results[method] = {\n        'output_mean': output.mean().item(),\n        'output_std': output.std().item(),\n        'output_min': output.min().item(),\n        'output_max': output.max().item()\n    }\n    \n    print(f\"\\n{method.upper():12}\")\n    print(f\"  Mean: {results[method]['output_mean']:10.6f}\")\n    print(f\"  Std:  {results[method]['output_std']:10.6f}\")\n    print(f\"  Min:  {results[method]['output_min']:10.6f}\")\n    print(f\"  Max:  {results[method]['output_max']:10.6f}\")\n    \n    # Diagnosis\n    if method == 'zeros':\n        print(\"  ❌ All neurons produce same output (symmetry!)\")\n    elif method == 'large':\n        if abs(results[method]['output_std']) > 100:\n            print(\"  ❌ Exploding activations!\")\n    elif method == 'small':\n        if abs(results[method]['output_std']) < 0.01:\n            print(\"  ❌ Vanishing activations!\")\n    elif method in ['xavier', 'he']:\n        if 0.1 < results[method]['output_std'] < 10:\n            print(\"  ✓ Good variance preservation!\")\n\n# Visualize\nfig, axes = plt.subplots(2, 3, figsize=(15, 10))\naxes = axes.flatten()\n\nfor idx, method in enumerate(init_methods):\n    model = SimpleNet(init_method=method)\n    \n    with torch.no_grad():\n        outputs = model(x).numpy().flatten()\n    \n    ax = axes[idx]\n    ax.hist(outputs, bins=50, edgecolor='black', alpha=0.7)\n    ax.set_title(f'{method.upper()}', fontsize=14)\n    ax.set_xlabel('Output Value')\n    ax.set_ylabel('Frequency')\n    ax.axvline(x=0, color='r', linestyle='--', linewidth=2)\n    \n    # Stats\n    ax.text(0.02, 0.98, \n           f'μ={results[method][\"output_mean\"]:.2f}\\nσ={results[method][\"output_std\"]:.2f}',\n           transform=ax.transAxes, fontsize=11,\n           verticalalignment='top',\n           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))\n\naxes[-1].axis('off')  # Last subplot empty\n\nplt.tight_layout()\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"SUMMARY\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n❌ ZEROS: Symmetry problem - all neurons learn same thing\n❌ LARGE: Exploding activations → training instability\n❌ SMALL: Vanishing activations → very slow learning\n✓ XAVIER: Good for tanh/sigmoid\n✓ HE: Good for ReLU (most common)\n\"\"\")",
+      "explanation": "Farklı initialization methods'ların output distribution'a etkisi. Zeros = symmetry, large = exploding, small = vanishing. Xavier/He = just right!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch Built-in Initialization Methods",
+      "code": "import torch\nimport torch.nn as nn\n\nprint(\"=\"*60)\nprint(\"PYTORCH INITIALIZATION METHODS\")\nprint(\"=\"*60)\n\n# Create a simple layer\nlayer = nn.Linear(100, 50)\n\nprint(\"\\nLayer shape: [out_features, in_features]\")\nprint(f\"Weight shape: {layer.weight.shape}\")\nprint(f\"Bias shape: {layer.bias.shape}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"1️⃣  XAVIER/GLOROT INITIALIZATION\")\nprint(\"=\"*60)\n\n# Xavier Normal\nnn.init.xavier_normal_(layer.weight)\nprint(\"\\nXavier Normal (Gaussian):\")\nprint(f\"  Mean: {layer.weight.mean():.6f}\")\nprint(f\"  Std:  {layer.weight.std():.6f}\")\nprint(f\"  Expected std: {np.sqrt(2 / (100 + 50)):.6f}\")\n\n# Xavier Uniform\nnn.init.xavier_uniform_(layer.weight)\nprint(\"\\nXavier Uniform:\")\nprint(f\"  Mean: {layer.weight.mean():.6f}\")\nprint(f\"  Std:  {layer.weight.std():.6f}\")\nprint(f\"  Range: [{layer.weight.min():.4f}, {layer.weight.max():.4f}]\")\nprint(f\"  Expected range: ±{np.sqrt(6 / (100 + 50)):.4f}\")\n\nprint(\"\\n💡 Use for: Tanh, Sigmoid activations\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  HE/KAIMING INITIALIZATION\")\nprint(\"=\"*60)\n\n# He Normal (most common!)\nnn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')\nprint(\"\\nHe Normal (for ReLU):\")\nprint(f\"  Mean: {layer.weight.mean():.6f}\")\nprint(f\"  Std:  {layer.weight.std():.6f}\")\nprint(f\"  Expected std: {np.sqrt(2 / 100):.6f}\")\n\n# He Uniform\nnn.init.kaiming_uniform_(layer.weight, mode='fan_in', nonlinearity='relu')\nprint(\"\\nHe Uniform:\")\nprint(f\"  Mean: {layer.weight.mean():.6f}\")\nprint(f\"  Std:  {layer.weight.std():.6f}\")\nprint(f\"  Range: [{layer.weight.min():.4f}, {layer.weight.max():.4f}]\")\n\nprint(\"\\n💡 Use for: ReLU, LeakyReLU, PReLU\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  OTHER METHODS\")\nprint(\"=\"*60)\n\n# Zeros\nnn.init.zeros_(layer.weight)\nprint(\"\\nZeros:\")\nprint(f\"  All elements: {layer.weight.unique()}\")\nprint(\"  ❌ Don't use for weights (symmetry!)\")\nprint(\"  ✓ OK for biases\")\n\n# Ones\nnn.init.ones_(layer.weight)\nprint(\"\\nOnes:\")\nprint(f\"  All elements: {layer.weight.unique()}\")\nprint(\"  ❌ Don't use (symmetry!)\")\n\n# Constant\nnn.init.constant_(layer.weight, 0.5)\nprint(\"\\nConstant (0.5):\")\nprint(f\"  All elements: {layer.weight.unique()}\")\nprint(\"  ⚠️  Rarely used\")\n\n# Uniform\nnn.init.uniform_(layer.weight, a=-0.1, b=0.1)\nprint(\"\\nUniform [-0.1, 0.1]:\")\nprint(f\"  Mean: {layer.weight.mean():.6f}\")\nprint(f\"  Range: [{layer.weight.min():.4f}, {layer.weight.max():.4f}]\")\n\n# Normal\nnn.init.normal_(layer.weight, mean=0, std=0.01)\nprint(\"\\nNormal (0, 0.01):\")\nprint(f\"  Mean: {layer.weight.mean():.6f}\")\nprint(f\"  Std:  {layer.weight.std():.6f}\")\n\n# Orthogonal (for RNNs!)\nnn.init.orthogonal_(layer.weight)\nprint(\"\\nOrthogonal:\")\nprint(f\"  Shape: {layer.weight.shape}\")\n# Check orthogonality\nif layer.weight.shape[0] <= layer.weight.shape[1]:\n    product = layer.weight @ layer.weight.T\n    is_orthogonal = torch.allclose(product, torch.eye(layer.weight.shape[0]), atol=1e-5)\n    print(f\"  Is orthogonal: {is_orthogonal}\")\n    print(\"  ✓ Use for RNN/LSTM hidden-to-hidden weights\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"PRACTICAL USAGE\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nclass MyModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 64, 3)\n        self.fc1 = nn.Linear(64*30*30, 128)\n        self.fc2 = nn.Linear(128, 10)\n        \n        # Initialize\n        self._init_weights()\n    \n    def _init_weights(self):\n        for m in self.modules():\n            if isinstance(m, nn.Conv2d):\n                # He init for conv (ReLU)\n                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')\n                if m.bias is not None:\n                    nn.init.zeros_(m.bias)\n            \n            elif isinstance(m, nn.Linear):\n                # He init for linear (ReLU)\n                nn.init.kaiming_normal_(m.weight)\n                nn.init.zeros_(m.bias)\n            \n            elif isinstance(m, nn.BatchNorm2d):\n                # Batch norm\n                nn.init.ones_(m.weight)  # gamma\n                nn.init.zeros_(m.bias)   # beta\n\"\"\")",
+      "explanation": "PyTorch'ta built-in initialization functions. xavier_normal, xavier_uniform, kaiming_normal, kaiming_uniform. ReLU için He, Tanh için Xavier!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Gradient Flow Analysis - Good vs Bad Init",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"GRADIENT FLOW: GOOD VS BAD INITIALIZATION\")\nprint(\"=\"*60)\n\nclass DeepNet(nn.Module):\n    def __init__(self, init_method='he', n_layers=10):\n        super().__init__()\n        \n        layers = []\n        for i in range(n_layers):\n            layers.append(nn.Linear(100, 100))\n            layers.append(nn.ReLU())\n        layers.append(nn.Linear(100, 1))\n        \n        self.network = nn.Sequential(*layers)\n        self.init_method = init_method\n        self._initialize()\n    \n    def _initialize(self):\n        for module in self.modules():\n            if isinstance(module, nn.Linear):\n                if self.init_method == 'small':\n                    nn.init.normal_(module.weight, 0, 0.001)\n                elif self.init_method == 'large':\n                    nn.init.normal_(module.weight, 0, 1.0)\n                elif self.init_method == 'xavier':\n                    nn.init.xavier_normal_(module.weight)\n                elif self.init_method == 'he':\n                    nn.init.kaiming_normal_(module.weight, nonlinearity='relu')\n                \n                nn.init.zeros_(module.bias)\n    \n    def forward(self, x):\n        return self.network(x)\n\ndef analyze_gradients(model, x, y):\n    \"\"\"Compute gradients and analyze flow\"\"\"\n    model.zero_grad()\n    output = model(x)\n    loss = ((output - y) ** 2).mean()\n    loss.backward()\n    \n    grad_stats = []\n    for name, param in model.named_parameters():\n        if 'weight' in name and param.grad is not None:\n            grad_stats.append({\n                'layer': name,\n                'mean': param.grad.mean().item(),\n                'std': param.grad.std().item(),\n                'max': param.grad.abs().max().item()\n            })\n    \n    return grad_stats\n\n# Test data\nx = torch.randn(32, 100)\ny = torch.randn(32, 1)\n\nprint(\"\\nAnalyzing gradient flow with different initializations...\\n\")\n\ninit_methods = ['small', 'large', 'he']\nresults = {}\n\nfor method in init_methods:\n    print(f\"Testing {method.upper()}...\")\n    model = DeepNet(init_method=method, n_layers=10)\n    grad_stats = analyze_gradients(model, x, y)\n    results[method] = grad_stats\n    \n    # Check for vanishing/exploding\n    avg_grad = np.mean([s['std'] for s in grad_stats])\n    \n    if avg_grad < 1e-6:\n        print(f\"  ❌ Vanishing gradients! (avg={avg_grad:.2e})\")\n    elif avg_grad > 1e3:\n        print(f\"  ❌ Exploding gradients! (avg={avg_grad:.2e})\")\n    else:\n        print(f\"  ✓ Good gradient flow (avg={avg_grad:.2e})\")\n\n# Visualize\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\n\nfor idx, method in enumerate(init_methods):\n    ax = axes[idx]\n    \n    layers = list(range(len(results[method])))\n    grads = [s['std'] for s in results[method]]\n    \n    ax.bar(layers, grads, alpha=0.7)\n    ax.set_xlabel('Layer Depth', fontsize=12)\n    ax.set_ylabel('Gradient Std', fontsize=12)\n    ax.set_title(f'{method.upper()} Initialization', fontsize=14)\n    ax.set_yscale('log')\n    ax.grid(True, alpha=0.3, which='both')\n    \n    # Highlight problems\n    if method == 'small':\n        ax.annotate('Vanishing!', xy=(5, grads[5]), xytext=(7, grads[5]*10),\n                   arrowprops=dict(arrowstyle='->', color='red', lw=2),\n                   fontsize=12, color='red')\n    elif method == 'large':\n        ax.annotate('Exploding!', xy=(2, grads[2]), xytext=(4, grads[2]/10),\n                   arrowprops=dict(arrowstyle='->', color='red', lw=2),\n                   fontsize=12, color='red')\n    else:\n        ax.annotate('Healthy!', xy=(5, grads[5]), xytext=(7, grads[5]*2),\n                   arrowprops=dict(arrowstyle='->', color='green', lw=2),\n                   fontsize=12, color='green')\n\nplt.tight_layout()\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TRAINING COMPARISON\")\nprint(\"=\"*60)\n\nprint(\"\\nTraining models for 100 iterations...\\n\")\n\ntraining_results = {}\n\nfor method in init_methods:\n    model = DeepNet(init_method=method, n_layers=10)\n    optimizer = optim.SGD(model.parameters(), lr=0.001)\n    criterion = nn.MSELoss()\n    \n    losses = []\n    for epoch in range(100):\n        optimizer.zero_grad()\n        output = model(x)\n        loss = criterion(output, y)\n        loss.backward()\n        optimizer.step()\n        losses.append(loss.item())\n    \n    training_results[method] = losses\n    print(f\"{method.upper():10} - Final loss: {losses[-1]:.6f}\")\n\n# Plot training curves\nplt.figure(figsize=(10, 6))\nfor method in init_methods:\n    plt.plot(training_results[method], label=method.upper(), linewidth=2)\n\nplt.xlabel('Iteration', fontsize=12)\nplt.ylabel('Loss', fontsize=12)\nplt.title('Training Convergence: Different Initializations', fontsize=14)\nplt.legend(fontsize=12)\nplt.yscale('log')\nplt.grid(True, alpha=0.3)\nplt.tight_layout()\n\nprint(\"\\n💡 Observations:\")\nprint(\"   • SMALL init: Very slow convergence (vanishing gradients)\")\nprint(\"   • LARGE init: Unstable, may diverge (exploding gradients)\")\nprint(\"   • HE init: Fast, stable convergence ✓\")",
+      "explanation": "Good vs bad initialization'ın gradient flow'a etkisi. Small = vanishing, large = exploding, He = healthy! Deep networks için kritik."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Custom Initialization - Production Best Practices",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"PRODUCTION INITIALIZATION BEST PRACTICES\")\nprint(\"=\"*60)\n\nclass ProductionModel(nn.Module):\n    \"\"\"\n    Production-ready model with proper initialization\n    \"\"\"\n    def __init__(self, num_classes=10):\n        super().__init__()\n        \n        # Conv layers\n        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)\n        self.bn1 = nn.BatchNorm2d(64)\n        \n        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)\n        self.bn2 = nn.BatchNorm2d(128)\n        \n        # FC layers\n        self.fc1 = nn.Linear(128 * 8 * 8, 512)\n        self.dropout = nn.Dropout(0.5)\n        self.fc2 = nn.Linear(512, num_classes)\n        \n        # Initialize\n        self._init_weights()\n    \n    def _init_weights(self):\n        \"\"\"\n        Custom initialization logic\n        \"\"\"\n        for m in self.modules():\n            if isinstance(m, nn.Conv2d):\n                # He initialization for conv (ReLU activation)\n                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')\n                if m.bias is not None:\n                    nn.init.constant_(m.bias, 0)\n            \n            elif isinstance(m, nn.BatchNorm2d):\n                # Batch norm parameters\n                nn.init.constant_(m.weight, 1)  # gamma\n                nn.init.constant_(m.bias, 0)    # beta\n            \n            elif isinstance(m, nn.Linear):\n                # He initialization for linear (ReLU)\n                nn.init.kaiming_normal_(m.weight)\n                nn.init.constant_(m.bias, 0)\n        \n        # Special: final layer (smaller init for stability)\n        nn.init.normal_(self.fc2.weight, 0, 0.01)\n        nn.init.constant_(self.fc2.bias, 0)\n    \n    def forward(self, x):\n        x = torch.relu(self.bn1(self.conv1(x)))\n        x = torch.max_pool2d(x, 2)\n        \n        x = torch.relu(self.bn2(self.conv2(x)))\n        x = torch.max_pool2d(x, 2)\n        \n        x = x.view(x.size(0), -1)\n        x = torch.relu(self.fc1(x))\n        x = self.dropout(x)\n        x = self.fc2(x)\n        return x\n\nprint(\"\\n1️⃣  Standard Initialization\")\nmodel = ProductionModel()\nprint(\"✓ Model initialized with custom logic\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"2️⃣  TRANSFER LEARNING INITIALIZATION\")\nprint(\"=\"*60)\n\nclass TransferModel(nn.Module):\n    def __init__(self, pretrained_model, num_classes=100):\n        super().__init__()\n        \n        # Use pretrained feature extractor\n        self.features = pretrained_model.features\n        \n        # NEW classifier head\n        self.classifier = nn.Sequential(\n            nn.Linear(512, 256),\n            nn.ReLU(),\n            nn.Dropout(0.5),\n            nn.Linear(256, num_classes)\n        )\n        \n        # Freeze pretrained weights\n        for param in self.features.parameters():\n            param.requires_grad = False\n        \n        # Initialize new layers only\n        self._init_new_layers()\n    \n    def _init_new_layers(self):\n        \"\"\"Initialize only the new classifier\"\"\"\n        for m in self.classifier.modules():\n            if isinstance(m, nn.Linear):\n                nn.init.kaiming_normal_(m.weight)\n                nn.init.constant_(m.bias, 0)\n    \n    def forward(self, x):\n        x = self.features(x)\n        x = x.view(x.size(0), -1)\n        x = self.classifier(x)\n        return x\n\nprint(\"\"\"\nTransfer Learning Init Strategy:\n  ✓ Keep pretrained weights (already optimized!)\n  ✓ Initialize new layers with He/Xavier\n  ✓ Optionally: Fine-tune with smaller LR later\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"3️⃣  LSTM/RNN INITIALIZATION\")\nprint(\"=\"*60)\n\nclass LSTMModel(nn.Module):\n    def __init__(self, input_size, hidden_size, num_layers, num_classes):\n        super().__init__()\n        \n        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)\n        self.fc = nn.Linear(hidden_size, num_classes)\n        \n        self._init_weights()\n    \n    def _init_weights(self):\n        \"\"\"Special initialization for LSTM\"\"\"\n        for name, param in self.lstm.named_parameters():\n            if 'weight_ih' in name:\n                # Input-to-hidden: Xavier\n                nn.init.xavier_uniform_(param)\n            elif 'weight_hh' in name:\n                # Hidden-to-hidden: Orthogonal\n                nn.init.orthogonal_(param)\n            elif 'bias' in name:\n                # Biases\n                nn.init.constant_(param, 0)\n                \n                # IMPORTANT: Set forget gate bias to 1\n                # This helps with long-term dependencies\n                n = param.size(0)\n                param.data[n//4:n//2].fill_(1.0)  # Forget gate\n        \n        # FC layer\n        nn.init.kaiming_normal_(self.fc.weight)\n        nn.init.constant_(self.fc.bias, 0)\n    \n    def forward(self, x):\n        out, _ = self.lstm(x)\n        out = self.fc(out[:, -1, :])  # Last time step\n        return out\n\nprint(\"\"\"\nLSTM Initialization Best Practices:\n  ✓ Input-to-hidden: Xavier (linear transformation)\n  ✓ Hidden-to-hidden: Orthogonal (gradient flow)\n  ✓ Forget gate bias: 1.0 (remember by default!)\n  ✓ Other biases: 0.0\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"4️⃣  REPRODUCIBILITY\")\nprint(\"=\"*60)\n\ndef set_seed(seed=42):\n    \"\"\"Set all random seeds for reproducibility\"\"\"\n    torch.manual_seed(seed)\n    torch.cuda.manual_seed(seed)\n    torch.cuda.manual_seed_all(seed)  # multi-GPU\n    np.random.seed(seed)\n    \n    # Deterministic behavior (slower but reproducible)\n    torch.backends.cudnn.deterministic = True\n    torch.backends.cudnn.benchmark = False\n\nprint(\"\"\"\ndef set_seed(seed=42):\n    torch.manual_seed(seed)\n    torch.cuda.manual_seed_all(seed)\n    np.random.seed(seed)\n    torch.backends.cudnn.deterministic = True\n    torch.backends.cudnn.benchmark = False\n\n# Use it\nset_seed(42)\nmodel = MyModel()  # Now reproducible!\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"5️⃣  ACTIVATION STATISTICS CHECK\")\nprint(\"=\"*60)\n\ndef check_init_quality(model, sample_input):\n    \"\"\"\n    Verify initialization quality by checking activations\n    \"\"\"\n    model.eval()\n    activations = {}\n    \n    def hook_fn(module, input, output, name):\n        activations[name] = {\n            'mean': output.mean().item(),\n            'std': output.std().item(),\n            'dead_relu': (output == 0).float().mean().item() if isinstance(module, nn.ReLU) else None\n        }\n    \n    hooks = []\n    for name, module in model.named_modules():\n        if isinstance(module, (nn.Conv2d, nn.Linear, nn.ReLU)):\n            hooks.append(\n                module.register_forward_hook(\n                    lambda m, i, o, n=name: hook_fn(m, i, o, n)\n                )\n            )\n    \n    with torch.no_grad():\n        _ = model(sample_input)\n    \n    for hook in hooks:\n        hook.remove()\n    \n    return activations\n\nprint(\"\"\"\nCheck Initialization Quality:\n  • Activation mean ≈ 0 (centered)\n  • Activation std ≈ 0.5-2.0 (not too small/large)\n  • Dead ReLU < 50% (not too many dead neurons)\n  • Consistent across layers (no explosion/vanishing)\n\"\"\")\n\n# Test\nmodel = ProductionModel()\nsample = torch.randn(1, 3, 32, 32)\nstats = check_init_quality(model, sample)\n\nprint(\"\\nInitialization Statistics:\")\nfor name, stat in list(stats.items())[:5]:  # First 5 layers\n    print(f\"\\n{name}:\")\n    print(f\"  Mean: {stat['mean']:.4f}\")\n    print(f\"  Std:  {stat['std']:.4f}\")\n    if stat['dead_relu'] is not None:\n        print(f\"  Dead ReLU: {stat['dead_relu']:.1%}\")\n\nprint(\"\\n✓ Initialization quality check complete!\")",
+      "explanation": "Production initialization: Conv (He), BatchNorm (1,0), LSTM (orthogonal + forget bias=1), transfer learning (freeze + new init), reproducibility (seed), quality check!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Xavier initialization hangi activation function için optimaldir?",
+      "options": [
+        "ReLU",
+        "Tanh ve Sigmoid",
+        "Softmax",
+        "Hepsi için aynı"
+      ],
+      "correct": 1,
+      "explanation": "Xavier init tanh ve sigmoid için! Symmetric activations varsayar. ReLU half of neurons'ları kill eder, He init gerekir."
+    },
+    {
+      "question": "He initialization Xavier'den nasıl farklıdır?",
+      "options": [
+        "Aynıdır, sadece isim farklı",
+        "Sadece fan_in kullanır ve √2 factor (ReLU compensation)",
+        "Daha küçük variance kullanır",
+        "Sadece CNN için kullanılır"
+      ],
+      "correct": 1,
+      "explanation": "He init: var = 2/fan_in (Xavier: 2/(fan_in+fan_out)). √2 factor ReLU'nun half neurons'ları kill etmesini compensate eder!"
+    },
+    {
+      "question": "Neden tüm weights'i 0 ile initialize edemezsin?",
+      "options": [
+        "Training çok yavaş olur",
+        "Symmetry breaking olmaz, tüm neurons aynı şeyi öğrenir",
+        "Memory problemi yaratır",
+        "Yapabilirsin, problem yok"
+      ],
+      "correct": 1,
+      "explanation": "All zeros → symmetry problem! Tüm neurons aynı gradient alır, aynı update'i yapar, asla farklılaşamaz. Hiçbir şey öğrenemez!"
+    },
+    {
+      "question": "LSTM forget gate bias'ı neden 1.0 initialize edilir?",
+      "options": [
+        "Tesadüf, önemli değil",
+        "Long-term dependencies için memory'yi başlangıçta preserve et",
+        "Gradient explosion'ı önler",
+        "Daha hızlı convergence"
+      ],
+      "correct": 1,
+      "explanation": "Forget gate bias=1 → başlangıçta 'unutma' (remember by default). Long-term dependencies öğrenmeyi kolaylaştırır. 0 olursa everything forgets!"
+    },
+    {
+      "question": "Batch Normalization kullanıyorsan initialization ne kadar önemli?",
+      "options": [
+        "Hiç önemli değil",
+        "Hala önemli ama덜 kritik (BN variance'ı normalize eder)",
+        "Daha da önemli olur",
+        "Sadece ilk epoch için önemli"
+      ],
+      "correct": 1,
+      "explanation": "Batch Norm variance normalize eder → init덜 kritik. Ama ilk iterations için hala önemli, ve BN olmayan layers için critical!"
+    },
+    {
+      "question": "Transfer learning'de yeni classifier head nasıl initialize edilir?",
+      "options": [
+        "Random uniform",
+        "Pretrained weights'ten copy et",
+        "He/Xavier init (fresh random)",
+        "All zeros"
+      ],
+      "correct": 2,
+      "explanation": "Yeni layers fresh init gerekir (He/Xavier)! Pretrained body frozen veya fine-tuned. New head'in öğrenmesi için random init şart."
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "All weights'i 0 veya aynı constant ile initialize etmek",
+      "why": "Symmetry breaking olmaz! Tüm neurons aynı gradient alır, aynı update yapılır, asla farklılaşamaz.",
+      "fix": "Random initialization kullan (Xavier/He). Her neuron farklı başlasın!",
+      "example": "# YANLIŞ\nnn.init.zeros_(layer.weight)  # ❌ Symmetry!\nnn.init.constant_(layer.weight, 0.5)  # ❌ Still symmetry!\n\n# DOĞRU\nnn.init.kaiming_normal_(layer.weight)  # ✓ Random, breaks symmetry"
+    },
+    {
+      "mistake": "ReLU için Xavier, Tanh için He kullanmak (ters!)",
+      "why": "Xavier symmetric activations (tanh) için, He ReLU için optimize edilmiş! Ters kullanırsan suboptimal.",
+      "fix": "ReLU → He, Tanh/Sigmoid → Xavier. Activation'ına göre seç!",
+      "example": "# ReLU kullanıyorsan\nself.fc = nn.Linear(100, 50)\nnn.init.kaiming_normal_(self.fc.weight)  # ✓ He for ReLU\n\n# Tanh kullanıyorsan\nnn.init.xavier_normal_(self.fc.weight)  # ✓ Xavier for Tanh"
+    },
+    {
+      "mistake": "Bias'leri initialize etmeyi unutmak",
+      "why": "PyTorch default bias init çok büyük olabilir. Genelde bias=0 optimal.",
+      "fix": "Biases'i explicit initialize et, genelde zeros.",
+      "example": "# Weight init yaptın ama bias unuttun\nnn.init.kaiming_normal_(layer.weight)\n# Bias hala random!\n\n# DOĞRU\nnn.init.kaiming_normal_(layer.weight)\nnn.init.zeros_(layer.bias)  # ✓"
+    },
+    {
+      "mistake": "Transfer learning'de tüm weights'i reinitialize etmek",
+      "why": "Pretrained weights çok değerli! Öğrenilmiş features'i at, sıfırdan başla → çok kötü!",
+      "fix": "Pretrained weights'i koru (load), sadece yeni layers'ı init et.",
+      "example": "# YANLIŞ\nmodel.load_state_dict(pretrained)\nmodel._init_weights()  # ❌ Tüm pretrained weights silindi!\n\n# DOĞRU\nmodel.load_state_dict(pretrained, strict=False)\nmodel._init_new_layers()  # ✓ Sadece yeni layers"
+    },
+    {
+      "mistake": "LSTM forget gate bias'ını 0 bırakmak",
+      "why": "Bias=0 → forget gate başlangıçta 'forget everything' → long-term dependencies öğrenemez.",
+      "fix": "Forget gate bias = 1.0 (remember by default).",
+      "example": "# LSTM bias init\nfor name, param in lstm.named_parameters():\n    if 'bias' in name:\n        n = param.size(0)\n        # Forget gate: indices n//4 to n//2\n        param.data[n//4:n//2].fill_(1.0)  # ✓ Bias=1 for forget gate"
+    },
+    {
+      "mistake": "Initialization sonrası activation stats'ı check etmemek",
+      "why": "Kötü init early layers'da detect edilmeyebilir. Activation stats bakmadan training başlarsan sorun çıkabilir.",
+      "fix": "İlk forward pass sonrası activation mean/std check et.",
+      "example": "model = MyModel()\nx = torch.randn(32, 3, 32, 32)\n\n# Check activations\nwith torch.no_grad():\n    out = model(x)\n    print(f\"Output mean: {out.mean():.4f}\")\n    print(f\"Output std: {out.std():.4f}\")\n    # Should be reasonable (not 0, not 1e6)"
+    },
+    {
+      "mistake": "Reproducibility için seed set etmemek",
+      "why": "Initialization random → her run farklı results. Debugging ve comparison zor!",
+      "fix": "torch.manual_seed() ve np.random.seed() kullan.",
+      "example": "# Reproducible init\ntorch.manual_seed(42)\nnp.random.seed(42)\nmodel = MyModel()  # ✓ Same init every time"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Xavier/Glorot initialization nedir?",
+      "back": "Weights ~ N(0, √(2/(fan_in + fan_out))). Tanh/sigmoid activations için optimal. Forward ve backward variance preserve eder!"
+    },
+    {
+      "front": "He/Kaiming initialization nedir?",
+      "back": "Weights ~ N(0, √(2/fan_in)). ReLU activations için! ReLU half neurons kill eder, √2 factor bunu compensate eder."
+    },
+    {
+      "front": "Neden all zeros initialization çalışmaz?",
+      "back": "Symmetry breaking olmaz! Tüm neurons aynı gradient alır, aynı update yapılır, asla farklılaşamaz. Hiçbir şey öğrenemez."
+    },
+    {
+      "front": "Hangi activation için hangi init?",
+      "back": "ReLU/LeakyReLU → He. Tanh/Sigmoid → Xavier. SELU → LeCun. Modern default: He (ReLU dominant)."
+    },
+    {
+      "front": "LSTM forget gate bias neden 1.0?",
+      "back": "Başlangıçta 'remember by default'. Long-term dependencies için critical. 0 olursa everything forgets → öğrenemez!"
+    },
+    {
+      "front": "Batch Norm init nasıl?",
+      "back": "γ (weight) = 1, β (bias) = 0. Başlangıçta identity transformation (BN = x)."
+    },
+    {
+      "front": "Transfer learning'de new layers nasıl init?",
+      "back": "Pretrained body koru (frozen/fine-tune), new classifier He/Xavier ile fresh init. Pretrained weights'i asla reinitialize etme!"
+    },
+    {
+      "front": "Orthogonal init ne zaman kullanılır?",
+      "back": "RNN/LSTM hidden-to-hidden weights için! W^T W = I. Gradient flow preserve eder, vanishing/exploding önler."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "Initialization Comparison",
+      "description": "Zeros, small, large, Xavier, He initialization'ların output distribution'a etkisini interactive görün.",
+      "component": "InitializationComparison"
+    },
+    {
+      "type": "plot",
+      "title": "Gradient Flow Analysis",
+      "description": "Good vs bad init'in deep networks'te gradient magnitude'sine etkisi. Layer-by-layer visualization.",
+      "component": "GradientFlowViz"
+    },
+    {
+      "type": "animation",
+      "title": "Training Convergence",
+      "description": "Different initialization methods ile training convergence animation. Loss curves karşılaştırması.",
+      "component": "TrainingConvergence"
+    },
+    {
+      "type": "interactive",
+      "title": "Activation Statistics Explorer",
+      "description": "Forward pass'te activation mean/std/range'i layer-by-layer explore et. Healthy vs unhealthy init.",
+      "component": "ActivationStats"
+    }
+  ]
+}

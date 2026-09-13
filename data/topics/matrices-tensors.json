@@ -1,0 +1,285 @@
+{
+  "id": "matrices-tensors",
+  "title": "Matrisler ve Tensörler",
+  "category": "linear-algebra",
+  "level": 1,
+  "estimatedTime": 45,
+  "content": {
+    "level0_basic": "Matris, sayıların tablo şeklinde düzenlenmiş halidir. Bir Excel tablosu gibi düşünebilirsin - satırlar ve sütunlar var. Tensör ise daha genel bir kavram: tek sayı (0 boyut), vektör (1 boyut), matris (2 boyut) veya daha yüksek boyutlu diziler. Yapay zeka modellerinde, örneğin bir resim 3 boyutlu tensördür: yükseklik × genişlik × renk kanalları.",
+    "level1_beginner": "Matrisler, yapay zeka ve makine öğrenmesinin temel yapı taşlarıdır. Bir matris, m×n boyutunda (m satır, n sütun) sayıların düzenli bir şekilde yerleştirilmesidir. Matrislerle toplama, çıkarma, çarpma ve transpoz gibi işlemler yapabiliriz.\n\nTensörler, matrislerin genelleştirilmiş halidir. PyTorch ve TensorFlow gibi kütüphaneler tensörler üzerine kuruludur çünkü:\n- 0-boyutlu tensör = Skaler (tek sayı)\n- 1-boyutlu tensör = Vektör\n- 2-boyutlu tensör = Matris\n- 3-boyutlu tensör = Resimler, video kareleri\n- 4-boyutlu tensör = Video batch'leri\n\nNeural network'lerde ağırlıklar matrislerle, veriler tensörlerle temsil edilir.",
+    "level2_application": "Matris işlemleri neural network'lerin çalışma prensibinin temelidir. Bir layer'dan diğerine veri aktarımı matris çarpımıyla yapılır:\n\n**Forward Pass:** `output = input @ weights + bias`\n\nBurada @ operatörü matris çarpımıdır (dot product). Her layer'ın ağırlıkları bir matris, girdi ve çıktı birer tensördür.\n\n**Önemli Matris İşlemleri:**\n1. **Toplama/Çıkarma:** Aynı boyuttaki matrisler eleman eleman toplanır\n2. **Matris Çarpımı:** (m×n) × (n×p) = (m×p) boyutunda sonuç\n3. **Element-wise Çarpım:** Hadamard product, ⊙ sembolü\n4. **Transpoz:** Satır ve sütunları yer değiştirir (A^T)\n5. **Reshape:** Tensörün boyutunu değiştirir (flatten, unflatten)\n\n**Broadcasting:** NumPy ve PyTorch'ta farklı boyutlu tensörler otomatik olarak genişletilir.",
+    "level3_advanced": "Matris matematiği, neural network'lerin matematiksel temelini oluşturur.\n\n**Matris Çarpımı (Matrix Multiplication):**\nC = A × B için:\n$$C_{ij} = \\sum_{k=1}^{n} A_{ik} \\cdot B_{kj}$$\n\n**Transpoz Özellikleri:**\n$$(A^T)^T = A$$\n$$(AB)^T = B^T A^T$$\n\n**Gradient Hesabı:**\nBir layer'ın çıktısı $y = Wx + b$ olduğunda, gradyanlar:\n$$\\frac{\\partial L}{\\partial W} = \\frac{\\partial L}{\\partial y} \\cdot x^T$$\n$$\\frac{\\partial L}{\\partial x} = W^T \\cdot \\frac{\\partial L}{\\partial y}$$\n\n**Tensör Notasyonu:**\nEinstein notation ile tensör işlemleri:\n$$C_{ij} = A_{ik} B_{kj} \\text{ (implicit sum over k)}$$\n\n**Frobenius Norm:** Matris büyüklüğü ölçüsü\n$$||A||_F = \\sqrt{\\sum_{i,j} A_{ij}^2}$$\n\nBu formüller backpropagation'da ağırlık güncellemelerinde kullanılır.",
+    "level4_expert": "Üretim sistemlerinde matris işlemleri optimize edilmelidir.\n\n**GPU Optimizasyonu:**\n- CUDA kernels ile paralel matris çarpımı\n- Tensor Cores kullanımı (mixed precision)\n- Memory coalescing için doğru layout (row-major vs column-major)\n- cuBLAS, cuDNN gibi optimize kütüphaneler\n\n**Memory Efficiency:**\n- In-place operations: `tensor.add_(other)` vs `tensor + other`\n- View vs Clone: Memory paylaşımı\n- Gradient checkpointing: Trade-off memory vs computation\n\n**Distributed Training:**\n- Tensor parallelism: Matrisleri GPU'lar arasında böl\n- Model parallelism: Her GPU farklı layer\n- Data parallelism: Batch'i böl\n\n**Numerical Stability:**\n- Float16 vs Float32 vs Float64 trade-offs\n- Gradient clipping: Exploding gradient'i önle\n- Batch normalization: Internal covariate shift\n\n**Performance:**\n```python\n# Kötü: Loop kullanımı\nfor i in range(n):\n    output[i] = weight @ input[i]\n\n# İyi: Batched operation\noutput = torch.bmm(weight.unsqueeze(0).expand(n, -1, -1), \n                   input.unsqueeze(-1)).squeeze(-1)\n```\n\nBüyük modellerde (GPT, LLaMA) matris boyutları 10000×10000'i geçebilir."
+  },
+  "whatIsIt": "Matrisler, sayıların dikdörtgen tablo formatında düzenlenmiş halidir. Tensörler ise matrislerin n-boyutlu genelleştirmesidir. Neural network'lerde her şey tensör: ağırlıklar, aktivasyonlar, gradyanlar. Bir resim bile 3D tensördür (yükseklik × genişlik × RGB).",
+  "whyNeeded": "Neural network'lerin tüm hesaplamaları matris işlemleriyle yapılır. Bir layer'ın çıktısı = (Girdi × Ağırlık) + Bias. GPU'lar bu matris çarpımlarını paralel olarak yapabildiği için deep learning mümkün oldu. Tensör işlemlerini anlamadan modern AI sistemlerini anlayamazsınız.",
+  "realWorldAnalogy": "Excel'de bir tablo düşünün. Satırlar öğrenciler, sütunlar sınavlar olsun. Her hücre bir not. Bu bir matris! Şimdi birden fazla sınıf varsa (her sınıf bir tablo), bu 3D tensör olur. Netflix'te her kullanıcı × her film × her zaman dilimi = 3D tensör. Yapay zeka, bu çok boyutlu tablolarla çalışır.",
+  "mathematics": {
+    "formulas": [
+      "C_{ij} = \\sum_{k=1}^{n} A_{ik} \\cdot B_{kj}",
+      "(AB)^T = B^T A^T",
+      "||A||_F = \\sqrt{\\sum_{i,j} A_{ij}^2}",
+      "\\frac{\\partial L}{\\partial W} = \\frac{\\partial L}{\\partial y} \\cdot x^T",
+      "\\text{reshape: } \\mathbb{R}^{m \\times n} \\rightarrow \\mathbb{R}^{p \\times q} \\text{ where } mn = pq"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Matris Oluşturma: NumPy array veya PyTorch tensor ile",
+      "2. Shape Kontrolü: Çarpma için uyumlu boyutlar gerekli (m×n) × (n×p)",
+      "3. İşlem Seçimi: Toplama, çarpma, transpoz, reshape",
+      "4. Broadcasting: Farklı boyutlar otomatik genişletilir",
+      "5. Sonuç Doğrulama: Output shape'i kontrol et"
+    ],
+    "complexity": "Matris çarpımı O(n³) - GPU ile paralel hızlanır. Strassen algoritması O(n^2.807). Modern deep learning kütüphaneleri BLAS/LAPACK kullanır."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Matris Kavramı",
+      "code": "Matris = Sayıların Tablosu\n\nÖrnek:\n  1  2  3\n  4  5  6\n  \nBu 2 satır × 3 sütun = 2×3 boyutunda bir matris.\n\nTensör = Çok Boyutlu Dizi\n- 0D: Tek sayı (5)\n- 1D: Vektör [1, 2, 3]\n- 2D: Matris [[1,2], [3,4]]\n- 3D: Resim (224×224×3 RGB)",
+      "explanation": "Temel kavramları anlamak için görselleştirme yeterli."
+    },
+    {
+      "level": 1,
+      "language": "text",
+      "title": "Matris Gösterimi",
+      "code": "A = [\n  [1, 2, 3],\n  [4, 5, 6]\n]\n\nBoyut: 2 satır × 3 sütun = (2, 3)\nEleman: A[0, 1] = 2  (0. satır, 1. sütun)\n\nTranspoz: Satır ↔ Sütun\nA^T = [\n  [1, 4],\n  [2, 5],\n  [3, 6]\n]\nYeni boyut: (3, 2)",
+      "explanation": "Matris notasyonu ve temel işlemler."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "NumPy ile Matris İşlemleri",
+      "code": "import numpy as np\n\n# Matris oluşturma\nA = np.array([[1, 2, 3],\n              [4, 5, 6]])\nB = np.array([[7, 8],\n              [9, 10],\n              [11, 12]])\n\nprint(\"A shape:\", A.shape)  # (2, 3)\nprint(\"B shape:\", B.shape)  # (3, 2)\n\n# Matris çarpımı\nC = A @ B  # veya np.matmul(A, B)\nprint(\"C = A @ B:\")\nprint(C)\nprint(\"C shape:\", C.shape)  # (2, 2)\n\n# Transpoz\nA_T = A.T\nprint(\"\\nA^T shape:\", A_T.shape)  # (3, 2)\n\n# Element-wise çarpım\nD = np.array([[1, 2], [3, 4]])\nE = np.array([[5, 6], [7, 8]])\nF = D * E  # Hadamard product\nprint(\"\\nElement-wise:\", F)",
+      "explanation": "NumPy, bilimsel hesaplamaların temelidir. @ operatörü matris çarpımı yapar."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch Tensörleri",
+      "code": "import torch\n\n# Tensör oluşturma\nx = torch.tensor([[1., 2., 3.],\n                  [4., 5., 6.]])\n\nprint(\"Tensor:\", x)\nprint(\"Shape:\", x.shape)  # torch.Size([2, 3])\nprint(\"Dtype:\", x.dtype)  # torch.float32\n\n# Otomatik oluşturucular\nzeros = torch.zeros(3, 4)  # 3×4 sıfır matrisi\nones = torch.ones(2, 2)    # 2×2 birler matrisi\nrand = torch.randn(3, 3)   # Normal dağılım\n\n# Reshape\ny = x.view(3, 2)  # Aynı veri, farklı şekil\nprint(\"\\nReshaped:\", y.shape)  # (3, 2)\n\n# Flatten\nflat = x.flatten()\nprint(\"Flattened:\", flat.shape)  # (6,)\n\n# Broadcasting\na = torch.tensor([[1], [2], [3]])  # (3, 1)\nb = torch.tensor([10, 20, 30])     # (3,)\nc = a + b  # Otomatik (3,1) + (3,) = (3,3)\nprint(\"\\nBroadcast result shape:\", c.shape)",
+      "explanation": "PyTorch tensörleri GPU'ya taşınabilir ve otomatik gradient hesaplar. view() ve reshape() bellekte veri kopyalamadan şekil değiştirir."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Neural Network Layer Simülasyonu",
+      "code": "import torch\nimport torch.nn.functional as F\n\n# Basit bir linear layer simülasyonu\nbatch_size = 4\ninput_dim = 10\noutput_dim = 5\n\n# Girdi (batch × input_features)\nX = torch.randn(batch_size, input_dim)\n\n# Ağırlıklar (input_features × output_features)\nW = torch.randn(input_dim, output_dim)\n\n# Bias (output_features,)\nb = torch.randn(output_dim)\n\n# Forward pass: Y = X @ W + b\nY = X @ W + b\n\nprint(\"Input shape:\", X.shape)   # (4, 10)\nprint(\"Weight shape:\", W.shape)  # (10, 5)\nprint(\"Output shape:\", Y.shape)  # (4, 5)\nprint(\"\\nOutput (ilk satır):\")\nprint(Y[0])\n\n# PyTorch Linear layer ile aynı\nlinear = torch.nn.Linear(input_dim, output_dim, bias=True)\nY_pytorch = linear(X)\nprint(\"\\nPyTorch Linear output shape:\", Y_pytorch.shape)",
+      "explanation": "Neural network'te her layer bir matris çarpımıdır. Batch processing ile birden fazla örneği aynı anda işleriz."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Gradient Hesaplama (Backprop)",
+      "code": "import torch\n\n# Gradient tracking aktif\nX = torch.randn(3, 4, requires_grad=True)\nW = torch.randn(4, 2, requires_grad=True)\nb = torch.randn(2, requires_grad=True)\n\n# Forward pass\nY = X @ W + b\nloss = Y.sum()\n\n# Backward pass\nloss.backward()\n\n# Gradyanlar\nprint(\"X gradient shape:\", X.grad.shape)  # (3, 4)\nprint(\"W gradient shape:\", W.grad.shape)  # (4, 2)\nprint(\"b gradient shape:\", b.grad.shape)  # (2,)\n\nprint(\"\\nW gradient:\")\nprint(W.grad)\n\n# Manuel gradient: dL/dW = X^T @ dL/dY\nX_no_grad = X.detach()\ndL_dY = torch.ones_like(Y)\nmanual_grad = X_no_grad.T @ dL_dY\n\nprint(\"\\nManuel gradient (doğrulama):\")\nprint(manual_grad)\nprint(\"\\nEşit mi?\", torch.allclose(W.grad, manual_grad))",
+      "explanation": "Backpropagation matris transpoz ve çarpımlarıyla çalışır. dL/dW = X^T @ dL/dY formülü temeldir."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Tensör Boyut Manipülasyonu",
+      "code": "import torch\n\n# 4D tensör: Batch × Channels × Height × Width\nimages = torch.randn(32, 3, 224, 224)  # 32 RGB resim\n\nprint(\"Images shape:\", images.shape)\nprint(\"Batch size:\", images.shape[0])\nprint(\"Channels:\", images.shape[1])\nprint(\"Resolution:\", images.shape[2:4])\n\n# Dimension ekle/çıkar\nsingle = images[0]  # İlk resim (3, 224, 224)\nprint(\"\\nSingle image:\", single.shape)\n\n# Unsqueeze: Boyut ekle\nunsqueezed = single.unsqueeze(0)  # (1, 3, 224, 224)\nprint(\"Unsqueezed:\", unsqueezed.shape)\n\n# Squeeze: Tek boyutları kaldır\nsqueezed = unsqueezed.squeeze(0)  # (3, 224, 224)\nprint(\"Squeezed:\", squeezed.shape)\n\n# Permute: Boyutları yeniden sırala\n# PyTorch: (B, C, H, W) → TensorFlow: (B, H, W, C)\npermuted = images.permute(0, 2, 3, 1)\nprint(\"\\nPermuted (BHWC):\", permuted.shape)  # (32, 224, 224, 3)\n\n# Flatten: Tüm boyutları birleştir\nflattened = images.flatten(start_dim=1)  # Batch hariç\nprint(\"Flattened:\", flattened.shape)  # (32, 150528)",
+      "explanation": "Resim, video gibi veri tipleri çok boyutlu tensörlerdir. Framework'ler arası format dönüşümleri sık yapılır."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "GPU Optimizasyonu ve Bellek Yönetimi",
+      "code": "import torch\nimport time\n\n# CPU vs GPU karşılaştırma\nsize = 5000\nA_cpu = torch.randn(size, size)\nB_cpu = torch.randn(size, size)\n\n# CPU matris çarpımı\nstart = time.time()\nC_cpu = A_cpu @ B_cpu\ncpu_time = time.time() - start\nprint(f\"CPU time: {cpu_time:.4f}s\")\n\n# GPU'ya taşı (CUDA varsa)\nif torch.cuda.is_available():\n    device = torch.device('cuda')\n    A_gpu = A_cpu.to(device)\n    B_gpu = B_cpu.to(device)\n    \n    # Warmup\n    _ = A_gpu @ B_gpu\n    torch.cuda.synchronize()\n    \n    # GPU matris çarpımı\n    start = time.time()\n    C_gpu = A_gpu @ B_gpu\n    torch.cuda.synchronize()\n    gpu_time = time.time() - start\n    \n    print(f\"GPU time: {gpu_time:.4f}s\")\n    print(f\"Speedup: {cpu_time/gpu_time:.2f}x\")\n    \n    # Bellek kullanımı\n    print(f\"\\nGPU memory allocated: {torch.cuda.memory_allocated()/1e9:.2f} GB\")\n    print(f\"GPU memory reserved: {torch.cuda.memory_reserved()/1e9:.2f} GB\")\n    \n    # Bellek temizleme\n    del A_gpu, B_gpu, C_gpu\n    torch.cuda.empty_cache()\nelse:\n    print(\"CUDA not available\")",
+      "explanation": "Büyük matrisler GPU'da 10-100x daha hızlı hesaplanır. Ancak CPU→GPU veri transferi maliyetlidir. Production'da bellek yönetimi kritiktir."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Mixed Precision Training (Float16 + Float32)",
+      "code": "import torch\nfrom torch.cuda.amp import autocast, GradScaler\n\n# Simüle edilmiş model ve veri\nmodel = torch.nn.Linear(1000, 500).cuda()\noptimizer = torch.optim.Adam(model.parameters())\nscaler = GradScaler()\n\nX = torch.randn(128, 1000).cuda()\ny_true = torch.randn(128, 500).cuda()\n\nprint(\"Default dtype:\", X.dtype)  # float32\n\n# Mixed precision training\nfor epoch in range(3):\n    optimizer.zero_grad()\n    \n    # Forward pass with autocast\n    with autocast():\n        y_pred = model(X)\n        loss = torch.nn.functional.mse_loss(y_pred, y_true)\n    \n    print(f\"Epoch {epoch}: loss dtype = {loss.dtype}\")  # float16\n    \n    # Backward pass with scaling\n    scaler.scale(loss).backward()\n    \n    # Gradient clipping (opsiyonel)\n    scaler.unscale_(optimizer)\n    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n    \n    # Optimizer step\n    scaler.step(optimizer)\n    scaler.update()\n    \n    print(f\"Loss: {loss.item():.4f}\")\n\nprint(\"\\nNeden mixed precision?\")\nprint(\"- 2x daha hızlı (Tensor Cores)\")\nprint(\"- 2x daha az GPU bellek\")\nprint(\"- Numerical stability için float32 backup\")",
+      "explanation": "Modern GPU'lar (V100, A100) float16 işlemleri 2-8x hızlı yapar. GradScaler underflow/overflow'u önler. Büyük modellerde (GPT, BERT) zorunludur."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "matrix-multiplication",
+      "type": "interactive",
+      "title": "Matris Çarpımı ve Operatör Laboratuvarı",
+      "description": "İki matris ile toplama, çıkarma ve çarpma işlemlerini adım adım interaktif hesaplayın",
+      "component": "MatrixVisualizer"
+    },
+    {
+      "id": "tensor-reshape",
+      "type": "interactive",
+      "title": "Tensör Reshape Görselleştirmesi",
+      "description": "Tensör boyutlarını değiştirmeyi 3D olarak görün"
+    },
+    {
+      "id": "broadcasting",
+      "type": "diagram",
+      "title": "Broadcasting Kuralları",
+      "description": "Farklı boyutlu tensörlerin nasıl genişletildiğini gösterir"
+    }
+  ],
+  "prerequisites": [
+    "vectors"
+  ],
+  "nextTopics": [
+    "activation-functions",
+    "perceptron",
+    "convolution"
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Matris çarpımında boyut uyumsuzluğu",
+      "why": "(m×n) × (p×q) çarpımı için n=p olmalı. Aksi halde hata alırsınız.",
+      "fix": "Boyutları kontrol edin: A.shape[1] == B.shape[0]"
+    },
+    {
+      "mistake": "view() vs reshape() karıştırılması",
+      "why": "view() memory contiguous gerektir, reshape() her zaman çalışır.",
+      "fix": "Emin değilseniz reshape() kullanın veya önce .contiguous() çağırın"
+    },
+    {
+      "mistake": "GPU/CPU transfer overhead'i göz ardı etmek",
+      "why": "Küçük matrisler için GPU daha yavaş olabilir (transfer maliyeti).",
+      "fix": "Büyük batch'ler kullanın, gereksiz .cpu()/.cuda() çağrılarından kaçının"
+    },
+    {
+      "mistake": "Broadcasting'i yanlış anlamak",
+      "why": "Beklenmedik boyut genişletmeleri hatalı sonuçlar üretir.",
+      "fix": "İşlem öncesi shape'leri print edin, unsqueeze/squeeze ile kontrol edin"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "(3×4) boyutundaki bir matris ile (4×5) boyutundaki matrisi çarparsak sonuç ne boyutta olur?",
+      "options": [
+        "(3×5)",
+        "(3×4)",
+        "(4×5)",
+        "(12×20)"
+      ],
+      "explanation": "Matris çarpımında sonuç boyutu: (m×n) × (n×p) = (m×p). Bu durumda (3×4) × (4×5) = (3×5).",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 0
+    },
+    {
+      "id": "q2",
+      "question": "PyTorch'ta bir tensörün boyutunu (4, 3, 2) → (4, 6) yapmak için hangi metodu kullanırız?",
+      "options": [
+        "transpose()",
+        "view(4, 6) veya reshape(4, 6)",
+        "squeeze()",
+        "expand(4, 6)"
+      ],
+      "explanation": "view() veya reshape() tensör boyutunu değiştirir. 3×2=6 olduğu için (4,3,2) → (4,6) mümkün.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q3",
+      "question": "Matris transpozunun (A^T) amacı nedir?",
+      "options": [
+        "Matrisin elemanlarını sıfırlamak",
+        "Satır ve sütunları yer değiştirmek",
+        "Matris boyutunu büyütmek",
+        "Sadece kare matrislere uygulanır"
+      ],
+      "explanation": "Transpoz (A^T) satırları sütun, sütunları satır yapar. (m×n) → (n×m). Backpropagation'da çok kullanılır.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q4",
+      "question": "Neural network'te bir linear layer'ın forward pass formülü nedir?",
+      "options": [
+        "output = input + weights",
+        "output = input * weights",
+        "output = input @ weights + bias",
+        "output = weights @ input"
+      ],
+      "explanation": "Linear layer: output = input @ weights + bias. @ matris çarpımıdır. Bu formül tüm neural network'lerin temelidir.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 2
+    },
+    {
+      "id": "q5",
+      "question": "GPU'da matris çarpımı neden CPU'dan hızlıdır?",
+      "options": [
+        "GPU daha yüksek clock hızına sahiptir",
+        "GPU binlerce küçük işlemi paralel yapar",
+        "GPU daha fazla belleğe sahiptir",
+        "GPU floating point hatası yapmaz"
+      ],
+      "explanation": "GPU (Graphics Processing Unit) binlerce core ile paralel hesaplama yapar. Matris çarpımı paralelize edilebilir bir işlem olduğu için GPU'da çok hızlıdır. Modern GPU'lar 10-100x hızlanma sağlar.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "Matris çarpımının boyut kuralı nedir?",
+      "back": "(m×n) × (n×p) = (m×p)\n\nİç boyutlar eşit olmalı (n=n).\nSonuç dış boyutları alır (m×p)."
+    },
+    {
+      "id": "fc2",
+      "front": "Tensör nedir?",
+      "back": "N-boyutlu sayı dizisidir:\n- 0D: Skaler (5)\n- 1D: Vektör [1,2,3]\n- 2D: Matris [[1,2],[3,4]]\n- 3D+: Resim, video vb."
+    },
+    {
+      "id": "fc3",
+      "front": "Broadcasting nedir?",
+      "back": "Farklı boyutlu tensörlerin otomatik genişletilmesidir.\n\nÖrnek: (3,1) + (3,) → (3,3)\nKüçük tensör büyük tensöre uyacak şekilde tekrarlanır."
+    },
+    {
+      "id": "fc4",
+      "front": "view() ile reshape() farkı?",
+      "back": "view(): Memory contiguous gerekir, hızlı\nreshape(): Her zaman çalışır, bazen kopya yapar\n\nGüvenli seçim: reshape() veya önce .contiguous()"
+    },
+    {
+      "id": "fc5",
+      "front": "Neural network'te W^T neden kullanılır?",
+      "back": "Backpropagation'da gradient geçişi için:\n\ndL/dx = W^T @ dL/dy\n\nTranspoz olmadan boyutlar uyuşmaz!"
+    }
+  ],
+  "references": [
+    {
+      "title": "Deep Learning Book - Linear Algebra",
+      "url": "https://www.deeplearningbook.org/contents/linear_algebra.html",
+      "type": "book"
+    },
+    {
+      "title": "PyTorch Tensor Tutorial",
+      "url": "https://pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html",
+      "type": "tutorial"
+    },
+    {
+      "title": "NumPy Broadcasting",
+      "url": "https://numpy.org/doc/stable/user/basics.broadcasting.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Matrix Calculus for Deep Learning",
+      "url": "https://explained.ai/matrix-calculus/",
+      "type": "article"
+    }
+  ],
+  "tags": [
+    "matris",
+    "tensör",
+    "numpy",
+    "pytorch",
+    "lineer-cebir",
+    "neural-network",
+    "gpu",
+    "broadcasting",
+    "reshape",
+    "transpose"
+  ]
+}

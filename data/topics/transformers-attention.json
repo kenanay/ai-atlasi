@@ -1,0 +1,361 @@
+{
+  "id": "transformers-attention",
+  "title": "Transformers & Attention Mechanism",
+  "category": "neural-networks",
+  "level": 4,
+  "estimatedTime": 90,
+  "description": "Modern AI'ın temeli: Self-attention, multi-head attention, positional encoding. RNN'siz sequence processing. GPT, BERT, Vision Transformers'ın arkasındaki mekanizma.",
+  "content": {
+    "level0_basic": "Transformer, 2017'de AI dünyasını değiştiren bir mimaridir ('Attention is All You Need' paper). RNN kullanmadan sequence'leri işler! Nasıl? **Attention mechanism** ile: Her kelime diğer TÜM kelimelere bakabilir, en önemlilerine odaklanır. RNN gibi tek tek adım atmaz, tüm sequence'i parallel işler - çok daha hızlı! GPT (ChatGPT), BERT, T5 - hepsi Transformer. Sadece NLP değil: Vision Transformers resim işliyor, AlphaFold protein yapısı buluyor. Neden bu kadar güçlü? (1) Long-range dependencies problem yok, (2) Parallelization → GPU'da çok hızlı, (3) Attention weights interpretable - model neye bakıyor görebilirsin.",
+    "level1_beginner": "**Attention Mekanizması (Intuition):**\n\nCümle: 'The animal didn't cross the street because it was too tired.'\nSoru: 'it' ne demek?\n\nİnsan: 'it' → 'animal'e bakıyor (tired olabilir, street olamaz)\nRNN: Sequence boyunca yavaş yavaş ilerler, uzak kelimeleri unutabilir\nTransformer: 'it' TÜM kelimelere bakıyor, 'animal'e en yüksek attention weight veriyor!\n\n**Attention Formülü (Basitleştirilmiş):**\n\n```\nAttention(Query, Keys, Values) = weighted sum of Values\n\nweights = softmax(Query · Keys)\noutput = Σ (weights × Values)\n```\n\n**Örnek:**\n- Query: \"it\" kelimesi (neye bakmak istiyorum?)\n- Keys: Tüm kelimeler (hangi kelimelere bakabilirim?)\n- Values: Kelime anlamları (ne bilgi alacağım?)\n- Attention scores: it→animal: 0.8, it→street: 0.1, it→tired: 0.1\n\n**Self-Attention:**\nSequence kendine bakıyor! Her kelime diğer kelimelere attention ediyor.\n\n**Multi-Head Attention:**\nTek attention yerine birden fazla (8, 16 head):\n- Head 1: Syntax'e bakabilir (subject-verb)\n- Head 2: Semantics'e bakabilir (synonyms)\n- Head 3: Position'a bakabilir (near-far)\n\nFarklı pattern'leri parallel öğrenebilir!\n\n**Transformer Mimarisi:**\n\n```\nInput Embedding + Positional Encoding\n         ↓\n[Encoder Block] × N\n  - Multi-Head Self-Attention\n  - Feed Forward Network\n  - Layer Norm + Residual\n         ↓\n[Decoder Block] × N\n  - Masked Self-Attention\n  - Cross-Attention (Encoder'a bak)\n  - Feed Forward Network\n         ↓\nOutput (Linear + Softmax)\n```\n\n**Neden RNN'den İyi?**\n\n1. **Parallelization:** Tüm sequence aynı anda → GPU'da çok hızlı\n2. **Long-range:** Kelime 1 ile kelime 100 direkt ilişki kurabilir\n3. **No vanishing gradient:** RNN'deki problem yok\n4. **Interpretable:** Attention weights görselleştirebilirsin",
+    "level2_application": "**Scaled Dot-Product Attention:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport math\n\ndef scaled_dot_product_attention(Q, K, V, mask=None):\n    \"\"\"\n    Q: Query (batch, seq_len, d_k)\n    K: Key (batch, seq_len, d_k)\n    V: Value (batch, seq_len, d_v)\n    \"\"\"\n    d_k = Q.size(-1)\n    \n    # Attention scores\n    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)\n    # scores: (batch, seq_len, seq_len)\n    \n    # Mask (for padding or future tokens)\n    if mask is not None:\n        scores = scores.masked_fill(mask == 0, -1e9)\n    \n    # Attention weights\n    attn_weights = torch.softmax(scores, dim=-1)\n    \n    # Weighted sum\n    output = torch.matmul(attn_weights, V)\n    \n    return output, attn_weights\n```\n\n**Multi-Head Attention:**\n\n```python\nclass MultiHeadAttention(nn.Module):\n    def __init__(self, d_model, num_heads):\n        super().__init__()\n        assert d_model % num_heads == 0\n        \n        self.d_model = d_model\n        self.num_heads = num_heads\n        self.d_k = d_model // num_heads\n        \n        # Linear projections\n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        self.W_o = nn.Linear(d_model, d_model)\n    \n    def split_heads(self, x):\n        # x: (batch, seq_len, d_model)\n        batch_size, seq_len, d_model = x.size()\n        x = x.view(batch_size, seq_len, self.num_heads, self.d_k)\n        return x.transpose(1, 2)  # (batch, num_heads, seq_len, d_k)\n    \n    def forward(self, Q, K, V, mask=None):\n        batch_size = Q.size(0)\n        \n        # Linear projections\n        Q = self.W_q(Q)\n        K = self.W_k(K)\n        V = self.W_v(V)\n        \n        # Split into multiple heads\n        Q = self.split_heads(Q)\n        K = self.split_heads(K)\n        V = self.split_heads(V)\n        \n        # Scaled dot-product attention\n        attn_output, attn_weights = scaled_dot_product_attention(Q, K, V, mask)\n        \n        # Concatenate heads\n        attn_output = attn_output.transpose(1, 2).contiguous()\n        attn_output = attn_output.view(batch_size, -1, self.d_model)\n        \n        # Final linear projection\n        output = self.W_o(attn_output)\n        \n        return output, attn_weights\n```\n\n**Positional Encoding:**\n\nTransformer'da sequence order bilgisi yok! Positional encoding eklemeliyiz:\n\n```python\ndef positional_encoding(seq_len, d_model):\n    position = torch.arange(seq_len).unsqueeze(1)\n    div_term = torch.exp(torch.arange(0, d_model, 2) * -(math.log(10000.0) / d_model))\n    \n    pe = torch.zeros(seq_len, d_model)\n    pe[:, 0::2] = torch.sin(position * div_term)\n    pe[:, 1::2] = torch.cos(position * div_term)\n    \n    return pe\n```\n\n**Feed-Forward Network:**\n\nHer attention layer'dan sonra position-wise FFN:\n\n```python\nclass PositionWiseFeedForward(nn.Module):\n    def __init__(self, d_model, d_ff, dropout=0.1):\n        super().__init__()\n        self.fc1 = nn.Linear(d_model, d_ff)\n        self.fc2 = nn.Linear(d_ff, d_model)\n        self.dropout = nn.Dropout(dropout)\n    \n    def forward(self, x):\n        return self.fc2(self.dropout(torch.relu(self.fc1(x))))\n```",
+    "level3_advanced": "**Transformer Encoder Block:**\n\n```python\nclass TransformerEncoderBlock(nn.Module):\n    def __init__(self, d_model, num_heads, d_ff, dropout=0.1):\n        super().__init__()\n        \n        # Multi-head attention\n        self.attention = MultiHeadAttention(d_model, num_heads)\n        \n        # Feed-forward\n        self.feed_forward = PositionWiseFeedForward(d_model, d_ff, dropout)\n        \n        # Layer normalization\n        self.norm1 = nn.LayerNorm(d_model)\n        self.norm2 = nn.LayerNorm(d_model)\n        \n        # Dropout\n        self.dropout = nn.Dropout(dropout)\n    \n    def forward(self, x, mask=None):\n        # Self-attention with residual connection\n        attn_output, _ = self.attention(x, x, x, mask)\n        x = self.norm1(x + self.dropout(attn_output))\n        \n        # Feed-forward with residual connection\n        ff_output = self.feed_forward(x)\n        x = self.norm2(x + self.dropout(ff_output))\n        \n        return x\n```\n\n**Attention Formülasyonu (Matematiksel):**\n\n$$\\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V$$\n\nBurada:\n- $Q$: Query matrix ($n \\times d_k$)\n- $K$: Key matrix ($m \\times d_k$)\n- $V$: Value matrix ($m \\times d_v$)\n- $\\sqrt{d_k}$: Scaling factor (gradients stabilize için)\n\n**Multi-Head Attention:**\n\n$$\\text{MultiHead}(Q, K, V) = \\text{Concat}(\\text{head}_1, ..., \\text{head}_h)W^O$$\n\n$$\\text{head}_i = \\text{Attention}(QW_i^Q, KW_i^K, VW_i^V)$$\n\n**Positional Encoding Formülü:**\n\n$$PE_{(pos, 2i)} = \\sin\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)$$\n$$PE_{(pos, 2i+1)} = \\cos\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)$$\n\n**Masked Attention (Decoder):**\n\nGeneration'da future tokens görülmemeli:\n\n```python\ndef create_causal_mask(seq_len):\n    mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1)\n    return mask == 0  # Lower triangular matrix\n```\n\n**Cross-Attention (Encoder-Decoder):**\n\nDecoder encoder'ın output'una attention eder:\n- Query: Decoder'dan\n- Key, Value: Encoder'dan\n\n**Layer Normalization:**\n\nBatch norm yerine layer norm (sequence length'e invariant):\n\n$$\\text{LayerNorm}(x) = \\gamma \\frac{x - \\mu}{\\sqrt{\\sigma^2 + \\epsilon}} + \\beta$$\n\n$\\mu, \\sigma$: Feature dimension üzerinden hesaplanır\n\n**Complexity Analysis:**\n\n- Self-Attention: $O(n^2 \\cdot d)$ - $n$: sequence length, $d$: model dimension\n- RNN: $O(n \\cdot d^2)$\n\nKısa sequences: Transformer daha hızlı\nÇok uzun sequences (>1000): Attention $O(n^2)$ expensive!",
+    "level4_expert": "**Full Transformer Implementation:**\n\n```python\nclass Transformer(nn.Module):\n    def __init__(\n        self,\n        src_vocab_size,\n        tgt_vocab_size,\n        d_model=512,\n        num_heads=8,\n        num_encoder_layers=6,\n        num_decoder_layers=6,\n        d_ff=2048,\n        dropout=0.1,\n        max_seq_len=5000\n    ):\n        super().__init__()\n        \n        self.d_model = d_model\n        \n        # Embeddings\n        self.src_embedding = nn.Embedding(src_vocab_size, d_model)\n        self.tgt_embedding = nn.Embedding(tgt_vocab_size, d_model)\n        \n        # Positional encoding\n        self.register_buffer('pos_encoding', positional_encoding(max_seq_len, d_model))\n        \n        # Encoder\n        self.encoder_layers = nn.ModuleList([\n            TransformerEncoderBlock(d_model, num_heads, d_ff, dropout)\n            for _ in range(num_encoder_layers)\n        ])\n        \n        # Decoder\n        self.decoder_layers = nn.ModuleList([\n            TransformerDecoderBlock(d_model, num_heads, d_ff, dropout)\n            for _ in range(num_decoder_layers)\n        ])\n        \n        # Output\n        self.fc_out = nn.Linear(d_model, tgt_vocab_size)\n        self.dropout = nn.Dropout(dropout)\n    \n    def encode(self, src, src_mask):\n        seq_len = src.size(1)\n        x = self.src_embedding(src) * math.sqrt(self.d_model)\n        x = x + self.pos_encoding[:seq_len, :]\n        x = self.dropout(x)\n        \n        for layer in self.encoder_layers:\n            x = layer(x, src_mask)\n        \n        return x\n    \n    def decode(self, tgt, encoder_output, src_mask, tgt_mask):\n        seq_len = tgt.size(1)\n        x = self.tgt_embedding(tgt) * math.sqrt(self.d_model)\n        x = x + self.pos_encoding[:seq_len, :]\n        x = self.dropout(x)\n        \n        for layer in self.decoder_layers:\n            x = layer(x, encoder_output, src_mask, tgt_mask)\n        \n        return self.fc_out(x)\n    \n    def forward(self, src, tgt, src_mask=None, tgt_mask=None):\n        encoder_output = self.encode(src, src_mask)\n        output = self.decode(tgt, encoder_output, src_mask, tgt_mask)\n        return output\n```\n\n**BERT-style (Encoder-only):**\n\n```python\nclass BERT(nn.Module):\n    def __init__(self, vocab_size, d_model=768, num_heads=12, num_layers=12):\n        super().__init__()\n        \n        self.embedding = nn.Embedding(vocab_size, d_model)\n        self.pos_encoding = nn.Parameter(torch.randn(1, 512, d_model))\n        \n        self.encoder_layers = nn.ModuleList([\n            TransformerEncoderBlock(d_model, num_heads, d_model*4)\n            for _ in range(num_layers)\n        ])\n        \n        self.pooler = nn.Linear(d_model, d_model)\n    \n    def forward(self, input_ids, attention_mask=None):\n        x = self.embedding(input_ids)\n        x = x + self.pos_encoding[:, :x.size(1), :]\n        \n        for layer in self.encoder_layers:\n            x = layer(x, attention_mask)\n        \n        # [CLS] token representation\n        cls_output = self.pooler(x[:, 0, :])\n        return cls_output, x\n```\n\n**GPT-style (Decoder-only):**\n\n```python\nclass GPT(nn.Module):\n    def __init__(self, vocab_size, d_model=768, num_heads=12, num_layers=12):\n        super().__init__()\n        \n        self.embedding = nn.Embedding(vocab_size, d_model)\n        self.pos_encoding = nn.Parameter(torch.randn(1, 1024, d_model))\n        \n        self.decoder_layers = nn.ModuleList([\n            TransformerDecoderBlock(d_model, num_heads, d_model*4, causal=True)\n            for _ in range(num_layers)\n        ])\n        \n        self.lm_head = nn.Linear(d_model, vocab_size)\n    \n    def forward(self, input_ids):\n        seq_len = input_ids.size(1)\n        causal_mask = create_causal_mask(seq_len)\n        \n        x = self.embedding(input_ids)\n        x = x + self.pos_encoding[:, :seq_len, :]\n        \n        for layer in self.decoder_layers:\n            x = layer(x, mask=causal_mask)\n        \n        logits = self.lm_head(x)\n        return logits\n```\n\n**Efficient Attention Variants:**\n\n**1. Linear Attention:**\n$O(n)$ complexity instead of $O(n^2)$\n\n**2. Sparse Attention (OpenAI):**\nSadece specific positions'a attention\n\n**3. Reformer (Google):**\nLSH (Locality Sensitive Hashing) ile similar queries bul\n\n**4. Linformer:**\nKey/Value'yu low-rank projection ile küçült\n\n**Flash Attention (2022):**\n\nIO-aware attention - GPU memory hierarchy optimize:\n- 2-4x faster\n- Daha az memory\n- Exact attention (no approximation!)\n\n```python\nfrom flash_attn import flash_attn_func\n\n# Drop-in replacement\noutput = flash_attn_func(q, k, v, causal=True)\n```\n\n**Vision Transformer (ViT):**\n\nResmi patch'lere böl, her patch bir token:\n\n```python\nclass VisionTransformer(nn.Module):\n    def __init__(self, image_size=224, patch_size=16, num_classes=1000):\n        super().__init__()\n        \n        num_patches = (image_size // patch_size) ** 2\n        patch_dim = 3 * patch_size * patch_size\n        \n        # Patch embedding\n        self.patch_embedding = nn.Linear(patch_dim, d_model)\n        \n        # CLS token\n        self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))\n        \n        # Position embedding\n        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, d_model))\n        \n        # Transformer encoder\n        self.transformer = TransformerEncoder(d_model, num_heads, num_layers)\n        \n        # Classification head\n        self.mlp_head = nn.Linear(d_model, num_classes)\n    \n    def forward(self, img):\n        # img: (batch, 3, H, W)\n        patches = extract_patches(img)  # (batch, num_patches, patch_dim)\n        x = self.patch_embedding(patches)\n        \n        # Add CLS token\n        cls_tokens = self.cls_token.expand(x.size(0), -1, -1)\n        x = torch.cat([cls_tokens, x], dim=1)\n        \n        # Add position embedding\n        x = x + self.pos_embedding\n        \n        # Transformer\n        x = self.transformer(x)\n        \n        # Classify using CLS token\n        return self.mlp_head(x[:, 0])\n```\n\n**Training Tips:**\n\n1. **Warm-up:** LR'yi yavaşça artır ilk epoch'larda\n2. **Label Smoothing:** One-hot yerine soft labels\n3. **Gradient Accumulation:** Büyük batch size simulate\n4. **Mixed Precision:** FP16 + FP32, 2x speedup\n5. **Checkpoint:** Activation checkpointing, memory save"
+  },
+  "whatIsIt": "Transformer, 2017'de tanıtılan ve AI dünyasını değiştiren bir neural network mimarisidir. Ana yeniliği: RNN kullanmadan sequence'leri işleyebilir! Self-attention mechanism ile her eleman sequence'teki diğer TÜM elemanlara bakabilir, en önemlilerine yüksek weight verir. Multi-head attention ile birden fazla attention pattern'ini parallel öğrenir. Encoder-decoder yapısı ya da sadece encoder (BERT) veya sadece decoder (GPT) olabilir. GPT-3, ChatGPT, BERT, T5, Vision Transformers - hepsi bu mimariye dayanır.",
+  "whyNeeded": "RNN'in 3 büyük problemi vardı: (1) Sequential → Parallel işlenemez, yavaş, (2) Vanishing gradient → Uzak kelimeleri unutur, (3) Long-range dependencies zor. Transformer hepsini çözdü: (1) Tüm sequence parallel işlenir → GPU'da çok hızlı, (2) Attention direkt bağlantı → Gradient flow problem yok, (3) Kelime 1 ile 1000 direkt ilişki kurabilir. Ayrıca attention weights interpretable - model neye bakıyor görebilirsin. Sonuç: NLP'de state-of-art, sonra vision, protein folding, everywhere!",
+  "realWorldAnalogy": "Transformer bir toplantıdaki moderatör gibidir. RNN: Herkes sırayla konuşur, bir öncekini dinler (sequential). Transformer: Herkes aynı anda konuşabilir, ama herkes herkesi dinliyor, en relevant kişiye en çok attention veriyor (parallel + selective). Query: 'Benim bu konuda sorum var', Keys: Herkesin expertise'i, Values: Herkesin bilgisi. Attention: En alakalı kişiye en yüksek weight ver. Multi-head: Aynı anda farklı açılardan dinle (syntax, semantics, context). Sonuç: Çok daha hızlı ve etkili iletişim!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Attention}(Q,K,V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V",
+      "\\text{MultiHead}(Q,K,V) = \\text{Concat}(\\text{head}_1,...,\\text{head}_h)W^O",
+      "\\text{head}_i = \\text{Attention}(QW_i^Q, KW_i^K, VW_i^V)",
+      "PE_{(pos,2i)} = \\sin\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)",
+      "PE_{(pos,2i+1)} = \\cos\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)",
+      "\\text{LayerNorm}(x) = \\gamma \\frac{x-\\mu}{\\sqrt{\\sigma^2+\\epsilon}} + \\beta"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Input Embedding: Tokens → Vectors (d_model dimension)",
+      "2. Positional Encoding: Position bilgisi ekle (sin/cos functions)",
+      "3. Encoder (N layers):",
+      "   a. Multi-Head Self-Attention: Her token diğerlerine bak",
+      "   b. Add & Norm: Residual connection + Layer normalization",
+      "   c. Feed-Forward: Position-wise FFN",
+      "   d. Add & Norm: Residual + LayerNorm",
+      "4. Decoder (N layers):",
+      "   a. Masked Self-Attention: Future tokens görme!",
+      "   b. Cross-Attention: Encoder output'una bak",
+      "   c. Feed-Forward",
+      "5. Output: Linear + Softmax → Token probabilities",
+      "6. Training: Teacher forcing, label smoothing, warmup"
+    ],
+    "complexity": "Self-Attention: O(n² × d) - n: seq_len, d: d_model. Parallelizable! RNN: O(n × d²) sequential. Transformer kısa-orta sequences için çok daha hızlı."
+  },
+  "prerequisites": [
+    "neural-networks",
+    "recurrent-neural-networks",
+    "backpropagation"
+  ],
+  "nextTopics": [
+    "bert-gpt-models",
+    "vision-transformers",
+    "efficient-transformers",
+    "large-language-models"
+  ],
+  "relatedTopics": [
+    "word-embeddings",
+    "positional-encoding",
+    "layer-normalization"
+  ],
+  "tags": [
+    "transformers",
+    "attention",
+    "self-attention",
+    "multi-head-attention",
+    "bert",
+    "gpt",
+    "nlp",
+    "encoder-decoder",
+    "positional-encoding",
+    "pytorch"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Attention Mechanism Intuition",
+      "code": "RNN ile cümle işleme:\n'The' → 'animal' → 'didn't' → 'cross' → ... → 'it'\nHer adım sadece öncekini hatırlar, 'animal' çok geride unutulabilir!\n\nTransformer Attention:\n'it' kelimesi TÜM kelimelere bakıyor:\n\nQuery: 'it' (neye bakmak istiyorum?)\nKeys: ['The', 'animal', 'didn't', 'cross', 'street', 'because', 'it', 'was', 'tired']\nValues: Her kelimenin anlamı\n\nAttention Scores (simplified):\n  it → animal: 0.65 ⭐⭐⭐⭐⭐\n  it → street: 0.05 ⭐\n  it → tired:  0.10 ⭐⭐\n  it → was:    0.05 ⭐\n  ... (diğerleri düşük)\n\nOutput: Weighted sum\n  = 0.65 × [animal meaning] + 0.10 × [tired meaning] + ...\n\n'it' şimdi 'animal'ın bilgisini taşıyor!\n\nMulti-Head Attention:\n  Head 1: Syntax'e bakıyor (subject-object)\n  Head 2: Semantics'e bakıyor (meaning)\n  Head 3: Distance'a bakıyor (near-far)\n\nParallel farklı pattern'leri öğreniyor!",
+      "explanation": "Attention: Her kelime diğer kelimelere bakıp en önemlilerine odaklanır. RNN gibi sequential değil, parallel ve direkt bağlantı!"
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Scaled Dot-Product Attention",
+      "code": "import torch\nimport torch.nn.functional as F\nimport math\n\ndef scaled_dot_product_attention(Q, K, V, mask=None):\n    \"\"\"\n    Transformer'ın kalbi: Scaled Dot-Product Attention\n    \n    Q: Query (batch, seq_len, d_k)\n    K: Key (batch, seq_len, d_k)\n    V: Value (batch, seq_len, d_v)\n    \"\"\"\n    # 1. Compute attention scores\n    d_k = Q.size(-1)\n    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)\n    # scores: (batch, seq_len, seq_len)\n    # sqrt(d_k): Scaling to prevent softmax saturation\n    \n    # 2. Apply mask (optional)\n    if mask is not None:\n        scores = scores.masked_fill(mask == 0, -1e9)\n    \n    # 3. Softmax to get attention weights\n    attn_weights = F.softmax(scores, dim=-1)\n    # attn_weights: (batch, seq_len, seq_len)\n    # Her row: Bir query'nin tüm keys'e attention'ı\n    \n    # 4. Weighted sum of values\n    output = torch.matmul(attn_weights, V)\n    # output: (batch, seq_len, d_v)\n    \n    return output, attn_weights\n\n# Example\nbatch_size = 2\nseq_len = 5\nd_k = 64\nd_v = 64\n\nQ = torch.randn(batch_size, seq_len, d_k)\nK = torch.randn(batch_size, seq_len, d_k)\nV = torch.randn(batch_size, seq_len, d_v)\n\noutput, attn_weights = scaled_dot_product_attention(Q, K, V)\n\nprint(f\"Query shape: {Q.shape}\")\nprint(f\"Key shape: {K.shape}\")\nprint(f\"Value shape: {V.shape}\")\nprint(f\"\\nOutput shape: {output.shape}\")\nprint(f\"Attention weights shape: {attn_weights.shape}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ATTENTION WEIGHTS INTERPRETATION:\")\nprint(\"=\"*60)\nprint(\"attn_weights[0, 2, :] = attention from query 2 to all keys\")\nprint(f\"Example: {attn_weights[0, 2, :].tolist()}\")\nprint(\"\\nSum of each row = 1.0 (softmax property)\")\nprint(f\"Row sum: {attn_weights[0, 2, :].sum().item():.6f}\")\n\nprint(\"\\n✓ Scaled Dot-Product Attention complete!\")\nprint(\"\\nKey insight: Every position can attend to every other position!\")\nprint(\"This is why Transformers handle long-range dependencies well.\")",
+      "explanation": "Attention'ın matematik yapısı: Q×K^T→scores, softmax→weights, weights×V→output. Her pozisyon diğer tüm pozisyonlara bakabilir!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Multi-Head Attention",
+      "code": "import torch\nimport torch.nn as nn\nimport math\n\nclass MultiHeadAttention(nn.Module):\n    def __init__(self, d_model, num_heads):\n        super().__init__()\n        assert d_model % num_heads == 0, \"d_model must be divisible by num_heads\"\n        \n        self.d_model = d_model\n        self.num_heads = num_heads\n        self.d_k = d_model // num_heads\n        \n        # Linear projections for Q, K, V\n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        \n        # Output projection\n        self.W_o = nn.Linear(d_model, d_model)\n    \n    def split_heads(self, x):\n        \"\"\"Split last dimension into (num_heads, d_k)\"\"\"\n        batch_size, seq_len, d_model = x.size()\n        x = x.view(batch_size, seq_len, self.num_heads, self.d_k)\n        return x.transpose(1, 2)  # (batch, num_heads, seq_len, d_k)\n    \n    def forward(self, Q, K, V, mask=None):\n        batch_size = Q.size(0)\n        \n        # 1. Linear projections\n        Q = self.W_q(Q)  # (batch, seq_len, d_model)\n        K = self.W_k(K)\n        V = self.W_v(V)\n        \n        # 2. Split into multiple heads\n        Q = self.split_heads(Q)  # (batch, num_heads, seq_len, d_k)\n        K = self.split_heads(K)\n        V = self.split_heads(V)\n        \n        # 3. Scaled dot-product attention (parallel for all heads)\n        d_k = Q.size(-1)\n        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)\n        \n        if mask is not None:\n            scores = scores.masked_fill(mask == 0, -1e9)\n        \n        attn_weights = torch.softmax(scores, dim=-1)\n        attn_output = torch.matmul(attn_weights, V)\n        # attn_output: (batch, num_heads, seq_len, d_k)\n        \n        # 4. Concatenate heads\n        attn_output = attn_output.transpose(1, 2).contiguous()\n        attn_output = attn_output.view(batch_size, -1, self.d_model)\n        # (batch, seq_len, d_model)\n        \n        # 5. Final linear projection\n        output = self.W_o(attn_output)\n        \n        return output, attn_weights\n\n# Example\nd_model = 512\nnum_heads = 8\nbatch_size = 2\nseq_len = 10\n\nmodel = MultiHeadAttention(d_model, num_heads)\n\nprint(f\"Multi-Head Attention: {num_heads} heads, d_model={d_model}\")\nprint(f\"Each head dimension: {d_model // num_heads}\")\nprint(f\"\\nParameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Forward pass\nx = torch.randn(batch_size, seq_len, d_model)\noutput, attn_weights = model(x, x, x)\n\nprint(f\"\\nInput: {x.shape}\")\nprint(f\"Output: {output.shape}\")\nprint(f\"Attention weights: {attn_weights.shape}\")\nprint(f\"  → (batch, num_heads, seq_len, seq_len)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"WHY MULTI-HEAD?\")\nprint(\"=\"*60)\nprint(\"Single attention: One way of looking at relationships\")\nprint(\"Multi-head: Multiple perspectives simultaneously!\")\nprint(\"\\nExample heads:\")\nprint(\"  Head 1: Syntactic relationships (subject-verb-object)\")\nprint(\"  Head 2: Semantic similarity (synonyms, related concepts)\")\nprint(\"  Head 3: Positional proximity (nearby words)\")\nprint(\"  Head 4: Long-range dependencies (distant relationships)\")\nprint(\"\\nEach head learns different patterns → Richer representation!\")\n\nprint(\"\\n✓ Multi-Head Attention complete!\")",
+      "explanation": "Multi-head: 8 ayrı attention parallel çalışır, her biri farklı pattern'e odaklanır. Sonra concat edilir. Daha zengin representation!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Positional Encoding",
+      "code": "import torch\nimport math\nimport matplotlib.pyplot as plt\nimport numpy as np\n\ndef positional_encoding(seq_len, d_model):\n    \"\"\"\n    Generate positional encoding using sin/cos functions\n    \n    PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))\n    PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))\n    \"\"\"\n    # Create position indices\n    position = torch.arange(seq_len).unsqueeze(1)  # (seq_len, 1)\n    \n    # Create dimension indices\n    div_term = torch.exp(\n        torch.arange(0, d_model, 2) * -(math.log(10000.0) / d_model)\n    )\n    \n    # Initialize PE matrix\n    pe = torch.zeros(seq_len, d_model)\n    \n    # Apply sin to even indices\n    pe[:, 0::2] = torch.sin(position * div_term)\n    \n    # Apply cos to odd indices\n    pe[:, 1::2] = torch.cos(position * div_term)\n    \n    return pe\n\n# Generate positional encoding\nseq_len = 100\nd_model = 128\n\npe = positional_encoding(seq_len, d_model)\n\nprint(\"Positional Encoding:\")\nprint(f\"Shape: {pe.shape}  # (seq_len, d_model)\")\nprint(f\"\\nFirst position encoding (first 8 dims):\")\nprint(pe[0, :8])\nprint(f\"\\nSecond position encoding (first 8 dims):\")\nprint(pe[1, :8])\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"WHY POSITIONAL ENCODING?\")\nprint(\"=\"*60)\nprint(\"Problem: Transformer has NO notion of position!\")\nprint(\"  'I love you' = 'you love I' = 'love I you' (same tokens!)\")\nprint(\"\\nSolution: Add position information to embeddings\")\nprint(\"  embedding + positional_encoding\")\nprint(\"\\nWhy sin/cos?\")\nprint(\"  ✓ Unique for each position\")\nprint(\"  ✓ Bounded values (-1 to 1)\")\nprint(\"  ✓ Relative positions can be learned\")\nprint(\"  ✓ Can extrapolate to longer sequences\")\n\n# Visualize (simplified)\nprint(\"\\n\" + \"=\"*60)\nprint(\"POSITIONAL ENCODING VISUALIZATION:\")\nprint(\"=\"*60)\nprint(\"\\nLow dimensions (fast frequency):\")\nprint(f\"  Dim 0-1: Changes rapidly position by position\")\nprint(f\"    pos=0: {pe[0, 0:2].tolist()}\")\nprint(f\"    pos=1: {pe[1, 0:2].tolist()}\")\nprint(f\"    pos=2: {pe[2, 0:2].tolist()}\")\n\nprint(f\"\\nHigh dimensions (slow frequency):\")\nprint(f\"  Dim 126-127: Changes slowly\")\nprint(f\"    pos=0: {pe[0, -2:].tolist()}\")\nprint(f\"    pos=1: {pe[1, -2:].tolist()}\")\nprint(f\"    pos=2: {pe[2, -2:].tolist()}\")\n\nprint(\"\\nThis gives model both local and global position info!\")\n\n# Example usage in Transformer\nclass TransformerEmbedding(nn.Module):\n    def __init__(self, vocab_size, d_model, max_len=5000):\n        super().__init__()\n        self.token_embedding = nn.Embedding(vocab_size, d_model)\n        self.register_buffer('pos_encoding', positional_encoding(max_len, d_model))\n        self.d_model = d_model\n    \n    def forward(self, x):\n        seq_len = x.size(1)\n        # Token embedding + positional encoding\n        token_emb = self.token_embedding(x) * math.sqrt(self.d_model)\n        return token_emb + self.pos_encoding[:seq_len, :]\n\nprint(\"\\n✓ Positional Encoding complete!\")\nprint(\"Essential for Transformers to understand word order!\")",
+      "explanation": "Positional encoding: Sin/cos functions ile position bilgisi ekle. Transformer position-agnostic, bu encoding order'ı öğretir!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Complete Transformer Encoder Block",
+      "code": "import torch\nimport torch.nn as nn\n\nclass TransformerEncoderBlock(nn.Module):\n    \"\"\"\n    Complete Transformer Encoder Block:\n    1. Multi-Head Self-Attention\n    2. Add & Norm (Residual + Layer Norm)\n    3. Feed-Forward Network\n    4. Add & Norm\n    \"\"\"\n    def __init__(self, d_model, num_heads, d_ff, dropout=0.1):\n        super().__init__()\n        \n        # Multi-head attention\n        self.attention = MultiHeadAttention(d_model, num_heads)\n        \n        # Feed-forward network\n        self.feed_forward = nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.ReLU(),\n            nn.Dropout(dropout),\n            nn.Linear(d_ff, d_model)\n        )\n        \n        # Layer normalization\n        self.norm1 = nn.LayerNorm(d_model)\n        self.norm2 = nn.LayerNorm(d_model)\n        \n        # Dropout\n        self.dropout = nn.Dropout(dropout)\n    \n    def forward(self, x, mask=None):\n        # 1. Self-attention with residual connection\n        attn_output, _ = self.attention(x, x, x, mask)\n        x = self.norm1(x + self.dropout(attn_output))\n        \n        # 2. Feed-forward with residual connection\n        ff_output = self.feed_forward(x)\n        x = self.norm2(x + self.dropout(ff_output))\n        \n        return x\n\nclass TransformerEncoder(nn.Module):\n    def __init__(self, vocab_size, d_model=512, num_heads=8, num_layers=6, d_ff=2048, max_len=5000):\n        super().__init__()\n        \n        self.embedding = TransformerEmbedding(vocab_size, d_model, max_len)\n        \n        self.encoder_layers = nn.ModuleList([\n            TransformerEncoderBlock(d_model, num_heads, d_ff)\n            for _ in range(num_layers)\n        ])\n        \n        self.dropout = nn.Dropout(0.1)\n    \n    def forward(self, x, mask=None):\n        # Embedding + positional encoding\n        x = self.embedding(x)\n        x = self.dropout(x)\n        \n        # Pass through encoder layers\n        for layer in self.encoder_layers:\n            x = layer(x, mask)\n        \n        return x\n\n# Example\nvocab_size = 10000\nd_model = 512\nnum_heads = 8\nnum_layers = 6\nd_ff = 2048\n\nencoder = TransformerEncoder(vocab_size, d_model, num_heads, num_layers, d_ff)\n\nprint(\"Transformer Encoder:\")\nprint(f\"  d_model: {d_model}\")\nprint(f\"  num_heads: {num_heads}\")\nprint(f\"  num_layers: {num_layers}\")\nprint(f\"  d_ff: {d_ff}\")\nprint(f\"\\nTotal parameters: {sum(p.numel() for p in encoder.parameters()):,}\")\n\n# Forward pass\nbatch_size = 4\nseq_len = 20\ninput_ids = torch.randint(0, vocab_size, (batch_size, seq_len))\n\noutput = encoder(input_ids)\n\nprint(f\"\\nInput: {input_ids.shape}\")\nprint(f\"Output: {output.shape}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"ENCODER BLOCK STRUCTURE:\")\nprint(\"=\"*60)\nprint(\"\"\"\nInput\n  ↓\n[Multi-Head Self-Attention]\n  ↓\nAdd & Norm (residual + layer norm)\n  ↓\n[Feed-Forward Network]\n  ↓\nAdd & Norm\n  ↓\nOutput\n\nRepeated N times (typically 6-12 layers)\n\"\"\")\n\nprint(\"\" + \"=\"*60)\nprint(\"KEY COMPONENTS:\")\nprint(\"=\"*60)\nprint(\"✓ Multi-Head Attention: Multiple attention patterns\")\nprint(\"✓ Residual Connections: Gradient flow, deep networks\")\nprint(\"✓ Layer Normalization: Stabilize training\")\nprint(\"✓ Feed-Forward: Position-wise transformation\")\nprint(\"✓ Dropout: Regularization\")\n\nprint(\"\\n✓ Transformer Encoder complete!\")\nprint(\"This is the same architecture used in BERT!\")",
+      "explanation": "Complete encoder block: Self-attention → Add&Norm → FFN → Add&Norm. N layer stack edilerek full encoder oluşur. BERT'in temel yapısı!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Causal (Masked) Attention for GPT",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\ndef create_causal_mask(seq_len):\n    \"\"\"\n    Create causal mask for autoregressive generation\n    Prevents attending to future tokens\n    \"\"\"\n    mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1)\n    return mask == 0  # Lower triangular = True, upper = False\n\ndef visualize_causal_mask(seq_len=5):\n    mask = create_causal_mask(seq_len)\n    print(\"Causal Mask (True = can attend, False = masked):\")\n    print(mask.int())\n    print(\"\\nInterpretation:\")\n    for i in range(seq_len):\n        can_attend = [j for j in range(seq_len) if mask[i, j]]\n        print(f\"  Position {i} can attend to positions: {can_attend}\")\n\nprint(\"CAUSAL (MASKED) ATTENTION\")\nprint(\"=\"*60)\nprint(\"\\nWhy needed? Autoregressive generation (GPT, language models)\")\nprint(\"When generating token t, cannot see tokens t+1, t+2, ...\")\nprint(\"\\nExample: Generating 'I love cats'\")\nprint(\"  Step 1: Generate 'I' (no context)\")\nprint(\"  Step 2: Generate 'love' (can see 'I')\")\nprint(\"  Step 3: Generate 'cats' (can see 'I love')\")\nprint(\"  ❌ Cannot see future tokens (cheating!)\")\n\nprint(\"\\n\" + \"=\"*60)\nvisualize_causal_mask(5)\n\nclass CausalSelfAttention(nn.Module):\n    def __init__(self, d_model, num_heads):\n        super().__init__()\n        self.d_model = d_model\n        self.num_heads = num_heads\n        self.d_k = d_model // num_heads\n        \n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        self.W_o = nn.Linear(d_model, d_model)\n    \n    def forward(self, x):\n        batch_size, seq_len, d_model = x.size()\n        \n        # Create causal mask\n        causal_mask = create_causal_mask(seq_len).to(x.device)\n        \n        # Linear projections and split heads\n        Q = self.W_q(x).view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)\n        K = self.W_k(x).view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)\n        V = self.W_v(x).view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)\n        \n        # Attention scores\n        scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)\n        \n        # Apply causal mask\n        scores = scores.masked_fill(~causal_mask, float('-inf'))\n        \n        # Attention weights\n        attn_weights = F.softmax(scores, dim=-1)\n        \n        # Weighted sum\n        attn_output = torch.matmul(attn_weights, V)\n        \n        # Concatenate and project\n        attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, d_model)\n        output = self.W_o(attn_output)\n        \n        return output, attn_weights\n\n# Example\nd_model = 256\nnum_heads = 8\nbatch_size = 2\nseq_len = 10\n\nmodel = CausalSelfAttention(d_model, num_heads)\nx = torch.randn(batch_size, seq_len, d_model)\n\noutput, attn_weights = model(x)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"CAUSAL SELF-ATTENTION OUTPUT:\")\nprint(\"=\"*60)\nprint(f\"Input: {x.shape}\")\nprint(f\"Output: {output.shape}\")\nprint(f\"Attention weights: {attn_weights.shape}\")\n\nprint(\"\\nAttention weights for position 5 (one head):\")\nprint(attn_weights[0, 0, 5, :].tolist())\nprint(\"\\nNotice: Weights after position 5 are 0 (masked out!)\")\n\nprint(\"\\n✓ Causal Self-Attention complete!\")\nprint(\"This is the core of GPT, language models, autoregressive generation!\")",
+      "explanation": "Causal attention: Future tokens'ı mask'le! Autoregressive generation için gerekli. GPT'nin core component'i. Position t sadece ≤t'ye bakabilir."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Mini GPT Implementation",
+      "code": "import torch\nimport torch.nn as nn\n\nclass GPTBlock(nn.Module):\n    \"\"\"GPT Transformer block\"\"\"\n    def __init__(self, d_model, num_heads, d_ff, dropout=0.1):\n        super().__init__()\n        \n        self.attention = CausalSelfAttention(d_model, num_heads)\n        self.feed_forward = nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.GELU(),  # GPT uses GELU instead of ReLU\n            nn.Dropout(dropout),\n            nn.Linear(d_ff, d_model)\n        )\n        \n        self.ln1 = nn.LayerNorm(d_model)\n        self.ln2 = nn.LayerNorm(d_model)\n        self.dropout = nn.Dropout(dropout)\n    \n    def forward(self, x):\n        # Pre-norm architecture (GPT-2 style)\n        attn_out, _ = self.attention(self.ln1(x))\n        x = x + self.dropout(attn_out)\n        \n        ff_out = self.feed_forward(self.ln2(x))\n        x = x + self.dropout(ff_out)\n        \n        return x\n\nclass MiniGPT(nn.Module):\n    def __init__(\n        self,\n        vocab_size,\n        d_model=768,\n        num_heads=12,\n        num_layers=12,\n        d_ff=3072,\n        max_len=1024,\n        dropout=0.1\n    ):\n        super().__init__()\n        \n        self.d_model = d_model\n        \n        # Token + positional embeddings\n        self.token_embedding = nn.Embedding(vocab_size, d_model)\n        self.position_embedding = nn.Embedding(max_len, d_model)\n        \n        # Transformer blocks\n        self.blocks = nn.ModuleList([\n            GPTBlock(d_model, num_heads, d_ff, dropout)\n            for _ in range(num_layers)\n        ])\n        \n        # Final layer norm and output\n        self.ln_f = nn.LayerNorm(d_model)\n        self.lm_head = nn.Linear(d_model, vocab_size, bias=False)\n        \n        # Weight tying\n        self.lm_head.weight = self.token_embedding.weight\n        \n        self.dropout = nn.Dropout(dropout)\n    \n    def forward(self, input_ids):\n        batch_size, seq_len = input_ids.size()\n        \n        # Create position indices\n        positions = torch.arange(seq_len, device=input_ids.device).unsqueeze(0)\n        \n        # Embeddings\n        token_emb = self.token_embedding(input_ids)\n        pos_emb = self.position_embedding(positions)\n        x = self.dropout(token_emb + pos_emb)\n        \n        # Transformer blocks\n        for block in self.blocks:\n            x = block(x)\n        \n        # Final layer norm\n        x = self.ln_f(x)\n        \n        # Language modeling head\n        logits = self.lm_head(x)\n        \n        return logits\n    \n    def generate(self, input_ids, max_new_tokens=50, temperature=1.0, top_k=None):\n        \"\"\"Autoregressive generation\"\"\"\n        self.eval()\n        \n        for _ in range(max_new_tokens):\n            # Forward pass\n            logits = self(input_ids)\n            \n            # Get logits for last token\n            logits = logits[:, -1, :] / temperature\n            \n            # Top-k sampling\n            if top_k is not None:\n                values, _ = torch.topk(logits, top_k)\n                logits[logits < values[:, [-1]]] = float('-inf')\n            \n            # Sample\n            probs = torch.softmax(logits, dim=-1)\n            next_token = torch.multinomial(probs, num_samples=1)\n            \n            # Append to sequence\n            input_ids = torch.cat([input_ids, next_token], dim=1)\n        \n        return input_ids\n\n# Create mini GPT\nvocab_size = 50000\nd_model = 768\nnum_heads = 12\nnum_layers = 12\n\nmodel = MiniGPT(vocab_size, d_model, num_heads, num_layers)\n\nprint(\"Mini GPT Model:\")\nprint(f\"  Vocabulary: {vocab_size:,}\")\nprint(f\"  d_model: {d_model}\")\nprint(f\"  Heads: {num_heads}\")\nprint(f\"  Layers: {num_layers}\")\nprint(f\"\\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}\")\nprint(f\"  (GPT-2 small: 117M, GPT-3: 175B parameters!)\")\n\n# Example usage\nbatch_size = 2\nseq_len = 50\n\ninput_ids = torch.randint(0, vocab_size, (batch_size, seq_len))\nlogits = model(input_ids)\n\nprint(f\"\\nInput: {input_ids.shape}\")\nprint(f\"Output logits: {logits.shape}  # Predict next token for each position\")\n\n# Generation example\nprint(\"\\n\" + \"=\"*60)\nprint(\"AUTOREGRESSIVE GENERATION:\")\nprint(\"=\"*60)\nstart_tokens = torch.randint(0, vocab_size, (1, 10))\nprint(f\"Start tokens: {start_tokens.shape}\")\n\nwith torch.no_grad():\n    generated = model.generate(start_tokens, max_new_tokens=20, temperature=0.8, top_k=40)\n\nprint(f\"Generated: {generated.shape}  # Added 20 new tokens\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"GPT KEY FEATURES:\")\nprint(\"=\"*60)\nprint(\"✓ Decoder-only (causal attention)\")\nprint(\"✓ Autoregressive generation\")\nprint(\"✓ Pre-norm + GELU activation\")\nprint(\"✓ Weight tying (embedding = lm_head)\")\nprint(\"✓ Position embeddings (learned, not sin/cos)\")\nprint(\"\\nThis architecture powers ChatGPT, GPT-4, and modern LLMs!\")\n\nprint(\"\\n✓ Mini GPT complete!\")",
+      "explanation": "Complete GPT implementation! Decoder-only Transformer with causal attention. Autoregressive generation ile text üretir. ChatGPT'nin temel yapısı!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Vision Transformer (ViT)",
+      "code": "import torch\nimport torch.nn as nn\n\nclass PatchEmbedding(nn.Module):\n    \"\"\"Convert image to sequence of patches\"\"\"\n    def __init__(self, image_size=224, patch_size=16, in_channels=3, d_model=768):\n        super().__init__()\n        self.image_size = image_size\n        self.patch_size = patch_size\n        self.num_patches = (image_size // patch_size) ** 2\n        \n        # Convolutional patch extraction\n        self.projection = nn.Conv2d(\n            in_channels, d_model,\n            kernel_size=patch_size,\n            stride=patch_size\n        )\n    \n    def forward(self, x):\n        # x: (batch, channels, height, width)\n        x = self.projection(x)  # (batch, d_model, H/P, W/P)\n        x = x.flatten(2)  # (batch, d_model, num_patches)\n        x = x.transpose(1, 2)  # (batch, num_patches, d_model)\n        return x\n\nclass VisionTransformer(nn.Module):\n    def __init__(\n        self,\n        image_size=224,\n        patch_size=16,\n        num_classes=1000,\n        d_model=768,\n        num_heads=12,\n        num_layers=12,\n        d_ff=3072,\n        dropout=0.1\n    ):\n        super().__init__()\n        \n        # Patch embedding\n        self.patch_embed = PatchEmbedding(image_size, patch_size, 3, d_model)\n        num_patches = self.patch_embed.num_patches\n        \n        # CLS token (classification token)\n        self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))\n        \n        # Positional embeddings\n        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, d_model))\n        \n        # Transformer encoder\n        self.encoder_blocks = nn.ModuleList([\n            TransformerEncoderBlock(d_model, num_heads, d_ff, dropout)\n            for _ in range(num_layers)\n        ])\n        \n        # Classification head\n        self.norm = nn.LayerNorm(d_model)\n        self.head = nn.Linear(d_model, num_classes)\n        \n        self.dropout = nn.Dropout(dropout)\n    \n    def forward(self, x):\n        batch_size = x.size(0)\n        \n        # Patch embedding\n        x = self.patch_embed(x)  # (batch, num_patches, d_model)\n        \n        # Add CLS token\n        cls_tokens = self.cls_token.expand(batch_size, -1, -1)\n        x = torch.cat([cls_tokens, x], dim=1)  # (batch, num_patches+1, d_model)\n        \n        # Add positional embedding\n        x = x + self.pos_embedding\n        x = self.dropout(x)\n        \n        # Transformer encoder\n        for block in self.encoder_blocks:\n            x = block(x)\n        \n        # Use CLS token for classification\n        x = self.norm(x)\n        cls_output = x[:, 0]  # Take CLS token\n        \n        # Classification\n        logits = self.head(cls_output)\n        \n        return logits\n\n# Create ViT\nmodel = VisionTransformer(\n    image_size=224,\n    patch_size=16,\n    num_classes=1000,\n    d_model=768,\n    num_heads=12,\n    num_layers=12\n)\n\nprint(\"Vision Transformer (ViT):\")\nprint(f\"  Image size: 224×224\")\nprint(f\"  Patch size: 16×16\")\nprint(f\"  Number of patches: {(224//16)**2} = 196\")\nprint(f\"  d_model: 768\")\nprint(f\"  Layers: 12\")\nprint(f\"\\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}\")\nprint(f\"  (ViT-Base: 86M parameters)\")\n\n# Example\nbatch_size = 4\nimage = torch.randn(batch_size, 3, 224, 224)\n\nlogits = model(image)\n\nprint(f\"\\nInput image: {image.shape}\")\nprint(f\"Output logits: {logits.shape}  # (batch, num_classes)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"VISION TRANSFORMER WORKFLOW:\")\nprint(\"=\"*60)\nprint(\"\"\"\n1. Split image into patches (16×16)\n   224×224 → 14×14 = 196 patches\n\n2. Linear projection of patches\n   Each patch → d_model vector\n\n3. Add CLS token (classification token)\n   Special token for aggregate representation\n\n4. Add position embeddings\n   Which patch is where?\n\n5. Transformer encoder (same as NLP!)\n   Patches attend to each other\n\n6. Use CLS token for classification\n   CLS has seen all patches via attention\n\"\"\")\n\nprint(\"\" + \"=\"*60)\nprint(\"ViT vs CNN:\")\nprint(\"=\"*60)\nprint(\"CNN:\")\nprint(\"  ✓ Inductive bias (locality, translation invariance)\")\nprint(\"  ✓ Works well with small data\")\nprint(\"  ✓ Efficient\")\nprint(\"\\nViT:\")\nprint(\"  ✓ No inductive bias (learns everything from data)\")\nprint(\"  ✓ Needs LARGE datasets (ImageNet-21K, JFT-300M)\")\nprint(\"  ✓ Better scaling (larger model → better performance)\")\nprint(\"  ✓ State-of-art on ImageNet (with enough data!)\")\n\nprint(\"\\n✓ Vision Transformer complete!\")\nprint(\"Transformers conquered vision too, not just NLP!\")",
+      "explanation": "Vision Transformer: Resmi patch'lere böl, her patch bir token gibi treat et, Transformer encoder uygula. NLP'deki başarıyı vision'a taşıdı!"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Transformer'ın RNN'e göre ana avantajı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Daha az parametre kullanır",
+        "Parallelization - tüm sequence aynı anda işlenir",
+        "Her zaman daha iyi accuracy",
+        "Daha kolay implement"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Transformer'ın核心优势: Parallelization! RNN sequential (tek tek), Transformer tüm tokens aynı anda işler → GPU'da çok hızlı. Ayrıca long-range dependencies problem yok!",
+      "difficulty": 2
+    },
+    {
+      "id": "q2",
+      "question": "Attention mechanism'de Query, Key, Value ne işe yarar?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece terminoloji, hepsi aynı",
+        "Query: Ne arıyorum?, Keys: Nerelere bakabilirim?, Values: Ne alacağım?",
+        "Üç farklı layer tipi",
+        "Encoder, Decoder, Output layer'ları"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Q-K-V analojisi: Query='Sorum bu', Keys='Kim cevap verebilir?', Values='Cevaplar'. Attention: Q ile K'yı compare et → scores, scores ile V'yi weight et → output!",
+      "difficulty": 2
+    },
+    {
+      "id": "q3",
+      "question": "Multi-head attention neden tek attention'dan iyi?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece daha hızlı",
+        "Her head farklı pattern'e odaklanır (syntax, semantics, position)",
+        "Daha az parametre kullanır",
+        "Sadece büyük models için gerekli"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Multi-head: 8 ayrı attention parallel çalışır. Her biri farklı relationship'e bakabilir: Head 1→syntax, Head 2→semantics, Head 3→distance. Daha zengin representation!",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Positional encoding neden gerekli?",
+      "type": "multiple-choice",
+      "options": [
+        "Transformer position-agnostic, order bilgisi yok",
+        "Model'i daha hızlı yapar",
+        "Accuracy'yi artırır",
+        "Sadece uzun sequences için gerekli"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Transformer'da inherent position bilgisi YOK! 'I love you' = 'you love I' (same tokens). Positional encoding (sin/cos) position bilgisi ekler, böylece order öğrenilir.",
+      "difficulty": 2
+    },
+    {
+      "id": "q5",
+      "question": "Causal (masked) attention ne zaman kullanılır?",
+      "type": "multiple-choice",
+      "options": [
+        "Her zaman, her Transformer'da",
+        "Autoregressive generation'da (GPT), future tokens görülmemeli",
+        "Sadece encoder'da",
+        "Sadece training'de"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Causal attention: Position t sadece ≤t'ye bakabilir, future masked. Autoregressive generation için gerekli (GPT). Encoder'da (BERT) gerekli değil, tüm sequence görülebilir!",
+      "difficulty": 3
+    },
+    {
+      "id": "q6",
+      "question": "Vision Transformer (ViT) resmi nasıl işler?",
+      "type": "multiple-choice",
+      "options": [
+        "Piksel piksel Transformer'a verir",
+        "CNN'den sonra Transformer kullanır",
+        "Resmi patch'lere böler, her patch bir token gibi treat edilir",
+        "RNN ile sequence olarak işler"
+      ],
+      "correctAnswer": 2,
+      "explanation": "ViT: 224×224 resmi 16×16 patch'lere böl → 196 patch. Her patch linear projection → token embedding gibi. Sonra standard Transformer encoder! NLP'deki başarıyı vision'a taşıdı.",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "Attention mechanism ne yapar?",
+      "back": "Her pozisyon diğer TÜM pozisyonlara bakabilir:\n\nAttention(Q,K,V) = softmax(QK^T/√d_k) V\n\n1. Q·K: Similarity scores\n2. Softmax: Weights (sum=1)\n3. Weights × V: Weighted sum\n\nRNN: Sequential, yavaş\nAttention: Parallel, hızlı, long-range OK!"
+    },
+    {
+      "id": "fc2",
+      "front": "Query, Key, Value nedir?",
+      "back": "Attention'ın 3 component'i:\n\nQuery: Ne arıyorum?\n  'it' kelimesi → Neye refer ediyor?\n\nKeys: Nerelere bakabilirim?\n  Tüm kelimeler (animal, street, ...)\n\nValues: Ne bilgi alacağım?\n  Her kelimenin semantic info\n\nQ×K→scores, softmax→weights, weights×V→output"
+    },
+    {
+      "id": "fc3",
+      "front": "Multi-Head Attention?",
+      "back": "8 (veya 16) ayrı attention parallel:\n\nhead_i = Attention(QW_i^Q, KW_i^K, KW_i^V)\n\nHer head farklı pattern:\n- Head 1: Syntax (subject-verb)\n- Head 2: Semantics (similar words)\n- Head 3: Position (near-far)\n\nConcat → W^O → Final output\n\nDaha zengin representation!"
+    },
+    {
+      "id": "fc4",
+      "front": "Positional Encoding formülü?",
+      "back": "Sin/cos functions ile position:\n\nPE(pos,2i) = sin(pos/10000^(2i/d))\nPE(pos,2i+1) = cos(pos/10000^(2i/d))\n\nNeden gerekli?\n  Transformer position-agnostic!\n  'I love you' = 'you love I'\n\nNeden sin/cos?\n  ✓ Unique per position\n  ✓ Relative positions learnable\n  ✓ Extrapolate to longer seqs"
+    },
+    {
+      "id": "fc5",
+      "front": "Encoder vs Decoder?",
+      "back": "Encoder: Bidirectional attention\n  Her token tüm tokens'a bakabilir\n  BERT uses encoder-only\n\nDecoder: Causal attention\n  Token t sadece ≤t'ye bakabilir\n  Future masked (autoregressive)\n  GPT uses decoder-only\n\nEncoder-Decoder: Both\n  Translation, seq2seq tasks\n  Original Transformer paper"
+    },
+    {
+      "id": "fc6",
+      "front": "Layer Normalization?",
+      "back": "Batch norm'un Transformer versiyonu:\n\nLayerNorm(x) = γ(x-μ)/√(σ²+ε) + β\n\nμ,σ: Feature dim üzerinden\n  (Batch norm: Batch üzerinden)\n\nNeden?\n  Sequence length variable\n  Batch norm problematic\n\nHer sublayer'dan sonra:\n  x = LayerNorm(x + sublayer(x))\n  (Residual + Norm)"
+    },
+    {
+      "id": "fc7",
+      "front": "Causal (Masked) Attention?",
+      "back": "Future tokens görülmemeli:\n\nmask = [[1,0,0],\n        [1,1,0],\n        [1,1,1]]  # Lower triangular\n\nPos 0: Sadece pos 0\nPos 1: Pos 0,1\nPos 2: Pos 0,1,2\n\nScores masked_fill(-inf) → softmax\n\nGPT, autoregressive generation\nTraining = inference consistency!"
+    },
+    {
+      "id": "fc8",
+      "front": "Transformer complexity?",
+      "back": "Self-Attention: O(n² × d)\n  n: seq_len, d: d_model\n  Her token her token'a bak\n\nRNN: O(n × d²)\n  Sequential, no parallelization\n\nKısa seq: Transformer hızlı\nUzun seq (>1000): n² expensive!\n\nEfficent variants:\n  Linear attention: O(n)\n  Sparse attention\n  Flash attention (IO-aware)"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Positional encoding'i unutmak veya yanlış uygulamak",
+      "why": "Transformer position-agnostic! Positional encoding olmazsa 'I love you' = 'you love I'. Order bilgisi kaybolur.",
+      "fix": "Embedding'e EKLE (concat değil!): x = token_emb + pos_enc. Sin/cos formülü doğru implement et. Learned embeddings de kullanılabilir (GPT gibi)."
+    },
+    {
+      "mistake": "Attention scores'u scale etmemek (√d_k ile bölmemek)",
+      "why": "Scores çok büyürse softmax saturate eder, gradients vanish. d_k=64 → scores ~64 range → softmax problematic!",
+      "fix": "scores = QK^T / sqrt(d_k). d_k büyüdükçe scaling daha kritik. Paper'daki formülü takip et!"
+    },
+    {
+      "mistake": "Causal mask'i decoder'da kullanmamak",
+      "why": "GPT-style generation'da future tokens görülürse cheating olur! Training ile inference mismatch → kötü generation.",
+      "fix": "Decoder self-attention'da causal mask kullan: scores.masked_fill(mask==0, -inf). Lower triangular matrix."
+    },
+    {
+      "mistake": "Layer Normalization yerine Batch Normalization kullanmak",
+      "why": "Batch norm batch ve sequence dimension'larda normalize eder. Variable length sequences'de problematic!",
+      "fix": "Layer Normalization kullan: Feature dimension üzerinden normalize. nn.LayerNorm(d_model). Transformer için designed!"
+    },
+    {
+      "mistake": "Residual connections'ı unutmak",
+      "why": "Deep Transformer (12+ layers) vanishing gradient yaşar. Gradients erken layer'lara ulaşamaz, öğrenmez!",
+      "fix": "Her sublayer'da residual: x = x + sublayer(x). Sonra LayerNorm. Gradient flow sağlar, deep networks mümkün olur."
+    },
+    {
+      "mistake": "Warmup olmadan büyük learning rate kullanmak",
+      "why": "Transformer başlangıçta unstable! Büyük LR ile diverge edebilir, NaN loss.",
+      "fix": "Learning rate warmup kullan: İlk N step'te LR'yi 0'dan linearly artır. Sonra decay et. Paper: 4000 warmup steps."
+    },
+    {
+      "mistake": "Attention O(n²) complexity'yi göz ardı etmek",
+      "why": "Uzun sequences (>2048) çok fazla memory ve compute gerektirir. Training/inference yavaşlar, OOM error!",
+      "fix": "Efficient attention variants: Flash Attention (2-4x hızlı), Sparse attention, Linear attention. Ya da sequences'i chunk'la."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "attention-heatmap",
+      "type": "interactive",
+      "title": "Attention Weights Visualization",
+      "description": "Her token'ın diğer tokens'a attention weight'lerini heatmap olarak görün. Query token seç, attention pattern'ini keşfet"
+    },
+    {
+      "id": "multi-head-comparison",
+      "type": "animation",
+      "title": "Multi-Head Attention Patterns",
+      "description": "8 farklı head'in aynı sentence'de farklı pattern'lere nasıl odaklandığını görün"
+    },
+    {
+      "id": "positional-encoding-viz",
+      "type": "plot",
+      "title": "Positional Encoding Visualization",
+      "description": "Sin/cos functions ile oluşturulan positional encoding'leri 2D heatmap olarak görün"
+    },
+    {
+      "id": "transformer-architecture",
+      "type": "diagram",
+      "title": "Full Transformer Architecture",
+      "description": "Encoder-decoder yapısı, her component'in data flow'u, shape transformations"
+    }
+  ],
+  "references": [
+    {
+      "title": "Attention Is All You Need (Original Paper)",
+      "url": "https://arxiv.org/abs/1706.03762",
+      "type": "paper",
+      "author": "Vaswani et al., 2017"
+    },
+    {
+      "title": "The Illustrated Transformer",
+      "url": "http://jalammar.github.io/illustrated-transformer/",
+      "type": "blog",
+      "author": "Jay Alammar"
+    },
+    {
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+      "url": "https://arxiv.org/abs/1810.04805",
+      "type": "paper",
+      "author": "Devlin et al., 2018"
+    },
+    {
+      "title": "GPT-3: Language Models are Few-Shot Learners",
+      "url": "https://arxiv.org/abs/2005.14165",
+      "type": "paper",
+      "author": "Brown et al., 2020"
+    },
+    {
+      "title": "Vision Transformer (ViT)",
+      "url": "https://arxiv.org/abs/2010.11929",
+      "type": "paper",
+      "author": "Dosovitskiy et al., 2020"
+    },
+    {
+      "title": "Flash Attention: Fast and Memory-Efficient",
+      "url": "https://arxiv.org/abs/2205.14135",
+      "type": "paper",
+      "author": "Dao et al., 2022"
+    }
+  ]
+}

@@ -1,0 +1,312 @@
+{
+  "id": "large-language-models-basics",
+  "title": "Large Language Models (LLM) Basics",
+  "category": "natural-language-processing",
+  "level": 4,
+  "estimatedTime": 85,
+  "description": "Large Language Models (LLMs): Foundation models for NLP! Architecture: Transformer decoder (GPT) or encoder-decoder (T5). Key: Scale! Billions of parameters (GPT-3: 175B). Training: Pre-train on massive text (web, books) → learn language patterns. Then: Fine-tune on specific tasks. Emergent abilities: Chain-of-thought reasoning, few-shot learning (0-shot, 1-shot, 5-shot examples). Prompting: Instruction → response. Prompt engineering critical! Examples: GPT (GPT-3, GPT-4, ChatGPT), BERT variants, T5, LLaMA, Claude. Applications: Text generation, question answering, summarization, translation, code generation. Training challenges: Compute cost (millions of dollars), data quality, alignment. Inference: Autoregressive generation (token by token). Optimization: Quantization, distillation, efficient inference. Revolution: General-purpose language understanding!",
+  "content": {
+    "level0_basic": "LLMs: AI that understands and generates text! Like ChatGPT. Architecture: Transformer (attention mechanism). Key difference from BERT: (1) Size: Billions of parameters! GPT-3: 175 billion. (2) Training data: Entire internet (TB of text). (3) Capabilities: Can do many tasks without specific training! How it works: (1) Pre-training: Read massive text, predict next word. Learn: Grammar, facts, reasoning. (2) Fine-tuning: Instruction following, helpful responses. (3) Inference: Given prompt → generate response token by token. Emergent abilities: With scale, suddenly can reason! Chain-of-thought: 'Let's think step by step'. Few-shot: Give 3 examples → understands task! Applications: Chatbots (ChatGPT), coding assistants (GitHub Copilot), writing tools. Models: GPT-3/4, LLaMA, Claude, Gemini. Revolution: General intelligence for language!",
+    "level1_beginner": "**LLM Architecture (GPT-style):**\n\n```\nInput: Text → Tokenize → Token IDs\n  ↓\nToken Embeddings + Positional Encodings\n  ↓\nTransformer Decoder Layers (×96 for GPT-3)\n  - Masked self-attention (causal!)\n  - Feedforward network\n  ↓\nOutput: Logits for next token\n  ↓\nSample → Generate text\n```\n\n**Autoregressive Generation:**\n\n```\nInput: \"The cat\"\n\nStep 1: Predict next token\n  P(sat | The cat) = 0.6\n  P(ran | The cat) = 0.3\n  → Sample: \"sat\"\n\nStep 2: Append, predict next\n  Input: \"The cat sat\"\n  P(on | The cat sat) = 0.7\n  → Sample: \"on\"\n\nStep 3: Continue...\n  \"The cat sat on the mat.\"\n\nToken by token! Autoregressive.\n```\n\n**Training:**\n\n```\nPre-training (Self-supervised):\n  Input: \"The cat sat on the\"\n  Target: \"mat\"\n  \n  Loss: Cross-entropy on next token prediction\n  Data: Billions of tokens (web, books)\n  \nFine-tuning (Supervised):\n  Input: \"Translate to French: Hello\"\n  Target: \"Bonjour\"\n  \n  Instruction following, alignment\n```\n\n**Scale Effects:**\n\n```\nSmall models (GPT-2, 1.5B params):\n  - Good text generation\n  - Weak reasoning\n  - Task-specific training needed\n  \nLarge models (GPT-3, 175B params):\n  - Excellent generation\n  - Strong reasoning!\n  - Few-shot learning\n  - Emergent abilities\n\nScale unlocks capabilities!\n```\n\n**Prompting:**\n\n```\nZero-shot:\n  \"Translate to Spanish: Hello\"\n  → \"Hola\"\n  \nFew-shot (3 examples):\n  \"English: Hello → Spanish: Hola\n   English: Goodbye → Spanish: Adiós\n   English: Thanks → Spanish: Gracias\n   English: Please → Spanish:\"\n  → \"Por favor\"\n  \nChain-of-Thought:\n  \"Q: 23 + 47? A: Let's think step by step.\"\n  → \"20 + 40 = 60, 3 + 7 = 10, 60 + 10 = 70\"\n\nPrompt engineering matters!\n```",
+    "level2_application": "**Simple LLM Training Loop:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass SimpleLLM(nn.Module):\n    def __init__(self, vocab_size=50000, d_model=768, n_layers=12, n_heads=12):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, d_model)\n        self.pos_encoding = nn.Parameter(torch.randn(1, 2048, d_model))  # Max seq len\n        \n        decoder_layer = nn.TransformerDecoderLayer(\n            d_model, n_heads, d_model * 4, dropout=0.1\n        )\n        self.transformer = nn.TransformerDecoder(decoder_layer, n_layers)\n        \n        self.output = nn.Linear(d_model, vocab_size)\n    \n    def forward(self, input_ids):\n        # Embeddings\n        x = self.embedding(input_ids)\n        x = x + self.pos_encoding[:, :input_ids.shape[1]]\n        \n        # Causal mask (prevent looking ahead)\n        seq_len = input_ids.shape[1]\n        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()\n        \n        # Transformer\n        x = self.transformer(x, x, tgt_mask=mask)\n        \n        # Output logits\n        logits = self.output(x)\n        return logits\n\n# Training\nmodel = SimpleLLM()\noptimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)\n\nfor batch in dataloader:\n    input_ids = batch['input_ids']  # (B, seq_len)\n    labels = batch['labels']  # Shifted by 1\n    \n    logits = model(input_ids)\n    \n    # Next token prediction loss\n    loss = nn.CrossEntropyLoss()(logits.view(-1, 50000), labels.view(-1))\n    \n    loss.backward()\n    optimizer.step()\n    optimizer.zero_grad()\n```\n\n**Text Generation:**\n\n```python\n@torch.no_grad()\ndef generate(model, prompt, max_length=100, temperature=0.8):\n    model.eval()\n    tokens = tokenizer.encode(prompt)\n    \n    for _ in range(max_length):\n        # Forward pass\n        logits = model(torch.tensor([tokens]))[0, -1]  # Last token logits\n        \n        # Temperature sampling\n        probs = torch.softmax(logits / temperature, dim=-1)\n        next_token = torch.multinomial(probs, 1).item()\n        \n        # Stop if EOS\n        if next_token == tokenizer.eos_token_id:\n            break\n        \n        tokens.append(next_token)\n    \n    return tokenizer.decode(tokens)\n\n# Usage\ntext = generate(model, \"Once upon a time\", max_length=50)\nprint(text)\n```",
+    "level3_advanced": "**Efficient LLM Inference (KV-Cache):**\n\n```python\nclass EfficientLLM(nn.Module):\n    \"\"\"LLM with KV-cache for fast generation\"\"\"\n    \n    def forward(self, input_ids, past_key_values=None, use_cache=True):\n        # Only process new tokens!\n        if past_key_values is not None:\n            input_ids = input_ids[:, -1:]  # Last token only\n        \n        x = self.embedding(input_ids)\n        \n        # Transformer with caching\n        new_past_key_values = []\n        for i, layer in enumerate(self.layers):\n            past_kv = past_key_values[i] if past_key_values else None\n            x, new_kv = layer(x, past_key_values=past_kv, use_cache=use_cache)\n            if use_cache:\n                new_past_key_values.append(new_kv)\n        \n        logits = self.output(x)\n        \n        if use_cache:\n            return logits, new_past_key_values\n        return logits\n\n@torch.no_grad()\ndef generate_with_cache(model, prompt, max_length=100):\n    tokens = tokenizer.encode(prompt)\n    past_key_values = None\n    \n    for _ in range(max_length):\n        # First iteration: Process all tokens\n        # Later: Only process new token (cached keys/values)\n        input_ids = torch.tensor([tokens]) if past_key_values is None else torch.tensor([[tokens[-1]]])\n        \n        logits, past_key_values = model(input_ids, past_key_values=past_key_values)\n        \n        next_token = logits[0, -1].argmax().item()\n        if next_token == tokenizer.eos_token_id:\n            break\n        \n        tokens.append(next_token)\n    \n    return tokenizer.decode(tokens)\n\n# Much faster! O(n) instead of O(n²)\n```",
+    "level4_expert": "**LLM Optimization Techniques:**\n\n```python\n# 1. Quantization (INT8)\nfrom transformers import AutoModelForCausalLM\nimport torch\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    'gpt2',\n    load_in_8bit=True,  # INT8 quantization\n    device_map='auto'\n)\n# 4× smaller memory, 2-3× faster\n\n# 2. Flash Attention (memory-efficient attention)\nfrom flash_attn import flash_attn_func\n\ndef efficient_attention(q, k, v):\n    # O(n) memory instead of O(n²)\n    return flash_attn_func(q, k, v, causal=True)\n\n# 3. Gradient Checkpointing (training)\nmodel.gradient_checkpointing_enable()\n# Trade compute for memory: Recompute activations\n\n# 4. Mixed Precision (FP16)\nfrom torch.cuda.amp import autocast, GradScaler\n\nscaler = GradScaler()\nfor batch in dataloader:\n    with autocast():\n        loss = model(**batch)\n    \n    scaler.scale(loss).backward()\n    scaler.step(optimizer)\n    scaler.update()\n\n# 5. Model Parallelism (for huge models)\nfrom transformers import AutoModelForCausalLM\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    'gpt-neo-20b',\n    device_map='auto',  # Automatically split across GPUs\n    offload_folder='offload'  # CPU offloading\n)\n```\n\n**RLHF (Reinforcement Learning from Human Feedback):**\n\n```python\nclass RewardModel(nn.Module):\n    \"\"\"Judge response quality\"\"\"\n    def __init__(self, base_model):\n        super().__init__()\n        self.base = base_model\n        self.reward_head = nn.Linear(768, 1)\n    \n    def forward(self, input_ids):\n        hidden = self.base(input_ids).last_hidden_state[:, -1]\n        reward = self.reward_head(hidden)\n        return reward\n\n# PPO training\nfrom trl import PPOTrainer, PPOConfig\n\nconfig = PPOConfig(learning_rate=1e-5)\ntrainer = PPOTrainer(config, model, ref_model, tokenizer)\n\nfor query, response in dataset:\n    # Get reward from reward model\n    reward = reward_model(response)\n    \n    # PPO update\n    stats = trainer.step([query], [response], [reward])\n\n# Result: Aligned model (helpful, harmless, honest)\n```"
+  },
+  "whatIsIt": "Large Language Models (LLMs): Transformer-based models trained on massive text corpora! Architecture: Typically decoder-only (GPT) with billions of parameters. Training: (1) Pre-training: Self-supervised next-token prediction on web-scale data. Learns language structure, world knowledge, reasoning patterns. (2) Fine-tuning: Supervised instruction following, RLHF (alignment). Key: Scale enables emergent abilities! Few-shot learning (learn from examples in prompt), chain-of-thought reasoning, instruction following. Autoregressive generation: Generate token by token, each token conditioned on previous. Attention: Causal masking (can't see future tokens). Optimization: KV-caching, quantization, flash attention. Examples: GPT-3/4 (175B-1T+ params), LLaMA (7B-65B), Claude, Gemini.",
+  "whyNeeded": "Why LLMs revolutionary? (1) General Purpose: One model, many tasks! No task-specific training needed (few-shot). (2) Emergent Abilities: Scale unlocks capabilities. GPT-3 can reason, GPT-2 couldn't! (3) Instruction Following: Natural language interface. 'Translate this' → does it. (4) Transfer Learning: Pre-train once, use everywhere. (5) World Knowledge: Learns from internet → vast knowledge base. Applications: (1) Chatbots: ChatGPT, Claude. (2) Code: GitHub Copilot, Code generation. (3) Writing: Content creation, editing. (4) Analysis: Summarization, Q&A. (5) Reasoning: Math, logic problems. Challenges: (1) Hallucinations: Makes up facts! (2) Bias: Reflects training data biases. (3) Cost: Training $millions, inference expensive. (4) Alignment: Make helpful, harmless, honest. Future: Multimodal (GPT-4V), agents, reasoning improvements. Foundation of modern AI!",
+  "realWorldAnalogy": "LLM = Universal translator + encyclopedia + reasoning engine! Like person who: (1) Read entire internet. (2) Remembers patterns (not exact facts). (3) Can discuss anything reasonably. Autoregressive generation = Speaking! You ask question, they think word by word. 'The cat' → 'sat' → 'on' → 'mat'. Chain-of-thought = 'Let me think out loud'. Shows reasoning steps, not just answer. Few-shot learning = Quick learner! Show 3 examples of task → understands pattern, does it. No need for months of training! Prompting = How you ask matters! 'Translate' vs 'What is Spanish for': Different responses. Art of asking! Scale = Brain size. Bigger model (more params) = more capability. GPT-2 (1.5B): Smart parrot. GPT-3 (175B): Can reason! Emergent abilities appear. RLHF = Teaching manners. Model knows language, but needs to learn: Be helpful, don't be harmful, be honest. Human feedback guides behavior.",
+  "mathematics": {
+    "formulas": [
+      "\\text{Autoregressive: } P(x_{1:n}) = \\prod_{i=1}^n P(x_i | x_{<i})",
+      "\\text{Loss: } \\mathcal{L} = -\\sum_{i=1}^n \\log P(x_i | x_{<i})",
+      "\\text{Attention (causal): } \\text{Attention}(Q,K,V) = \\text{softmax}\\left(\\frac{QK^T + M}{\\sqrt{d_k}}\\right)V",
+      "\\text{Temperature sampling: } P(x_i) = \\frac{\\exp(z_i/T)}{\\sum_j \\exp(z_j/T)}",
+      "\\text{Perplexity: } \\text{PPL} = \\exp\\left(-\\frac{1}{n}\\sum_{i=1}^n \\log P(x_i | x_{<i})\\right)"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "Pre-training:",
+      "1. Collect massive text corpus (web, books, code)",
+      "2. Tokenize text (BPE, SentencePiece)",
+      "3. Create training samples: Input = text[:-1], Target = text[1:]",
+      "4. Forward: Transformer decoder predicts next token",
+      "5. Loss: Cross-entropy on predicted vs actual next token",
+      "6. Backprop, update parameters",
+      "7. Repeat for billions of tokens",
+      "Generation (Inference):",
+      "1. Tokenize prompt",
+      "2. Forward pass → logits for next token",
+      "3. Apply temperature, sample next token",
+      "4. Append to sequence",
+      "5. Repeat until EOS or max length",
+      "6. Decode tokens → text"
+    ],
+    "complexity": "Forward pass: O(n·d² + n²·d) where n=sequence length, d=model dimension. Attention: O(n²·d) dominates for long sequences. Generation: O(L·n²·d) for length L output (without caching). With KV-cache: O(L·n·d) → much faster! Parameters: 175B (GPT-3) → ~700GB in FP32, ~350GB in FP16."
+  },
+  "prerequisites": [
+    "transformers-attention",
+    "bert-language-models"
+  ],
+  "nextTopics": [
+    "prompt-engineering",
+    "llm-fine-tuning",
+    "rlhf"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "bert-language-models",
+    "neural-networks"
+  ],
+  "tags": [
+    "llm",
+    "gpt",
+    "language-model",
+    "transformer",
+    "text-generation",
+    "nlp",
+    "chatgpt"
+  ],
+  "codeExamples": [
+    {
+      "title": "Using GPT-2",
+      "language": "python",
+      "code": "from transformers import GPT2LMHeadModel, GPT2Tokenizer\nimport torch\n\nmodel = GPT2LMHeadModel.from_pretrained('gpt2')\ntokenizer = GPT2Tokenizer.from_pretrained('gpt2')\n\nprompt = \"Once upon a time\"\ninput_ids = tokenizer.encode(prompt, return_tensors='pt')\n\n# Generate\nwith torch.no_grad():\n    output = model.generate(\n        input_ids,\n        max_length=50,\n        temperature=0.8,\n        do_sample=True\n    )\n\ntext = tokenizer.decode(output[0])\nprint(text)",
+      "level": 1,
+      "explanation": "Using GPT-2 code"
+    },
+    {
+      "title": "Temperature Sampling",
+      "language": "python",
+      "code": "@torch.no_grad()\ndef generate_with_temperature(model, prompt, temp=1.0, max_len=50):\n    tokens = tokenizer.encode(prompt)\n    \n    for _ in range(max_len):\n        input_ids = torch.tensor([tokens])\n        logits = model(input_ids).logits[0, -1]\n        \n        # Temperature scaling\n        probs = torch.softmax(logits / temp, dim=-1)\n        \n        # Sample\n        next_token = torch.multinomial(probs, 1).item()\n        \n        if next_token == tokenizer.eos_token_id:\n            break\n        tokens.append(next_token)\n    \n    return tokenizer.decode(tokens)\n\n# Low temp (0.5): Focused, repetitive\n# High temp (1.5): Creative, random\ntext = generate_with_temperature(model, \"The\", temp=0.8)",
+      "level": 2,
+      "explanation": "Temperature Sampling code"
+    },
+    {
+      "title": "Top-k and Top-p Sampling",
+      "language": "python",
+      "code": "def sample_top_k_top_p(logits, top_k=50, top_p=0.95, temp=1.0):\n    # Temperature\n    logits = logits / temp\n    \n    # Top-k filtering\n    if top_k > 0:\n        indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]\n        logits[indices_to_remove] = float('-inf')\n    \n    # Top-p (nucleus) filtering\n    if top_p < 1.0:\n        sorted_logits, sorted_indices = torch.sort(logits, descending=True)\n        cumulative_probs = torch.cumsum(torch.softmax(sorted_logits, dim=-1), dim=-1)\n        \n        # Remove tokens with cumulative probability > top_p\n        sorted_indices_to_remove = cumulative_probs > top_p\n        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()\n        sorted_indices_to_remove[..., 0] = 0\n        \n        indices_to_remove = sorted_indices[sorted_indices_to_remove]\n        logits[indices_to_remove] = float('-inf')\n    \n    probs = torch.softmax(logits, dim=-1)\n    return torch.multinomial(probs, 1)\n\n# Better quality than pure sampling!",
+      "level": 3,
+      "explanation": "Top-k and Top-p Sampling code"
+    },
+    {
+      "title": "Few-Shot Prompting",
+      "language": "python",
+      "code": "def few_shot_prompt(examples, query):\n    prompt = \"Translate English to French:\\n\\n\"\n    \n    # Add examples\n    for eng, fr in examples:\n        prompt += f\"English: {eng}\\nFrench: {fr}\\n\\n\"\n    \n    # Add query\n    prompt += f\"English: {query}\\nFrench:\"\n    \n    return prompt\n\nexamples = [\n    (\"Hello\", \"Bonjour\"),\n    (\"Goodbye\", \"Au revoir\"),\n    (\"Thank you\", \"Merci\")\n]\n\nprompt = few_shot_prompt(examples, \"Please\")\nresponse = generate(model, prompt)\nprint(response)  # Should output \"S'il vous plaît\"",
+      "level": 2,
+      "explanation": "Few-Shot Prompting code"
+    },
+    {
+      "title": "Batch Generation with KV-Cache",
+      "language": "python",
+      "code": "from transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel = AutoModelForCausalLM.from_pretrained('gpt2')\ntokenizer = AutoTokenizer.from_pretrained('gpt2')\n\nprompts = [\"Once upon\", \"The quick\", \"In a galaxy\"]\ninputs = tokenizer(prompts, return_tensors='pt', padding=True)\n\n# Generate with caching (much faster!)\noutputs = model.generate(\n    **inputs,\n    max_length=50,\n    do_sample=True,\n    use_cache=True,  # Enable KV-cache\n    pad_token_id=tokenizer.eos_token_id\n)\n\nfor i, output in enumerate(outputs):\n    text = tokenizer.decode(output, skip_special_tokens=True)\n    print(f\"Prompt {i}: {text}\")",
+      "level": 3,
+      "explanation": "Batch Generation with KV-Cache code"
+    },
+    {
+      "title": "Model Quantization (8-bit)",
+      "language": "python",
+      "code": "from transformers import AutoModelForCausalLM\nimport torch\n\n# Load in 8-bit (4× memory reduction!)\nmodel = AutoModelForCausalLM.from_pretrained(\n    'facebook/opt-6.7b',\n    load_in_8bit=True,\n    device_map='auto',  # Automatic device placement\n    torch_dtype=torch.float16\n)\n\ntokenizer = AutoTokenizer.from_pretrained('facebook/opt-6.7b')\n\n# Use normally\ninputs = tokenizer(\"Hello, my name is\", return_tensors='pt').to(0)\noutputs = model.generate(**inputs, max_length=20)\n\nprint(tokenizer.decode(outputs[0]))\nprint(f\"Model size: {model.get_memory_footprint() / 1e9:.2f} GB\")",
+      "level": 4,
+      "explanation": "Model Quantization (8-bit) code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "LLM'lerde autoregressive generation nedir?",
+      "options": [
+        "Parallel token üretimi",
+        "Generate tokens one by one: Each token conditioned on previous",
+        "Bidirectional generation",
+        "Random token sampling"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Autoregressive: Generate sequentially! P(x₁:ₙ) = P(x₁)·P(x₂|x₁)·P(x₃|x₁,x₂)·.... Each token prediction conditioned on all previous tokens. Process: 'The' → 'cat' → 'sat' → 'on' → 'mat'. One token at a time! Why: Causal dependency. Future tokens depend on past. Enables coherent text generation. Contrast: BERT (bidirectional, can't generate). GPT: Autoregressive, generates naturally."
+    },
+    {
+      "question": "Temperature parameter'ın etkisi?",
+      "options": [
+        "Training speed",
+        "Controls randomness: Low (focused), High (creative)",
+        "Model size",
+        "Sadece initialization"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Temperature: Sampling randomness control! Formula: P(xᵢ) = exp(zᵢ/T) / Σexp(zⱼ/T). Low temp (0.5): Peaked distribution → deterministic, focused, repetitive. High temp (1.5): Flat distribution → creative, diverse, random. T=1: Standard softmax. T→0: Argmax (greedy). T→∞: Uniform random. Use cases: Low T for factual (code, translation). High T for creative (stories). Sweet spot: 0.7-0.9."
+    },
+    {
+      "question": "Few-shot learning LLM'lerde nasıl çalışır?",
+      "options": [
+        "Requires model retraining",
+        "Give examples in prompt: Model learns pattern, applies to new input!",
+        "Sadece fine-tuning ile",
+        "Automatic"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Few-shot: In-context learning! Provide examples IN the prompt, no training! Example: '1+1=2, 2+2=4, 3+3=?' → Model infers pattern, outputs '6'. Emergent ability: Only large models (100B+) can do this! Small models can't. 0-shot: No examples. 1-shot: 1 example. 5-shot: 5 examples. More examples → better performance (to a point). Why works: Model recognizes pattern from pre-training, applies to new case. Revolutionary: Task learning without parameter updates!"
+    },
+    {
+      "question": "KV-cache neden kullanılır?",
+      "options": [
+        "Accuracy için",
+        "Speed up generation: Cache previous keys/values, avoid recomputation!",
+        "Training için",
+        "Memory tasarrufu"
+      ],
+      "correctAnswer": 1,
+      "explanation": "KV-Cache: Cache attention keys/values! Problem: Each generation step recomputes attention for ALL previous tokens → O(n²). Solution: Cache computed K,V matrices! Only compute new token's K,V. Speedup: 2-10× faster generation! Trade-off: Memory for speed. Without cache: Generate 100 tokens → recompute 5050 times. With cache: 100 times. Critical for long-form generation. Standard in production LLMs!"
+    },
+    {
+      "question": "Emergent abilities nedir?",
+      "options": [
+        "Planned features",
+        "Capabilities that suddenly appear at scale: Reasoning, few-shot learning!",
+        "Training tricks",
+        "Just better accuracy"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Emergent Abilities: Capabilities NOT present in small models, SUDDENLY appear in large! Examples: Chain-of-thought reasoning (GPT-3 can, GPT-2 can't), Arithmetic (suddenly works at 100B+ params), Few-shot learning. Not gradual improvement → phase transition! Why: Scale unlocks qualitatively different behavior. Hypothesis: Learned patterns combine into higher-level capabilities. Controversial: Some argue 'just better stats'. Regardless: Larger models DO show qualitatively different behaviors. Key motivation for scaling!"
+    },
+    {
+      "question": "RLHF (Reinforcement Learning from Human Feedback) amacı?",
+      "options": [
+        "Training speed",
+        "Align model: Make helpful, harmless, honest (match human preferences)",
+        "Model compression",
+        "Sadece research"
+      ],
+      "correctAnswer": 1,
+      "explanation": "RLHF: Align LLM with human values! Problem: Pre-trained LLM generates any text (toxic, unhelpful). Solution: (1) Collect human preferences (response A vs B). (2) Train reward model to predict preferences. (3) Use RL (PPO) to optimize LLM to maximize reward. Result: ChatGPT-style helpful assistant! Without RLHF: Raw GPT-3 (not aligned). With RLHF: ChatGPT (helpful, safe). Critical for deployment. Also: Instruction fine-tuning (supervised step before RLHF)."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "LLM Training",
+      "back": "**Pre-training:**\nMassive text → Predict next token\nLearn language patterns\n\n**Fine-tuning:**\nInstructions → Follow tasks\nRLHF → Alignment\n\n**Result:** General purpose model! 🧠"
+    },
+    {
+      "front": "Autoregressive Generation",
+      "back": "**Process:**\nGenerate token by token\nEach conditioned on previous\n\n**Example:**\n'The' → 'cat' → 'sat'\n\n**Why:**\nCausal dependency\nCoherent text\n\nSequential! ➡️"
+    },
+    {
+      "front": "Temperature Sampling",
+      "back": "**Low (0.5):**\nFocused, deterministic\n\n**Medium (0.8):**\nBalanced\n\n**High (1.5):**\nCreative, random\n\n**Formula:**\nP ∝ exp(logits/T)\n\nControls randomness! 🎲"
+    },
+    {
+      "front": "Few-Shot Learning",
+      "back": "**Method:**\nGive examples in prompt\n\n**Example:**\n'1+1=2, 2+2=4, 3+3=?'\n→ Model: '6'\n\n**No training needed!**\n\nEmergent ability! 🎯"
+    },
+    {
+      "front": "KV-Cache",
+      "back": "**Problem:**\nRecompute attention O(n²)\n\n**Solution:**\nCache previous K,V\nOnly compute new token\n\n**Speedup:**\n2-10× faster!\n\nCritical optimization! ⚡"
+    },
+    {
+      "front": "Emergent Abilities",
+      "back": "**Definition:**\nCapabilities appear at scale\n\n**Examples:**\n- Chain-of-thought\n- Few-shot learning\n- Arithmetic\n\n**Scale matters!**\n\nPhase transition! 📈"
+    },
+    {
+      "front": "Prompt Engineering",
+      "back": "**Key:**\nHow you ask matters!\n\n**Techniques:**\n- Clear instructions\n- Few-shot examples\n- Chain-of-thought\n- Role playing\n\nArt of prompting! 📝"
+    },
+    {
+      "front": "LLM vs BERT",
+      "back": "**BERT:**\nBidirectional, encoder\nCan't generate\n\n**LLM (GPT):**\nCausal, decoder\nAutoregressive generation\n\n**Different purposes!** 🔄"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Using greedy decoding always",
+      "why": "Greedy (argmax) → repetitive, boring text! 'The cat sat. The cat sat. The cat sat.' Misses better sequences.",
+      "fix": "Use sampling with temperature! Or beam search (balance). Temperature 0.7-0.9 for good quality-diversity trade-off. Top-p (nucleus) sampling even better: Sample from top 95% probability mass. Avoids both repetition (greedy) and nonsense (too random)."
+    },
+    {
+      "mistake": "Not using KV-cache in generation",
+      "why": "Without cache: Recompute attention for all previous tokens every step! 100 tokens → 5050 computations. Very slow!",
+      "fix": "Always enable use_cache=True in HuggingFace generate()! Speeds up 2-10×. Trade-off: Memory for speed (worth it!). Essential for long-form generation, chatbots, interactive use. Production systems: Always cached."
+    },
+    {
+      "mistake": "Ignoring context length limits",
+      "why": "Models have max context (GPT-3: 2048, GPT-4: 8k-32k tokens). Exceeding → truncation or error. Loses important context!",
+      "fix": "Track token count! Tokenize prompt, check length. If too long: Summarize, truncate intelligently (keep beginning/end). Use longer-context models when needed. Strategies: Sliding window, hierarchical summarization. Always leave room for generation!"
+    },
+    {
+      "mistake": "Bad prompt engineering",
+      "why": "Vague prompt → vague answer. 'Tell me about cats' vs 'List 5 interesting facts about cats with sources' → very different quality!",
+      "fix": "Be specific! Clear instructions, examples (few-shot), desired format. Use: 'Think step by step' for reasoning. 'Answer in JSON' for structured output. Role playing: 'You are an expert...'. Iterate prompts! Small changes → big improvements. Prompt engineering = key skill for LLMs."
+    },
+    {
+      "mistake": "Forgetting about hallucinations",
+      "why": "LLMs confidently generate false information! 'The Eiffel Tower is in Germany' with complete confidence. Users trust wrong info.",
+      "fix": "Never trust LLM facts without verification! Use for: Generation, ideas, drafts. Not for: Critical facts, medical/legal advice. Solutions: Retrieval-augmented generation (RAG, ground in real docs), multiple sources, human verification. Warn users about hallucination possibility!"
+    },
+    {
+      "mistake": "Using raw model without fine-tuning",
+      "why": "Base LLM (just pre-trained) not instruction-following! Won't act as helpful assistant. Might generate anything.",
+      "fix": "Use instruction-fine-tuned models! GPT-3 → GPT-3.5-Turbo (instruct), Base → Chat version. Or fine-tune yourself: Instruction dataset, RLHF if possible. Chat models: Much better user experience. Base models: Only for specific tasks with careful prompting."
+    },
+    {
+      "mistake": "Inefficient batch processing",
+      "why": "Processing prompts one-by-one → waste GPU! LLMs can batch. Sequential processing 10× slower than batch.",
+      "fix": "Batch prompts! Pad to same length, process together. 10 prompts, batch size 10 → 10× throughput improvement! Trade-off: Latency vs throughput. Interactive: Small batches. Offline processing: Large batches (32-128). Use generate() with multiple prompts. Critical for production efficiency!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "GPT Architecture",
+      "description": "Diagram: Token + Position Embedding → Transformer Decoder Layers (×96) → Output Projection. Shows causal masking, autoregressive generation flow."
+    },
+    {
+      "type": "interactive",
+      "title": "Temperature Effect",
+      "description": "Slider: Temperature 0.1 → 2.0. Shows same prompt with different temperatures. Low: Repetitive. High: Random. Interactive demonstration of sampling."
+    },
+    {
+      "type": "comparison",
+      "title": "Model Scale vs Capabilities",
+      "description": "Chart: X=Parameters (1B, 10B, 100B, 1T), Y=Capability metrics. Shows emergence of few-shot learning, reasoning at scale thresholds."
+    },
+    {
+      "type": "animation",
+      "title": "Autoregressive Generation",
+      "description": "Animation: 'The cat' → predict 'sat' → append → 'The cat sat' → predict 'on' → continues. Shows token-by-token generation process with probabilities."
+    }
+  ],
+  "references": [
+    {
+      "title": "Language Models are Few-Shot Learners (GPT-3)",
+      "authors": "Brown et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/2005.14165",
+      "type": "paper"
+    },
+    {
+      "title": "Training language models to follow instructions (InstructGPT)",
+      "authors": "Ouyang et al.",
+      "year": 2022,
+      "link": "https://arxiv.org/abs/2203.02155",
+      "type": "paper"
+    },
+    {
+      "title": "LLaMA: Open and Efficient Foundation Language Models",
+      "authors": "Touvron et al.",
+      "year": 2023,
+      "link": "https://arxiv.org/abs/2302.13971",
+      "type": "paper"
+    },
+    {
+      "title": "Scaling Laws for Neural Language Models",
+      "authors": "Kaplan et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/2001.08361",
+      "type": "paper"
+    },
+    {
+      "title": "The Illustrated GPT-2",
+      "authors": "Jay Alammar",
+      "year": 2019,
+      "link": "https://jalammar.github.io/illustrated-gpt2/",
+      "type": "tutorial"
+    }
+  ]
+}

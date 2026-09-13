@@ -1,0 +1,312 @@
+{
+  "id": "generative-adversarial-networks",
+  "title": "GANs (Generative Adversarial Networks)",
+  "category": "generative-models",
+  "level": 3,
+  "estimatedTime": 80,
+  "description": "GANs: İki network yarışır! Generator (fake data üretir), Discriminator (real vs fake ayırt eder). Adversarial training: Min-max game! DCGAN (convolutional GAN), StyleGAN (photorealistic faces), Pix2Pix (image-to-image), CycleGAN (unpaired translation). Applications: Image generation, style transfer, super-resolution, data augmentation. Mode collapse, training instability, Wasserstein loss. Nash equilibrium, generator vs discriminator balance.",
+  "content": {
+    "level0_basic": "GAN = Generative Adversarial Network. İki network birbiriyle yarışır! (1) Generator: Random noise'dan fake data üretir (forger). Hedef: Discriminator'ı kandır! (2) Discriminator: Real vs fake ayırt eder (detective). Hedef: Fake'leri yakala! Adversarial training: Generator better → Discriminator must improve → Generator must improve... Nash equilibrium! Applications: Photorealistic face generation (StyleGAN), Image-to-image translation (Pix2Pix: sketch→photo), Style transfer (CycleGAN: horse→zebra), Super-resolution (low-res→high-res), Data augmentation (synthetic training data). Training: Min-max game! Generator minimizes detection, Discriminator maximizes accuracy. Challenges: Mode collapse (generator produces limited variety), Training instability (oscillations, non-convergence). DCGAN breakthrough: Convolutional architecture, batch norm, stable training!",
+    "level1_beginner": "**GAN Architecture:**\n\n```\nGenerator Network:\n  Input: Random noise z ~ N(0,1) (latent vector)\n  Process: Upsampling (transposed convs)\n  Output: Fake image G(z)\n  \n  Goal: Generate realistic images\n       Fool discriminator!\n\nDiscriminator Network:\n  Input: Real image OR Fake image\n  Process: Downsampling (convs)\n  Output: Probability [0,1]\n    1 = Real, 0 = Fake\n  \n  Goal: Classify correctly\n       Catch fakes!\n\nTraining Loop:\n  1. Train D on real images → label=1\n  2. Generate fake images G(z)\n  3. Train D on fake images → label=0\n  4. Train G to fool D\n     (D says fake → G updates to look real)\n  5. Repeat until equilibrium!\n```\n\n**Loss Functions:**\n\n```python\n# Discriminator Loss\nD_loss = -log(D(x_real)) - log(1 - D(G(z)))\n# Maximize: Classify real=1, fake=0\n\n# Generator Loss\nG_loss = -log(D(G(z)))\n# Minimize: Make D classify fake as real\n\n# Min-Max Game:\nmin_G max_D: E[log D(x)] + E[log(1-D(G(z)))]\n```\n\n**Training Dynamics:**\n\n```\nEpoch 1:\n  G: Poor quality → D easily detects\n  D accuracy: 95% (easy task)\n\nEpoch 50:\n  G: Better quality → D struggles\n  D accuracy: 70% (harder task)\n\nEpoch 200:\n  G: High quality → D near random\n  D accuracy: 50% (equilibrium!)\n  \n  Perfect GAN: D cannot distinguish\n                (like random guessing)\n```\n\n**Common Architectures:**\n\n```\nDCGAN (Deep Convolutional GAN):\n  - No fully connected layers\n  - Batch normalization\n  - ReLU (G), LeakyReLU (D)\n  - Transposed conv for upsampling\n  - Stable training!\n\nStyleGAN:\n  - Progressive growing\n  - Style-based generation\n  - Photorealistic faces\n  - Control: Age, gender, pose\n\nPix2Pix:\n  - Paired image translation\n  - Input: Sketch → Output: Photo\n  - U-Net generator + PatchGAN discriminator\n\nCycleGAN:\n  - Unpaired translation\n  - Horse ↔ Zebra (no paired data!)\n  - Cycle consistency loss\n```",
+    "level2_application": "**DCGAN Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass Generator(nn.Module):\n    def __init__(self, latent_dim=100, img_channels=3):\n        super().__init__()\n        \n        self.model = nn.Sequential(\n            # Input: (B, 100, 1, 1)\n            nn.ConvTranspose2d(latent_dim, 512, 4, 1, 0),\n            nn.BatchNorm2d(512),\n            nn.ReLU(True),\n            # (B, 512, 4, 4)\n            \n            nn.ConvTranspose2d(512, 256, 4, 2, 1),\n            nn.BatchNorm2d(256),\n            nn.ReLU(True),\n            # (B, 256, 8, 8)\n            \n            nn.ConvTranspose2d(256, 128, 4, 2, 1),\n            nn.BatchNorm2d(128),\n            nn.ReLU(True),\n            # (B, 128, 16, 16)\n            \n            nn.ConvTranspose2d(128, 64, 4, 2, 1),\n            nn.BatchNorm2d(64),\n            nn.ReLU(True),\n            # (B, 64, 32, 32)\n            \n            nn.ConvTranspose2d(64, img_channels, 4, 2, 1),\n            nn.Tanh()  # Output: [-1, 1]\n            # (B, 3, 64, 64)\n        )\n    \n    def forward(self, z):\n        # z: (B, latent_dim, 1, 1)\n        return self.model(z)\n\nclass Discriminator(nn.Module):\n    def __init__(self, img_channels=3):\n        super().__init__()\n        \n        self.model = nn.Sequential(\n            # Input: (B, 3, 64, 64)\n            nn.Conv2d(img_channels, 64, 4, 2, 1),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 64, 32, 32)\n            \n            nn.Conv2d(64, 128, 4, 2, 1),\n            nn.BatchNorm2d(128),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 128, 16, 16)\n            \n            nn.Conv2d(128, 256, 4, 2, 1),\n            nn.BatchNorm2d(256),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 256, 8, 8)\n            \n            nn.Conv2d(256, 512, 4, 2, 1),\n            nn.BatchNorm2d(512),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 512, 4, 4)\n            \n            nn.Conv2d(512, 1, 4, 1, 0),\n            nn.Sigmoid()  # Output: [0, 1]\n            # (B, 1, 1, 1)\n        )\n    \n    def forward(self, img):\n        return self.model(img).view(-1, 1)\n\n# Initialize\nG = Generator(latent_dim=100)\nD = Discriminator()\n\n# Test\nz = torch.randn(4, 100, 1, 1)\nfake_img = G(z)\nprint(f\"Generated: {fake_img.shape}\")  # (4, 3, 64, 64)\n\npred = D(fake_img)\nprint(f\"Discriminator: {pred.shape}\")  # (4, 1)\n```\n\n**Training Loop:**\n\n```python\nimport torch.optim as optim\n\n# Models\nG = Generator().to('cuda')\nD = Discriminator().to('cuda')\n\n# Optimizers\nopt_G = optim.Adam(G.parameters(), lr=0.0002, betas=(0.5, 0.999))\nopt_D = optim.Adam(D.parameters(), lr=0.0002, betas=(0.5, 0.999))\n\n# Loss\ncriterion = nn.BCELoss()\n\nfor epoch in range(100):\n    for real_imgs in dataloader:\n        batch_size = real_imgs.size(0)\n        real_imgs = real_imgs.to('cuda')\n        \n        # Labels\n        real_labels = torch.ones(batch_size, 1).to('cuda')\n        fake_labels = torch.zeros(batch_size, 1).to('cuda')\n        \n        # ============ Train Discriminator ============\n        opt_D.zero_grad()\n        \n        # Real images\n        real_pred = D(real_imgs)\n        d_loss_real = criterion(real_pred, real_labels)\n        \n        # Fake images\n        z = torch.randn(batch_size, 100, 1, 1).to('cuda')\n        fake_imgs = G(z)\n        fake_pred = D(fake_imgs.detach())  # Detach!\n        d_loss_fake = criterion(fake_pred, fake_labels)\n        \n        # Total D loss\n        d_loss = d_loss_real + d_loss_fake\n        d_loss.backward()\n        opt_D.step()\n        \n        # ============ Train Generator ============\n        opt_G.zero_grad()\n        \n        # Generate again\n        z = torch.randn(batch_size, 100, 1, 1).to('cuda')\n        fake_imgs = G(z)\n        fake_pred = D(fake_imgs)  # No detach!\n        \n        # G wants D to think fake is real\n        g_loss = criterion(fake_pred, real_labels)\n        g_loss.backward()\n        opt_G.step()\n    \n    print(f\"Epoch {epoch}: D_loss={d_loss.item():.4f}, G_loss={g_loss.item():.4f}\")\n```",
+    "level3_advanced": "**Wasserstein GAN (WGAN):**\n\n```python\nclass WassersteinLoss:\n    '''\n    Wasserstein distance: More stable training\n    No saturation, meaningful loss curve\n    '''\n    def __init__(self):\n        pass\n    \n    def d_loss(self, real_pred, fake_pred):\n        # Maximize: real_pred - fake_pred\n        return -(real_pred.mean() - fake_pred.mean())\n    \n    def g_loss(self, fake_pred):\n        # Maximize: fake_pred\n        return -fake_pred.mean()\n\ndef gradient_penalty(D, real_imgs, fake_imgs, device='cuda'):\n    '''\n    WGAN-GP: Gradient penalty for Lipschitz constraint\n    '''\n    batch_size = real_imgs.size(0)\n    \n    # Random interpolation\n    alpha = torch.rand(batch_size, 1, 1, 1).to(device)\n    interpolates = (alpha * real_imgs + (1 - alpha) * fake_imgs).requires_grad_(True)\n    \n    # Discriminator on interpolates\n    d_interpolates = D(interpolates)\n    \n    # Gradients\n    gradients = torch.autograd.grad(\n        outputs=d_interpolates,\n        inputs=interpolates,\n        grad_outputs=torch.ones_like(d_interpolates),\n        create_graph=True,\n        retain_graph=True\n    )[0]\n    \n    # Gradient penalty\n    gradients = gradients.view(batch_size, -1)\n    penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()\n    return penalty\n\n# WGAN-GP Training\nfor epoch in range(100):\n    for real_imgs in dataloader:\n        # Train D multiple times per G update\n        for _ in range(5):\n            z = torch.randn(batch_size, 100, 1, 1).to('cuda')\n            fake_imgs = G(z)\n            \n            real_pred = D(real_imgs)\n            fake_pred = D(fake_imgs.detach())\n            \n            # Wasserstein loss\n            d_loss = -(real_pred.mean() - fake_pred.mean())\n            \n            # Gradient penalty\n            gp = gradient_penalty(D, real_imgs, fake_imgs)\n            d_total = d_loss + 10 * gp  # λ=10\n            \n            opt_D.zero_grad()\n            d_total.backward()\n            opt_D.step()\n        \n        # Train G\n        z = torch.randn(batch_size, 100, 1, 1).to('cuda')\n        fake_imgs = G(z)\n        fake_pred = D(fake_imgs)\n        g_loss = -fake_pred.mean()\n        \n        opt_G.zero_grad()\n        g_loss.backward()\n        opt_G.step()\n```\n\n**Conditional GAN (cGAN):**\n\n```python\nclass ConditionalGenerator(nn.Module):\n    '''Generate based on class label'''\n    def __init__(self, latent_dim=100, num_classes=10):\n        super().__init__()\n        \n        # Embedding for class labels\n        self.label_emb = nn.Embedding(num_classes, latent_dim)\n        \n        # Generator (latent + class info)\n        self.model = nn.Sequential(\n            nn.Linear(latent_dim * 2, 256),\n            nn.ReLU(),\n            nn.Linear(256, 512),\n            nn.ReLU(),\n            nn.Linear(512, 784),\n            nn.Tanh()\n        )\n    \n    def forward(self, z, labels):\n        # Combine noise + label\n        label_emb = self.label_emb(labels)\n        x = torch.cat([z, label_emb], dim=1)\n        return self.model(x).view(-1, 1, 28, 28)\n\n# Usage: Generate specific digit\nlabels = torch.LongTensor([3, 7, 1, 9])  # Desired digits\nz = torch.randn(4, 100)\nfake_imgs = cond_G(z, labels)  # Generate those digits!\n```",
+    "level4_expert": "**StyleGAN Architecture:**\n\n```python\nclass MappingNetwork(nn.Module):\n    '''Z → W latent space mapping'''\n    def __init__(self, z_dim=512, w_dim=512, num_layers=8):\n        super().__init__()\n        \n        layers = []\n        for _ in range(num_layers):\n            layers.extend([\n                nn.Linear(z_dim if len(layers)==0 else w_dim, w_dim),\n                nn.LeakyReLU(0.2)\n            ])\n        \n        self.mapping = nn.Sequential(*layers)\n    \n    def forward(self, z):\n        return self.mapping(z)\n\nclass StyleBlock(nn.Module):\n    '''Style modulation + convolution'''\n    def __init__(self, in_ch, out_ch, w_dim=512):\n        super().__init__()\n        \n        self.conv = nn.Conv2d(in_ch, out_ch, 3, padding=1)\n        self.noise_weight = nn.Parameter(torch.zeros(1))\n        \n        # Affine transformation from W\n        self.style_scale = nn.Linear(w_dim, out_ch)\n        self.style_bias = nn.Linear(w_dim, out_ch)\n        \n        self.activate = nn.LeakyReLU(0.2)\n    \n    def forward(self, x, w):\n        # Convolution\n        x = self.conv(x)\n        \n        # Add noise (stochastic variation)\n        noise = torch.randn_like(x) * self.noise_weight\n        x = x + noise\n        \n        # Style modulation (AdaIN)\n        style_scale = self.style_scale(w).unsqueeze(2).unsqueeze(3)\n        style_bias = self.style_bias(w).unsqueeze(2).unsqueeze(3)\n        \n        x = x * style_scale + style_bias\n        \n        return self.activate(x)\n\nclass StyleGenerator(nn.Module):\n    '''StyleGAN generator'''\n    def __init__(self, z_dim=512, w_dim=512):\n        super().__init__()\n        \n        self.mapping = MappingNetwork(z_dim, w_dim)\n        \n        # Learned constant input\n        self.constant = nn.Parameter(torch.randn(1, 512, 4, 4))\n        \n        # Progressive layers\n        self.style_blocks = nn.ModuleList([\n            StyleBlock(512, 512, w_dim),  # 4x4\n            StyleBlock(512, 512, w_dim),  # 8x8\n            StyleBlock(512, 256, w_dim),  # 16x16\n            StyleBlock(256, 128, w_dim),  # 32x32\n            StyleBlock(128, 64, w_dim),   # 64x64\n        ])\n        \n        self.to_rgb = nn.Conv2d(64, 3, 1)\n    \n    def forward(self, z):\n        # Map to W space\n        w = self.mapping(z)\n        \n        # Start with constant\n        x = self.constant.repeat(z.size(0), 1, 1, 1)\n        \n        # Apply style blocks\n        for block in self.style_blocks:\n            x = block(x, w)\n            x = F.interpolate(x, scale_factor=2)  # Upsample\n        \n        # To RGB\n        return torch.tanh(self.to_rgb(x))\n\n# Style mixing\ndef style_mixing(G, z1, z2, mix_layer=4):\n    '''Mix styles from two latents'''\n    w1 = G.mapping(z1)\n    w2 = G.mapping(z2)\n    \n    x = G.constant.repeat(z1.size(0), 1, 1, 1)\n    \n    for i, block in enumerate(G.style_blocks):\n        w = w1 if i < mix_layer else w2  # Switch!\n        x = block(x, w)\n        x = F.interpolate(x, scale_factor=2)\n    \n    return torch.tanh(G.to_rgb(x))\n```\n\n**CycleGAN for Unpaired Translation:**\n\n```python\nclass CycleGAN:\n    '''Unpaired image-to-image translation'''\n    def __init__(self):\n        self.G_AB = Generator()  # A → B\n        self.G_BA = Generator()  # B → A\n        self.D_A = Discriminator()\n        self.D_B = Discriminator()\n    \n    def forward(self, real_A, real_B):\n        # Forward cycle: A → B → A'\n        fake_B = self.G_AB(real_A)\n        rec_A = self.G_BA(fake_B)\n        \n        # Backward cycle: B → A → B'\n        fake_A = self.G_BA(real_B)\n        rec_B = self.G_AB(fake_A)\n        \n        return fake_A, fake_B, rec_A, rec_B\n    \n    def loss(self, real_A, real_B):\n        fake_A, fake_B, rec_A, rec_B = self.forward(real_A, real_B)\n        \n        # Adversarial losses\n        loss_G_AB = -self.D_B(fake_B).mean()\n        loss_G_BA = -self.D_A(fake_A).mean()\n        \n        # Cycle consistency\n        loss_cycle_A = F.l1_loss(rec_A, real_A)\n        loss_cycle_B = F.l1_loss(rec_B, real_B)\n        \n        # Total generator loss\n        loss_G = loss_G_AB + loss_G_BA + 10 * (loss_cycle_A + loss_cycle_B)\n        \n        return loss_G\n```"
+  },
+  "whatIsIt": "GAN = Generative Adversarial Network. Two networks compete! Generator: Creates fake data from noise, tries to fool discriminator. Discriminator: Classifies real vs fake, tries to catch generator. Adversarial training: Min-max game → Nash equilibrium. Output: Realistic synthetic data (images, audio, text). DCGAN: Convolutional architecture, stable training. StyleGAN: Photorealistic faces, style control. Pix2Pix: Paired translation (sketch→photo). CycleGAN: Unpaired translation (horse→zebra). Loss: Binary cross-entropy (vanilla), Wasserstein distance (WGAN). Training: Alternating optimization. Challenges: Mode collapse, training instability. Applications: Image generation, data augmentation, style transfer!",
+  "whyNeeded": "Generative models = Create NEW data! Applications: (1) Data Augmentation: Synthetic training data when real data scarce. Medical imaging: Generate rare disease samples! (2) Creative Tools: Art generation (DeepArt), face synthesis (ThisPersonDoesNotExist), image editing (remove/add objects). (3) Super-resolution: Low-res → high-res images. Security cameras, medical scans enhanced! (4) Style Transfer: Photo → painting style, day → night, summer → winter. (5) Anomaly Detection: Train on normal data, detect abnormal (fraud, defects). (6) Drug Discovery: Generate molecular structures. Why adversarial? Generator learns distribution implicitly! No explicit likelihood needed. Discriminator provides gradient signal. Result: Photorealistic images that don't exist! Training data augmentation breakthrough!",
+  "realWorldAnalogy": "GAN forger vs detective gibi! Generator = Forger (sahtekar): Fake money (image) yapmaya çalışıyor. Hedef: Detective'i kandır! Discriminator = Detective (dedektif): Real vs fake money ayırt ediyor. Hedef: Sahtekarı yakala! Training: Forger better fake money makes → Detective must improve → Forger must improve further... Arms race! Eventually: Forger SO good, detective cannot tell (50% accuracy = random guessing). Perfect equilibrium! StyleGAN = Master forger: Photorealistic faces creates, nobody can tell fake! CycleGAN = Style chameleon: Horse görüyor, zebra resmediyor. Back to horse çevirebiliyor (cycle consistency)!",
+  "mathematics": {
+    "formulas": [
+      "\\text{Min-max game: } \\min_G \\max_D V(D,G) = E_{x\\sim p_{data}}[\\log D(x)] + E_{z\\sim p_z}[\\log(1-D(G(z)))]",
+      "\\text{Generator loss: } L_G = -E_{z\\sim p_z}[\\log D(G(z))]",
+      "\\text{Discriminator loss: } L_D = -E_{x\\sim p_{data}}[\\log D(x)] - E_{z\\sim p_z}[\\log(1-D(G(z)))]",
+      "\\text{Wasserstein distance: } W(P_r, P_g) = \\inf_{\\gamma \\in \\Pi(P_r, P_g)} E_{(x,y)\\sim\\gamma}[||x-y||]",
+      "\\text{Gradient penalty: } \\lambda E_{\\hat{x}\\sim P_{\\hat{x}}}[(||\\nabla_{\\hat{x}} D(\\hat{x})||_2 - 1)^2]",
+      "\\text{Cycle consistency: } L_{cyc} = E_{x\\sim P_A}[||G_{BA}(G_{AB}(x)) - x||_1] + E_{y\\sim P_B}[||G_{AB}(G_{BA}(y)) - y||_1]"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize Generator G and Discriminator D",
+      "2. Sample minibatch of real data x ~ p_data",
+      "3. Sample minibatch of noise z ~ p_z (e.g., N(0,1))",
+      "4. Generate fake data: x_fake = G(z)",
+      "5. Update D: Maximize log(D(x_real)) + log(1-D(x_fake))",
+      "6. Sample new noise z ~ p_z",
+      "7. Update G: Maximize log(D(G(z))) (fool discriminator)",
+      "8. Repeat steps 2-7 until convergence (Nash equilibrium)",
+      "9. Monitor: D accuracy ~50%, visual quality improves"
+    ],
+    "complexity": "Forward pass: O(model_params). Training: Alternating optimization, non-convex. Convergence: Nash equilibrium (not guaranteed!). Mode collapse: Generator produces limited variety. Training time: Hours to days depending on resolution/dataset."
+  },
+  "prerequisites": [
+    "neural-networks",
+    "convolutional-neural-networks",
+    "backpropagation",
+    "optimizers"
+  ],
+  "nextTopics": [
+    "variational-autoencoders",
+    "diffusion-models",
+    "neural-style-transfer"
+  ],
+  "relatedTopics": [
+    "convolutional-neural-networks",
+    "image-segmentation",
+    "transfer-learning"
+  ],
+  "tags": [
+    "gan",
+    "generative-models",
+    "adversarial-training",
+    "dcgan",
+    "stylegan",
+    "pix2pix",
+    "cyclegan",
+    "image-generation",
+    "deep-learning",
+    "unsupervised-learning"
+  ],
+  "codeExamples": [
+    {
+      "title": "Simple GAN for MNIST",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\n# Simple Generator\nclass Generator(nn.Module):\n    def __init__(self, latent_dim=100):\n        super().__init__()\n        self.model = nn.Sequential(\n            nn.Linear(latent_dim, 256),\n            nn.ReLU(),\n            nn.Linear(256, 512),\n            nn.ReLU(),\n            nn.Linear(512, 784),  # 28x28\n            nn.Tanh()  # [-1, 1]\n        )\n    \n    def forward(self, z):\n        return self.model(z).view(-1, 1, 28, 28)\n\n# Simple Discriminator\nclass Discriminator(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.model = nn.Sequential(\n            nn.Linear(784, 512),\n            nn.LeakyReLU(0.2),\n            nn.Linear(512, 256),\n            nn.LeakyReLU(0.2),\n            nn.Linear(256, 1),\n            nn.Sigmoid()  # [0, 1]\n        )\n    \n    def forward(self, img):\n        return self.model(img.view(-1, 784))\n\n# Initialize\nG = Generator().to('cuda')\nD = Discriminator().to('cuda')\n\n# Test\nz = torch.randn(4, 100).to('cuda')\nfake_imgs = G(z)\nprint(f\"Generated: {fake_imgs.shape}\")  # (4, 1, 28, 28)\n\npred = D(fake_imgs)\nprint(f\"Discriminator output: {pred.shape}\")  # (4, 1)",
+      "level": 0,
+      "explanation": "Simple GAN for MNIST code"
+    },
+    {
+      "title": "Basic GAN Training Loop",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torchvision import datasets, transforms\n\n# Models\nG = Generator(latent_dim=100).to('cuda')\nD = Discriminator().to('cuda')\n\n# Optimizers\nopt_G = optim.Adam(G.parameters(), lr=0.0002, betas=(0.5, 0.999))\nopt_D = optim.Adam(D.parameters(), lr=0.0002, betas=(0.5, 0.999))\n\n# Loss\ncriterion = nn.BCELoss()\n\n# Training\nfor epoch in range(100):\n    for real_imgs, _ in dataloader:\n        batch_size = real_imgs.size(0)\n        real_imgs = real_imgs.to('cuda')\n        \n        # Labels\n        real_labels = torch.ones(batch_size, 1).to('cuda')\n        fake_labels = torch.zeros(batch_size, 1).to('cuda')\n        \n        # ============ Train D ============\n        # On real images\n        real_pred = D(real_imgs)\n        d_loss_real = criterion(real_pred, real_labels)\n        \n        # On fake images\n        z = torch.randn(batch_size, 100).to('cuda')\n        fake_imgs = G(z)\n        fake_pred = D(fake_imgs.detach())  # Important: detach!\n        d_loss_fake = criterion(fake_pred, fake_labels)\n        \n        # Update D\n        d_loss = d_loss_real + d_loss_fake\n        opt_D.zero_grad()\n        d_loss.backward()\n        opt_D.step()\n        \n        # ============ Train G ============\n        z = torch.randn(batch_size, 100).to('cuda')\n        fake_imgs = G(z)\n        fake_pred = D(fake_imgs)  # No detach!\n        \n        # G wants D to think fake is real\n        g_loss = criterion(fake_pred, real_labels)\n        \n        opt_G.zero_grad()\n        g_loss.backward()\n        opt_G.step()\n    \n    print(f\"Epoch {epoch}: D_loss={d_loss.item():.4f}, G_loss={g_loss.item():.4f}\")\n    \n    # Sample images every 10 epochs\n    if epoch % 10 == 0:\n        with torch.no_grad():\n            z = torch.randn(16, 100).to('cuda')\n            samples = G(z)\n            # Save or visualize samples",
+      "level": 1,
+      "explanation": "Basic GAN Training Loop code"
+    },
+    {
+      "title": "DCGAN (Deep Convolutional GAN)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass DCGenerator(nn.Module):\n    '''DCGAN Generator with transposed convolutions'''\n    def __init__(self, latent_dim=100, img_channels=3):\n        super().__init__()\n        \n        self.model = nn.Sequential(\n            # Input: (B, 100, 1, 1)\n            nn.ConvTranspose2d(latent_dim, 512, 4, 1, 0, bias=False),\n            nn.BatchNorm2d(512),\n            nn.ReLU(True),\n            # (B, 512, 4, 4)\n            \n            nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(256),\n            nn.ReLU(True),\n            # (B, 256, 8, 8)\n            \n            nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(128),\n            nn.ReLU(True),\n            # (B, 128, 16, 16)\n            \n            nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(64),\n            nn.ReLU(True),\n            # (B, 64, 32, 32)\n            \n            nn.ConvTranspose2d(64, img_channels, 4, 2, 1, bias=False),\n            nn.Tanh()\n            # (B, 3, 64, 64)\n        )\n    \n    def forward(self, z):\n        return self.model(z)\n\nclass DCDiscriminator(nn.Module):\n    '''DCGAN Discriminator'''\n    def __init__(self, img_channels=3):\n        super().__init__()\n        \n        self.model = nn.Sequential(\n            # Input: (B, 3, 64, 64)\n            nn.Conv2d(img_channels, 64, 4, 2, 1, bias=False),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 64, 32, 32)\n            \n            nn.Conv2d(64, 128, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(128),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 128, 16, 16)\n            \n            nn.Conv2d(128, 256, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(256),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 256, 8, 8)\n            \n            nn.Conv2d(256, 512, 4, 2, 1, bias=False),\n            nn.BatchNorm2d(512),\n            nn.LeakyReLU(0.2, inplace=True),\n            # (B, 512, 4, 4)\n            \n            nn.Conv2d(512, 1, 4, 1, 0, bias=False),\n            nn.Sigmoid()\n            # (B, 1, 1, 1)\n        )\n    \n    def forward(self, img):\n        return self.model(img).view(-1, 1)\n\n# Test\nG = DCGenerator()\nD = DCDiscriminator()\n\nz = torch.randn(4, 100, 1, 1)\nfake = G(z)\nprint(f\"Generated: {fake.shape}\")  # (4, 3, 64, 64)\n\npred = D(fake)\nprint(f\"Prediction: {pred.shape}\")  # (4, 1)",
+      "level": 2,
+      "explanation": "DCGAN (Deep Convolutional GAN) code"
+    },
+    {
+      "title": "Conditional GAN (Generate Specific Classes)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass ConditionalGenerator(nn.Module):\n    '''Generate images conditioned on class labels'''\n    def __init__(self, latent_dim=100, num_classes=10, img_size=28):\n        super().__init__()\n        \n        self.label_emb = nn.Embedding(num_classes, latent_dim)\n        \n        self.model = nn.Sequential(\n            nn.Linear(latent_dim * 2, 256),\n            nn.ReLU(),\n            nn.BatchNorm1d(256),\n            nn.Linear(256, 512),\n            nn.ReLU(),\n            nn.BatchNorm1d(512),\n            nn.Linear(512, img_size * img_size),\n            nn.Tanh()\n        )\n        \n        self.img_size = img_size\n    \n    def forward(self, z, labels):\n        # Embed labels\n        label_emb = self.label_emb(labels)\n        \n        # Concatenate noise + label\n        x = torch.cat([z, label_emb], dim=1)\n        \n        # Generate\n        img = self.model(x)\n        return img.view(-1, 1, self.img_size, self.img_size)\n\nclass ConditionalDiscriminator(nn.Module):\n    '''Discriminate based on image + label'''\n    def __init__(self, num_classes=10, img_size=28):\n        super().__init__()\n        \n        self.label_emb = nn.Embedding(num_classes, img_size * img_size)\n        \n        self.model = nn.Sequential(\n            nn.Linear(img_size * img_size * 2, 512),\n            nn.LeakyReLU(0.2),\n            nn.Linear(512, 256),\n            nn.LeakyReLU(0.2),\n            nn.Linear(256, 1),\n            nn.Sigmoid()\n        )\n    \n    def forward(self, img, labels):\n        # Flatten image\n        img_flat = img.view(img.size(0), -1)\n        \n        # Embed labels\n        label_emb = self.label_emb(labels)\n        \n        # Concatenate\n        x = torch.cat([img_flat, label_emb], dim=1)\n        \n        return self.model(x)\n\n# Usage: Generate specific digits!\ncond_G = ConditionalGenerator()\ncond_D = ConditionalDiscriminator()\n\n# Generate digit '7'\nz = torch.randn(4, 100)\nlabels = torch.LongTensor([7, 7, 7, 7])  # All 7s\nfake_imgs = cond_G(z, labels)\n\nprint(f\"Generated 7s: {fake_imgs.shape}\")  # (4, 1, 28, 28)",
+      "level": 2,
+      "explanation": "Conditional GAN (Generate Specific Classes) code"
+    },
+    {
+      "title": "WGAN with Gradient Penalty",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.autograd as autograd\n\ndef gradient_penalty(D, real_imgs, fake_imgs, device='cuda'):\n    '''Compute gradient penalty for WGAN-GP'''\n    batch_size = real_imgs.size(0)\n    \n    # Random weight for interpolation\n    alpha = torch.rand(batch_size, 1, 1, 1).to(device)\n    \n    # Interpolated images\n    interpolates = (alpha * real_imgs + (1 - alpha) * fake_imgs).requires_grad_(True)\n    \n    # Discriminator output on interpolates\n    d_interpolates = D(interpolates)\n    \n    # Compute gradients\n    gradients = autograd.grad(\n        outputs=d_interpolates,\n        inputs=interpolates,\n        grad_outputs=torch.ones_like(d_interpolates),\n        create_graph=True,\n        retain_graph=True,\n        only_inputs=True\n    )[0]\n    \n    # Flatten\n    gradients = gradients.view(batch_size, -1)\n    \n    # Compute penalty\n    penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()\n    return penalty\n\n# WGAN-GP Training\nfor epoch in range(100):\n    for real_imgs, _ in dataloader:\n        real_imgs = real_imgs.to('cuda')\n        batch_size = real_imgs.size(0)\n        \n        # Train D multiple times (typically 5)\n        for _ in range(5):\n            z = torch.randn(batch_size, 100, 1, 1).to('cuda')\n            fake_imgs = G(z)\n            \n            # WGAN loss (no sigmoid in D!)\n            real_pred = D(real_imgs)\n            fake_pred = D(fake_imgs.detach())\n            \n            # Wasserstein distance\n            d_loss = -(real_pred.mean() - fake_pred.mean())\n            \n            # Gradient penalty\n            gp = gradient_penalty(D, real_imgs, fake_imgs)\n            \n            # Total D loss\n            d_total = d_loss + 10 * gp  # λ=10\n            \n            opt_D.zero_grad()\n            d_total.backward()\n            opt_D.step()\n        \n        # Train G once\n        z = torch.randn(batch_size, 100, 1, 1).to('cuda')\n        fake_imgs = G(z)\n        fake_pred = D(fake_imgs)\n        \n        g_loss = -fake_pred.mean()\n        \n        opt_G.zero_grad()\n        g_loss.backward()\n        opt_G.step()\n    \n    print(f\"Epoch {epoch}: D_loss={d_loss.item():.4f}, G_loss={g_loss.item():.4f}\")",
+      "level": 3,
+      "explanation": "WGAN with Gradient Penalty code"
+    },
+    {
+      "title": "CycleGAN for Unpaired Image Translation",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass CycleGAN(nn.Module):\n    '''Unpaired image-to-image translation'''\n    def __init__(self):\n        super().__init__()\n        \n        # Two generators\n        self.G_AB = UNetGenerator()  # A → B (e.g., horse → zebra)\n        self.G_BA = UNetGenerator()  # B → A (e.g., zebra → horse)\n        \n        # Two discriminators\n        self.D_A = PatchDiscriminator()\n        self.D_B = PatchDiscriminator()\n    \n    def forward(self, real_A, real_B):\n        # Forward cycle: A → B → A'\n        fake_B = self.G_AB(real_A)\n        rec_A = self.G_BA(fake_B)\n        \n        # Backward cycle: B → A → B'\n        fake_A = self.G_BA(real_B)\n        rec_B = self.G_AB(fake_A)\n        \n        return fake_A, fake_B, rec_A, rec_B\n    \n    def generator_loss(self, real_A, real_B):\n        fake_A, fake_B, rec_A, rec_B = self.forward(real_A, real_B)\n        \n        # Adversarial loss\n        loss_G_AB = self.adversarial_loss(self.D_B(fake_B), True)\n        loss_G_BA = self.adversarial_loss(self.D_A(fake_A), True)\n        \n        # Cycle consistency loss\n        loss_cycle_A = F.l1_loss(rec_A, real_A)\n        loss_cycle_B = F.l1_loss(rec_B, real_B)\n        \n        # Identity loss (optional, preserves color)\n        identity_A = self.G_BA(real_A)\n        identity_B = self.G_AB(real_B)\n        loss_identity_A = F.l1_loss(identity_A, real_A)\n        loss_identity_B = F.l1_loss(identity_B, real_B)\n        \n        # Total loss\n        loss_G = (loss_G_AB + loss_G_BA + \n                  10 * (loss_cycle_A + loss_cycle_B) +\n                  5 * (loss_identity_A + loss_identity_B))\n        \n        return loss_G\n    \n    def discriminator_loss(self, real_A, real_B):\n        fake_A, fake_B, _, _ = self.forward(real_A, real_B)\n        \n        # D_A loss\n        loss_D_A_real = self.adversarial_loss(self.D_A(real_A), True)\n        loss_D_A_fake = self.adversarial_loss(self.D_A(fake_A.detach()), False)\n        loss_D_A = (loss_D_A_real + loss_D_A_fake) / 2\n        \n        # D_B loss\n        loss_D_B_real = self.adversarial_loss(self.D_B(real_B), True)\n        loss_D_B_fake = self.adversarial_loss(self.D_B(fake_B.detach()), False)\n        loss_D_B = (loss_D_B_real + loss_D_B_fake) / 2\n        \n        return loss_D_A + loss_D_B\n    \n    def adversarial_loss(self, pred, target_is_real):\n        target = torch.ones_like(pred) if target_is_real else torch.zeros_like(pred)\n        return F.mse_loss(pred, target)\n\n# Usage: Horse ↔ Zebra translation!\nmodel = CycleGAN()\n\n# Training\nfor real_horses, real_zebras in dataloader:\n    # Train generators\n    loss_G = model.generator_loss(real_horses, real_zebras)\n    \n    # Train discriminators\n    loss_D = model.discriminator_loss(real_horses, real_zebras)\n    \n    # Convert horse to zebra!\n    with torch.no_grad():\n        fake_zebras = model.G_AB(real_horses)\n        # Can convert back: rec_horses = model.G_BA(fake_zebras)",
+      "level": 4,
+      "explanation": "CycleGAN for Unpaired Image Translation code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "GAN'de Generator ve Discriminator'ın rolleri nedir?",
+      "options": [
+        "İkisi de classification yapar",
+        "Generator fake data üretir, Discriminator real vs fake ayırt eder",
+        "Generator feature extraction, Discriminator regression yapar",
+        "İkisi de aynı loss function'ı minimize eder"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Generator: Random noise'dan realistic fake data üretir (forger). Goal: Fool discriminator! Discriminator: Real vs fake classify eder (detective). Goal: Catch fakes! Adversarial training: G tries to fool D, D tries to catch G. Min-max game!"
+    },
+    {
+      "question": "GAN training'de 'mode collapse' nedir?",
+      "options": [
+        "Discriminator çok güçlü olur",
+        "Generator limited variety üretir, dataset'in sadece bir kısmını capture eder",
+        "Training çok hızlı converge eder",
+        "Both networks aynı anda overfit olur"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Mode Collapse: Generator discovers one/few samples that fool D, keeps generating those! Example: Face GAN only generates blonde women, ignores diversity. Lost modes: Other face types never generated. Solution: Minibatch discrimination, unrolled GAN, multiple generators, spectral normalization. Wasserstein GAN helps!"
+    },
+    {
+      "question": "WGAN (Wasserstein GAN), vanilla GAN'den neden daha stable?",
+      "options": [
+        "Daha az parameter kullanır",
+        "Wasserstein distance uses, gradient vanishing/exploding problemi azaltır, meaningful loss curve",
+        "Discriminator'ı remove eder",
+        "Sadece binary classification için çalışır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Vanilla GAN: JS divergence → gradient vanishing when D perfect (saturation). Loss: Meaningless oscillation! WGAN: Wasserstein (Earth Mover's) distance → smooth gradients everywhere. Benefits: (1) Meaningful loss curve (lower = better!), (2) More stable training, (3) Less mode collapse. WGAN-GP: Gradient penalty for Lipschitz constraint. Training: Update D more (5×) per G update."
+    },
+    {
+      "question": "Conditional GAN (cGAN)'de conditioning nasıl çalışır?",
+      "options": [
+        "Sadece discriminator'a label verilir",
+        "Both G and D receive label information as additional input",
+        "Label, training sonrası post-processing'de kullanılır",
+        "Conditioning sadece inference'ta aktif olur"
+      ],
+      "correctAnswer": 1,
+      "explanation": "cGAN: Control generation with labels! Generator: Input = noise + label embedding → generate specific class. Discriminator: Input = image + label → verify image matches label. Example: MNIST cGAN: 'Generate digit 7' → G(noise, label=7) → outputs 7! Applications: Class-conditional generation, text-to-image (label=text description), image-to-image translation (label=edge map)."
+    },
+    {
+      "question": "CycleGAN'de cycle consistency loss neden critical?",
+      "options": [
+        "Training speed'i artırır",
+        "Unpaired translation'da, forward-backward cycle consistency sağlar: G_BA(G_AB(A)) ≈ A",
+        "Mode collapse'ı tamamen önler",
+        "Sadece style transfer için gereklidir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "CycleGAN: Unpaired translation! No (A, B) pairs needed. Problem: Without constraint, G can map anything to anything. Solution: Cycle Consistency! Forward: A → fake_B → rec_A. Loss: ||rec_A - A||. Backward: B → fake_A → rec_B. Loss: ||rec_B - B||. Ensures: Translation preserves content, only style changes! Example: Horse→Zebra: Shape preserved, texture changed. Without cycle loss: Arbitrary mappings!"
+    },
+    {
+      "question": "GAN'lerin real-world applications'ları nelerdir?",
+      "options": [
+        "Sadece image classification",
+        "Image generation, data augmentation, super-resolution, style transfer, image-to-image translation",
+        "Sadece anomaly detection",
+        "Text generation için kullanılamaz"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Applications: (1) Image Generation: Photorealistic faces (StyleGAN), artwork. (2) Data Augmentation: Synthetic training data when scarce. (3) Super-Resolution: Low→high res enhancement. (4) Style Transfer: Photo→painting, day→night. (5) Image Translation: Sketch→photo, satellite→map. (6) Anomaly Detection: Train on normal, detect abnormal. (7) Drug Discovery: Generate molecules. (8) Video Generation: Future frame prediction. Creative tools everywhere!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "GAN Core Concept",
+      "back": "**Two networks compete:**\n\n**Generator:** Noise → Fake data. Goal: Fool D!\n\n**Discriminator:** Real vs Fake classification. Goal: Catch G!\n\n**Training:** Adversarial game. G improves → D must improve → G must improve... \n\n**Equilibrium:** D cannot distinguish (50% accuracy) = Perfect G! 🎯"
+    },
+    {
+      "front": "GAN Loss Functions",
+      "back": "**Min-Max Game:**\nmin_G max_D: E[log D(x)] + E[log(1-D(G(z)))]\n\n**Generator:** Maximize D(G(z)) (fool D)\n\n**Discriminator:** Maximize D(x_real), minimize D(G(z)) (detect fakes)\n\n**Alternating optimization:** Update D, then G, repeat!"
+    },
+    {
+      "front": "Mode Collapse Problem",
+      "back": "**Problem:** Generator produces LIMITED variety!\n\n**Example:** Face GAN only generates blonde women, ignores other types\n\n**Cause:** G finds samples that fool D, keeps generating those\n\n**Solutions:** Minibatch discrimination, Wasserstein loss, unrolled optimization, spectral normalization"
+    },
+    {
+      "front": "DCGAN Architecture",
+      "back": "**Deep Convolutional GAN:**\n\n**G:** Transposed convs (upsampling), BatchNorm, ReLU, Tanh output\n\n**D:** Convs (downsampling), BatchNorm, LeakyReLU, Sigmoid output\n\n**No FC layers!** All convolutional\n\n**Breakthrough:** Stable training, high-quality images! 🖼️"
+    },
+    {
+      "front": "Wasserstein GAN (WGAN)",
+      "back": "**Problem:** Vanilla GAN unstable, meaningless loss\n\n**Solution:** Wasserstein (Earth Mover's) distance\n\n**Benefits:**\n- Smooth gradients everywhere\n- Meaningful loss curve\n- More stable training\n\n**WGAN-GP:** Add gradient penalty (Lipschitz constraint)\n\n**Training:** Update D 5× per G update"
+    },
+    {
+      "front": "Conditional GAN (cGAN)",
+      "back": "**Control generation with labels!**\n\n**G:** Input = noise + label → generate specific class\n\n**D:** Input = image + label → verify match\n\n**Example:** Generate digit '7' on command!\n\n**Applications:** Text-to-image, class-conditional generation, guided editing"
+    },
+    {
+      "front": "CycleGAN Architecture",
+      "back": "**Unpaired image translation!**\n\n**Components:**\n- G_AB: A → B (horse → zebra)\n- G_BA: B → A (zebra → horse)\n- D_A, D_B: Discriminators\n\n**Cycle Consistency:**\nA → B → A' (||A - A'||)\nB → A → B' (||B - B'||)\n\nNo paired data needed! 🔄"
+    },
+    {
+      "front": "GAN Applications",
+      "back": "**Creative & Practical:**\n\n1. Image Generation (faces, art)\n2. Data Augmentation (synthetic training)\n3. Super-Resolution (enhance quality)\n4. Style Transfer (photo→painting)\n5. Image Translation (sketch→photo)\n6. Anomaly Detection (fraud, defects)\n7. Video Generation (future frames)\n8. Drug Discovery (molecules)\n\nGenerative power! 🎨"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Generator ve Discriminator'ı aynı learning rate'le train etmek",
+      "why": "Imbalanced training: Biri diğerinden çok güçlü olur. D too strong → G can't learn (gradient vanishing). G too strong → D useless, no gradient signal.",
+      "fix": "Learning rates adjust: Typically lr_D slightly higher. WGAN: Update D multiple times (5×) per G update. Monitor: D accuracy ~50-70% range (not too easy/hard). Dynamic adjustment based on losses."
+    },
+    {
+      "mistake": "Mode collapse'ı ignore etmek",
+      "why": "Generator limited variety produces, dataset'in sadece subset'ini capture eder. Face GAN: Only blonde women. Lost diversity!",
+      "fix": "Detect: Visual inspection, inception score, FID score. Solutions: Minibatch discrimination, unrolled GAN, Wasserstein loss, multiple generators, spectral normalization. Monitor: Sample diversity during training!"
+    },
+    {
+      "mistake": "Vanilla GAN loss kullanmak (modern alternatives varken)",
+      "why": "Binary cross-entropy unstable: Gradient vanishing, oscillations, meaningless loss curve. Training: Trial and error nightmare!",
+      "fix": "WGAN-GP kullan: Wasserstein distance + gradient penalty. Benefits: Stable, meaningful loss, less mode collapse. Or: Least squares GAN (LSGAN), Hinge loss. Modern GANs: Always use improved losses!"
+    },
+    {
+      "mistake": "Batch normalization layers'ı yanlış kullanmak",
+      "why": "Vanilla GAN: BatchNorm in G creates artifacts (correlation between samples in batch). Discriminator: BatchNorm critical for stability!",
+      "fix": "Generator: Conditional BatchNorm, Instance Normalization, or Layer Normalization. Discriminator: BatchNorm OK (helps stability). Spectral normalization (modern): Controls Lipschitz constant, no BN needed!"
+    },
+    {
+      "mistake": "Evaluation metrics kullanmamak",
+      "why": "Visual inspection subjective! Loss values meaningless (oscillate). Can't compare models objectively. Publication: Need quantitative metrics!",
+      "fix": "Inception Score (IS): Measures quality + diversity. FID (Frechet Inception Distance): Real vs fake distribution distance. Precision/Recall: Quality vs diversity trade-off. Human evaluation for final validation!"
+    },
+    {
+      "mistake": "CycleGAN'de cycle consistency weight'i çok küçük/büyük tutmak",
+      "why": "Too small: No cycle constraint, arbitrary mappings! Content not preserved. Too large: Only identity mapping learned, no style transfer!",
+      "fix": "Typical: λ_cycle = 10. Adversarial + 10×cycle loss. Tune based on task: More preservation needed → higher weight. More creative freedom → lower weight. Monitor: Both losses balanced!"
+    },
+    {
+      "mistake": "Training instability signs'ı ignore etmek",
+      "why": "Loss oscillations, D→0 or D→1, gradient explosion/vanishing. Model: Collapsed or diverged! Hours wasted.",
+      "fix": "Monitor: Loss curves, D accuracy, visual samples every epoch. Signs of trouble: D accuracy > 90% or < 30%, loss oscillations wild, generated images garbage/constant. Action: Reduce learning rates, switch to WGAN, check architecture (BN, activations), gradient clipping!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "GAN Training Dynamics: Generator vs Discriminator",
+      "description": "Interactive visualization: G improves → D struggles → G improves further. Nash equilibrium when D accuracy ≈ 50%"
+    },
+    {
+      "type": "comparison",
+      "title": "Generated Images Quality Over Epochs",
+      "description": "Visual progression: Epoch 1 (noise) → Epoch 50 (shapes) → Epoch 200 (realistic). Quality improvement timeline"
+    },
+    {
+      "type": "algorithm",
+      "title": "CycleGAN Cycle Consistency",
+      "description": "Animated: A → fake_B → rec_A (must equal A!). Forward and backward cycle visualization"
+    },
+    {
+      "type": "metric",
+      "title": "Mode Collapse Demonstration",
+      "description": "Comparison: Healthy GAN (diverse samples) vs Mode Collapsed GAN (repetitive samples). Distribution visualization"
+    }
+  ],
+  "references": [
+    {
+      "title": "Generative Adversarial Networks",
+      "authors": "Ian Goodfellow et al.",
+      "year": 2014,
+      "link": "https://arxiv.org/abs/1406.2661",
+      "type": "paper"
+    },
+    {
+      "title": "Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks (DCGAN)",
+      "authors": "Radford et al.",
+      "year": 2015,
+      "link": "https://arxiv.org/abs/1511.06434",
+      "type": "paper"
+    },
+    {
+      "title": "Wasserstein GAN",
+      "authors": "Arjovsky et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1701.07875",
+      "type": "paper"
+    },
+    {
+      "title": "Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (CycleGAN)",
+      "authors": "Zhu et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1703.10593",
+      "type": "paper"
+    },
+    {
+      "title": "A Style-Based Generator Architecture for Generative Adversarial Networks (StyleGAN)",
+      "authors": "Karras et al.",
+      "year": 2019,
+      "link": "https://arxiv.org/abs/1812.04948",
+      "type": "paper"
+    }
+  ]
+}

@@ -1,0 +1,357 @@
+{
+  "id": "neural-networks",
+  "title": "Neural Networks (Yapay Sinir Ağları)",
+  "category": "neural-networks",
+  "level": 2,
+  "estimatedTime": 60,
+  "description": "Multi-Layer Perceptron (MLP) ve neural network temelleri. Hidden layers, forward/backward propagation ve modern deep learning'in yapı taşları.",
+  "content": {
+    "level0_basic": "Neural Network (Yapay Sinir Ağı), beyindeki nöronları taklit eden bir yapıdır. Tek perceptron bir soru cevaplayabilir ('Bu spam mi?'), ama neural network onlarca-yüzlerce perceptron'u katmanlar halinde bağlayarak çok daha karmaşık problemleri çözebilir. İlk katman (input layer) veriyi alır, ortadaki gizli katmanlar (hidden layers) özellikleri öğrenir, son katman (output layer) kararı verir. Her bağlantının bir ağırlığı var, network öğrendikçe bu ağırlıklar ayarlanır.",
+    "level1_beginner": "**Neural Network Anatomisi:**\n\n1. **Input Layer (Girdi Katmanı):** Veriyi alır (örn: 28×28 piksel = 784 nöron)\n2. **Hidden Layers (Gizli Katmanlar):** Özellikleri öğrenir (1+ katman, her biri N nöron)\n3. **Output Layer (Çıktı Katmanı):** Sonucu üretir (classification için class sayısı kadar nöron)\n\n**Her Nöron:**\n```\noutput = activation(Σ(weight × input) + bias)\n```\n\n**Neden 'Multi-Layer'?**\n- Single layer (perceptron): Sadece linear problemler (AND, OR)\n- Multi-layer: Non-linear problemler (XOR, yüz tanıma, ses tanıma)\n- Her hidden layer daha abstract features öğrenir\n\n**Universal Approximation Theorem:**\nYeterli nöron ile tek hidden layer bile herhangi bir sürekli fonksiyonu yaklaşık olarak öğrenebilir! Ama pratikte deep networks (çok katman) daha iyi çalışır.\n\n**Tipik MLP Mimarisi:**\n```\nInput (784) → Hidden1 (128) → ReLU → Hidden2 (64) → ReLU → Output (10) → Softmax\n```\n\n**Öğrenme Süreci:**\n1. Forward pass: Tahmin yap\n2. Loss hesapla: Ne kadar yanlış?\n3. Backpropagation: Her ağırlığın hatadaki payını bul\n4. Gradient descent: Ağırlıkları güncelle\n5. Tekrarla!",
+    "level2_application": "**PyTorch ile Neural Network:**\n\n```python\nimport torch.nn as nn\n\nclass NeuralNetwork(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(784, 128),    # Input → Hidden1\n            nn.ReLU(),\n            nn.Dropout(0.2),        # Regularization\n            nn.Linear(128, 64),     # Hidden1 → Hidden2\n            nn.ReLU(),\n            nn.Dropout(0.2),\n            nn.Linear(64, 10)       # Hidden2 → Output\n        )\n    \n    def forward(self, x):\n        return self.layers(x)\n```\n\n**Sklearn MLPClassifier:**\n```python\nfrom sklearn.neural_network import MLPClassifier\n\nmlp = MLPClassifier(\n    hidden_layer_sizes=(128, 64),\n    activation='relu',\n    solver='adam',\n    max_iter=100\n)\nmlp.fit(X_train, y_train)\n```\n\n**Hyperparameter Seçimi:**\n- **Hidden layers:** 1-3 katman yeterli (çoğu problem için)\n- **Nöron sayısı:** Input ile output arasında (128, 64, 32 gibi)\n- **Activation:** Hidden'da ReLU, output'ta task'a göre\n- **Learning rate:** 0.001 - 0.01 arası\n- **Batch size:** 32, 64, 128\n- **Epochs:** Validation loss'a bakarak early stopping\n\n**Overfitting vs Underfitting:**\n- Overfitting: Train accuracy yüksek, test düşük → Regularization ekle\n- Underfitting: Her ikisi de düşük → Daha büyük network, daha fazla epoch",
+    "level3_advanced": "**Matematiksel Formalizasyon:**\n\n**Forward Pass (L-layer network):**\n$$z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}$$\n$$a^{[l]} = g^{[l]}(z^{[l]})$$\n\nBurada:\n- $W^{[l]}$: Layer l'nin weight matrix'i\n- $a^{[l]}$: Layer l'nin activation'ları\n- $g^{[l]}$: Activation function\n- $z^{[l]}$: Pre-activation (linear output)\n\n**Backward Pass:**\n$$\\frac{\\partial L}{\\partial W^{[l]}} = \\frac{1}{m} \\frac{\\partial L}{\\partial z^{[l]}} (a^{[l-1]})^T$$\n$$\\frac{\\partial L}{\\partial b^{[l]}} = \\frac{1}{m} \\sum_{i} \\frac{\\partial L}{\\partial z^{[l]}}$$\n$$\\frac{\\partial L}{\\partial a^{[l-1]}} = (W^{[l]})^T \\frac{\\partial L}{\\partial z^{[l]}}$$\n\n**Xavier/He Initialization:**\nRastgele ağırlık başlatma kritik!\n\n- Xavier (Glorot): $W \\sim \\mathcal{N}(0, \\sqrt{\\frac{2}{n_{in} + n_{out}}})$ (Sigmoid/Tanh için)\n- He: $W \\sim \\mathcal{N}(0, \\sqrt{\\frac{2}{n_{in}}})$ (ReLU için)\n\nKötü initialization → vanishing/exploding gradients\n\n**Batch Normalization:**\n$$\\hat{x} = \\frac{x - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}}$$\n$$y = \\gamma \\hat{x} + \\beta$$\n\nHer mini-batch'i normalize eder:\n- Internal covariate shift'i azaltır\n- Daha yüksek learning rate kullanılabilir\n- Regularization effect (dropout gibi)\n\n**Dropout:**\nTraining sırasında rastgele nöronları kapat (p=0.2-0.5):\n$$a^{[l]} = a^{[l]} \\cdot \\text{mask}$$\n$$\\text{mask} \\sim \\text{Bernoulli}(1-p)$$\n\nInference'da tüm nöronlar aktif ama output scale edilir.",
+    "level4_expert": "**Production-Ready Neural Networks:**\n\n**1. Advanced Architectures:**\n```python\nclass ResidualBlock(nn.Module):\n    def __init__(self, dim):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(dim, dim),\n            nn.BatchNorm1d(dim),\n            nn.ReLU(),\n            nn.Dropout(0.1),\n            nn.Linear(dim, dim),\n            nn.BatchNorm1d(dim)\n        )\n    \n    def forward(self, x):\n        return F.relu(x + self.layers(x))  # Skip connection!\n```\n\nResidual connections vanishing gradient'i önler.\n\n**2. Learning Rate Scheduling:**\n- Step decay: Her N epoch'ta lr × 0.1\n- Cosine annealing: Sinüs eğrisi ile azalt\n- ReduceLROnPlateau: Validation loss plateau'ya ulaşınca azalt\n- Warmup: İlk birkaç epoch'ta yavaşça artır\n\n**3. Early Stopping:**\n```python\nbest_val_loss = float('inf')\npatience_counter = 0\npatience = 10\n\nfor epoch in epochs:\n    val_loss = validate()\n    if val_loss < best_val_loss:\n        best_val_loss = val_loss\n        save_model()\n        patience_counter = 0\n    else:\n        patience_counter += 1\n        if patience_counter >= patience:\n            print(\"Early stopping!\")\n            break\n```\n\n**4. Gradient Clipping:**\n```python\ntorch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n```\n\n**5. Mixed Precision Training:**\n2x hızlı, 2x az memory:\n```python\nfrom torch.cuda.amp import autocast, GradScaler\nscaler = GradScaler()\n\nwith autocast():\n    output = model(input)\n    loss = criterion(output, target)\n\nscaler.scale(loss).backward()\nscaler.step(optimizer)\nscaler.update()\n```\n\n**6. Model Profiling:**\n```python\nfrom torch.profiler import profile, ProfilerActivity\n\nwith profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:\n    model(input)\n\nprint(prof.key_averages().table())\n```\n\n**7. Quantization (8-bit inference):**\nModel boyutu 4x küçük, inference 2-4x hızlı:\n```python\nmodel_quantized = torch.quantization.quantize_dynamic(\n    model, {nn.Linear}, dtype=torch.qint8\n)\n```\n\n**8. ONNX Export (Cross-platform):**\n```python\ntorch.onnx.export(model, dummy_input, 'model.onnx')\n```\n\nONNX → TensorRT, CoreML, ONNX Runtime"
+  },
+  "whatIsIt": "Neural Network (Yapay Sinir Ağı), birbirine bağlı yapay nöronlardan oluşan matematiksel bir modeldir. Input layer, hidden layer(s) ve output layer'dan oluşur. Her bağlantının öğrenilebilir bir ağırlığı var. Multi-layer (çok katmanlı) olduğu için non-linear pattern'leri öğrenebilir. Modern AI'ın temel yapı taşı: görüntü tanıma, ses tanıma, NLP, oyun oynama - hepsi neural network'lerle çalışır.",
+  "whyNeeded": "Single perceptron sadece linear problemleri çözebilir (AND, OR). Gerçek dünya problemleri non-linear! XOR bile single layer çözemez. Hidden layer ekleyince network karmaşık pattern'leri öğrenebilir. Universal Approximation Theorem der ki: Yeterli nöronla herhangi bir fonksiyonu yaklaşık öğrenebilirsin. Neural network'ler feature engineering gerektirmez - kendisi özellikleri öğrenir! Modern deep learning'in temeli.",
+  "realWorldAnalogy": "Neural network bir şirketin organizasyon şeması gibidir. Input layer müşteri hizmetleri (veriyi alır), hidden layers farklı departmanlar (her biri farklı analiz yapar: finans, hukuk, teknik), output layer CEO (final kararı verir). Her çalışan (nöron) input'ları değerlendirir, ağırlıklı karar verir, üstüne iletir. Şirket tecrübe kazandıkça (training) her çalışan işini daha iyi yapmayı öğrenir (ağırlıklar güncellenir).",
+  "mathematics": {
+    "formulas": [
+      "z^{[l]} = W^{[l]} a^{[l-1]} + b^{[l]}",
+      "a^{[l]} = g^{[l]}(z^{[l]})",
+      "L = -\\frac{1}{m} \\sum_{i=1}^{m} \\sum_{j=1}^{k} y_{ij} \\log(\\hat{y}_{ij})",
+      "\\frac{\\partial L}{\\partial W^{[l]}} = \\frac{1}{m} \\frac{\\partial L}{\\partial z^{[l]}} (a^{[l-1]})^T",
+      "W \\sim \\mathcal{N}(0, \\sqrt{\\frac{2}{n_{in}}}) \\quad \\text{(He initialization)}",
+      "\\text{BN}(x) = \\gamma \\frac{x - \\mu}{\\sqrt{\\sigma^2 + \\epsilon}} + \\beta"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize: Ağırlıkları Xavier/He initialization ile başlat",
+      "2. Forward Pass: Her katmandan veriyi geçir (z = Wx + b, a = activation(z))",
+      "3. Compute Loss: Çıktı ile gerçek değer arasındaki hatayı hesapla",
+      "4. Backward Pass: Backpropagation ile her ağırlığın gradientini hesapla",
+      "5. Update Weights: Optimizer ile ağırlıkları güncelle (w -= lr * gradient)",
+      "6. Repeat: Convergence veya max epoch'a kadar tekrarla",
+      "7. Validate: Her epoch sonunda validation set'te test et",
+      "8. Early Stop: Validation loss artıyorsa dur (overfitting)"
+    ],
+    "complexity": "Forward: O(Σ(n_l × n_{l+1})) - Her layer'ın nöron çarpımları toplamı. Backward: ~2-3x forward. Toplam: O(weights × epochs × batch_size)"
+  },
+  "prerequisites": [
+    "perceptron",
+    "activation-functions",
+    "loss-functions",
+    "gradient-descent",
+    "backpropagation"
+  ],
+  "nextTopics": [
+    "convolutional-neural-networks",
+    "recurrent-neural-networks",
+    "deep-learning-optimization",
+    "regularization-techniques"
+  ],
+  "tags": [
+    "neural-networks",
+    "mlp",
+    "multi-layer-perceptron",
+    "deep-learning",
+    "hidden-layers",
+    "forward-propagation",
+    "backpropagation",
+    "pytorch",
+    "sklearn"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Neural Network Kavramı",
+      "code": "Tek Perceptron:\nInput → [Nöron] → Output\nSadece linear problemler (AND, OR)\n\nNeural Network (MLP):\nInput → [Hidden Layer 1] → [Hidden Layer 2] → Output\n         (10 nöron)         (5 nöron)\n\nÖrnek: El yazısı rakam tanıma (MNIST)\nInput: 28×28 = 784 piksel\nHidden1: 128 nöron (kenarlar, çizgiler öğrenir)\nHidden2: 64 nöron (şekiller öğrenir)\nOutput: 10 nöron (0-9 rakamlar)\n\nHer layer bir öncekinin öğrendiklerini kullanarak\ndaha karmaşık features öğrenir!",
+      "explanation": "Neural network katmanlar halinde düzenlenmiş perceptron'lardır. Her katman daha abstract features öğrenir."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "NumPy ile Basit Neural Network",
+      "code": "import numpy as np\n\ndef sigmoid(x):\n    return 1 / (1 + np.exp(-x))\n\ndef sigmoid_derivative(x):\n    return x * (1 - x)\n\n# Network mimarisi: 2 → 3 → 1\nnp.random.seed(42)\nW1 = np.random.randn(2, 3) * 0.5  # Input → Hidden\nW2 = np.random.randn(3, 1) * 0.5  # Hidden → Output\n\n# Training data (XOR)\nX = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])\ny = np.array([[0], [1], [1], [0]])\n\nlearning_rate = 0.5\n\nfor epoch in range(10000):\n    # Forward pass\n    hidden = sigmoid(np.dot(X, W1))\n    output = sigmoid(np.dot(hidden, W2))\n    \n    # Loss\n    loss = np.mean((output - y) ** 2)\n    \n    # Backward pass\n    output_error = output - y\n    output_delta = output_error * sigmoid_derivative(output)\n    \n    hidden_error = output_delta.dot(W2.T)\n    hidden_delta = hidden_error * sigmoid_derivative(hidden)\n    \n    # Update weights\n    W2 -= hidden.T.dot(output_delta) * learning_rate\n    W1 -= X.T.dot(hidden_delta) * learning_rate\n    \n    if epoch % 2000 == 0:\n        print(f\"Epoch {epoch}: Loss = {loss:.4f}\")\n\n# Test\nprint(\"\\nPredictions:\")\nfor i, x_test in enumerate(X):\n    hidden = sigmoid(np.dot(x_test, W1))\n    pred = sigmoid(np.dot(hidden, W2))\n    print(f\"{x_test} → {pred[0]:.3f} (target: {y[i][0]})\")",
+      "explanation": "Sıfırdan 2-layer neural network. XOR problemini çözüyor - single perceptron'un çözemediği!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch ile Neural Network",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\nclass NeuralNetwork(nn.Module):\n    def __init__(self, input_size, hidden_sizes, output_size):\n        super().__init__()\n        \n        # Layers oluştur\n        layers = []\n        prev_size = input_size\n        \n        for hidden_size in hidden_sizes:\n            layers.append(nn.Linear(prev_size, hidden_size))\n            layers.append(nn.ReLU())\n            layers.append(nn.Dropout(0.2))  # Overfitting önleme\n            prev_size = hidden_size\n        \n        layers.append(nn.Linear(prev_size, output_size))\n        \n        self.network = nn.Sequential(*layers)\n    \n    def forward(self, x):\n        return self.network(x)\n\n# Model oluştur\nmodel = NeuralNetwork(\n    input_size=784,      # MNIST: 28x28\n    hidden_sizes=[128, 64],\n    output_size=10       # 10 digit\n)\n\nprint(\"Model Architecture:\")\nprint(model)\nprint(f\"\\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Training setup\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Dummy training loop\nfor epoch in range(5):\n    # Dummy data\n    x = torch.randn(32, 784)  # Batch of 32\n    y = torch.randint(0, 10, (32,))\n    \n    # Forward\n    optimizer.zero_grad()\n    output = model(x)\n    loss = criterion(output, y)\n    \n    # Backward\n    loss.backward()\n    optimizer.step()\n    \n    print(f\"Epoch {epoch+1}: Loss = {loss.item():.4f}\")",
+      "explanation": "PyTorch ile esnek neural network. Hidden layer sayısı ve boyutu parametre olarak verilebilir. Dropout ile regularization."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "MNIST Digit Classification",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torchvision import datasets, transforms\nfrom torch.utils.data import DataLoader\n\n# Data loading\ntransform = transforms.Compose([\n    transforms.ToTensor(),\n    transforms.Normalize((0.1307,), (0.3081,))\n])\n\ntrain_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)\ntest_dataset = datasets.MNIST('./data', train=False, transform=transform)\n\ntrain_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)\ntest_loader = DataLoader(test_dataset, batch_size=1000)\n\n# Model\nclass MNISTNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(28*28, 128)\n        self.fc2 = nn.Linear(128, 64)\n        self.fc3 = nn.Linear(64, 10)\n        self.dropout = nn.Dropout(0.2)\n    \n    def forward(self, x):\n        x = x.view(-1, 28*28)  # Flatten\n        x = torch.relu(self.fc1(x))\n        x = self.dropout(x)\n        x = torch.relu(self.fc2(x))\n        x = self.dropout(x)\n        x = self.fc3(x)\n        return x\n\nmodel = MNISTNet()\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Training\ndef train(epoch):\n    model.train()\n    for batch_idx, (data, target) in enumerate(train_loader):\n        optimizer.zero_grad()\n        output = model(data)\n        loss = criterion(output, target)\n        loss.backward()\n        optimizer.step()\n        \n        if batch_idx % 100 == 0:\n            print(f'Epoch {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)}] '\n                  f'Loss: {loss.item():.4f}')\n\n# Test\ndef test():\n    model.eval()\n    test_loss = 0\n    correct = 0\n    with torch.no_grad():\n        for data, target in test_loader:\n            output = model(data)\n            test_loss += criterion(output, target).item()\n            pred = output.argmax(dim=1)\n            correct += pred.eq(target).sum().item()\n    \n    test_loss /= len(test_loader)\n    accuracy = 100. * correct / len(test_loader.dataset)\n    print(f'\\nTest: Average loss: {test_loss:.4f}, '\n          f'Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.2f}%)\\n')\n\n# Run\nfor epoch in range(1, 4):\n    train(epoch)\n    test()\n\nprint(\"\\n✓ MNIST classification complete!\")\nprint(\"Expected accuracy: ~97-98%\")",
+      "explanation": "Gerçek MNIST dataset'i ile digit classification. 3 epoch'ta %97-98 accuracy. Neural network'lerin gücünü gösterir!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Sklearn MLPClassifier",
+      "code": "from sklearn.neural_network import MLPClassifier\nfrom sklearn.datasets import load_digits\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.metrics import classification_report, confusion_matrix\nimport numpy as np\n\n# Load digits dataset (8x8 images)\ndigits = load_digits()\nX, y = digits.data, digits.target\n\nprint(f\"Dataset: {X.shape[0]} samples, {X.shape[1]} features\")\nprint(f\"Classes: {len(np.unique(y))} (digits 0-9)\")\n\n# Split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Scale features\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\n\n# MLP Classifier\nmlp = MLPClassifier(\n    hidden_layer_sizes=(100, 50),  # 2 hidden layers\n    activation='relu',\n    solver='adam',\n    learning_rate_init=0.001,\n    max_iter=200,\n    random_state=42,\n    verbose=True\n)\n\nprint(\"\\nTraining MLP...\")\nmlp.fit(X_train_scaled, y_train)\n\n# Evaluate\ntrain_score = mlp.score(X_train_scaled, y_train)\ntest_score = mlp.score(X_test_scaled, y_test)\n\nprint(f\"\\nTrain Accuracy: {train_score:.4f}\")\nprint(f\"Test Accuracy: {test_score:.4f}\")\n\n# Predictions\ny_pred = mlp.predict(X_test_scaled)\n\nprint(\"\\nClassification Report:\")\nprint(classification_report(y_test, y_pred))\n\nprint(\"\\nConfusion Matrix:\")\nprint(confusion_matrix(y_test, y_pred))\n\nprint(f\"\\n✓ Sklearn MLP achieved {test_score:.2%} accuracy!\")",
+      "explanation": "Sklearn'in MLPClassifier'ı ile basit kullanım. Otomatik olarak backpropagation ve optimization yapar. Hızlı prototipleme için ideal."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Custom Weight Initialization",
+      "code": "import torch\nimport torch.nn as nn\nimport numpy as np\n\nclass CustomInitNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 256)\n        self.fc2 = nn.Linear(256, 128)\n        self.fc3 = nn.Linear(128, 10)\n        \n        # Custom initialization\n        self._initialize_weights()\n    \n    def _initialize_weights(self):\n        for m in self.modules():\n            if isinstance(m, nn.Linear):\n                # He initialization (ReLU için optimal)\n                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')\n                if m.bias is not None:\n                    nn.init.constant_(m.bias, 0)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = torch.relu(self.fc2(x))\n        x = self.fc3(x)\n        return x\n\n# Farklı initialization yöntemleri\ndef compare_initializations():\n    methods = {\n        'Default': nn.Linear(100, 100),\n        'Xavier (Glorot)': nn.Linear(100, 100),\n        'He (Kaiming)': nn.Linear(100, 100),\n        'Uniform': nn.Linear(100, 100),\n    }\n    \n    # Xavier\n    nn.init.xavier_normal_(methods['Xavier (Glorot)'].weight)\n    \n    # He\n    nn.init.kaiming_normal_(methods['He (Kaiming)'].weight)\n    \n    # Uniform\n    nn.init.uniform_(methods['Uniform'].weight, -0.1, 0.1)\n    \n    print(\"Weight Statistics:\\n\" + \"=\"*50)\n    for name, layer in methods.items():\n        w = layer.weight.data\n        print(f\"\\n{name}:\")\n        print(f\"  Mean: {w.mean():.6f}\")\n        print(f\"  Std:  {w.std():.6f}\")\n        print(f\"  Min:  {w.min():.6f}\")\n        print(f\"  Max:  {w.max():.6f}\")\n\ncompare_initializations()\n\nprint(\"\\n\" + \"=\"*50)\nprint(\"INITIALIZATION GUIDELINES:\")\nprint(\"=\"*50)\nprint(\"✓ ReLU activation → He (Kaiming) initialization\")\nprint(\"✓ Sigmoid/Tanh → Xavier (Glorot) initialization\")\nprint(\"✗ All zeros → Symmetry problem (neurons learn same thing)\")\nprint(\"✗ Too large → Exploding gradients\")\nprint(\"✗ Too small → Vanishing gradients\")",
+      "explanation": "Ağırlık initialization çok önemli! Kötü initialization vanishing/exploding gradient'e sebep olur. He init ReLU için, Xavier Sigmoid/Tanh için optimal."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Batch Normalization Etkisi",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport matplotlib.pyplot as plt\n\n# Without Batch Normalization\nclass NetWithoutBN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 256)\n        self.fc2 = nn.Linear(256, 128)\n        self.fc3 = nn.Linear(128, 10)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = torch.relu(self.fc2(x))\n        x = self.fc3(x)\n        return x\n\n# With Batch Normalization\nclass NetWithBN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 256)\n        self.bn1 = nn.BatchNorm1d(256)\n        self.fc2 = nn.Linear(256, 128)\n        self.bn2 = nn.BatchNorm1d(128)\n        self.fc3 = nn.Linear(128, 10)\n    \n    def forward(self, x):\n        x = torch.relu(self.bn1(self.fc1(x)))\n        x = torch.relu(self.bn2(self.fc2(x)))\n        x = self.fc3(x)\n        return x\n\ndef train_and_compare(epochs=10):\n    model_no_bn = NetWithoutBN()\n    model_with_bn = NetWithBN()\n    \n    optimizer_no_bn = optim.Adam(model_no_bn.parameters(), lr=0.001)\n    optimizer_with_bn = optim.Adam(model_with_bn.parameters(), lr=0.001)\n    \n    criterion = nn.CrossEntropyLoss()\n    \n    losses_no_bn = []\n    losses_with_bn = []\n    \n    for epoch in range(epochs):\n        # Dummy data\n        x = torch.randn(64, 784)\n        y = torch.randint(0, 10, (64,))\n        \n        # Train without BN\n        optimizer_no_bn.zero_grad()\n        out_no_bn = model_no_bn(x)\n        loss_no_bn = criterion(out_no_bn, y)\n        loss_no_bn.backward()\n        optimizer_no_bn.step()\n        losses_no_bn.append(loss_no_bn.item())\n        \n        # Train with BN\n        optimizer_with_bn.zero_grad()\n        out_with_bn = model_with_bn(x)\n        loss_with_bn = criterion(out_with_bn, y)\n        loss_with_bn.backward()\n        optimizer_with_bn.step()\n        losses_with_bn.append(loss_with_bn.item())\n        \n        if (epoch + 1) % 2 == 0:\n            print(f\"Epoch {epoch+1}: \"\n                  f\"No BN: {loss_no_bn.item():.4f}, \"\n                  f\"With BN: {loss_with_bn.item():.4f}\")\n    \n    print(\"\\n\" + \"=\"*50)\n    print(\"BATCH NORMALIZATION BENEFITS:\")\n    print(\"=\"*50)\n    print(\"✓ Faster convergence (can use higher learning rate)\")\n    print(\"✓ Less sensitive to initialization\")\n    print(\"✓ Regularization effect (like dropout)\")\n    print(\"✓ Reduces internal covariate shift\")\n    print(\"\\nTypically 2-3x faster training!\")\n\ntrain_and_compare()\n",
+      "explanation": "Batch Normalization internal covariate shift'i azaltır. Training'i hızlandırır, daha yüksek learning rate kullanılabilir, regularization effect'i var."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Residual Connections (Skip Connections)",
+      "code": "import torch\nimport torch.nn as nn\n\nclass ResidualBlock(nn.Module):\n    \"\"\"Residual connection ile block\"\"\"\n    def __init__(self, dim):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(dim, dim),\n            nn.BatchNorm1d(dim),\n            nn.ReLU(),\n            nn.Dropout(0.1),\n            nn.Linear(dim, dim),\n            nn.BatchNorm1d(dim)\n        )\n    \n    def forward(self, x):\n        # Skip connection: output = F(x) + x\n        return torch.relu(self.layers(x) + x)\n\nclass DeepResNet(nn.Module):\n    \"\"\"Deep network with residual connections\"\"\"\n    def __init__(self, input_dim, hidden_dim, output_dim, num_blocks=10):\n        super().__init__()\n        \n        # Input projection\n        self.input_proj = nn.Linear(input_dim, hidden_dim)\n        \n        # Residual blocks\n        self.blocks = nn.ModuleList([\n            ResidualBlock(hidden_dim) for _ in range(num_blocks)\n        ])\n        \n        # Output\n        self.output = nn.Linear(hidden_dim, output_dim)\n    \n    def forward(self, x):\n        x = self.input_proj(x)\n        \n        for block in self.blocks:\n            x = block(x)  # Skip connection inside\n        \n        x = self.output(x)\n        return x\n\n# Compare: Deep network without vs with residuals\nclass DeepNetworkNoResidual(nn.Module):\n    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=10):\n        super().__init__()\n        layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]\n        \n        for _ in range(num_layers - 2):\n            layers.extend([\n                nn.Linear(hidden_dim, hidden_dim),\n                nn.ReLU()\n            ])\n        \n        layers.append(nn.Linear(hidden_dim, output_dim))\n        self.network = nn.Sequential(*layers)\n    \n    def forward(self, x):\n        return self.network(x)\n\n# Test gradient flow\ndef test_gradient_flow():\n    input_dim, hidden_dim, output_dim = 100, 256, 10\n    \n    model_no_res = DeepNetworkNoResidual(input_dim, hidden_dim, output_dim, num_layers=20)\n    model_with_res = DeepResNet(input_dim, hidden_dim, output_dim, num_blocks=20)\n    \n    x = torch.randn(32, input_dim)\n    y = torch.randint(0, output_dim, (32,))\n    criterion = nn.CrossEntropyLoss()\n    \n    # No residual\n    out_no_res = model_no_res(x)\n    loss_no_res = criterion(out_no_res, y)\n    loss_no_res.backward()\n    \n    grads_no_res = []\n    for param in model_no_res.parameters():\n        if param.grad is not None:\n            grads_no_res.append(param.grad.norm().item())\n    \n    # With residual\n    out_with_res = model_with_res(x)\n    loss_with_res = criterion(out_with_res, y)\n    loss_with_res.backward()\n    \n    grads_with_res = []\n    for param in model_with_res.parameters():\n        if param.grad is not None:\n            grads_with_res.append(param.grad.norm().item())\n    \n    print(\"Gradient Flow Analysis (20 layers deep):\\n\" + \"=\"*50)\n    print(f\"\\nWithout Residual:\")\n    print(f\"  First layer gradient: {grads_no_res[0]:.6f}\")\n    print(f\"  Last layer gradient: {grads_no_res[-1]:.6f}\")\n    print(f\"  Ratio: {grads_no_res[-1] / (grads_no_res[0] + 1e-10):.6f}\")\n    \n    print(f\"\\nWith Residual:\")\n    print(f\"  First layer gradient: {grads_with_res[0]:.6f}\")\n    print(f\"  Last layer gradient: {grads_with_res[-1]:.6f}\")\n    print(f\"  Ratio: {grads_with_res[-1] / (grads_with_res[0] + 1e-10):.6f}\")\n    \n    print(\"\\n\" + \"=\"*50)\n    print(\"RESIDUAL CONNECTIONS:\")\n    print(\"=\"*50)\n    print(\"✓ Enable very deep networks (100+ layers)\")\n    print(\"✓ Solve vanishing gradient problem\")\n    print(\"✓ Better gradient flow to early layers\")\n    print(\"✓ Easier optimization\")\n    print(\"\\nUsed in: ResNet, Transformers, many modern architectures\")\n\ntest_gradient_flow()",
+      "explanation": "Residual connections (skip connections) vanishing gradient'i çözer. Çok derin network'ler (100+ layer) mümkün olur. ResNet'in temel prensibi."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production Pipeline with All Best Practices",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.optim.lr_scheduler import ReduceLROnPlateau\nfrom torch.cuda.amp import autocast, GradScaler\nimport time\n\nclass ProductionNN(nn.Module):\n    def __init__(self, input_dim, hidden_dims, output_dim, dropout=0.2):\n        super().__init__()\n        \n        layers = []\n        prev_dim = input_dim\n        \n        for hidden_dim in hidden_dims:\n            layers.extend([\n                nn.Linear(prev_dim, hidden_dim),\n                nn.BatchNorm1d(hidden_dim),\n                nn.ReLU(),\n                nn.Dropout(dropout)\n            ])\n            prev_dim = hidden_dim\n        \n        layers.append(nn.Linear(prev_dim, output_dim))\n        self.network = nn.Sequential(*layers)\n    \n    def forward(self, x):\n        return self.network(x)\n\nclass Trainer:\n    def __init__(self, model, device='cuda'):\n        self.model = model.to(device)\n        self.device = device\n        self.criterion = nn.CrossEntropyLoss()\n        self.optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)\n        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', \n                                           patience=5, factor=0.5, verbose=True)\n        self.scaler = GradScaler()  # Mixed precision\n        \n        self.best_val_loss = float('inf')\n        self.patience_counter = 0\n        self.patience = 10\n    \n    def train_epoch(self, train_loader):\n        self.model.train()\n        total_loss = 0\n        \n        for batch_idx, (data, target) in enumerate(train_loader):\n            data, target = data.to(self.device), target.to(self.device)\n            \n            self.optimizer.zero_grad()\n            \n            # Mixed precision forward\n            with autocast():\n                output = self.model(data)\n                loss = self.criterion(output, target)\n            \n            # Mixed precision backward\n            self.scaler.scale(loss).backward()\n            \n            # Gradient clipping\n            self.scaler.unscale_(self.optimizer)\n            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)\n            \n            self.scaler.step(self.optimizer)\n            self.scaler.update()\n            \n            total_loss += loss.item()\n        \n        return total_loss / len(train_loader)\n    \n    def validate(self, val_loader):\n        self.model.eval()\n        total_loss = 0\n        correct = 0\n        total = 0\n        \n        with torch.no_grad():\n            for data, target in val_loader:\n                data, target = data.to(self.device), target.to(self.device)\n                \n                output = self.model(data)\n                loss = self.criterion(output, target)\n                \n                total_loss += loss.item()\n                _, predicted = torch.max(output.data, 1)\n                total += target.size(0)\n                correct += (predicted == target).sum().item()\n        \n        avg_loss = total_loss / len(val_loader)\n        accuracy = 100 * correct / total\n        \n        return avg_loss, accuracy\n    \n    def train(self, train_loader, val_loader, epochs=100):\n        print(\"Starting training with all best practices...\\n\")\n        \n        for epoch in range(epochs):\n            start_time = time.time()\n            \n            # Train\n            train_loss = self.train_epoch(train_loader)\n            \n            # Validate\n            val_loss, val_acc = self.validate(val_loader)\n            \n            # Learning rate scheduling\n            self.scheduler.step(val_loss)\n            \n            epoch_time = time.time() - start_time\n            \n            print(f\"Epoch {epoch+1}/{epochs} ({epoch_time:.2f}s) - \"\n                  f\"Train Loss: {train_loss:.4f}, \"\n                  f\"Val Loss: {val_loss:.4f}, \"\n                  f\"Val Acc: {val_acc:.2f}%\")\n            \n            # Early stopping\n            if val_loss < self.best_val_loss:\n                self.best_val_loss = val_loss\n                self.patience_counter = 0\n                torch.save(self.model.state_dict(), 'best_model.pth')\n                print(\"  → New best model saved!\")\n            else:\n                self.patience_counter += 1\n                if self.patience_counter >= self.patience:\n                    print(f\"\\nEarly stopping after {epoch+1} epochs\")\n                    break\n        \n        print(\"\\n\" + \"=\"*60)\n        print(\"PRODUCTION BEST PRACTICES USED:\")\n        print(\"=\"*60)\n        print(\"✓ Batch Normalization\")\n        print(\"✓ Dropout regularization\")\n        print(\"✓ AdamW optimizer (weight decay)\")\n        print(\"✓ Learning rate scheduling\")\n        print(\"✓ Mixed precision training (FP16)\")\n        print(\"✓ Gradient clipping\")\n        print(\"✓ Early stopping\")\n        print(\"✓ Model checkpointing\")\n\n# Example usage\nif torch.cuda.is_available():\n    model = ProductionNN(input_dim=784, hidden_dims=[256, 128], output_dim=10)\n    trainer = Trainer(model, device='cuda')\n    print(\"✓ Production-ready trainer initialized!\")\n    print(\"  All best practices included.\")\nelse:\n    print(\"GPU not available. Use CPU for demo.\")",
+      "explanation": "Production-ready neural network pipeline. Tüm best practice'ler: mixed precision, gradient clipping, early stopping, LR scheduling, checkpointing."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Neural network'te hidden layer'ın amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece hesaplamayı yavaşlatmak",
+        "Non-linear features öğrenmek ve karmaşık pattern'leri yakalamak",
+        "Veriyi saklamak",
+        "Sadece görsel amaçlı"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Hidden layer'lar non-linear transformation'lar yaparak karmaşık pattern'leri öğrenir. Her layer daha abstract features çıkarır. Single layer sadece linear problemleri çözebilir, hidden layer ekleyince XOR gibi non-linear problemler çözülebilir.",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "Universal Approximation Theorem ne söyler?",
+      "type": "multiple-choice",
+      "options": [
+        "Neural network her problemi %100 doğru çözer",
+        "Yeterli nöronla tek hidden layer herhangi bir sürekli fonksiyonu yaklaşık öğrenebilir",
+        "Daha fazla layer her zaman daha iyidir",
+        "Neural network sadece classification yapabilir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Universal Approximation Theorem: Yeterli genişlikte (nöron sayısı) tek hidden layer bile herhangi bir sürekli fonksiyonu arbitrary accuracy ile yaklaşık öğrenebilir. Pratikte deep networks (çok layer) daha verimli.",
+      "difficulty": 2
+    },
+    {
+      "id": "q3",
+      "question": "Hangi initialization yöntemi ReLU activation için önerilir?",
+      "type": "multiple-choice",
+      "options": [
+        "Tüm ağırlıkları sıfır yap",
+        "Xavier (Glorot) initialization",
+        "He (Kaiming) initialization",
+        "Tüm ağırlıkları 1 yap"
+      ],
+      "correctAnswer": 2,
+      "explanation": "He initialization ReLU için optimize edilmiştir. Xavier Sigmoid/Tanh için. Sıfır initialization symmetry problemi yaratır (tüm nöronlar aynı şeyi öğrenir). Çok büyük değerler exploding gradient'e sebep olur.",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Batch Normalization'ın ana faydası nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Model boyutunu küçültür",
+        "Training'i hızlandırır ve internal covariate shift'i azaltır",
+        "Sadece test accuracy'sini artırır",
+        "Backward pass'i gereksiz kılar"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Batch Normalization her mini-batch'i normalize eder, internal covariate shift'i azaltır. Daha yüksek learning rate kullanılabilir, training 2-3x hızlanır, regularization effect'i var. Modern network'lerin standard komponenti.",
+      "difficulty": 2
+    },
+    {
+      "id": "q5",
+      "question": "Overfitting'i önlemek için hangi teknikler kullanılır?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece daha büyük model kullan",
+        "Dropout, L2 regularization, early stopping, data augmentation",
+        "Learning rate'i artır",
+        "Daha az data kullan"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Overfitting önleme: Dropout (random nöronları kapat), L2 regularization (weight decay), early stopping (validation loss artınca dur), data augmentation (daha fazla veri), batch normalization. Daha büyük model overfitting'i artırır!",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Residual connections (skip connections) ne işe yarar?",
+      "type": "multiple-choice",
+      "options": [
+        "Training'i yavaşlatır",
+        "Vanishing gradient problemini çözer ve çok derin network'leri mümkün kılar",
+        "Sadece CNN'lerde kullanılır",
+        "Model accuracy'sini düşürür"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Residual connections (y = F(x) + x) gradient'in direkt olarak geriye akmasını sağlar. Vanishing gradient çözülür, 100+ layer'lı network'ler mümkün olur. ResNet, Transformers'da kullanılır. Modern deep learning'in kritik inovasyonu.",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "Neural Network nedir?",
+      "back": "Katmanlar halinde düzenlenmiş yapay nöronlardan oluşan model:\n\nInput Layer → Hidden Layer(s) → Output Layer\n\nHer layer linear transformation + non-linear activation.\nMulti-layer olduğu için non-linear pattern'leri öğrenebilir."
+    },
+    {
+      "id": "fc2",
+      "front": "Forward propagation nedir?",
+      "back": "Veriyi network'ten geçirme:\n\n1. z = Wx + b (linear)\n2. a = activation(z) (non-linear)\n3. Bir sonraki layer'a geç\n4. Output'a kadar tekrarla\n\nHer layer öncekinin çıktısını input alır."
+    },
+    {
+      "id": "fc3",
+      "front": "Hidden layer neden gerekli?",
+      "back": "Single layer (perceptron): Sadece linear problemler\nHidden layer ekleyince: Non-linear problemler çözülebilir\n\nÖrnek: XOR single layer çözemez, 1 hidden layer çözer!\n\nHer layer daha abstract features öğrenir:\n- Layer 1: Kenarlar, çizgiler\n- Layer 2: Şekiller, dokular\n- Layer 3: Objeler, yüzler"
+    },
+    {
+      "id": "fc4",
+      "front": "He initialization nedir?",
+      "back": "ReLU için optimal weight initialization:\n\nW ~ N(0, sqrt(2/n_in))\n\nn_in: Input nöron sayısı\n\nXavier initialization: Sigmoid/Tanh için\nW ~ N(0, sqrt(2/(n_in + n_out)))\n\nKötü init → vanishing/exploding gradients!"
+    },
+    {
+      "id": "fc5",
+      "front": "Dropout nasıl çalışır?",
+      "back": "Training'de rastgele nöronları kapat (p=0.2-0.5):\n\noutput = output * mask\nmask ~ Bernoulli(1-p)\n\nInference'da tüm nöronlar aktif (mask yok)\n\nFayda: Overfitting önler, network ensemble gibi davranır.\nModern regularization tekniği!"
+    },
+    {
+      "id": "fc6",
+      "front": "Batch Normalization formülü?",
+      "back": "BN(x) = γ * (x - μ) / sqrt(σ² + ε) + β\n\nμ, σ²: Batch statistics\nγ, β: Learnable parameters\n\nFaydalar:\n- Faster training (2-3x)\n- Higher learning rates\n- Regularization effect\n- Less sensitive to initialization"
+    },
+    {
+      "id": "fc7",
+      "front": "Residual connection nedir?",
+      "back": "Skip connection: y = F(x) + x\n\nVanishing gradient'i çözer:\n- Gradient direkt geriye akabilir\n- Very deep networks (100+) mümkün\n- Easier optimization\n\nResNet'in temel prensibi!\nTransformers'da da kullanılır."
+    },
+    {
+      "id": "fc8",
+      "front": "Overfitting vs Underfitting?",
+      "back": "Overfitting:\n- Train accuracy yüksek, test düşük\n- Model ezberlemiş\n- Çözüm: Dropout, regularization, more data\n\nUnderfitting:\n- Her ikisi de düşük\n- Model yeterince karmaşık değil\n- Çözüm: Bigger network, more epochs, less regularization"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Çok büyük veya çok küçük learning rate",
+      "why": "Çok büyük: Divergence, loss patlar. Çok küçük: Çok yavaş öğrenme, local minima'da takılma.",
+      "fix": "0.001-0.01 arası başla. Learning rate scheduler kullan (ReduceLROnPlateau). Adam optimizer otomatik adapt eder."
+    },
+    {
+      "mistake": "Tüm ağırlıkları sıfır veya aynı değerle başlatmak",
+      "why": "Symmetry problem: Tüm nöronlar aynı update'i alır, aynı şeyi öğrenir. Network hiçbir şey öğrenemez!",
+      "fix": "He initialization (ReLU için) veya Xavier (Sigmoid/Tanh için) kullan. PyTorch default initialization genelde yeterli."
+    },
+    {
+      "mistake": "Regularization kullanmamak",
+      "why": "Overfitting: Model training data'yı ezberlemiş, test'te kötü. Özellikle küçük dataset'lerde problem.",
+      "fix": "Dropout ekle (0.2-0.5), L2 regularization (weight decay), early stopping, data augmentation."
+    },
+    {
+      "mistake": "Hidden layer boyutunu rastgele seçmek",
+      "why": "Çok büyük: Overfitting + yavaş. Çok küçük: Underfitting, öğrenemiyor.",
+      "fix": "Input-output arasında gradually azalt: 784 → 256 → 128 → 10. Empirical rule: Start wide, go deep."
+    },
+    {
+      "mistake": "Batch Normalization'ı yanlış yerde kullanmak",
+      "why": "BN, activation'dan önce mi sonra mı? Original paper: önce. Ama pratikte sonra da çalışır.",
+      "fix": "Standard pattern: Linear → BN → ReLU → Dropout. Bu sıra en yaygın kullanılan."
+    },
+    {
+      "mistake": "Validation set kullanmamak",
+      "why": "Training loss düşüyor ama test'te kötü mü? Overfitting olmuş ama fark etmemişsin.",
+      "fix": "Train-Validation-Test split yap (60-20-20 veya 70-15-15). Early stopping için validation loss'u izle."
+    },
+    {
+      "mistake": "Feature scaling yapmamak",
+      "why": "Farklı scale'deki features (örn: yaş [0-100], gelir [0-1M]) gradient descent'i yavaşlatır.",
+      "fix": "StandardScaler veya MinMaxScaler ile normalize et. Neural network'ler normalization'a çok hassas!"
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "network-architecture",
+      "type": "interactive",
+      "title": "Neural Network Architecture Visualizer",
+      "description": "Layer sayısı ve nöron sayısını değiştirerek network mimarisini görselleştirin"
+    },
+    {
+      "id": "activation-flow",
+      "type": "animation",
+      "title": "Forward Propagation Animation",
+      "description": "Veriyi network'ten geçirirken activation'ları canlı izleyin"
+    },
+    {
+      "id": "decision-boundary",
+      "type": "plot",
+      "title": "Decision Boundary (2D)",
+      "description": "2D veri için neural network'ün öğrendiği decision boundary'yi görün"
+    },
+    {
+      "id": "training-curves",
+      "type": "plot",
+      "title": "Training & Validation Curves",
+      "description": "Loss ve accuracy'nin epoch'lar boyunca değişimi. Overfitting tespiti"
+    }
+  ],
+  "references": [
+    {
+      "title": "Deep Learning Book - Chapter 6: Deep Feedforward Networks",
+      "url": "https://www.deeplearningbook.org/contents/mlp.html",
+      "type": "book",
+      "author": "Ian Goodfellow, Yoshua Bengio, Aaron Courville"
+    },
+    {
+      "title": "CS231n: Neural Networks Part 1",
+      "url": "http://cs231n.github.io/neural-networks-1/",
+      "type": "tutorial",
+      "author": "Stanford University"
+    },
+    {
+      "title": "PyTorch Neural Network Tutorial",
+      "url": "https://pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Universal Approximation Theorem",
+      "url": "https://en.wikipedia.org/wiki/Universal_approximation_theorem",
+      "type": "article"
+    },
+    {
+      "title": "Batch Normalization Paper",
+      "url": "https://arxiv.org/abs/1502.03167",
+      "type": "paper",
+      "author": "Ioffe & Szegedy, 2015"
+    },
+    {
+      "title": "Deep Residual Learning (ResNet)",
+      "url": "https://arxiv.org/abs/1512.03385",
+      "type": "paper",
+      "author": "He et al., 2015"
+    }
+  ]
+}

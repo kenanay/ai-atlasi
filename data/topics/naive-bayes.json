@@ -1,0 +1,268 @@
+{
+  "id": "naive-bayes",
+  "title": "Naive Bayes Sınıflandırıcı",
+  "category": "classical-ml",
+  "level": 1,
+  "estimatedTime": 40,
+  "description": "Bayes teoremini kullanarak olasılıklı sınıflandırma yapan, 'naive' (naif) özellik bağımsızlığı varsayımı ile hızlı ve etkili bir algoritma.",
+  "prerequisites": ["logistic-regression"],
+  "tags": ["classification", "probabilistic", "text-classification", "spam-filter", "supervised"],
+  "content": {
+    "level0_basic": "E-posta kutunuza gelen bir mesajı düşünün. 'Ücretsiz', 'Kazan', 'Tıkla' gibi kelimeler varsa spam olma olasılığı yüksektir. Naive Bayes tam olarak bunu yapar: Geçmişte spam/normal e-postalar gördü, her kelimenin spam olma olasılığını öğrendi. Yeni bir e-posta geldiğinde, içindeki kelimelerin olasılıklarını çarparak 'Bu %95 spam!' der. Gmail'in spam filtresi de benzer çalışır!",
+    "level1_beginner": "Naive Bayes, Bayes Teoremi'ne dayanan olasılıksal bir sınıflandırıcıdır. 'Naive' (naif) kelimesi, özelliklerin birbirinden **bağımsız** olduğunu varsaymasından gelir (gerçekte bağımlı olsalar bile!).\n\n**Bayes Teoremi:**\n$$P(y|X) = \\frac{P(X|y) \\cdot P(y)}{P(X)}$$\n\nBurada:\n- $P(y|X)$: **Posterior** - X özellikleri verildiğinde y sınıfının olasılığı (bulmak istediğimiz!)\n- $P(X|y)$: **Likelihood** - y sınıfındayken X özelliklerini görme olasılığı\n- $P(y)$: **Prior** - y sınıfının genel olasılığı (eğitim verisinden)\n- $P(X)$: **Evidence** - X'in genel olasılığı (tüm sınıflarda sabit, görmezden gelebiliriz)\n\n**Naive Varsayım:**\nTüm özellikler birbirinden bağımsızdır:\n$$P(X|y) = P(x_1|y) \\cdot P(x_2|y) \\cdot ... \\cdot P(x_n|y)$$\n\n**Sınıflandırma:**\nEn yüksek posterior olasılığa sahip sınıfı seç:\n$$\\hat{y} = \\arg\\max_{y} P(y) \\prod_{i=1}^{n} P(x_i|y)$$\n\n**Çeşitleri:**\n- **Gaussian NB:** Sürekli özellikler için (normal dağılım varsayımı)\n- **Multinomial NB:** Sayma verisi için (text classification, word counts)\n- **Bernoulli NB:** Binary özellikler için (kelime var/yok)",
+    "level2_application": "Naive Bayes özellikle text classification'da (spam detection, sentiment analysis) çok başarılıdır.\n\n**Text Classification Örneği:**\n```python\nfrom sklearn.naive_bayes import MultinomialNB\nfrom sklearn.feature_extraction.text import CountVectorizer\n\n# Email verisi\nemails = ['Win free money', 'Meeting tomorrow', 'Click here now', 'Lunch at 12']\nlabels = ['spam', 'ham', 'spam', 'ham']\n\n# Vectorize (bag of words)\nvectorizer = CountVectorizer()\nX = vectorizer.fit_transform(emails)\n\n# Model eğit\nmodel = MultinomialNB()\nmodel.fit(X, labels)\n\n# Yeni email tahmin et\ntest = vectorizer.transform(['Free lunch tomorrow'])\nprint(model.predict(test))  # Spam mi, ham mi?\nprint(model.predict_proba(test))  # Olasılıklar\n```\n\n**Neden Bu Kadar Etkili?**\n1. **Hızlı:** Training ve prediction çok hızlı (linear complexity)\n2. **Az veri:** Küçük veri setlerinde bile çalışır\n3. **High-dimensional:** Çok sayıda özellikle (10000+ kelime) başa çıkar\n4. **Probabilistic:** Olasılık skorları döndürür (confidence)\n\n**Laplace Smoothing:**\nEğitimde hiç görülmemiş kelimeler için:\n$$P(x_i|y) = \\frac{count(x_i, y) + \\alpha}{count(y) + \\alpha \\cdot n_{features}}$$\n$\\alpha=1$ genellikle kullanılır (add-one smoothing).",
+    "level3_advanced": "Naive Bayes'in matematiksel detayları ve türleri:\n\n**1. Gaussian Naive Bayes (Sürekli Özellikler):**\nHer özellik normal dağılıma sahiptir:\n$$P(x_i|y) = \\frac{1}{\\sqrt{2\\pi\\sigma_y^2}} \\exp\\left(-\\frac{(x_i - \\mu_y)^2}{2\\sigma_y^2}\\right)$$\n\nHer sınıf için $\\mu_y$ (mean) ve $\\sigma_y^2$ (variance) hesaplanır:\n$$\\mu_y = \\frac{1}{n_y} \\sum_{i:y_i=y} x_i$$\n$$\\sigma_y^2 = \\frac{1}{n_y} \\sum_{i:y_i=y} (x_i - \\mu_y)^2$$\n\n**2. Multinomial Naive Bayes (Text Classification):**\nÖzellik $x_i$ bir kelimenin kaç kez göründüğüdür:\n$$P(x_i|y) = \\frac{N_{yi} + \\alpha}{N_y + \\alpha \\cdot n}$$\n- $N_{yi}$: y sınıfında $x_i$ kelimesinin toplam sayısı\n- $N_y$: y sınıfındaki tüm kelimelerin toplamı\n- $\\alpha$: Laplace smoothing parametresi\n\n**3. Bernoulli Naive Bayes (Binary Features):**\nKelime var mı yok mu (0/1):\n$$P(x_i|y) = P(i|y) \\cdot x_i + (1 - P(i|y)) \\cdot (1 - x_i)$$\n\n**Log-Probability Trick:**\nÇok küçük olasılıkların çarpımı underflow'a yol açar. Log kullan:\n$$\\log P(y|X) = \\log P(y) + \\sum_{i=1}^{n} \\log P(x_i|y)$$\n\n**Naive Varsayımı Neden İşliyor?**\nÖzellikler gerçekte bağımlı olsa bile (örn. 'free' ve 'money' spam'de sık beraber görünür), Naive Bayes pratikte iyi çalışır:\n- Sınıflandırma için sadece **hangi sınıfın daha olası olduğu** önemli\n- Absolute olasılıklar yanlış olabilir ama **sıralama** doğrudur\n- Calibration yetersiz ama discrimination iyidir",
+    "level4_expert": "Production'da Naive Bayes ve advanced uygulamalar:\n\n**1. Complement Naive Bayes (İmbalanced Data):**\nStandart Multinomial NB imbalanced data'da zayıf. Complement NB her sınıf için **tüm diğer sınıfları** kullanır:\n$$\\hat{\\theta}_{ci} = \\frac{\\alpha_i + \\sum_{j:y_j \\neq c} d_{ji}}{\\alpha + \\sum_{j:y_j \\neq c} \\sum_{k} d_{jk}}$$\nImbalanced text classification'da Multinomial'den çok daha iyi!\n\n**2. Feature Selection ile Naive Bayes:**\nYüksek boyutlu text data'da (50K+ features) gereksiz kelimeler gürültü yaratır:\n- **Chi-square test:** Her feature'ın sınıfla bağımsızlığını test et\n- **Mutual Information:** Feature ve sınıf arasındaki bilgi miktarı\n- Top 1000-5000 feature seç\n\n**3. Real-Time Spam Detection Pipeline:**\n```python\n# Production-ready spam detector\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.naive_bayes import MultinomialNB\nfrom sklearn.model_selection import cross_val_score\n\npipeline = Pipeline([\n    ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1,2))),\n    ('clf', MultinomialNB(alpha=0.1))\n])\n\n# Train\npipeline.fit(X_train, y_train)\n\n# Real-time prediction (very fast!)\ndef classify_email(email_text):\n    prob = pipeline.predict_proba([email_text])[0]\n    return {'spam': prob[1], 'ham': prob[0]}\n```\n\n**4. Calibration:**\nNaive Bayes olasılıkları extreme'dir (0.99 veya 0.01). İyi kararlar için calibration gerekir:\n```python\nfrom sklearn.calibration import CalibratedClassifierCV\n\ncalibrated = CalibratedClassifierCV(MultinomialNB(), method='sigmoid', cv=5)\ncalibrated.fit(X_train, y_train)\n# Şimdi olasılıklar daha realistic!\n```\n\n**5. Streaming Learning:**\nNaive Bayes online learning destekler (yeni veri geldikçe güncelle):\n```python\nnb = MultinomialNB()\nnb.partial_fit(X_batch1, y_batch1, classes=[0, 1])\nnb.partial_fit(X_batch2, y_batch2)  # Yeni veri geldi, modeli güncelle\n```\n\n**6. Büyük Ölçekte:**\n- **Memory efficient:** Feature counts saklar (parametrik model)\n- **No iterations:** Tek geçişte eğitim (linear complexity)\n- **Parallelizable:** Her sınıf bağımsız hesaplanabilir\n- Gmail gibi sistemlerde milyarlarca email'e ölçeklenebilir"
+  },
+  "whatIsIt": "Naive Bayes, Bayes Teoremi ve özellik bağımsızlığı varsayımı kullanarak olasılıksal sınıflandırma yapan, hızlı ve etkili bir makine öğrenmesi algoritmasıdır.",
+  "whyNeeded": "Text classification, spam detection, sentiment analysis için ideal. Çok hızlı, az veri gerektirir, yüksek boyutlu verilerle başa çıkar ve olasılık skorları döndürür. Baseline model olarak mükemmeldir.",
+  "realWorldAnalogy": "Bir doktor hasta belirtilerine bakarak hastalık teşhisi koyar. 'Ateş varsa %80, öksürük varsa %60, baş ağrısı varsa %40 grip olasılığı' der. Tüm belirtilerin olasılıklarını çarparak en olası hastalığı bulur. Naive Bayes de aynısını yapar ama 'belirtiler birbirinden bağımsız' varsayar (naive!).",
+  "mathematics": {
+    "formulas": [
+      "P(y|X) = \\frac{P(X|y) \\cdot P(y)}{P(X)} \\quad \\text{(Bayes Teoremi)}",
+      "P(X|y) = \\prod_{i=1}^{n} P(x_i|y) \\quad \\text{(Naive assumption)}",
+      "\\hat{y} = \\arg\\max_{y} P(y) \\prod_{i=1}^{n} P(x_i|y)",
+      "P(x_i|y) = \\frac{1}{\\sqrt{2\\pi\\sigma_y^2}} \\exp\\left(-\\frac{(x_i - \\mu_y)^2}{2\\sigma_y^2}\\right) \\quad \\text{(Gaussian)}",
+      "P(x_i|y) = \\frac{N_{yi} + \\alpha}{N_y + \\alpha \\cdot n} \\quad \\text{(Multinomial)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Her sınıf için prior olasılığı hesapla: P(y) = count(y) / total",
+      "2. Her feature için likelihood hesapla:",
+      "   - Gaussian: Her sınıf için mean (μ) ve variance (σ²) hesapla",
+      "   - Multinomial: Her kelime için count hesapla (Laplace smoothing ile)",
+      "   - Bernoulli: Her feature için var/yok olasılığı hesapla",
+      "3. Yeni örnek X geldiğinde, her sınıf için posterior hesapla:",
+      "   P(y|X) ∝ P(y) × ∏ P(xi|y)",
+      "4. Log-probability kullan (underflow önleme):",
+      "   log P(y|X) = log P(y) + Σ log P(xi|y)",
+      "5. En yüksek posterior olasılığa sahip sınıfı döndür:",
+      "   ŷ = argmax_y P(y|X)"
+    ],
+    "complexity": "Training: O(n×d) - tüm özellikler için count/stats hesapla. Prediction: O(c×d) - her sınıf için likelihood hesapla (c: sınıf, d: feature sayısı). Çok hızlı!"
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Naive Bayes Mantığı - Basit Örnek",
+      "code": "Hava Durumu Tahmini:\n\nGeçmiş veri:\n- Güneşli gün → Bahçede: 6 kez, Evde: 2 kez\n- Yağmurlu gün → Bahçede: 1 kez, Evde: 7 kez\n\nPrior olasılıklar:\n- P(Bahçede) = 7/16 = 0.44\n- P(Evde) = 9/16 = 0.56\n\nYeni gün: Hava Güneşli\n\nBahçede olma olasılığı:\nP(Bahçede | Güneşli) ∝ P(Güneşli | Bahçede) × P(Bahçede)\n                      = (6/7) × (7/16) = 0.375\n\nEvde olma olasılığı:\nP(Evde | Güneşli) ∝ P(Güneşli | Evde) × P(Evde)\n                  = (2/9) × (9/16) = 0.125\n\nTahmin: BAHÇEDE! (0.375 > 0.125)",
+      "explanation": "Naive Bayes geçmiş olasılıklara bakarak en olası durumu bulur."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "NumPy ile Sıfırdan Gaussian Naive Bayes",
+      "code": "import numpy as np\n\nclass GaussianNB:\n    def fit(self, X, y):\n        \"\"\"Gaussian Naive Bayes eğitimi\"\"\"\n        self.classes = np.unique(y)\n        n_classes = len(self.classes)\n        n_features = X.shape[1]\n        \n        # Her sınıf için mean ve variance\n        self.means = np.zeros((n_classes, n_features))\n        self.variances = np.zeros((n_classes, n_features))\n        self.priors = np.zeros(n_classes)\n        \n        for idx, c in enumerate(self.classes):\n            X_c = X[y == c]\n            self.means[idx, :] = X_c.mean(axis=0)\n            self.variances[idx, :] = X_c.var(axis=0)\n            self.priors[idx] = X_c.shape[0] / X.shape[0]\n    \n    def _calculate_likelihood(self, class_idx, x):\n        \"\"\"Gaussian likelihood hesapla\"\"\"\n        mean = self.means[class_idx]\n        var = self.variances[class_idx]\n        \n        # Gaussian PDF\n        numerator = np.exp(-((x - mean) ** 2) / (2 * var))\n        denominator = np.sqrt(2 * np.pi * var)\n        \n        # Log probability (underflow önleme)\n        return np.sum(np.log(numerator / denominator))\n    \n    def _calculate_posterior(self, x):\n        \"\"\"Her sınıf için posterior hesapla\"\"\"\n        posteriors = []\n        \n        for idx, c in enumerate(self.classes):\n            prior = np.log(self.priors[idx])\n            likelihood = self._calculate_likelihood(idx, x)\n            posterior = prior + likelihood\n            posteriors.append(posterior)\n        \n        return self.classes[np.argmax(posteriors)]\n    \n    def predict(self, X):\n        \"\"\"Tahmin yap\"\"\"\n        return np.array([self._calculate_posterior(x) for x in X])\n\n# Test\nfrom sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import accuracy_score\n\niris = load_iris()\nX_train, X_test, y_train, y_test = train_test_split(\n    iris.data, iris.target, test_size=0.2, random_state=42\n)\n\n# Custom Gaussian NB\nnb = GaussianNB()\nnb.fit(X_train, y_train)\ny_pred = nb.predict(X_test)\n\nprint(f\"Accuracy: {accuracy_score(y_test, y_pred):.2%}\")\nprint(f\"\\nİlk 5 tahmin: {y_pred[:5]}\")\nprint(f\"Gerçek değerler: {y_test[:5]}\")",
+      "explanation": "Sıfırdan Gaussian Naive Bayes. Her sınıf için mean ve variance hesaplar, Gaussian PDF ile likelihood bulur."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Text Classification - Spam Detection",
+      "code": "from sklearn.naive_bayes import MultinomialNB\nfrom sklearn.feature_extraction.text import CountVectorizer\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import classification_report, confusion_matrix\nimport numpy as np\n\n# Örnek email verisi\nemails = [\n    'Win free money now', 'Meeting at 3pm tomorrow',\n    'Claim your prize', 'Lunch with team',\n    'Click here for discount', 'Project deadline reminder',\n    'Get rich quick', 'Calendar invite sent',\n    'Limited time offer', 'Code review feedback',\n    'Congratulations you won', 'Team standup notes',\n    'Free iPhone', 'Budget report attached',\n    'Act now', 'Sprint planning meeting'\n]\n\nlabels = np.array([\n    1, 0, 1, 0, 1, 0, 1, 0,  # 1: spam, 0: ham\n    1, 0, 1, 0, 1, 0, 1, 0\n])\n\nprint(\"=\"*60)\nprint(\"NAIVE BAYES SPAM DETECTOR\")\nprint(\"=\"*60)\n\n# Train-test split\nX_train, X_test, y_train, y_test = train_test_split(\n    emails, labels, test_size=0.25, random_state=42, stratify=labels\n)\n\n# Vectorize (Bag of Words)\nvectorizer = CountVectorizer(lowercase=True, stop_words='english')\nX_train_vec = vectorizer.fit_transform(X_train)\nX_test_vec = vectorizer.transform(X_test)\n\nprint(f\"\\nVocabulary size: {len(vectorizer.vocabulary_)}\")\nprint(f\"Training samples: {X_train_vec.shape[0]}\")\nprint(f\"Features: {X_train_vec.shape[1]}\")\n\n# Multinomial Naive Bayes eğit\nnb = MultinomialNB(alpha=1.0)  # Laplace smoothing\nnb.fit(X_train_vec, y_train)\n\n# Test\ny_pred = nb.predict(X_test_vec)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"PERFORMANS\")\nprint(\"=\"*60)\nprint(classification_report(y_test, y_pred, \n                          target_names=['Ham', 'Spam']))\n\nprint(\"\\nConfusion Matrix:\")\nprint(confusion_matrix(y_test, y_pred))\n\n# Yeni emailler test et\nprint(\"\\n\" + \"=\"*60)\nprint(\"YENİ EMAIL TAHMİNLERİ\")\nprint(\"=\"*60)\n\nnew_emails = [\n    'Free money waiting for you',\n    'Meeting notes from today',\n    'Click now to win',\n    'Your invoice is ready'\n]\n\nnew_vec = vectorizer.transform(new_emails)\npredictions = nb.predict(new_vec)\nprobs = nb.predict_proba(new_vec)\n\nfor email, pred, prob in zip(new_emails, predictions, probs):\n    label = 'SPAM' if pred == 1 else 'HAM'\n    confidence = prob[pred] * 100\n    print(f\"\\n'{email}'\")\n    print(f\"  → {label} ({confidence:.1f}% confidence)\")\n\n# En önemli kelimeler\nprint(\"\\n\" + \"=\"*60)\nprint(\"SPAM KELİMELERİ (Top 5)\")\nprint(\"=\"*60)\n\nfeature_names = vectorizer.get_feature_names_out()\nlog_probs = nb.feature_log_prob_\nspam_log_probs = log_probs[1]  # Spam class\n\ntop_spam_indices = np.argsort(spam_log_probs)[-5:]\nfor idx in reversed(top_spam_indices):\n    print(f\"  '{feature_names[idx]}': {np.exp(spam_log_probs[idx]):.4f}\")",
+      "explanation": "Gerçek dünya spam detection! Multinomial NB ile text classification. Bag-of-words vectorization ve Laplace smoothing kullanır."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Scikit-Learn ile Tüm Naive Bayes Çeşitleri",
+      "code": "from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB\nfrom sklearn.datasets import make_classification, fetch_20newsgroups\nfrom sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer\nfrom sklearn.model_selection import cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"NAIVE BAYES ÇEŞİTLERİ KARŞILAŞTIRMASI\")\nprint(\"=\"*60)\n\n# 1. GAUSSIAN NB - Sürekli özellikler\nprint(\"\\n1️⃣  GAUSSIAN NAIVE BAYES (Sürekli Özellikler)\")\nX, y = make_classification(n_samples=1000, n_features=20, \n                          n_informative=15, random_state=42)\n\ngaussian_nb = GaussianNB()\nscores = cross_val_score(gaussian_nb, X, y, cv=5)\nprint(f\"   Cross-val accuracy: {scores.mean():.4f} (±{scores.std():.4f})\")\nprint(f\"   Kullanım: Sürekli sayısal özellikler (normal dağılım varsayımı)\")\n\n# 2. MULTINOMIAL NB - Count data (text)\nprint(\"\\n2️⃣  MULTINOMIAL NAIVE BAYES (Count Data / Text)\")\n\n# Mini text dataset\ntexts = [\n    'machine learning is great', 'deep learning neural networks',\n    'python programming', 'data science analytics',\n    'artificial intelligence', 'computer vision image',\n] * 20\n\nlabels = [0, 0, 1, 1, 0, 0] * 20  # 0: AI, 1: Programming\n\nvectorizer = CountVectorizer()\nX_text = vectorizer.fit_transform(texts)\n\nmultinomial_nb = MultinomialNB(alpha=1.0)\nscores = cross_val_score(multinomial_nb, X_text, labels, cv=5)\nprint(f\"   Cross-val accuracy: {scores.mean():.4f} (±{scores.std():.4f})\")\nprint(f\"   Kullanım: Word counts, n-grams, TF-IDF (non-negative features)\")\n\n# 3. BERNOULLI NB - Binary features\nprint(\"\\n3️⃣  BERNOULLI NAIVE BAYES (Binary Features)\")\n\n# Binary features (kelime var mı yok mu)\nX_binary = (X_text > 0).astype(int)  # Count → Binary\n\nbernoulli_nb = BernoulliNB(alpha=1.0)\nscores = cross_val_score(bernoulli_nb, X_binary, labels, cv=5)\nprint(f\"   Cross-val accuracy: {scores.mean():.4f} (±{scores.std():.4f})\")\nprint(f\"   Kullanım: Binary features (kelime var/yok, feature presence)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"KARŞILAŞTIRMA ÖZETİ\")\nprint(\"=\"*60)\nprint(\"\\n📊 Ne Zaman Hangisi?\")\nprint(\"\\n  • Gaussian NB:\")\nprint(\"      - Sürekli sayısal özellikler\")\nprint(\"      - Normal dağılım varsayımı uygun\")\nprint(\"      - Örnek: Iris, sensör verileri, numerical features\")\n\nprint(\"\\n  • Multinomial NB:\")\nprint(\"      - Count/frequency data\")\nprint(\"      - Text classification (word counts, TF-IDF)\")\nprint(\"      - Örnek: Spam detection, sentiment analysis, topic classification\")\n\nprint(\"\\n  • Bernoulli NB:\")\nprint(\"      - Binary features (0/1)\")\nprint(\"      - Document classification (kelime var mı?)\")\nprint(\"      - Örnek: Feature presence/absence, binary sensors\")\n\n# Hyperparameter: alpha (Laplace smoothing)\nprint(\"\\n\" + \"=\"*60)\nprint(\"LAPLACE SMOOTHING (alpha)\")\nprint(\"=\"*60)\nprint(\"\\nAlpha değeri etkisi:\")\n\nalphas = [0.01, 0.1, 0.5, 1.0, 2.0, 5.0]\nfor alpha in alphas:\n    nb = MultinomialNB(alpha=alpha)\n    scores = cross_val_score(nb, X_text, labels, cv=3)\n    print(f\"  alpha={alpha:4.2f}: {scores.mean():.4f}\")\n\nprint(\"\\n💡 Alpha çok küçük → Overfitting (unseen words problemi)\")\nprint(\"   Alpha çok büyük → Underfitting (prior dominant)\")\nprint(\"   Alpha=1.0 genellikle iyi başlangıç (add-one smoothing)\")",
+      "explanation": "Scikit-learn'deki 3 Naive Bayes çeşidi: Gaussian (continuous), Multinomial (counts), Bernoulli (binary). Her birinin kullanım alanı farklı!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Real-World: Sentiment Analysis Pipeline",
+      "code": "from sklearn.naive_bayes import MultinomialNB\nfrom sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nfrom sklearn.metrics import classification_report\nimport numpy as np\n\n# Örnek tweet verisi (gerçek projede binlerce olur)\ntweets = [\n    'I love this product amazing', 'Terrible waste of money',\n    'Best purchase ever', 'Completely disappointed',\n    'Highly recommend', 'Worst experience',\n    'Fantastic quality', 'Do not buy',\n    'Very satisfied', 'Total garbage',\n    'Excellent service', 'Awful product',\n    'Great value', 'Horrible quality',\n    'Perfect', 'Waste of time'\n] * 10  # 160 örnek\n\nsentiments = np.array([1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0] * 10)\n# 1: Positive, 0: Negative\n\nprint(\"=\"*60)\nprint(\"SENTIMENT ANALYSIS PIPELINE\")\nprint(\"=\"*60)\n\n# Train-test split\nX_train, X_test, y_train, y_test = train_test_split(\n    tweets, sentiments, test_size=0.2, random_state=42, stratify=sentiments\n)\n\nprint(f\"\\nTraining samples: {len(X_train)}\")\nprint(f\"Test samples: {len(X_test)}\")\n\n# Pipeline: Vectorization + Classification\npipeline = Pipeline([\n    ('tfidf', TfidfVectorizer(\n        lowercase=True,\n        max_features=1000,\n        ngram_range=(1, 2),  # unigrams ve bigrams\n        min_df=2  # En az 2 dokümanda görülmeli\n    )),\n    ('clf', MultinomialNB())\n])\n\n# Hyperparameter tuning\nparam_grid = {\n    'tfidf__max_features': [500, 1000, 2000],\n    'tfidf__ngram_range': [(1, 1), (1, 2)],\n    'clf__alpha': [0.1, 0.5, 1.0, 2.0]\n}\n\nprint(\"\\nGrid Search başlıyor...\")\ngrid_search = GridSearchCV(\n    pipeline, param_grid, cv=5, \n    scoring='f1', n_jobs=-1, verbose=1\n)\n\ngrid_search.fit(X_train, y_train)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"EN İYİ PARAMETRELER\")\nprint(\"=\"*60)\nfor param, value in grid_search.best_params_.items():\n    print(f\"  {param}: {value}\")\nprint(f\"\\nBest F1 Score: {grid_search.best_score_:.4f}\")\n\n# Test performance\ny_pred = grid_search.predict(X_test)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TEST PERFORMANSI\")\nprint(\"=\"*60)\nprint(classification_report(y_test, y_pred, \n                          target_names=['Negative', 'Positive']))\n\n# Yeni tweet'ler tahmin et\nprint(\"\\n\" + \"=\"*60)\nprint(\"YENİ TWEETLERİ TAHMİN ET\")\nprint(\"=\"*60)\n\nnew_tweets = [\n    'This is absolutely amazing I love it',\n    'Terrible product waste of money',\n    'Not bad but could be better',\n    'Fantastic quality highly satisfied'\n]\n\npredictions = grid_search.predict(new_tweets)\nprobs = grid_search.predict_proba(new_tweets)\n\nfor tweet, pred, prob in zip(new_tweets, predictions, probs):\n    sentiment = 'POSITIVE' if pred == 1 else 'NEGATIVE'\n    confidence = prob[pred] * 100\n    print(f\"\\n'{tweet}'\")\n    print(f\"  → {sentiment} ({confidence:.1f}% confidence)\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"DEPLOYMENT HAZIR!\")\nprint(\"=\"*60)\nprint(\"\\n💡 Bu pipeline production'a deploy edilebilir:\")\nprint(\"  1. Pickle ile kaydet: joblib.dump(grid_search, 'model.pkl')\")\nprint(\"  2. FastAPI/Flask ile REST API oluştur\")\nprint(\"  3. Real-time sentiment analysis yapabilir!\")",
+      "explanation": "Production-ready sentiment analysis! TF-IDF + Multinomial NB pipeline, hyperparameter tuning, real-time prediction. Gerçek projelerde kullanılabilir."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Complement Naive Bayes - Imbalanced Data",
+      "code": "from sklearn.naive_bayes import MultinomialNB, ComplementNB\nfrom sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.model_selection import cross_val_score\nfrom sklearn.metrics import classification_report\nimport numpy as np\n\n# Imbalanced text classification örneği\nprint(\"=\"*60)\nprint(\"COMPLEMENT NB vs MULTINOMIAL NB (Imbalanced Data)\")\nprint(\"=\"*60)\n\n# Simüle edilmiş imbalanced dataset\n# Class 0: 80% (majority), Class 1: 15%, Class 2: 5% (minority)\ntexts_class0 = ['normal text data sample'] * 160\ntexts_class1 = ['special category words'] * 30\ntexts_class2 = ['rare minority class'] * 10\n\ntexts = texts_class0 + texts_class1 + texts_class2\nlabels = ([0] * 160) + ([1] * 30) + ([2] * 10)\n\n# Shuffle\nindices = np.random.permutation(len(texts))\ntexts = [texts[i] for i in indices]\nlabels = [labels[i] for i in indices]\n\nprint(f\"\\nClass distribution:\")\nfor cls in range(3):\n    count = labels.count(cls)\n    pct = count / len(labels) * 100\n    print(f\"  Class {cls}: {count} samples ({pct:.1f}%)\")\n\n# Vectorize\nvectorizer = TfidfVectorizer(max_features=100)\nX = vectorizer.fit_transform(texts)\ny = np.array(labels)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"PERFORMANS KARŞILAŞTIRMASI\")\nprint(\"=\"*60)\n\n# Standard Multinomial NB\nprint(\"\\n1️⃣  Multinomial Naive Bayes:\")\nmnb = MultinomialNB()\nscores_mnb = cross_val_score(mnb, X, y, cv=5, scoring='f1_macro')\nprint(f\"   F1 Macro Score: {scores_mnb.mean():.4f} (±{scores_mnb.std():.4f})\")\n\n# Complement NB (imbalanced data için optimize)\nprint(\"\\n2️⃣  Complement Naive Bayes:\")\ncnb = ComplementNB()\nscores_cnb = cross_val_score(cnb, X, y, cv=5, scoring='f1_macro')\nprint(f\"   F1 Macro Score: {scores_cnb.mean():.4f} (±{scores_cnb.std():.4f})\")\n\nimprovement = ((scores_cnb.mean() - scores_mnb.mean()) / scores_mnb.mean()) * 100\nprint(f\"\\n✨ Complement NB improvement: +{improvement:.1f}%\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"COMPLEMENT NB NASIL ÇALIŞIR?\")\nprint(\"=\"*60)\nprint(\"\"\"\n💡 Complement Naive Bayes:\n  \n  Standard Multinomial NB:\n    - Her sınıf için o sınıfın feature'larını kullanır\n    - Imbalanced data'da majority class dominant olur\n  \n  Complement NB:\n    - Her sınıf için DİĞER TÜM SINIFLARIN feature'larını kullanır\n    - Sınıfı tanımlamak için 'ne olmadığına' bakar\n    - Imbalanced data'da çok daha iyi!\n  \n  Formül:\n    θ̂_ci = (α_i + Σ_{j:y_j≠c} d_ji) / (α + Σ_{j:y_j≠c} Σ_k d_jk)\n  \n  Kullanım:\n    - Imbalanced text classification\n    - Multi-class problems (3+ class)\n    - News categorization, topic classification\n\"\"\")\n\nprint(\"\\n🎯 Ne Zaman Complement NB?\")\nprint(\"  ✓ Imbalanced data (class distribution çok farklı)\")\nprint(\"  ✓ Multi-class classification (3+ sınıf)\")\nprint(\"  ✓ Text classification\")\nprint(\"  ✗ Binary classification (Multinomial ile aynı)\")\nprint(\"  ✗ Balanced data (gereksiz complexity)\")",
+      "explanation": "Complement Naive Bayes imbalanced data için optimize edilmiş varyant. Her sınıf için 'diğer sınıfları' kullanarak daha iyi generalization sağlar."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production Pipeline + Calibration + Online Learning",
+      "code": "from sklearn.naive_bayes import MultinomialNB\nfrom sklearn.calibration import CalibratedClassifierCV\nfrom sklearn.feature_extraction.text import HashingVectorizer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import brier_score_loss, log_loss\nimport numpy as np\nimport joblib\n\nprint(\"=\"*60)\nprint(\"PRODUCTION-READY NAIVE BAYES PIPELINE\")\nprint(\"=\"*60)\n\n# Örnek data (gerçekte çok daha büyük)\ntexts_train = [\n    'urgent call now', 'meeting tomorrow', 'free money win',\n    'project update', 'click here now', 'team lunch',\n    'limited offer', 'code review', 'act fast',\n    'weekly report', 'exclusive deal', 'standup notes'\n] * 50\n\ny_train = np.array([1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0] * 50)\n\ntexts_test = ['win prize', 'meeting notes', 'free offer', 'project deadline'] * 10\ny_test = np.array([1, 0, 1, 0] * 10)\n\nprint(\"\\n1️⃣  HASHING VECTORIZER (Memory Efficient)\")\nprint(\"   → Fixed-size feature space (n_features)\")\nprint(\"   → No vocabulary storage (stateless)\")\nprint(\"   → Online learning için ideal\")\n\n# HashingVectorizer: Memory efficient, stateless\nvectorizer = HashingVectorizer(\n    n_features=2**10,  # 1024 features\n    alternate_sign=False,  # Non-negative (Multinomial NB için)\n    norm=None\n)\n\nX_train = vectorizer.transform(texts_train)\nX_test = vectorizer.transform(texts_test)\n\nprint(f\"\\n   Feature space: {X_train.shape[1]}\")\nprint(f\"   Memory: ~{X_train.data.nbytes / 1024:.1f} KB (sparse)\")\n\n# Base model\nbase_nb = MultinomialNB(alpha=0.1)\nbase_nb.fit(X_train, y_train)\n\ny_pred_base = base_nb.predict(X_test)\ny_prob_base = base_nb.predict_proba(X_test)\n\nprint(\"\\n2️⃣  PROBABILITY CALIBRATION\")\nprint(\"   → Naive Bayes olasılıkları extreme (0.99 vs 0.01)\")\nprint(\"   → Calibration daha realistic olasılıklar verir\")\nprint(\"   → Sigmoid or Isotonic regression\")\n\n# Calibrated model\ncalibrated_nb = CalibratedClassifierCV(\n    base_nb, method='sigmoid', cv=3\n)\ncalibrated_nb.fit(X_train, y_train)\n\ny_pred_cal = calibrated_nb.predict(X_test)\ny_prob_cal = calibrated_nb.predict_proba(X_test)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"CALIBRATION KARŞILAŞTIRMASI\")\nprint(\"=\"*60)\n\n# Brier score (lower is better)\nbrier_base = brier_score_loss(y_test, y_prob_base[:, 1])\nbrier_cal = brier_score_loss(y_test, y_prob_cal[:, 1])\n\nprint(f\"\\nBrier Score (calibration quality):\")\nprint(f\"  Base NB:       {brier_base:.4f}\")\nprint(f\"  Calibrated NB: {brier_cal:.4f}\")\nprint(f\"  Improvement:   {((brier_base - brier_cal) / brier_base * 100):.1f}%\")\n\nprint(\"\\n💡 Brier Score: Olasılık tahminlerinin kalitesi\")\nprint(\"   0.0 = Mükemmel, 1.0 = Kötü\")\nprint(\"   Calibrated model daha güvenilir olasılıklar verir!\")\n\nprint(\"\\n3️⃣  ONLINE LEARNING (Streaming Data)\")\nprint(\"   → Yeni veri geldikçe modeli güncelle\")\nprint(\"   → partial_fit() kullan\")\nprint(\"   → Memory efficient (tüm veriyi saklamaya gerek yok)\")\n\n# Online learning demonstration\nonline_nb = MultinomialNB(alpha=0.1)\n\n# İlk batch\nbatch1_texts = texts_train[:100]\nbatch1_labels = y_train[:100]\nX_batch1 = vectorizer.transform(batch1_texts)\n\nonline_nb.partial_fit(X_batch1, batch1_labels, classes=[0, 1])\nprint(f\"\\n   Batch 1: {len(batch1_texts)} samples learned\")\n\n# İkinci batch (yeni veri geldi)\nbatch2_texts = texts_train[100:200]\nbatch2_labels = y_train[100:200]\nX_batch2 = vectorizer.transform(batch2_texts)\n\nonline_nb.partial_fit(X_batch2, batch2_labels)\nprint(f\"   Batch 2: {len(batch2_texts)} samples learned\")\n\n# Üçüncü batch\nbatch3_texts = texts_train[200:]\nbatch3_labels = y_train[200:]\nX_batch3 = vectorizer.transform(batch3_texts)\n\nonline_nb.partial_fit(X_batch3, batch3_labels)\nprint(f\"   Batch 3: {len(batch3_texts)} samples learned\")\n\ntest_acc = online_nb.score(X_test, y_test)\nprint(f\"\\n   Final Test Accuracy: {test_acc:.2%}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"DEPLOYMENT\")\nprint(\"=\"*60)\n\nprint(\"\"\"\n💾 Model Kaydetme:\n   joblib.dump(calibrated_nb, 'spam_classifier.pkl')\n   joblib.dump(vectorizer, 'vectorizer.pkl')\n\n🚀 FastAPI Deployment:\n   \n   from fastapi import FastAPI\n   import joblib\n   \n   app = FastAPI()\n   model = joblib.load('spam_classifier.pkl')\n   vectorizer = joblib.load('vectorizer.pkl')\n   \n   @app.post('/predict')\n   def predict(text: str):\n       X = vectorizer.transform([text])\n       prob = model.predict_proba(X)[0]\n       return {\n           'spam_probability': float(prob[1]),\n           'is_spam': bool(prob[1] > 0.5)\n       }\n\n⚡ Performance:\n   - Inference: <1ms per prediction\n   - Throughput: 1000+ requests/second\n   - Memory: <100MB for model\n   \n📈 Monitoring:\n   - Track prediction confidence\n   - Log misclassifications\n   - Retrain periodically with partial_fit()\n   - A/B test calibrated vs non-calibrated\n\"\"\")\n\nprint(\"\\n✅ Production-ready Naive Bayes pipeline complete!\")",
+      "explanation": "Production-grade NB pipeline: HashingVectorizer (memory efficient), Calibration (better probabilities), Online learning (streaming data). Real-world deployment hazır!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Naive Bayes'in 'naive' (naif) olmasının sebebi nedir?",
+      "options": [
+        "Algoritma basit olduğu için",
+        "Tüm özelliklerin birbirinden bağımsız olduğunu varsaydığı için",
+        "Sadece küçük veri setlerinde çalıştığı için",
+        "Eğitim süresi çok kısa olduğu için"
+      ],
+      "correct": 1,
+      "explanation": "Naive Bayes, özelliklerin birbirinden bağımsız olduğunu varsayar (P(X|y) = ∏P(xi|y)). Gerçekte özellikler bağımlı olsa bile bu varsayım pratikte iyi çalışır!"
+    },
+    {
+      "question": "Text classification için hangi Naive Bayes varyantı en uygun?",
+      "options": [
+        "Gaussian NB - normal dağılım varsayımı",
+        "Multinomial NB - word counts/frequencies için",
+        "Bernoulli NB - binary features için",
+        "Complement NB - sadece balanced data için"
+      ],
+      "correct": 1,
+      "explanation": "Multinomial NB text classification için ideal. Word counts, TF-IDF gibi count/frequency data ile çalışır. Spam detection, sentiment analysis'te yaygın kullanılır."
+    },
+    {
+      "question": "Laplace smoothing (alpha=1) neden kullanılır?",
+      "options": [
+        "Model accuracy'sini artırmak için",
+        "Eğitimde hiç görülmemiş kelimelerin olasılığını sıfır olmasını önlemek için",
+        "Training süresini azaltmak için",
+        "Feature sayısını azaltmak için"
+      ],
+      "correct": 1,
+      "explanation": "Eğitimde görülmeyen bir kelime test'te çıkarsa P(kelime|sınıf)=0 olur ve tüm posterior sıfır olur! Laplace smoothing her kelimeye +alpha (genellikle 1) ekler, sıfır olasılıkları önler."
+    },
+    {
+      "question": "Naive Bayes'in time complexity'si nedir?",
+      "options": [
+        "Training: O(n²), Prediction: O(n)",
+        "Training: O(n×d), Prediction: O(c×d)",
+        "Training: O(n log n), Prediction: O(log n)",
+        "Training: O(n³), Prediction: O(d²)"
+      ],
+      "correct": 1,
+      "explanation": "Training O(n×d): her örnek için feature counts hesapla. Prediction O(c×d): her sınıf için tüm feature'ların likelihood'ını hesapla. Çok hızlı! (c: sınıf, d: feature, n: örnek)"
+    },
+    {
+      "question": "Imbalanced text classification için en iyi Naive Bayes varyantı hangisi?",
+      "options": [
+        "Gaussian NB",
+        "Multinomial NB",
+        "Complement NB",
+        "Bernoulli NB"
+      ],
+      "correct": 2,
+      "explanation": "Complement NB imbalanced data için özel olarak optimize edilmiştir. Her sınıf için 'diğer tüm sınıfların' feature'larını kullanır, minority class'ları daha iyi tanır."
+    },
+    {
+      "question": "Naive Bayes neden online learning için idealdir?",
+      "options": [
+        "GPU kullanır",
+        "Gradient descent kullanır",
+        "partial_fit() ile incremental training yapılabilir",
+        "Hiçbir parametre öğrenmez"
+      ],
+      "correct": 2,
+      "explanation": "Naive Bayes'in partial_fit() metodu var. Yeni veri batch'leri geldikçe modeli günceller. Tüm veriyi tekrar eğitmeye gerek yok! Streaming data için perfect."
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Text data'yı vectorize etmeden Naive Bayes'e vermek",
+      "why": "Naive Bayes numerical input bekler. 'spam' gibi text string'leri doğrudan işleyemez. Önce CountVectorizer veya TfidfVectorizer gerekli.",
+      "fix": "CountVectorizer veya TfidfVectorizer ile text'i sayısal vektöre çevir.",
+      "example": "# YANLIŞ\nnb.fit(emails, labels)  # emails = ['spam text', ...]\n\n# DOĞRU\nvectorizer = CountVectorizer()\nX = vectorizer.fit_transform(emails)\nnb.fit(X, labels)"
+    },
+    {
+      "mistake": "Gaussian NB için feature scaling yapmamak",
+      "why": "Gaussian NB her feature için mean/variance hesaplar. Farklı ölçeklerdeki özellikler (örn. yaş: 20-80, gelir: 20K-100K) variance hesabını bozar.",
+      "fix": "StandardScaler ile normalize et. Her feature'ın aynı ölçekte olması önemli.",
+      "example": "from sklearn.preprocessing import StandardScaler\n\nscaler = StandardScaler()\nX_train = scaler.fit_transform(X_train)\nX_test = scaler.transform(X_test)\n\ngaussian_nb.fit(X_train, y_train)"
+    },
+    {
+      "mistake": "Negative features ile Multinomial NB kullanmak",
+      "why": "Multinomial NB count data için tasarlandı (non-negative). TF-IDF'in negative değerleri veya StandardScaler sonrası negative değerler hata verir.",
+      "fix": "TF-IDF için norm='l2' kullan veya Gaussian NB'ye geç. Ya da non-negative features garanti et.",
+      "example": "# YANLIŞ\nvectorizer = TfidfVectorizer()\nX = vectorizer.fit_transform(texts)  # Negative olabilir\nMultinomialNB().fit(X, y)  # HATA!\n\n# DOĞRU 1: GaussianNB kullan\nGaussianNB().fit(X.toarray(), y)\n\n# DOĞRU 2: Binary features\nBernoulliNB().fit((X > 0).astype(int), y)"
+    },
+    {
+      "mistake": "Laplace smoothing (alpha) parametresini 0 yapmak",
+      "why": "alpha=0 olursa smoothing yok. Eğitimde görülmeyen kelime test'te çıkarsa P=0, tüm posterior sıfır olur! Zero-frequency problem.",
+      "fix": "alpha >= 0.01 kullan. Genellikle alpha=1.0 (add-one smoothing) iyi başlangıç. Grid search ile optimize et.",
+      "example": "# YANLIŞ\nnb = MultinomialNB(alpha=0.0)  # Zero-frequency problem!\n\n# DOĞRU\nnb = MultinomialNB(alpha=1.0)  # Laplace smoothing\n\n# EN İYİSİ: Tune et\nparam_grid = {'alpha': [0.01, 0.1, 0.5, 1.0, 2.0]}\nGridSearchCV(MultinomialNB(), param_grid, cv=5)"
+    },
+    {
+      "mistake": "Imbalanced data'da standard Multinomial NB kullanmak",
+      "why": "Çoğunluk sınıfı dominant olur, minority class'lar hiç tahmin edilemez. F1-score çok düşük.",
+      "fix": "Complement NB kullan (imbalanced data için optimize). Ya da class_prior parametresini ayarla.",
+      "example": "# İmbalanced data için\nfrom sklearn.naive_bayes import ComplementNB\n\n# DOĞRU\ncnb = ComplementNB()\ncnb.fit(X_train, y_train)  # Minority class'ları daha iyi yakalar"
+    },
+    {
+      "mistake": "Continuous features için Multinomial NB kullanmak",
+      "why": "Multinomial NB count/frequency data için. Sürekli sayısal özellikler (age, temperature) için tasarlanmadı. Negative değerler hata verir.",
+      "fix": "Gaussian NB kullan. Ya da continuous features'ı discretize et (binning).",
+      "example": "# YANLIŞ\nX = [[25.5, 60.2], [30.1, 55.8]]  # Continuous features\nMultinomialNB().fit(X, y)  # Hata veya kötü sonuç\n\n# DOĞRU\nGaussianNB().fit(X, y)  # Continuous için ideal"
+    },
+    {
+      "mistake": "Naive Bayes olasılıklarını calibration yapmadan kullanmak",
+      "why": "NB olasılıkları extreme'dir (0.99 veya 0.01). Threshold-based kararlar (örn. prob > 0.7 ise kabul et) yanıltıcıdır.",
+      "fix": "CalibratedClassifierCV ile calibration yap. Daha realistic olasılıklar elde et.",
+      "example": "from sklearn.calibration import CalibratedClassifierCV\n\n# Base model\nnb = MultinomialNB()\n\n# Calibrated model\ncalibrated = CalibratedClassifierCV(nb, method='sigmoid', cv=5)\ncalibrated.fit(X_train, y_train)\n# Şimdi olasılıklar daha güvenilir!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Bayes Teoremi formülü nedir?",
+      "back": "P(y|X) = P(X|y) × P(y) / P(X). Posterior = Likelihood × Prior / Evidence. Naive Bayes'in temeli!"
+    },
+    {
+      "front": "Naive assumption (naif varsayım) nedir?",
+      "back": "Tüm özellikler birbirinden bağımsızdır: P(X|y) = ∏P(xi|y). Gerçekte bağımlı olsalar bile bu varsayım pratikte iyi çalışır!"
+    },
+    {
+      "front": "3 Naive Bayes varyantı ve kullanım alanları?",
+      "back": "1) Gaussian NB: Continuous features (normal dağılım). 2) Multinomial NB: Count data, text (word counts). 3) Bernoulli NB: Binary features (var/yok)."
+    },
+    {
+      "front": "Laplace smoothing nedir ve neden gerekli?",
+      "back": "Eğitimde görülmeyen kelimelere +alpha ekler (genellikle 1). Zero-frequency problem'i çözer. P(kelime|sınıf) = (count + α) / (total + α×n)"
+    },
+    {
+      "front": "Naive Bayes neden text classification'da başarılı?",
+      "back": "1) Hızlı (linear complexity). 2) Yüksek boyutlu verilerle başa çıkar (10K+ kelime). 3) Az veri gerektirir. 4) Olasılık skorları verir. Spam, sentiment için ideal!"
+    },
+    {
+      "front": "Complement NB ne zaman kullanılır?",
+      "back": "Imbalanced text classification için! Her sınıf için 'diğer tüm sınıfların' feature'larını kullanır. Minority class'ları daha iyi tanır."
+    },
+    {
+      "front": "Naive Bayes time complexity?",
+      "back": "Training: O(n×d) - feature counts hesapla. Prediction: O(c×d) - her sınıf için likelihood hesapla. Çok hızlı!"
+    },
+    {
+      "front": "Log-probability trick neden kullanılır?",
+      "back": "Çok küçük olasılıkların çarpımı underflow'a yol açar. log P(y|X) = log P(y) + Σ log P(xi|y) kullan. Numeric stability!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "interactive",
+      "title": "Bayes Teoremi Görselleştirme",
+      "description": "Prior, Likelihood ve Posterior olasılıklarını interaktif olarak keşfedin. Bayes teoreminin nasıl çalıştığını görsel olarak anlayın.",
+      "component": "BayesTheoremVisualizer"
+    },
+    {
+      "type": "plot",
+      "title": "Gaussian NB: Feature Distributions",
+      "description": "Her sınıf için Gaussian dağılımlar. Mean ve variance'ın likelihood hesabına etkisi.",
+      "component": "GaussianDistributions"
+    },
+    {
+      "type": "interactive",
+      "title": "Text Classification: Word Probabilities",
+      "description": "Spam vs Ham classification'da kelimelerin olasılıkları. Hangi kelimeler spam göstergesi?",
+      "component": "WordProbabilities"
+    },
+    {
+      "type": "animation",
+      "title": "Naive Bayes Prediction Adım Adım",
+      "description": "Yeni bir document için NB'nin nasıl tahmin yaptığını adım adım: 1) Prior hesapla, 2) Likelihood hesapla, 3) Posterior bul, 4) Argmax al.",
+      "component": "NaiveBayesPrediction"
+    }
+  ]
+}

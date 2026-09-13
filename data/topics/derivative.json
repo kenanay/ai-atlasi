@@ -1,0 +1,168 @@
+{
+  "id": "derivative",
+  "title": "Türev ve Kısmi Türev",
+  "category": "calculus",
+  "level": 1,
+  "estimatedTime": 40,
+  "description": "Yapay zekanın nasıl öğrendiğini anlamak için en temel matematiksel araç: Türev, kısmi türev ve gradyan kavramları.",
+  "content": {
+    "level0_basic": "Türev, basitçe 'değişim hızı' demektir. Bir tepeden aşağı yuvarlanan topu düşünün: Topun bir sonraki anda ne kadar hızlanacağını veya hangi yöne gideceğini eğim belirler. İşte türev, bir eğrinin tam o noktadaki eğimidir. Yapay zekada model hata yaptığında 'Hangi parametreyi ne kadar değiştirirsem hata azalır?' sorusunun cevabını türev verir.",
+    "level1_beginner": "Kalkülüsün kalbi olan türev, bir fonksiyonun girdisindeki sonsuz küçük değişimin çıktıda yarattığı etkiyi ölçer.\n\n**Temel Kavramlar:**\n1. **Türev (Tek Değişkenli):** $f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$\n   - Fonksiyonun o andaki anlık değişim oranıdır.\n   - Pozitif türev: x artarsa y artar.\n   - Negatif türev: x artarsa y azalır.\n   - Sıfır türev: Tepe veya dip noktası (minimum/maksimum).\n\n2. **Kısmi Türev (Çok Değişkenli):** $\\frac{\\partial f}{\\partial x}$\n   - Modelin yüzlerce parametresi olduğunda, diğer tüm değişkenleri sabit tutup yalnızca tek bir parametreye göre türev almaya kısmi türev denir.\n\n3. **Gradyan (Gradient):** $\\nabla f$\n   - Tüm kısmi türevlerin bir araya gelmesiyle oluşan vektördür. Fonksiyonun en hızlı arttığı yönü gösterir. Tersi yönü ($-\\nabla f$) ise en hızlı azaldığı yönü gösterir!",
+    "level2_application": "Yapay öğrenmede parametreleri güncellemek için türevleri sayısal ve otomatik olarak hesaplarız:\n\n```python\n# Sayısal Türev (Finite Differences)\ndef numerical_derivative(f, x, h=1e-5):\n    return (f(x + h) - f(x - h)) / (2 * h)\n```\n\n**Derin Öğrenmede Autograd (Otomatik Türev):**\nModern kütüphaneler (PyTorch) geriye yayılım (backpropagation) sırasında hesaplama grafiği (computational graph) üzerinden otomatik olarak zincir kuralını (chain rule) işletir:\n\n```python\nimport torch\n\nx = torch.tensor(3.0, requires_grad=True)\ny = x**2 + 2*x + 1\ny.backward()  # dy/dx = 2x + 2 = 8.0\nprint(x.grad) # tensor(8.)\n```\n\nBu sayede milyonlarca parametreli derin ağlarda elle türev almak zorunda kalmayız.",
+    "level3_advanced": "Matematiksel türetimler ve çok boyutlu kalkülüs:\n\n**1. Zincir Kuralı (Chain Rule):**\nBileşke fonksiyonların türevi yapay sinir ağlarının temelidir:\n$$\\frac{\\partial z}{\\partial x} = \\frac{\\partial z}{\\partial y} \\cdot \\frac{\\partial y}{\\partial x}$$\n\n**2. Gradyan Vektörü:**\n$$f(x_1, x_2, \\dots, x_n) \\implies \\nabla f = \\left[ \\frac{\\partial f}{\\partial x_1}, \\frac{\\partial f}{\\partial x_2}, \\dots, \\frac{\\partial f}{\\partial x_n} \\right]^T$$\n\n**3. Jacobian Matrisi:**\nVektör değerli bir fonksiyonun girdilerine göre tüm kısmi türevlerini içeren matristir:\n$$J_{ij} = \\frac{\\partial f_i}{\\partial x_j}$$\n\n**4. Hessian Matrisi:**\nİkinci dereceden kısmi türevlerin oluşturduğu simetrik matristir, kayıp yüzeyinin eğriliğini (curvature) gösterir ve optimizasyonda yerel minimum/eyer noktası (saddle point) tespitinde kullanılır.",
+    "level4_expert": "Büyük ölçekli modellerde türev hesaplama mimarileri ve donanım optimizasyonu:\n\n**1. Reverse-Mode vs Forward-Mode Autodiff:**\n- Derin öğrenmede girdi sayısı (parametreler) çıktı sayısından (tek skaler loss) çok daha büyük olduğu için **Reverse-mode autodiff** (Backpropagation) $O(1)$ ileri geçiş maliyetinde gradyan hesaplar.\n\n**2. Gradient Checkpointing (Activation Recomputation):**\nTürev alırken ara aktivasyonları bellekte tutmak yerine backward aşamasında tekrar hesaplayarak bellek kullanımını %60-80 oranında düşürür.\n\n**3. Numerik Kararsızlık (Gradient Clipping):**\nTürevlerin çok büyümesi (exploding) veya sıfıra yaklaşması (vanishing) durumunda gradyan norm kırpma (norm clipping) uygulanır."
+  },
+  "whatIsIt": "Türev, bir fonksiyonun girdisindeki ufacık bir değişikliğin çıktıda ne kadarlık bir değişime yol açtığını belirten matematiksel kavramdır. Çok değişkenli fonksiyonlarda kısmi türev ve bunların vektörü olan gradyan kullanılır.",
+  "whyNeeded": "Yapay zeka modellerinin öğrenmesi demek, kayıp fonksiyonunun (hatanın) minimum olduğu noktayı bulmak demektir. Bu arayışta hangi yöne adım atılacağını türev ve gradyan belirler. Türev olmadan gradient descent ve backpropagation çalışamaz.",
+  "realWorldAnalogy": "Sisli bir dağda mahsur kaldığınızı ve en aşağıdaki köye (en düşük hata noktasına) inmek istediğinizi hayal edin. Etrafı göremiyorsunuz ama ayağınızın altındaki zeminin hangi yönde aşağı doğru eğimli olduğunu hissedebilirsiniz. Zemin eğimini hissetme eyleminiz türevdir; eğimin en dik olduğu yöne adım atarak vadiye inmeniz ise optimizasyondur.",
+  "mathematics": {
+    "formulas": [
+      "f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}",
+      "\\frac{\\partial f}{\\partial x_i} = \\lim_{h \\to 0} \\frac{f(x_1, \\dots, x_i+h, \\dots) - f(x_1, \\dots, x_i, \\dots)}{h}",
+      "\\nabla f = \\left[ \\frac{\\partial f}{\\partial x_1}, \\frac{\\partial f}{\\partial x_2}, \\dots, \\frac{\\partial f}{\\partial x_n} \\right]^T",
+      "\\frac{dz}{dx} = \\frac{dz}{dy} \\cdot \\frac{dy}{dx} \\quad \\text{(Zincir Kuralı)}",
+      "H_{ij} = \\frac{\\partial^2 f}{\\partial x_i \\partial x_j} \\quad \\text{(Hessian Matrisi)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. İleri Geçiş (Forward Pass): Girdiyi hesaplama grafiğinden geçir ve çıktıyı üret.",
+      "2. Hata (Loss) Tespiti: Hedef değer ile çıktı arasındaki skaler kaybı hesapla.",
+      "3. Zincir Kuralı Uygulama: Çıktı katmanından başlayarak geriye doğru her işlemin yerel türevini al.",
+      "4. Gradyan Akümülasyonu: Her parametre için ∂Loss/∂w gradyanını topla.",
+      "5. Parametre Güncellemesi: Ağırlıkları gradyanın tersi yönünde güncelle."
+    ],
+    "complexity": "İleri geçiş maliyetinin yaklaşık 2-3 katı zamanda tüm gradyanlar reverse-mode autodiff ile hesaplanır (O(N))."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Türev Mantığı",
+      "code": "f(x) = x² fonksiyonunu düşünelim:\nx = 2 iken y = 4\nx = 2.01 iken y = 4.0401\n\nx 0.01 arttığında y yaklaşık 0.04 arttı!\nDeğişim oranı = 0.04 / 0.01 = 4\n\nMatematiksel türev formülü: (x²)' = 2x\nx=2 için 2*(2) = 4! Türev tam olarak budur.",
+      "explanation": "Türev, girdideki minik bir kıpırdanmanın çıktıya olan çarpan etkisidir."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Sayısal Türev vs Analitik Türev",
+      "code": "import numpy as np\n\ndef f(x):\n    return x**2 + 3*x\n\ndef numerical_diff(f, x, h=1e-5):\n    return (f(x + h) - f(x - h)) / (2 * h)\n\nx_val = 4.0\nnum_result = numerical_diff(f, x_val)\nexact_result = 2 * x_val + 3 # f'(x) = 2x + 3\n\nprint(f\"Sayısal Türev: {num_result:.6f}\")\nprint(f\"Analitik Türev: {exact_result:.6f}\")\nprint(f\"Fark: {abs(num_result - exact_result):.2e}\")",
+      "explanation": "Merkezi sonlu farklar (central difference) formülü yüksek doğrulukla sayısal türev hesaplar."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch Autograd ile Otomatik Türev",
+      "code": "import torch\n\n# requires_grad=True türev takip mekanizmasını açar\nx = torch.tensor(3.0, requires_grad=True)\nw = torch.tensor(2.0, requires_grad=True)\nb = torch.tensor(1.0, requires_grad=True)\n\n# Lineer dönüşüm ve kayıp\ny = w * x + b\nloss = (y - 10.0)**2\n\n# Geriye yayılım\nloss.backward()\n\nprint(f\"Loss değeri: {loss.item()}\")\nprint(f\"dLoss/dw: {w.grad.item()}\")\nprint(f\"dLoss/dx: {x.grad.item()}\")\nprint(f\"dLoss/db: {b.grad.item()}\")",
+      "explanation": "PyTorch computational graph oluşturur ve backward() çağrısıyla tüm değişkenlerin gradyanını doldurur."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Kısmi Türevler ve 2D Gradyan Vektörü",
+      "code": "import numpy as np\n\n# f(x, y) = x^2 + 3*y^2\ndef f(x, y):\n    return x**2 + 3*y**2\n\ndef grad_f(x, y):\n    df_dx = 2 * x\n    df_dy = 6 * y\n    return np.array([df_dx, df_dy])\n\npoint = np.array([2.0, 1.0])\ngradient = grad_f(point[0], point[1])\n\nprint(f\"Nokta (x, y): {point}\")\nprint(f\"Fonksiyon Değeri: {f(point[0], point[1])}\")\nprint(f\"Gradyan [df/dx, df/dy]: {gradient}\")\nprint(f\"En dik azalış yönü (-grad): {-gradient}\")",
+      "explanation": "Gradyan vektörü çok boyutlu uzayda fonksiyonun tepeye tırmanma yönünü, negatifi ise vadiye iniş yönünü verir."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "derivative-tangent-plot",
+      "type": "plot",
+      "title": "Fonksiyon ve Türev Grafiği",
+      "description": "f(x) = x² eğrisi ve türevinin değişimini inceleyin",
+      "component": "FunctionPlot"
+    }
+  ],
+  "prerequisites": [],
+  "nextTopics": [
+    "gradient-descent",
+    "backpropagation"
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Türevi sıfır olan noktanın her zaman global minimum olduğunu varsaymak",
+      "why": "Türevin sıfır olduğu nokta yerel minimum, yerel maksimum veya eyer noktası (saddle point) olabilir.",
+      "fix": "Hessian matrisinin özdeğerlerini inceleyin veya momentum/stochastic optimizasyon yöntemleri kullanın."
+    },
+    {
+      "mistake": "Çok küçük sonlu fark adımı (h < 1e-15) seçmek",
+      "why": "Bilgisayardaki kayan nokta yuvarlama hataları (floating point roundoff) nedeniyle sıfıra bölünme veya anlamsız sonuçlar oluşur.",
+      "fix": "Float64 için h = 1e-7 veya Float32 için h = 1e-4 civarında değerler kullanın."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Bir fonksiyonun türevinin pozitif olması ne anlama gelir?",
+      "type": "multiple-choice",
+      "options": [
+        "Girdi arttıkça çıktı da artmaktadır (eğim yukarı)",
+        "Girdi arttıkça çıktı azalmaktadır",
+        "Fonksiyon minimum noktadadır",
+        "Fonksiyon tanımsızdır"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Pozitif türev, eğrinin sağa doğru yükseldiğini ve fonksiyonun artan olduğunu gösterir.",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "Gradyan vektörü (∇f) hangi yönü gösterir?",
+      "type": "multiple-choice",
+      "options": [
+        "Fonksiyonun en hızlı azaldığı yönü",
+        "Fonksiyonun en hızlı arttığı yönü",
+        "Rastgele bir yönü",
+        "Sabit kaldığı yönü"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Gradyan, bir skaler alanın en hızlı artış yönünü ve bu artışın oranını veren vektördür.",
+      "difficulty": 1
+    },
+    {
+      "id": "q3",
+      "question": "Derin öğrenmede bileşke katmanların türevini hesaplamak için hangi kural kullanılır?",
+      "type": "multiple-choice",
+      "options": [
+        "L'Hopital Kuralı",
+        "Zincir Kuralı (Chain Rule)",
+        "Cramer Kuralı",
+        "Pisagor Teoremi"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Zincir kuralı, iç içe geçmiş fonksiyonların geriye doğru türevlerinin birbiriyle çarpılmasını sağlar.",
+      "difficulty": 2
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Türev (Derivative) nedir?",
+      "back": "Bir fonksiyonun girdi değerindeki küçük bir değişime karşı çıktısının verdiği anlık tepki / teğetin eğimidir."
+    },
+    {
+      "front": "Kısmi Türev (Partial Derivative) nedir?",
+      "back": "Çok değişkenli bir fonksiyonda, ilgilenilen değişken dışındaki diğer tüm değişkenleri sabit kabul ederek alınan türevdir."
+    },
+    {
+      "front": "Gradyan (Gradient) nedir?",
+      "back": "Bir fonksiyonun tüm kısmi türevlerinin oluşturduğu vektördür. En dik artış yönünü gösterir."
+    },
+    {
+      "front": "Zincir Kuralı (Chain Rule) ne işe yarar?",
+      "back": "z = f(y) ve y = g(x) gibi katmanlı fonksiyonlarda dz/dx = (dz/dy) * (dy/dx) şeklinde ara gradyanları geriye doğru yaymayı sağlar."
+    }
+  ],
+  "references": [
+    {
+      "title": "3Blue1Brown - Kalkülüsün Özü (Essence of Calculus)",
+      "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr",
+      "type": "video"
+    },
+    {
+      "title": "PyTorch Autograd Resmi Dokümantasyonu",
+      "url": "https://pytorch.org/tutorials/beginner/blitz/autograd_tutorial.html",
+      "type": "documentation"
+    }
+  ],
+  "tags": ["calculus", "türev", "gradyan", "zincir-kurali", "autograd", "matematik"]
+}

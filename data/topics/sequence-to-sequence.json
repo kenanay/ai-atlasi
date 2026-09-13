@@ -1,0 +1,258 @@
+{
+  "id": "sequence-to-sequence",
+  "title": "Sequence-to-Sequence Models (Encoder-Decoder)",
+  "category": "deep-learning",
+  "level": 3,
+  "estimatedTime": 50,
+  "description": "Variable-length input'u variable-length output'a map eden architecture. Machine translation, text summarization, chatbots için temel. Encoder-Decoder + Attention mechanism.",
+  "prerequisites": ["rnn", "lstm", "word-embeddings", "attention"],
+  "tags": ["seq2seq", "encoder-decoder", "machine-translation", "attention", "rnn", "lstm"],
+  "content": {
+    "level0_basic": "Bir cümleyi başka bir dile çevirmek istersen ne yaparsın? 'Hello' → 'Merhaba', 'How are you?' → 'Nasılsın?'. Giriş ve çıkış farklı uzunlukta! Traditional models fixed-size input/output bekler. Seq2Seq bunu çözer: Encoder input'u okur, anlam context vector'üne kodlar. Decoder bu context'ten output generate eder, word by word. İngilizce → Türkçe, soru → cevap, text → summary - hepsi seq2seq!",
+    "level1_beginner": "Sequence-to-Sequence (Seq2Seq) variable-length sequences arasında mapping yapar.\n\n**Problem:**\nTraditional NN fixed-size input/output bekler.\n- Image classification: 224×224 → 1000 classes ✓\n- Machine translation: variable length → variable length ❌\n\n**Seq2Seq Solution:**\n\n**Architecture: Encoder-Decoder**\n\n```\nInput:  [Hello, how, are, you, ?]\n         ↓\n      ENCODER (RNN/LSTM)\n         ↓\n    Context Vector (fixed-size)\n         ↓\n      DECODER (RNN/LSTM)\n         ↓\nOutput: [Merhaba, nasılsın, ?]\n```\n\n**1. Encoder:**\nInput sequence'i okur, final hidden state = context vector.\n\n$$h_t = f(h_{t-1}, x_t)$$\n$$c = h_T  \\quad \\text{(context vector)}$$\n\n- $x_t$: input at time $t$\n- $h_t$: hidden state\n- $c$: context vector (input'un \"anlamı\")\n\n**2. Decoder:**\nContext vector'den output generate eder, otoregressive.\n\n$$s_t = g(s_{t-1}, y_{t-1}, c)$$\n$$y_t = \\text{softmax}(W_s s_t)$$\n\n- $s_t$: decoder hidden state\n- $y_t$: output at time $t$\n- $c$: context from encoder\n\n**Training:**\n- **Teacher Forcing:** Decoder'a ground truth previous token ver\n- **Loss:** Cross-entropy on output sequence\n\n**Inference:**\n- **Greedy:** Her step'te argmax al\n- **Beam Search:** Top-k candidates track et\n\n**Applications:**\n- Machine translation (EN → TR)\n- Text summarization (long → short)\n- Chatbots (question → answer)\n- Speech recognition (audio → text)\n- Image captioning (image → text)",
+    "level2_application": "**Detailed Seq2Seq Architecture:**\n\n**Encoder (LSTM-based):**\n\n```python\nfor t in range(input_length):\n    h_t, c_t = LSTM(x_t, h_{t-1}, c_{t-1})\n\ncontext = h_T  # Final hidden state\n```\n\n**Decoder (LSTM-based):**\n\n```python\ns_0 = context  # Initialize with encoder's final state\ny_0 = <START> token\n\nfor t in range(output_length):\n    s_t, c_t = LSTM(y_{t-1}, s_{t-1}, c_{t-1})\n    logits = Linear(s_t)\n    y_t = softmax(logits)\n```\n\n**Teacher Forcing:**\n\nTraining sırasında decoder'a ground truth input ver!\n\n**Without Teacher Forcing:**\n```\nDecoder input: <START> → predicted1 → predicted2 → ...\n```\nErken hata accumulate eder (exposure bias).\n\n**With Teacher Forcing:**\n```\nDecoder input: <START> → ground1 → ground2 → ...\n```\nHer step doğru input alır, faster training!\n\n**Scheduled Sampling:**\nTeacher forcing probability'yi training boyunca azalt:\n$$p(\\text{teacher forcing}) = \\max(\\epsilon, k - \\alpha \\cdot \\text{epoch})$$\n\n**Inference Strategies:**\n\n**1. Greedy Decoding:**\n```python\ny_t = argmax(P(y_t | y_{<t}, x))\n```\nHızlı ama suboptimal. Local optimum'a takılır.\n\n**2. Beam Search:**\nTop-k sequences track et!\n\n```python\nbeam_size = 5\ncandidates = [([], 1.0)]  # (sequence, probability)\n\nfor t in range(max_length):\n    new_candidates = []\n    for seq, prob in candidates:\n        for token in top_k(P(y_t | seq, x)):\n            new_seq = seq + [token]\n            new_prob = prob * P(token | seq, x)\n            new_candidates.append((new_seq, new_prob))\n    \n    # Keep top beam_size\n    candidates = sorted(new_candidates, key=lambda x: x[1], reverse=True)[:beam_size]\n```\n\n**Beam size trade-off:**\n- Small (1-3): Fast, may miss good sequences\n- Large (10+): Better quality, slow\n- Typical: 5-10\n\n**Problem: Information Bottleneck**\n\nContext vector = single fixed-size vector!\n\nLong sequences için inadequate:\n- 100 word sentence → 512-dim vector\n- Information loss!\n\n**Solution: Attention Mechanism** (next level)",
+    "level3_advanced": "**Attention Mechanism:**\n\nContext vector bottleneck'i çözer!\n\n**Idea:** Decoder her step'te encoder'ın **tüm** hidden states'lerine bakabilsin.\n\n**Bahdanau Attention (2015):**\n\n**1. Alignment Scores:**\nDecoder state $s_t$ ile her encoder state $h_j$ arasındaki relevance:\n\n$$e_{tj} = a(s_{t-1}, h_j)$$\n\n$a$: alignment model (small feed-forward NN):\n$$e_{tj} = v^T \\tanh(W_s s_{t-1} + W_h h_j)$$\n\n**2. Attention Weights:**\nSoftmax over alignment scores:\n\n$$\\alpha_{tj} = \\frac{\\exp(e_{tj})}{\\sum_{k=1}^{T_x} \\exp(e_{tk})}$$\n\n**3. Context Vector:**\nWeighted sum of encoder states:\n\n$$c_t = \\sum_{j=1}^{T_x} \\alpha_{tj} h_j$$\n\nHer decoder step için **farklı** context vector!\n\n**4. Decoder Update:**\n$$s_t = f(s_{t-1}, y_{t-1}, c_t)$$\n\n**Luong Attention (2015):**\n\nSimpler, decoder state **sonrası** attention:\n\n**1. Alignment (dot product):**\n$$e_{tj} = s_t^T h_j$$\n\nVeya:\n- **General:** $e_{tj} = s_t^T W h_j$\n- **Concat:** $e_{tj} = v^T \\tanh(W[s_t; h_j])$\n\n**2. Context vector:** Same as Bahdanau\n\n**3. Attentional hidden state:**\n$$\\tilde{s}_t = \\tanh(W_c [s_t; c_t])$$\n\n**4. Output:**\n$$y_t = \\text{softmax}(W_o \\tilde{s}_t)$$\n\n**Attention Visualization:**\n\nAttention weights $\\alpha_{tj}$ = alignment matrix.\n\n```\n              Encoder (French)\n           je  suis  étudiant\nDecoder  I    ██    □     □\n(English) am   □    ██     □\n          a    □     □    ██\n          student □  □    ██\n```\n\nHigh attention = model \"looking at\" that input word.\n\n**Bidirectional Encoder:**\n\nForward + backward RNN:\n\n$$\\vec{h}_t = \\text{LSTM}_{\\text{fwd}}(x_t, \\vec{h}_{t-1})$$\n$$\\overleftarrow{h}_t = \\text{LSTM}_{\\text{bwd}}(x_t, \\overleftarrow{h}_{t+1})$$\n$$h_t = [\\vec{h}_t; \\overleftarrow{h}_t]$$\n\nHer position için left ve right context!",
+    "level4_expert": "**Advanced Seq2Seq Techniques:**\n\n**1. Copy Mechanism / Pointer Networks:**\n\nProblem: OOV words, proper nouns.\n\n**Solution:** Decoder can \"copy\" from input!\n\n$$P(y_t) = p_{\\text{gen}} \\cdot P_{\\text{vocab}}(y_t) + (1 - p_{\\text{gen}}) \\cdot \\sum_{j: x_j = y_t} \\alpha_{tj}$$\n\n- $p_{\\text{gen}}$: generate vs copy probability\n- $\\alpha_{tj}$: attention weights\n\n**Use cases:**\n- Summarization: Copy important phrases\n- Translation: Copy names, numbers\n- Question answering: Extract answer span\n\n**2. Coverage Mechanism:**\n\nProblem: Repetition in output.\n\n**Solution:** Track what's been attended to:\n\n$$c^{\\text{cov}}_t = \\sum_{t'=1}^{t-1} \\alpha_{t'j}$$\n\n$$e_{tj} = a(s_{t-1}, h_j, c^{\\text{cov}}_{tj})$$\n\nPenalize attending to same positions!\n\n**3. Multilayer / Deep Encoder-Decoder:**\n\n```python\n# Encoder\nfor layer in range(num_layers):\n    h[layer] = LSTM[layer](x, h[layer])\n    x = h[layer]  # Input to next layer\n\n# Decoder\nfor layer in range(num_layers):\n    s[layer] = LSTM[layer](y, s[layer], context)\n    y = s[layer]\n```\n\nDeeper = more capacity, but harder to train.\n\n**4. Residual Connections:**\n\n$$h_t^{(l)} = h_t^{(l-1)} + f(h_t^{(l-1)})$$\n\nHelps gradient flow in deep models.\n\n**5. Length Normalization:**\n\nBeam search bias: shorter sequences higher probability.\n\n**Length penalty:**\n$$\\text{score}(y) = \\frac{\\log P(y | x)}{|y|^{\\alpha}}$$\n\n- $\\alpha = 0$: No normalization\n- $\\alpha = 1$: Full normalization\n- Typical: $\\alpha = 0.6-0.8$\n\n**Production Considerations:**\n\n**Inference Speed:**\n- Autoregressive decoding slow (sequential)\n- Batch decoding: Process multiple beams parallel\n- Caching: Save encoder outputs\n\n**Model Compression:**\n- Knowledge distillation\n- Quantization (INT8)\n- Pruning\n\n**Serving:**\n- TorchScript / ONNX export\n- TensorRT optimization\n- Dynamic batching\n\n**Evaluation Metrics:**\n\n**BLEU Score:**\nN-gram overlap between generated and reference.\n\n$$\\text{BLEU} = \\text{BP} \\cdot \\exp\\left(\\sum_{n=1}^{N} w_n \\log p_n\\right)$$\n\n- $p_n$: n-gram precision\n- BP: brevity penalty\n- Standard: BLEU-4\n\n**ROUGE Score:**\nRecall-based (for summarization).\n\n**METEOR:**\nSynonym and stemming aware.\n\n**Limitations:**\nAutomatic metrics ≠ human judgment!\nUse human evaluation for production.",
+    "level5_research": "**Beyond Seq2Seq:**\n\n**Transformer Architecture:**\nReplaces RNN with self-attention!\n- Parallel training (no sequential dependency)\n- Better long-range dependencies\n- State-of-the-art for NMT\n\n**Non-autoregressive Decoding:**\nGenerate all tokens in parallel!\n- Much faster inference\n- Quality trade-off\n\n**Multilingual Models:**\nSingle model, many languages:\n- Google's M4\n- Facebook's M2M-100\n\n**Research Directions:**\n- Low-resource translation\n- Unsupervised NMT\n- Simultaneous translation (streaming)\n- Document-level translation (context beyond sentence)"
+  },
+  "whatIsIt": "Seq2Seq variable-length input'u variable-length output'a map eder. Encoder input'u context vector'e kodlar, Decoder output'u generate eder. Attention mechanism bottleneck'i çözer.",
+  "whyNeeded": "Machine translation, summarization, chatbots variable-length sequences gerektirir. Fixed-size models bunları handle edemez. Seq2Seq + Attention state-of-the-art çözüm!",
+  "realWorldAnalogy": "Bir tercüman düşün: Önce tüm cümleyi dinler, anlar (Encoder), sonra hedef dilde ifade eder (Decoder). Uzun cümlelerde önemli kelimelere dikkat eder (Attention). Kısa bir özet tutar (context vector).",
+  "mathematics": {
+    "formulas": [
+      "h_t = f(h_{t-1}, x_t)",
+      "c = h_T",
+      "s_t = g(s_{t-1}, y_{t-1}, c)",
+      "\\alpha_{tj} = \\frac{\\exp(e_{tj})}{\\sum_k \\exp(e_{tk})}",
+      "c_t = \\sum_j \\alpha_{tj} h_j"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "TRAINING:",
+      "1. Encoder: Process input sequence, get hidden states h_1...h_T",
+      "2. Initialize decoder with encoder's final state",
+      "3. For each output position t:",
+      "   a. Compute attention weights over encoder states",
+      "   b. Weighted sum → context vector c_t",
+      "   c. Decoder step: s_t = f(s_{t-1}, y_{t-1}, c_t)",
+      "   d. Predict: p(y_t) = softmax(W s_t)",
+      "   e. Loss: cross-entropy with ground truth",
+      "4. Backprop through time, update all parameters",
+      "INFERENCE:",
+      "1. Encoder: Same as training",
+      "2. Beam search: Track top-k sequences",
+      "3. Generate until <END> or max_length"
+    ],
+    "complexity": "Training: O(T_x × T_y × d²) - T_x input length, T_y output, d hidden dim. Attention adds O(T_x × T_y) comparisons."
+  },
+  "codeExamples": [
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Simple Seq2Seq - Encoder-Decoder",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nprint(\"=\"*60)\nprint(\"SIMPLE SEQ2SEQ: ENCODER-DECODER\")\nprint(\"=\"*60)\n\nclass Encoder(nn.Module):\n    def __init__(self, input_size, embedding_dim, hidden_dim):\n        super().__init__()\n        self.embedding = nn.Embedding(input_size, embedding_dim)\n        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)\n    \n    def forward(self, x):\n        # x: [batch, seq_len]\n        embedded = self.embedding(x)  # [batch, seq_len, embedding_dim]\n        outputs, (hidden, cell) = self.lstm(embedded)\n        # outputs: [batch, seq_len, hidden_dim]\n        # hidden: [1, batch, hidden_dim]\n        return outputs, hidden, cell\n\nclass Decoder(nn.Module):\n    def __init__(self, output_size, embedding_dim, hidden_dim):\n        super().__init__()\n        self.embedding = nn.Embedding(output_size, embedding_dim)\n        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)\n        self.fc = nn.Linear(hidden_dim, output_size)\n    \n    def forward(self, x, hidden, cell):\n        # x: [batch, 1] - single token\n        embedded = self.embedding(x)  # [batch, 1, embedding_dim]\n        output, (hidden, cell) = self.lstm(embedded, (hidden, cell))\n        # output: [batch, 1, hidden_dim]\n        prediction = self.fc(output.squeeze(1))  # [batch, output_size]\n        return prediction, hidden, cell\n\nclass Seq2Seq(nn.Module):\n    def __init__(self, encoder, decoder):\n        super().__init__()\n        self.encoder = encoder\n        self.decoder = decoder\n    \n    def forward(self, src, trg, teacher_forcing_ratio=0.5):\n        # src: [batch, src_len]\n        # trg: [batch, trg_len]\n        batch_size = src.shape[0]\n        trg_len = trg.shape[1]\n        trg_vocab_size = self.decoder.fc.out_features\n        \n        # Encoder\n        encoder_outputs, hidden, cell = self.encoder(src)\n        \n        # Decoder outputs\n        outputs = torch.zeros(batch_size, trg_len, trg_vocab_size)\n        \n        # First input: <START> token\n        decoder_input = trg[:, 0].unsqueeze(1)  # [batch, 1]\n        \n        for t in range(1, trg_len):\n            # Decode one step\n            prediction, hidden, cell = self.decoder(decoder_input, hidden, cell)\n            outputs[:, t] = prediction\n            \n            # Teacher forcing\n            use_teacher_forcing = torch.rand(1).item() < teacher_forcing_ratio\n            if use_teacher_forcing:\n                decoder_input = trg[:, t].unsqueeze(1)  # Ground truth\n            else:\n                decoder_input = prediction.argmax(1).unsqueeze(1)  # Predicted\n        \n        return outputs\n\n# Example\nprint(\"\\nCreating Seq2Seq model...\")\n\nINPUT_DIM = 1000  # Source vocabulary\nOUTPUT_DIM = 800  # Target vocabulary\nEMBED_DIM = 128\nHIDDEN_DIM = 256\n\nencoder = Encoder(INPUT_DIM, EMBED_DIM, HIDDEN_DIM)\ndecoder = Decoder(OUTPUT_DIM, EMBED_DIM, HIDDEN_DIM)\nmodel = Seq2Seq(encoder, decoder)\n\nprint(f\"\\nModel parameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Test forward\nsrc = torch.randint(0, INPUT_DIM, (4, 10))  # batch=4, src_len=10\ntrg = torch.randint(0, OUTPUT_DIM, (4, 12))  # batch=4, trg_len=12\n\nprint(f\"\\nInput shape: {src.shape}\")\nprint(f\"Target shape: {trg.shape}\")\n\noutput = model(src, trg, teacher_forcing_ratio=0.5)\nprint(f\"Output shape: {output.shape}  # [batch, trg_len, vocab]\")\n\nprint(\"\\n✓ Simple Seq2Seq forward pass successful!\")",
+      "explanation": "Basic Seq2Seq: Encoder processes input, Decoder generates output. Teacher forcing ile training. Context = encoder's final hidden state."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Seq2Seq with Attention Mechanism",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nprint(\"=\"*60)\nprint(\"SEQ2SEQ WITH ATTENTION\")\nprint(\"=\"*60)\n\nclass Attention(nn.Module):\n    \"\"\"Luong Attention (dot product)\"\"\"\n    def __init__(self, hidden_dim):\n        super().__init__()\n        self.hidden_dim = hidden_dim\n    \n    def forward(self, decoder_hidden, encoder_outputs):\n        # decoder_hidden: [batch, hidden_dim]\n        # encoder_outputs: [batch, src_len, hidden_dim]\n        \n        # Compute alignment scores (dot product)\n        scores = torch.bmm(\n            encoder_outputs,  # [batch, src_len, hidden]\n            decoder_hidden.unsqueeze(2)  # [batch, hidden, 1]\n        ).squeeze(2)  # [batch, src_len]\n        \n        # Attention weights\n        attn_weights = F.softmax(scores, dim=1)  # [batch, src_len]\n        \n        # Context vector (weighted sum)\n        context = torch.bmm(\n            attn_weights.unsqueeze(1),  # [batch, 1, src_len]\n            encoder_outputs  # [batch, src_len, hidden]\n        ).squeeze(1)  # [batch, hidden]\n        \n        return context, attn_weights\n\nclass AttentionDecoder(nn.Module):\n    def __init__(self, output_size, embedding_dim, hidden_dim):\n        super().__init__()\n        self.embedding = nn.Embedding(output_size, embedding_dim)\n        self.attention = Attention(hidden_dim)\n        # LSTM input: embedding + context\n        self.lstm = nn.LSTM(embedding_dim + hidden_dim, hidden_dim, batch_first=True)\n        # Output: hidden + context\n        self.fc = nn.Linear(hidden_dim * 2, output_size)\n        self.hidden_dim = hidden_dim\n    \n    def forward(self, x, hidden, cell, encoder_outputs):\n        # x: [batch, 1]\n        # hidden: [1, batch, hidden]\n        # encoder_outputs: [batch, src_len, hidden]\n        \n        embedded = self.embedding(x)  # [batch, 1, embed]\n        \n        # Attention (using previous hidden state)\n        decoder_hidden = hidden.squeeze(0)  # [batch, hidden]\n        context, attn_weights = self.attention(decoder_hidden, encoder_outputs)\n        \n        # Concatenate embedding + context\n        lstm_input = torch.cat([embedded, context.unsqueeze(1)], dim=2)\n        # [batch, 1, embed + hidden]\n        \n        # LSTM step\n        output, (hidden, cell) = self.lstm(lstm_input, (hidden, cell))\n        # output: [batch, 1, hidden]\n        \n        # Concatenate output + context\n        output = output.squeeze(1)  # [batch, hidden]\n        combined = torch.cat([output, context], dim=1)  # [batch, 2*hidden]\n        \n        # Prediction\n        prediction = self.fc(combined)  # [batch, output_size]\n        \n        return prediction, hidden, cell, attn_weights\n\nclass Seq2SeqWithAttention(nn.Module):\n    def __init__(self, encoder, decoder):\n        super().__init__()\n        self.encoder = encoder\n        self.decoder = decoder\n    \n    def forward(self, src, trg, teacher_forcing_ratio=0.5):\n        batch_size = src.shape[0]\n        trg_len = trg.shape[1]\n        trg_vocab_size = self.decoder.fc.out_features\n        \n        # Encoder\n        encoder_outputs, hidden, cell = self.encoder(src)\n        \n        # Storage\n        outputs = torch.zeros(batch_size, trg_len, trg_vocab_size)\n        attentions = torch.zeros(batch_size, trg_len, src.shape[1])\n        \n        # First input\n        decoder_input = trg[:, 0].unsqueeze(1)\n        \n        for t in range(1, trg_len):\n            prediction, hidden, cell, attn_weights = self.decoder(\n                decoder_input, hidden, cell, encoder_outputs\n            )\n            outputs[:, t] = prediction\n            attentions[:, t] = attn_weights\n            \n            # Teacher forcing\n            use_teacher_forcing = torch.rand(1).item() < teacher_forcing_ratio\n            decoder_input = trg[:, t].unsqueeze(1) if use_teacher_forcing else prediction.argmax(1).unsqueeze(1)\n        \n        return outputs, attentions\n\n# Test\nprint(\"\\nCreating Seq2Seq with Attention...\")\n\nINPUT_DIM = 1000\nOUTPUT_DIM = 800\nEMBED_DIM = 128\nHIDDEN_DIM = 256\n\nencoder = Encoder(INPUT_DIM, EMBED_DIM, HIDDEN_DIM)\ndecoder = AttentionDecoder(OUTPUT_DIM, EMBED_DIM, HIDDEN_DIM)\nmodel = Seq2SeqWithAttention(encoder, decoder)\n\nprint(f\"Model parameters: {sum(p.numel() for p in model.parameters()):,}\")\n\n# Forward\nsrc = torch.randint(0, INPUT_DIM, (2, 8))  # batch=2, src_len=8\ntrg = torch.randint(0, OUTPUT_DIM, (2, 10))  # trg_len=10\n\noutputs, attentions = model(src, trg)\nprint(f\"\\nOutputs shape: {outputs.shape}\")\nprint(f\"Attention shape: {attentions.shape}  # [batch, trg_len, src_len]\")\n\nprint(\"\\n💡 Attention visualization:\")\nprint(f\"Sample attention weights (target step 5 → source):\")\nprint(attentions[0, 5].detach().numpy())\n\nprint(\"\\n✓ Attention mechanism allows decoder to focus on relevant input parts!\")",
+      "explanation": "Attention mechanism context bottleneck'i çözer. Her decoder step farklı encoder positions'a attend edebilir. Alignment weights interpretable!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Beam Search Decoding",
+      "code": "import torch\nimport torch.nn.functional as F\nfrom queue import PriorityQueue\n\nprint(\"=\"*60)\nprint(\"BEAM SEARCH DECODING\")\nprint(\"=\"*60)\n\nclass BeamSearchDecoder:\n    def __init__(self, model, beam_size=5, max_length=50):\n        self.model = model\n        self.beam_size = beam_size\n        self.max_length = max_length\n    \n    def decode(self, src, start_token, end_token):\n        \"\"\"\n        Beam search decoding\n        \n        Args:\n            src: [1, src_len] - single example\n            start_token: int\n            end_token: int\n        \n        Returns:\n            best_sequence: list of tokens\n            best_score: float\n        \"\"\"\n        # Encode\n        encoder_outputs, hidden, cell = self.model.encoder(src)\n        \n        # Initialize beams\n        beams = [([start_token], 0.0, hidden, cell)]  # (sequence, score, hidden, cell)\n        completed = []\n        \n        for _ in range(self.max_length):\n            candidates = []\n            \n            for seq, score, hidden, cell in beams:\n                # If completed, skip\n                if seq[-1] == end_token:\n                    completed.append((seq, score))\n                    continue\n                \n                # Last token\n                token = torch.tensor([[seq[-1]]])\n                \n                # Decode one step\n                prediction, new_hidden, new_cell, _ = self.model.decoder(\n                    token, hidden, cell, encoder_outputs\n                )\n                \n                # Log probabilities\n                log_probs = F.log_softmax(prediction, dim=1).squeeze(0)\n                \n                # Top-k tokens\n                topk_probs, topk_tokens = torch.topk(log_probs, self.beam_size)\n                \n                for i in range(self.beam_size):\n                    token_id = topk_tokens[i].item()\n                    token_prob = topk_probs[i].item()\n                    \n                    new_seq = seq + [token_id]\n                    new_score = score + token_prob\n                    \n                    candidates.append((new_seq, new_score, new_hidden, new_cell))\n            \n            # No more candidates\n            if not candidates:\n                break\n            \n            # Select top beam_size candidates\n            beams = sorted(candidates, key=lambda x: x[1], reverse=True)[:self.beam_size]\n        \n        # Add remaining beams to completed\n        completed.extend([(seq, score) for seq, score, _, _ in beams])\n        \n        # Best sequence\n        if not completed:\n            return beams[0][0], beams[0][1]\n        \n        best_seq, best_score = max(completed, key=lambda x: x[1])\n        return best_seq, best_score\n\nprint(\"\\nTesting Beam Search...\\n\")\n\n# Mock example\nclass MockSeq2Seq:\n    \"\"\"Simplified for demonstration\"\"\"\n    def __init__(self):\n        self.encoder = lambda x: (None, torch.randn(1, 1, 256), torch.randn(1, 1, 256))\n        self.decoder = lambda t, h, c, e: (\n            torch.randn(1, 100),  # logits\n            h, c, None\n        )\n\nmodel = MockSeq2Seq()\nsrc = torch.randint(0, 100, (1, 10))\n\nprint(\"Decoding strategies comparison:\\n\")\n\n# Greedy\nprint(\"1️⃣  GREEDY DECODING (beam_size=1):\")\nbeam1 = BeamSearchDecoder(model, beam_size=1, max_length=10)\nseq, score = beam1.decode(src, start_token=1, end_token=2)\nprint(f\"   Sequence length: {len(seq)}\")\nprint(f\"   Score: {score:.4f}\")\n\n# Beam Search\nprint(\"\\n2️⃣  BEAM SEARCH (beam_size=5):\")\nbeam5 = BeamSearchDecoder(model, beam_size=5, max_length=10)\nseq, score = beam5.decode(src, start_token=1, end_token=2)\nprint(f\"   Sequence length: {len(seq)}\")\nprint(f\"   Score: {score:.4f}\")\nprint(f\"   (Usually higher score than greedy!)\")\n\nprint(\"\\n💡 Beam Search vs Greedy:\")\nprint(\"\"\"\n   Greedy (beam=1):\n     ✓ Fast\n     ❌ May miss good sequences (local optimum)\n   \n   Beam Search (beam=5-10):\n     ✓ Better quality (explores more)\n     ❌ Slower (k times more computation)\n     ✓ Good balance for production\n   \n   Large Beam (beam=50+):\n     ✓ Best quality\n     ❌ Very slow\n     ❌ Diminishing returns\n\"\"\")\n\nprint(\"\\n3️⃣  LENGTH NORMALIZATION:\")\nprint(\"\"\"\nProblem: Beam search favors shorter sequences!\n  P(y) = P(y1) * P(y2) * ... * P(yn)\n  More tokens → lower probability\n\nSolution: Length normalization\n  score(y) = log P(y) / length(y)^alpha\n  \n  alpha = 0.0: No normalization\n  alpha = 0.6-0.8: Typical (gentle preference for longer)\n  alpha = 1.0: Full normalization\n\"\"\")",
+      "explanation": "Beam search greedy'den better! Top-k sequences track eder, locally optimal olmaz. Production NMT için standard. Length normalization shorter sequences bias'ını düzeltir."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Training Loop with Teacher Forcing Schedule",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nprint(\"=\"*60)\nprint(\"SEQ2SEQ TRAINING LOOP\")\nprint(\"=\"*60)\n\ndef train_epoch(model, iterator, optimizer, criterion, clip, teacher_forcing_ratio):\n    model.train()\n    epoch_loss = 0\n    \n    for i, (src, trg) in enumerate(iterator):\n        # src: [batch, src_len]\n        # trg: [batch, trg_len]\n        \n        optimizer.zero_grad()\n        \n        # Forward\n        if hasattr(model, 'decoder') and hasattr(model.decoder, 'attention'):\n            output, _ = model(src, trg, teacher_forcing_ratio)\n        else:\n            output = model(src, trg, teacher_forcing_ratio)\n        \n        # output: [batch, trg_len, output_dim]\n        # trg: [batch, trg_len]\n        \n        output_dim = output.shape[-1]\n        \n        # Reshape for loss\n        output = output[:, 1:].reshape(-1, output_dim)  # Skip <START>\n        trg = trg[:, 1:].reshape(-1)  # Skip <START>\n        \n        # Loss\n        loss = criterion(output, trg)\n        loss.backward()\n        \n        # Gradient clipping (important for RNN!)\n        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)\n        \n        optimizer.step()\n        epoch_loss += loss.item()\n    \n    return epoch_loss / len(iterator)\n\ndef evaluate(model, iterator, criterion):\n    model.eval()\n    epoch_loss = 0\n    \n    with torch.no_grad():\n        for src, trg in iterator:\n            # No teacher forcing in eval!\n            if hasattr(model, 'decoder') and hasattr(model.decoder, 'attention'):\n                output, _ = model(src, trg, teacher_forcing_ratio=0)\n            else:\n                output = model(src, trg, teacher_forcing_ratio=0)\n            \n            output_dim = output.shape[-1]\n            output = output[:, 1:].reshape(-1, output_dim)\n            trg = trg[:, 1:].reshape(-1)\n            \n            loss = criterion(output, trg)\n            epoch_loss += loss.item()\n    \n    return epoch_loss / len(iterator)\n\nprint(\"\"\"\nTRAINING CONFIGURATION:\n\"\"\")\n\n# Hyperparameters\nconfig = {\n    'num_epochs': 10,\n    'learning_rate': 0.001,\n    'clip': 1.0,  # Gradient clipping\n    'teacher_forcing_ratio': 0.5  # Will decay\n}\n\nprint(f\"\"\"\n  Epochs: {config['num_epochs']}\n  Learning Rate: {config['learning_rate']}\n  Gradient Clip: {config['clip']}\n  Teacher Forcing (initial): {config['teacher_forcing_ratio']}\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TEACHER FORCING SCHEDULE\")\nprint(\"=\"*60)\n\ndef get_teacher_forcing_ratio(epoch, total_epochs, initial=0.9, final=0.1):\n    \"\"\"\n    Linearly decay teacher forcing ratio\n    \n    Start: 0.9 (heavy teacher forcing)\n    End: 0.1 (mostly use own predictions)\n    \"\"\"\n    return initial - (initial - final) * (epoch / total_epochs)\n\nepochs = np.arange(10)\ntf_ratios = [get_teacher_forcing_ratio(e, 10) for e in epochs]\n\nprint(\"\\nTeacher Forcing Schedule:\")\nfor e, tf in zip(epochs, tf_ratios):\n    bar = '█' * int(tf * 20)\n    print(f\"  Epoch {e:2d}: {tf:.2f}  {bar}\")\n\nplt.figure(figsize=(10, 6))\nplt.plot(epochs, tf_ratios, 'b-', linewidth=2, marker='o')\nplt.xlabel('Epoch', fontsize=12)\nplt.ylabel('Teacher Forcing Ratio', fontsize=12)\nplt.title('Teacher Forcing Decay Schedule', fontsize=14)\nplt.grid(True, alpha=0.3)\nplt.ylim(0, 1)\nplt.tight_layout()\n\nprint(\"\\n💡 Why decay teacher forcing?\")\nprint(\"\"\"\n   Early epochs (TF=0.9):\n     • Model unstable, needs guidance\n     • Ground truth helps learn faster\n   \n   Later epochs (TF=0.1):\n     • Model more confident\n     • Use own predictions → better generalization\n     • Reduces exposure bias\n   \n   Exposure Bias:\n     • Training: Always see ground truth\n     • Inference: Use own (possibly wrong) predictions\n     • Mismatch → errors accumulate!\n     • Solution: Gradually use own predictions in training\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"GRADIENT CLIPPING\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nWhy clip gradients?\n  • RNNs prone to exploding gradients\n  • Long sequences → many multiplication steps\n  • Gradient can become huge (1e10+)\n  • Training unstable, NaN loss\n\nSolution: Clip gradient norm\n  torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n  \n  If ||grad|| > max_norm:\n    grad = grad * (max_norm / ||grad||)\n  \n  Typical values: 0.5 - 5.0\n\"\"\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"EXAMPLE TRAINING LOOP\")\nprint(\"=\"*60)\n\nprint(\"\"\"\ndef train_model(model, train_data, val_data, config):\n    criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)\n    optimizer = optim.Adam(model.parameters(), lr=config['lr'])\n    \n    for epoch in range(config['num_epochs']):\n        # Decay teacher forcing\n        tf_ratio = get_teacher_forcing_ratio(\n            epoch, config['num_epochs']\n        )\n        \n        # Train\n        train_loss = train_epoch(\n            model, train_data, optimizer, criterion,\n            config['clip'], tf_ratio\n        )\n        \n        # Validate\n        val_loss = evaluate(model, val_data, criterion)\n        \n        print(f\"Epoch {epoch+1}/{config['num_epochs']}\")\n        print(f\"  Train Loss: {train_loss:.3f}\")\n        print(f\"  Val Loss: {val_loss:.3f}\")\n        print(f\"  TF Ratio: {tf_ratio:.2f}\")\n        \n        # Save best model\n        if val_loss < best_val_loss:\n            best_val_loss = val_loss\n            torch.save(model.state_dict(), 'best_model.pt')\n\"\"\")\n\nprint(\"\\n✓ Complete training pipeline!\")",
+      "explanation": "Production training loop: Teacher forcing decay (0.9→0.1), gradient clipping (RNN stability), proper evaluation (no TF). Exposure bias'ı reduce eder."
+    },
+    {
+      "level": 5,
+      "language": "python",
+      "title": "BLEU Score Evaluation",
+      "code": "from collections import Counter\nimport numpy as np\n\nprint(\"=\"*60)\nprint(\"BLEU SCORE EVALUATION\")\nprint(\"=\"*60)\n\ndef get_ngrams(tokens, n):\n    \"\"\"Extract n-grams from tokens\"\"\"\n    return [tuple(tokens[i:i+n]) for i in range(len(tokens) - n + 1)]\n\ndef bleu_score(candidate, reference, max_n=4):\n    \"\"\"\n    Calculate BLEU score\n    \n    Args:\n        candidate: list of tokens (generated)\n        reference: list of tokens (ground truth)\n        max_n: maximum n-gram order (default: 4)\n    \n    Returns:\n        bleu: float (0-1)\n    \"\"\"\n    # Brevity penalty\n    c = len(candidate)\n    r = len(reference)\n    \n    if c == 0:\n        return 0.0\n    \n    if c < r:\n        bp = np.exp(1 - r / c)\n    else:\n        bp = 1.0\n    \n    # N-gram precisions\n    precisions = []\n    \n    for n in range(1, max_n + 1):\n        cand_ngrams = Counter(get_ngrams(candidate, n))\n        ref_ngrams = Counter(get_ngrams(reference, n))\n        \n        if not cand_ngrams:\n            precisions.append(0)\n            continue\n        \n        # Clipped counts\n        overlap = sum(\n            min(cand_ngrams[ng], ref_ngrams[ng])\n            for ng in cand_ngrams\n        )\n        \n        total = sum(cand_ngrams.values())\n        precision = overlap / total if total > 0 else 0\n        precisions.append(precision)\n    \n    # Geometric mean\n    if min(precisions) == 0:\n        return 0.0\n    \n    log_precision_sum = sum(np.log(p) for p in precisions if p > 0)\n    geo_mean = np.exp(log_precision_sum / max_n)\n    \n    bleu = bp * geo_mean\n    return bleu\n\nprint(\"\\nExample 1: Perfect Match\")\nprint(\"=\"*60)\n\nreference = \"the cat sat on the mat\".split()\ncandidate = \"the cat sat on the mat\".split()\n\nbleu = bleu_score(candidate, reference)\nprint(f\"\\nReference:  {' '.join(reference)}\")\nprint(f\"Candidate:  {' '.join(candidate)}\")\nprint(f\"BLEU Score: {bleu:.4f}  ✓ Perfect!\")\n\nprint(\"\\n\\nExample 2: Partial Match\")\nprint(\"=\"*60)\n\nreference = \"the cat sat on the mat\".split()\ncandidate = \"the cat was on the mat\".split()\n\nbleu = bleu_score(candidate, reference)\nprint(f\"\\nReference:  {' '.join(reference)}\")\nprint(f\"Candidate:  {' '.join(candidate)}\")\nprint(f\"BLEU Score: {bleu:.4f}\")\n\n# Analyze n-grams\nfor n in range(1, 5):\n    ref_ng = set(get_ngrams(reference, n))\n    cand_ng = set(get_ngrams(candidate, n))\n    overlap = len(ref_ng & cand_ng)\n    total = len(cand_ng)\n    precision = overlap / total if total > 0 else 0\n    print(f\"  {n}-gram precision: {precision:.2f}  ({overlap}/{total} match)\")\n\nprint(\"\\n\\nExample 3: Word Order Matters\")\nprint(\"=\"*60)\n\nreference = \"the cat sat on the mat\".split()\ncandidate = \"mat the on sat cat the\".split()  # Scrambled!\n\nbleu = bleu_score(candidate, reference)\nprint(f\"\\nReference:  {' '.join(reference)}\")\nprint(f\"Candidate:  {' '.join(candidate)}\")\nprint(f\"BLEU Score: {bleu:.4f}  # Lower! (order matters)\")\n\nprint(\"\\n\\nExample 4: Length Penalty\")\nprint(\"=\"*60)\n\nreference = \"the cat sat on the mat\".split()\ncandidate = \"the cat\".split()  # Too short!\n\nbleu = bleu_score(candidate, reference)\nprint(f\"\\nReference:  {' '.join(reference)}  (length: {len(reference)})\")\nprint(f\"Candidate:  {' '.join(candidate)}  (length: {len(candidate)})\")\nprint(f\"BLEU Score: {bleu:.4f}  # Brevity penalty applied!\")\n\nprint(\"\\n\\n\" + \"=\"*60)\nprint(\"BLEU SCORE INTERPRETATION\")\nprint(\"=\"*60)\n\nprint(\"\"\"\nBLEU Score Range:\n  0.0 - 0.1: Very poor\n  0.1 - 0.2: Poor\n  0.2 - 0.3: Fair\n  0.3 - 0.4: Good\n  0.4 - 0.5: Very good\n  0.5+: Excellent\n\nComponents:\n  1. N-gram Precision (1-gram to 4-gram)\n     • Measures word overlap\n     • Higher n-grams = phrase-level match\n  \n  2. Brevity Penalty (BP)\n     • Penalizes too-short translations\n     • BP = exp(1 - ref_len / cand_len) if cand < ref\n  \n  3. Geometric Mean\n     • Combines all n-gram precisions\n     • Balanced measure\n\nLimitations:\n  ❌ Doesn't consider synonyms (\"big\" vs \"large\")\n  ❌ Ignores fluency (grammatically correct?)\n  ❌ Multiple valid translations not captured\n  ❌ Not correlated with human judgment sometimes\n  \n  ✓ Use for comparison (same task, different models)\n  ✓ Complement with human evaluation\n  ✓ Consider other metrics: ROUGE, METEOR, BERTScore\n\"\"\")\n\nprint(\"\\n✓ BLEU: Standard metric for machine translation!\")",
+      "explanation": "BLEU score n-gram overlap ölçer. 1-4 gram precision + brevity penalty. 0-1 arası, yüksek = better. Limitations var, human eval ile combine et!"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Seq2Seq'te context vector bottleneck nedir?",
+      "options": [
+        "Encoder çok yavaştır",
+        "Tüm input info single fixed-size vector'e sıkıştırılır, long sequences için yetersiz",
+        "Decoder çok karmaşıktır",
+        "Memory problemi yaratır"
+      ],
+      "correct": 1,
+      "explanation": "Context vector = encoder'ın final hidden state. Tüm input'u (100 kelime) 512-dim vector'e sıkıştırır. Long sequences için information loss! Attention mechanism bunu çözer."
+    },
+    {
+      "question": "Teacher forcing nedir?",
+      "options": [
+        "Decoder'a previous prediction yerine ground truth input vermek",
+        "Encoder'ı daha güçlü train etmek",
+        "Model'i zorla öğretmek",
+        "Gradients'i clip etmek"
+      ],
+      "correct": 0,
+      "explanation": "Teacher forcing: Decoder'ın her step'inde previous predicted token yerine ground truth token ver. Faster training ama exposure bias yaratabilir!"
+    },
+    {
+      "question": "Attention mechanism nasıl çalışır?",
+      "options": [
+        "Encoder'ı daha güçlü yapar",
+        "Decoder her step'te encoder'ın farklı parts'ına weighted attention verir",
+        "Training'i hızlandırır",
+        "Model size'ı küçültür"
+      ],
+      "correct": 1,
+      "explanation": "Attention: Decoder her step'te tüm encoder hidden states'lerine bakabilir. Alignment scores hesaplar, weighted sum alır → dynamic context vector!"
+    },
+    {
+      "question": "Beam search greedy decoding'den neden daha iyi?",
+      "options": [
+        "Daha hızlıdır",
+        "Top-k sequences track eder, locally optimal olmaz",
+        "Daha az memory kullanır",
+        "Her zaman perfect sequence bulur"
+      ],
+      "correct": 1,
+      "explanation": "Greedy her step'te argmax alır → local optimum. Beam search k tane best sequences parallel track eder → globally better sequence bulabilir!"
+    },
+    {
+      "question": "BLEU score neyi ölçer?",
+      "options": [
+        "Model training speed",
+        "N-gram overlap between generated and reference translations",
+        "Model size",
+        "Inference latency"
+      ],
+      "correct": 1,
+      "explanation": "BLEU n-gram (1-4) precision'larının geometric mean'i + brevity penalty. Generated vs reference overlap. 0-1 arası, yüksek = better. Standard NMT metric!"
+    },
+    {
+      "question": "Exposure bias nedir?",
+      "options": [
+        "Model bazı examples'ı daha çok görür",
+        "Training'de ground truth, inference'da own predictions kullanılması mismatch",
+        "Encoder-decoder size farkı",
+        "Dataset bias"
+      ],
+      "correct": 1,
+      "explanation": "Training: Teacher forcing → always ground truth. Inference: Own predictions kullanılır. Mismatch → errors accumulate! Solution: Scheduled sampling (TF ratio decay)."
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Attention olmadan uzun sequences translate etmeye çalışmak",
+      "why": "Context vector bottleneck! 100 kelimeyi 512-dim vector'e sıkıştıramazsın, information loss!",
+      "fix": "Attention mechanism kullan. Her decoder step farklı encoder positions'a attend etsin.",
+      "example": "# Uzun sequence için attention şart!\nif src_len > 20:\n    decoder = AttentionDecoder(...)  # ✓\nelse:\n    decoder = SimpleDecoder(...)  # OK for short"
+    },
+    {
+      "mistake": "Inference'da teacher forcing kullanmak",
+      "why": "Inference'da ground truth yok! Teacher forcing kullanamazsın.",
+      "fix": "Evaluation ve inference'da teacher_forcing_ratio=0 kullan.",
+      "example": "# Training\noutput = model(src, trg, teacher_forcing_ratio=0.5)\n\n# Inference\noutput = model(src, trg, teacher_forcing_ratio=0)  # ✓ No TF!"
+    },
+    {
+      "mistake": "Gradient clipping yapmamak",
+      "why": "RNN'ler exploding gradients'e prone! Especially long sequences. Loss = NaN.",
+      "fix": "torch.nn.utils.clip_grad_norm_ kullan (max_norm=1.0).",
+      "example": "loss.backward()\ntorch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # ✓\noptimizer.step()"
+    },
+    {
+      "mistake": "Beam search'te length normalization yapmamak",
+      "why": "Beam search shorter sequences'ı favor eder (daha az multiplication → higher prob).",
+      "fix": "Score'u length ile normalize et: score / length^alpha.",
+      "example": "# Length normalization\nscore = log_prob / (len(sequence) ** 0.7)  # ✓ alpha=0.7"
+    },
+    {
+      "mistake": "<START> ve <END> tokens'ı handle etmemek",
+      "why": "Decoder ne zaman stop edeceğini bilmez, infinite loop veya kesik output!",
+      "fix": "START token ile başla, END token görünce dur.",
+      "example": "# Initialize\ninput = torch.tensor([[START_IDX]])\n\n# Loop\nwhile input != END_IDX and t < max_len:\n    output = decoder(input, ...)\n    input = output.argmax()  # Next token"
+    },
+    {
+      "mistake": "Padding tokens'ı loss hesabına dahil etmek",
+      "why": "Padding artificial, öğrenmeye katkısı yok. Loss artificially inflate eder.",
+      "fix": "CrossEntropyLoss'a ignore_index=PAD_IDX ver.",
+      "example": "criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)  # ✓"
+    },
+    {
+      "mistake": "Bidirectional encoder kullanmamak",
+      "why": "Forward-only RNN sadece left context görür. Bidirectional hem left hem right!",
+      "fix": "nn.LSTM(..., bidirectional=True) kullan.",
+      "example": "# Bidirectional encoder\nself.lstm = nn.LSTM(\n    embed_dim, hidden_dim,\n    bidirectional=True  # ✓\n)\n# hidden_dim *2 olur!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Seq2Seq architecture nedir?",
+      "back": "Encoder-Decoder: Encoder input'u context vector'e encode eder, Decoder output'u autoregressive generate eder. Variable-length input → variable-length output."
+    },
+    {
+      "front": "Context vector bottleneck nedir?",
+      "back": "Tüm input info single fixed-size vector'e sıkıştırılır. Long sequences için inadequate, information loss! Attention mechanism çözer."
+    },
+    {
+      "front": "Teacher forcing nedir?",
+      "back": "Training'de decoder'a previous prediction yerine ground truth token vermek. Faster training ama exposure bias yaratabilir. Solution: Scheduled sampling (decay TF ratio)."
+    },
+    {
+      "front": "Attention mechanism nasıl çalışır?",
+      "back": "Decoder her step'te tüm encoder hidden states'lerine weighted attention verir. Alignment scores → softmax → context vector (weighted sum). Dynamic context!"
+    },
+    {
+      "front": "Beam search vs greedy decoding?",
+      "back": "Greedy: argmax her step (fast, local optimum). Beam: top-k sequences track (better quality, k×slower). Typical beam=5-10."
+    },
+    {
+      "front": "BLEU score nedir?",
+      "back": "N-gram (1-4) precision geometric mean + brevity penalty. Generated vs reference overlap. 0-1 arası, yüksek = better. Standard NMT metric!"
+    },
+    {
+      "front": "Exposure bias nedir?",
+      "back": "Training: teacher forcing (ground truth). Inference: own predictions. Mismatch → errors accumulate! Solution: Scheduled sampling (TF ratio 0.9→0.1)."
+    },
+    {
+      "front": "Seq2Seq applications?",
+      "back": "Machine translation, text summarization, chatbots, speech recognition, image captioning. Any variable-length → variable-length mapping!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "animation",
+      "title": "Encoder-Decoder Architecture",
+      "description": "Seq2Seq forward pass animation. Input encoding, context vector, autoregressive decoding. Teacher forcing visualization.",
+      "component": "Seq2SeqAnimation"
+    },
+    {
+      "type": "interactive",
+      "title": "Attention Mechanism",
+      "description": "Attention weights visualization. Her decoder step'te encoder'ın hangi parts'ına attend edildiğini interactive görün.",
+      "component": "AttentionViz"
+    },
+    {
+      "type": "plot",
+      "title": "Beam Search Exploration",
+      "description": "Beam search tree. Multiple hypotheses parallel track edilmesi, pruning, final selection. Greedy ile compare.",
+      "component": "BeamSearchViz"
+    },
+    {
+      "type": "interactive",
+      "title": "Teacher Forcing Schedule",
+      "description": "TF ratio decay schedule. Training progress boyunca TF'nin etkisi, exposure bias reduction.",
+      "component": "TeacherForcingSchedule"
+    }
+  ]
+}

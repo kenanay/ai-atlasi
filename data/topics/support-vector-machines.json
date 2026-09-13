@@ -1,0 +1,290 @@
+{
+  "id": "support-vector-machines",
+  "title": "Support Vector Machines (SVM)",
+  "category": "supervised-learning",
+  "level": 2,
+  "estimatedTime": 60,
+  "description": "SVM: Find optimal hyperplane that maximizes margin between classes! Support vectors: Points closest to boundary. Kernel trick: Handle non-linear data (RBF, polynomial). Soft margin: Allow some misclassification (C parameter). Math: Quadratic programming, Lagrange multipliers. Applications: Text classification, image recognition, bioinformatics. Advantages: Effective in high dimensions, memory efficient (only support vectors). Disadvantages: Slow on large datasets, sensitive to scaling. Modern use: Good baseline, but neural networks often better.",
+  "content": {
+    "level0_basic": "SVM: Find best line/plane separating classes! Maximize margin (distance to nearest points). Support vectors: Points touching margin. Kernel trick: Transform data to higher dimension where linearly separable! RBF kernel: Most common. C parameter: Trade-off between margin width and misclassification. Large C: Hard margin (no errors allowed). Small C: Soft margin (allow some errors). Training: Quadratic optimization. Prediction: Fast (dot products with support vectors).",
+    "level1_beginner": "**SVM Objective:**\n\nMargin maximization:\n  max: 2/||w||\n  subject to: y_i(w·x_i + b) ≥ 1\n\nSoft margin (allow errors):\n  min: (1/2)||w||² + C·Σξ_i\n  where ξ_i = slack variables\n\n**Kernel Functions:**\n\nLinear: K(x,x') = x·x'\nPolynomial: K(x,x') = (x·x' + 1)^d\nRBF (Gaussian): K(x,x') = exp(-γ||x-x'||²)\n\nRBF most versatile!\n\n**Support Vectors:**\nOnly points with α_i > 0\nLie on or inside margin\nDefine decision boundary",
+    "level2_application": "**Scikit-learn SVM:**\n\n```python\nfrom sklearn.svm import SVC\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import Pipeline\n\n# Always scale for SVM!\npipeline = Pipeline([\n    ('scaler', StandardScaler()),\n    ('svm', SVC(kernel='rbf', C=1.0, gamma='scale'))\n])\n\npipeline.fit(X_train, y_train)\nprint(f'Accuracy: {pipeline.score(X_test, y_test):.3f}')\n\n# Support vectors\nprint(f'Support vectors: {pipeline['svm'].n_support_}')\n```",
+    "level3_advanced": "**Hyperparameter Tuning:**\n\n```python\nfrom sklearn.model_selection import GridSearchCV\n\nparam_grid = {\n    'svm__C': [0.1, 1, 10, 100],\n    'svm__gamma': ['scale', 0.001, 0.01, 0.1, 1],\n    'svm__kernel': ['rbf', 'poly']\n}\n\ngrid = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1)\ngrid.fit(X_train, y_train)\n\nprint(f'Best params: {grid.best_params_}')\nprint(f'Best score: {grid.best_score_:.3f}')\n```",
+    "level4_expert": "**Custom Kernel:**\n\n```python\nimport numpy as np\nfrom sklearn.svm import SVC\nfrom sklearn.metrics.pairwise import pairwise_kernels\n\ndef custom_kernel(X, Y):\n    # Example: Exponential kernel\n    return np.exp(-np.linalg.norm(X[:, None] - Y, axis=2))\n\nsvm = SVC(kernel=custom_kernel)\nsvm.fit(X_train, y_train)\n```"
+  },
+  "whatIsIt": "SVM: Maximum margin classifier. Finds hyperplane that maximizes distance to nearest points (support vectors). Soft margin: Allow misclassification via slack variables (ξ). Objective: min ||w||²/2 + C·Σξ. Kernel trick: Map to high-dimensional space via kernel function K(x,x'). RBF kernel: K = exp(-γ||x-x'||²). Decision function: f(x) = Σα_i·y_i·K(x_i,x) + b. Only support vectors have α>0. Dual formulation: Convex quadratic programming.",
+  "whyNeeded": "Why SVM: (1) Effective in high dimensions (text with 10k+ features). (2) Memory efficient (only stores support vectors, not all data). (3) Versatile (different kernels). (4) Strong theoretical foundation (VC dimension, margin theory). Applications: Text classification (spam, sentiment), image classification, bioinformatics (protein classification). When not to use: Large datasets (>100k samples, use linear SVM or neural nets), need probability estimates (SVM gives distances), many features relative to samples (regularization critical).",
+  "realWorldAnalogy": "SVM = Optimal fence! Separate sheep from goats. Many possible fences (hyperplanes). Which best? Maximum margin: Farthest from both groups! Support vectors: Animals closest to fence (define boundary). If they move, fence moves. Others irrelevant! Kernel trick: Ground not flat (data not linearly separable)? Transform space! Think 3D paper: Can't separate on flat paper, but fold into cone → separable! RBF kernel does this mathematically. C parameter: Fence rigidity. High C: Rigid (must separate perfectly, even outliers). Low C: Flexible (allow some sheep on goat side for better overall fence).",
+  "mathematics": {
+    "formulas": [
+      "\\text{Margin: } \\frac{2}{||w||}",
+      "\\text{Soft margin objective: } \\min \\frac{1}{2}||w||^2 + C\\sum_i \\xi_i",
+      "\\text{Constraint: } y_i(w \\cdot x_i + b) \\geq 1 - \\xi_i",
+      "\\text{RBF kernel: } K(x,x') = \\exp\\left(-\\gamma||x-x'||^2\\right)",
+      "\\text{Decision: } f(x) = \\text{sign}\\left(\\sum_i \\alpha_i y_i K(x_i, x) + b\\right)"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "SVM Training:",
+      "1. Scale features (critical!)",
+      "2. Choose kernel (RBF default)",
+      "3. Solve quadratic programming:",
+      "   max: Σα_i - (1/2)ΣΣα_i·α_j·y_i·y_j·K(x_i,x_j)",
+      "   s.t.: 0 ≤ α_i ≤ C, Σα_i·y_i = 0",
+      "4. Find support vectors (α_i > 0)",
+      "5. Compute bias b",
+      "Prediction:",
+      "1. Compute f(x) = Σα_i·y_i·K(x_i,x) + b",
+      "2. Return sign(f(x))"
+    ],
+    "complexity": "Training: O(n²·d) to O(n³) depending on solver. Quadratic programming complexity. Prediction: O(n_sv·d) where n_sv = support vectors (typically 20-80% of data). Memory: O(n_sv·d). Slow for large datasets (>100k samples). Use LinearSVC for large scale."
+  },
+  "prerequisites": [
+    "logistic-regression",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "kernel-methods",
+    "neural-networks"
+  ],
+  "relatedTopics": [
+    "logistic-regression",
+    "decision-trees"
+  ],
+  "tags": [
+    "svm",
+    "support-vector-machine",
+    "kernel-trick",
+    "margin",
+    "classification"
+  ],
+  "codeExamples": [
+    {
+      "title": "Basic SVM",
+      "language": "python",
+      "code": "from sklearn.svm import SVC\nfrom sklearn.preprocessing import StandardScaler\n\n# Scale data (IMPORTANT!)\nscaler = StandardScaler()\nX_train_scaled = scaler.fit_transform(X_train)\nX_test_scaled = scaler.transform(X_test)\n\nsvm = SVC(kernel='rbf', C=1.0)\nsvm.fit(X_train_scaled, y_train)\n\nprint(f'Accuracy: {svm.score(X_test_scaled, y_test):.3f}')\nprint(f'Support vectors: {len(svm.support_vectors_)}')",
+      "level": 1,
+      "explanation": "Basic SVM code"
+    },
+    {
+      "title": "Different Kernels",
+      "language": "python",
+      "code": "from sklearn.svm import SVC\n\n# Linear\nsvm_linear = SVC(kernel='linear')\n\n# Polynomial\nsvm_poly = SVC(kernel='poly', degree=3)\n\n# RBF (Gaussian)\nsvm_rbf = SVC(kernel='rbf', gamma='scale')\n\n# Sigmoid\nsvm_sigmoid = SVC(kernel='sigmoid')\n\nfor name, svm in [('Linear', svm_linear), ('Poly', svm_poly), \n                  ('RBF', svm_rbf), ('Sigmoid', svm_sigmoid)]:\n    svm.fit(X_train_scaled, y_train)\n    print(f'{name}: {svm.score(X_test_scaled, y_test):.3f}')",
+      "level": 2,
+      "explanation": "Different Kernels code"
+    },
+    {
+      "title": "Grid Search Tuning",
+      "language": "python",
+      "code": "from sklearn.model_selection import GridSearchCV\n\nparam_grid = {\n    'C': [0.1, 1, 10, 100],\n    'gamma': ['scale', 'auto', 0.001, 0.01, 0.1],\n    'kernel': ['rbf', 'poly']\n}\n\nsvm = SVC()\ngrid = GridSearchCV(svm, param_grid, cv=5, scoring='f1_weighted')\ngrid.fit(X_train_scaled, y_train)\n\nprint(f'Best: {grid.best_params_}')\nprint(f'Score: {grid.best_score_:.3f}')",
+      "level": 2,
+      "explanation": "Grid Search Tuning code"
+    },
+    {
+      "title": "Probability Estimates",
+      "language": "python",
+      "code": "# Enable probability (slower, uses Platt scaling)\nsvm_proba = SVC(kernel='rbf', probability=True)\nsvm_proba.fit(X_train_scaled, y_train)\n\n# Get probabilities\nproba = svm_proba.predict_proba(X_test_scaled[:5])\nfor i, p in enumerate(proba):\n    print(f'Sample {i}: {p}')\n    print(f'Predicted: class {p.argmax()}, confidence {p.max():.3f}')",
+      "level": 3,
+      "explanation": "Probability Estimates code"
+    },
+    {
+      "title": "One-Class SVM (Anomaly)",
+      "language": "python",
+      "code": "from sklearn.svm import OneClassSVM\n\n# Learn normal data, detect outliers\noclsvm = OneClassSVM(kernel='rbf', nu=0.1)  # nu = outlier fraction\noclsvm.fit(X_train_scaled)\n\n# Predict: 1=normal, -1=outlier\npredictions = oclsvm.predict(X_test_scaled)\noutliers = np.sum(predictions == -1)\n\nprint(f'Outliers detected: {outliers}/{len(predictions)} ({100*outliers/len(predictions):.1f}%)')",
+      "level": 4,
+      "explanation": "One-Class SVM (Anomaly) code"
+    },
+    {
+      "title": "Large Scale (LinearSVC)",
+      "language": "python",
+      "code": "from sklearn.svm import LinearSVC\n\n# For large datasets (>100k samples)\nlinear_svm = LinearSVC(C=1.0, max_iter=1000, dual=False)\nlinear_svm.fit(X_train_scaled, y_train)\n\nprint(f'Accuracy: {linear_svm.score(X_test_scaled, y_test):.3f}')\nprint('Much faster than kernel SVM on large data!')",
+      "level": 3,
+      "explanation": "Large Scale (LinearSVC) code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "SVM'de margin nedir?",
+      "options": [
+        "Error rate",
+        "Distance from hyperplane to nearest points (support vectors)",
+        "Number of support vectors",
+        "Training time"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Margin: Distance from decision boundary to closest points! SVM maximizes this distance. Larger margin → better generalization (points can move slightly without misclassification). Support vectors: Points on margin boundary. Only these matter for decision boundary. Other points irrelevant! Intuition: Safer boundary (far from both classes) → more robust."
+    },
+    {
+      "question": "Kernel trick'in amacı nedir?",
+      "options": [
+        "Speed up",
+        "Transform data to higher dimension where linearly separable!",
+        "Reduce features",
+        "Visualization"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Kernel trick: Map data to high-dimensional space WITHOUT computing transformation explicitly! Example: XOR not linearly separable in 2D. Map to 3D (add z=x₁·x₂) → separable! RBF kernel: Infinite dimensional space! Mathematically equivalent but computed via kernel function K(x,x'). Benefit: Handle non-linear data efficiently. No explicit high-dim computation!"
+    },
+    {
+      "question": "C parametresinin rolü?",
+      "options": [
+        "Kernel type",
+        "Regularization: Trade-off between margin width and misclassification",
+        "Learning rate",
+        "Feature scaling"
+      ],
+      "correctAnswer": 1,
+      "explanation": "C: Penalty for misclassification! Large C (100): Hard margin, no errors allowed → may overfit, narrow margin. Small C (0.01): Soft margin, allow errors → wider margin, better generalization. Trade-off: Margin width vs training accuracy. Similar to: Inverse of λ in regularization. Tune via cross-validation! Typical range: 0.1 to 100."
+    },
+    {
+      "question": "Neden SVM'de feature scaling kritik?",
+      "options": [
+        "Accuracy",
+        "SVM uses distances! Different scales → biased toward large-scale features",
+        "Speed",
+        "Required by algorithm"
+      ],
+      "correctAnswer": 1,
+      "explanation": "SVM based on distances/dot products! Features different scales → large-scale features dominate. Example: Feature1 [0-1], Feature2 [0-1000]. Feature2 will dominate distance calculation → wrong decision boundary. Solution: Always StandardScaler or MinMaxScaler before SVM! Unlike trees (scale-invariant). Critical for good performance!"
+    },
+    {
+      "question": "Support vectors nedir?",
+      "options": [
+        "All training points",
+        "Points closest to boundary: Define hyperplane, others don't matter!",
+        "Outliers",
+        "Test points"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Support vectors: Points with α>0 (non-zero Lagrange multipliers). Lie on or inside margin! These points define decision boundary. Remove other points → same boundary! Why 'support': They support the hyperplane. Benefit: Memory efficient (store only SVs, not all data). Typically 20-80% of training data. More support vectors → complex boundary."
+    },
+    {
+      "question": "Large datasets (>100k) için best practice?",
+      "options": [
+        "Standard SVM",
+        "Use LinearSVC: Much faster, scales better!",
+        "Increase C",
+        "Use polynomial kernel"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Standard SVM: O(n²-n³) → prohibitive for large n! LinearSVC: Linear kernel only, optimized for speed. Uses liblinear (faster solver). Complexity: O(n·d). Can handle millions of samples! Trade-off: Only linear decision boundary. Alternative: SGDClassifier(loss='hinge') for even larger scale. Kernel SVM: Only for small-medium datasets (<50k)."
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "SVM Core Idea",
+      "back": "**Maximum margin classifier**\n\nFind hyperplane farthest from nearest points\n\n**Support vectors:**\nPoints on margin\n\n**Maximize:**\n2/||w||\n\nSafest boundary! 📏"
+    },
+    {
+      "front": "Kernel Trick",
+      "back": "**Problem:**\nNon-linear data\n\n**Solution:**\nMap to high dimension\n\n**Magic:**\nK(x,x') = ϕ(x)·ϕ(x')\nNo explicit ϕ needed!\n\n**RBF most common** 🎩"
+    },
+    {
+      "front": "C Parameter",
+      "back": "**Regularization strength:**\n\nHigh C (100):\n→ Hard margin, no errors\n\nLow C (0.01):\n→ Soft margin, allow errors\n\n**Trade-off:**\nMargin vs accuracy\n\nTune via CV! ⚖️"
+    },
+    {
+      "front": "RBF Kernel",
+      "back": "**Formula:**\nK = exp(-γ||x-x'||²)\n\n**γ parameter:**\nLow → smooth boundary\nHigh → complex, overfit\n\n**Most versatile kernel!**\n\nGaussian similarity 🔔"
+    },
+    {
+      "front": "Feature Scaling",
+      "back": "**CRITICAL for SVM!**\n\nSVM uses distances\nDifferent scales → bias\n\n**Always:**\nStandardScaler()\nor MinMaxScaler()\n\n**Before training!** ⚠️"
+    },
+    {
+      "front": "Support Vectors",
+      "back": "**Definition:**\nPoints with α > 0\n\n**Location:**\nOn or inside margin\n\n**Importance:**\nDefine boundary\nOthers irrelevant!\n\n**Memory efficient** 💾"
+    },
+    {
+      "front": "SVM Kernels",
+      "back": "**Linear:** x·x'\n**Poly:** (x·x'+1)^d\n**RBF:** exp(-γ||x-x'||²)\n**Sigmoid:** tanh()\n\n**Default: RBF**\n**Large scale: Linear**\n\nChoose wisely! 🎯"
+    },
+    {
+      "front": "When Use SVM",
+      "back": "**Good for:**\n✓ High dimensions\n✓ Clear margin\n✓ Small-medium data\n\n**Not for:**\n✗ Large datasets (>100k)\n✗ Need probabilities\n✗ Many noisy features\n\nStrong baseline! 💪"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Not scaling features",
+      "why": "SVM uses distances! Unscaled features → large-scale features dominate. Wrong decision boundary.",
+      "fix": "ALWAYS use StandardScaler or MinMaxScaler before SVM! Pipeline: scaler → SVM. Critical for performance. Without scaling: Random results, depends on units (meters vs kilometers)."
+    },
+    {
+      "mistake": "Using RBF kernel on all datasets",
+      "why": "RBF: Flexible but complex. Linear data → overfits unnecessarily. Small datasets + RBF → overfitting.",
+      "fix": "Try linear kernel first! Faster, less overfitting. If insufficient: Try RBF. Rule: Start simple (linear), add complexity if needed. Large datasets (>100k): LinearSVC only (speed)."
+    },
+    {
+      "mistake": "Default C and gamma values",
+      "why": "C=1.0, gamma='scale': Good start but rarely optimal! Dataset-specific tuning needed. Can be 10× better performance.",
+      "fix": "Always tune hyperparameters! GridSearchCV or RandomizedSearchCV. C: [0.1, 1, 10, 100], gamma: ['scale', 0.001, 0.01, 0.1, 1]. Takes time but critical for good results."
+    },
+    {
+      "mistake": "Using kernel SVM on large datasets",
+      "why": "Standard SVM: O(n²-n³). 100k samples → hours or days! Infeasible.",
+      "fix": "Large datasets (>50k): Use LinearSVC (linear kernel only but fast). Or SGDClassifier(loss='hinge'). Or neural networks. Kernel SVM: Only small-medium datasets (<50k samples)."
+    },
+    {
+      "mistake": "Expecting probability estimates",
+      "why": "SVM outputs distances, not probabilities! Probabilities via Platt scaling (probability=True): Calibrated but slower, not true probabilities.",
+      "fix": "For probabilities: Use logistic regression or calibrated models. SVM probability=True: OK but slower, less reliable than LR probabilities. If need probabilities: Consider different algorithm."
+    },
+    {
+      "mistake": "Ignoring class imbalance",
+      "why": "Imbalanced classes → SVM biased toward majority. Minority class ignored!",
+      "fix": "Use class_weight='balanced'! Automatically adjusts for imbalance. Or manual weights: class_weight={0: 1, 1: 10}. Critical for rare classes (fraud, disease detection)."
+    },
+    {
+      "mistake": "Not checking number of support vectors",
+      "why": "Too many support vectors (>80%) → Model using most training data. Complex boundary, possible overfit, slow prediction.",
+      "fix": "Check: svm.n_support_. Healthy: 20-50%. Too many: Reduce C (softer margin), try linear kernel, or algorithm not suitable for data. Too few (<5%): May be underfitting."
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "geometry",
+      "title": "SVM Decision Boundary",
+      "description": "2D plot: Two classes, hyperplane, margins (dashed lines), support vectors (circled). Interactive: Adjust C, see margin width change."
+    },
+    {
+      "type": "comparison",
+      "title": "Linear vs RBF Kernel",
+      "description": "Side-by-side: Same data. Linear: Straight boundary. RBF: Curved, complex boundary. Shows when each appropriate."
+    },
+    {
+      "type": "interactive",
+      "title": "C and Gamma Effect",
+      "description": "Sliders: C (0.1-100), gamma (0.001-10). Real-time decision boundary update. See overfitting with high C/gamma."
+    },
+    {
+      "type": "metric",
+      "title": "Support Vectors vs Performance",
+      "description": "Graph: X=% support vectors, Y=accuracy. Shows optimal range (20-50%). Too few: underfit. Too many: overfit."
+    }
+  ],
+  "references": [
+    {
+      "title": "Support-Vector Networks",
+      "authors": "Cortes & Vapnik",
+      "year": 1995,
+      "link": "https://link.springer.com/article/10.1007/BF00994018",
+      "type": "paper"
+    },
+    {
+      "title": "A Tutorial on Support Vector Machines",
+      "authors": "C.J.C. Burges",
+      "year": 1998,
+      "link": "https://www.microsoft.com/en-us/research/publication/a-tutorial-on-support-vector-machines-for-pattern-recognition/",
+      "type": "paper"
+    },
+    {
+      "title": "Scikit-learn SVM Guide",
+      "authors": "Scikit-learn Team",
+      "year": 2023,
+      "link": "https://scikit-learn.org/stable/modules/svm.html",
+      "type": "documentation"
+    }
+  ]
+}

@@ -1,0 +1,380 @@
+{
+  "id": "backpropagation",
+  "title": "Backpropagation (Geri Yayılım)",
+  "category": "neural-networks",
+  "level": 2,
+  "estimatedTime": 50,
+  "description": "Neural network'lerin nasıl öğrendiğini anlamak için backpropagation algoritması. Chain rule ile gradientlerin geriye doğru yayılması.",
+  "prerequisites": [
+    "gradient-descent",
+    "activation-functions",
+    "loss-functions",
+    "perceptron"
+  ],
+  "realWorldAnalogy": "Backpropagation bir okçunun hedefi ıskaladıktan sonra 'nerede hata yaptım?' diye geriye dönüp her hareketi analiz etmesi gibidir. Ok hedefe varmadı mı? Geriye git: Kolun açısı mı yanlıştı? Nefes kontrolü mü bozuktu? Duruş mu hatalıydı? Her adımdaki hatayı bulup düzeltirsin. Neural network de aynı şekilde çıktıdaki hatayı geriye doğru takip ederek her katmanın ve her ağırlığın ne kadar sorumlu olduğunu hesaplar.",
+  "whatIsIt": "Backpropagation (geri yayılım), neural network'lerin öğrenmesini sağlayan algoritmanızdır. Chain rule (zincirleme türev kuralı) kullanarak loss fonksiyonunun her ağırlığa göre gradientini hesaplar. Forward pass'te prediction yapar, backward pass'te hatayı geriye yayar ve her parametrenin güncellenmesi gereken miktarını bulur. Modern deep learning'in temel taşı!",
+  "whyNeeded": "Multi-layer neural network'lerde binlerce-milyonlarca parametre var. Her parametrenin hataya etkisini manuel hesaplamak imkansız. Backpropagation bunu otomatik ve verimli yapar. Gradient descent için gerekli gradientleri tek bir backward pass'te hesaplar. Olmadan deep learning mümkün olmazdı! PyTorch ve TensorFlow'un autograd sistemleri backpropagation uygular.",
+  "mathematics": {
+    "formulas": [
+      "\\frac{\\partial L}{\\partial w} = \\frac{\\partial L}{\\partial y} \\cdot \\frac{\\partial y}{\\partial z} \\cdot \\frac{\\partial z}{\\partial w}",
+      "\\frac{\\partial L}{\\partial W^{[l]}} = \\frac{\\partial L}{\\partial z^{[l]}} \\cdot (a^{[l-1]})^T",
+      "\\frac{\\partial L}{\\partial a^{[l-1]}} = (W^{[l]})^T \\cdot \\frac{\\partial L}{\\partial z^{[l]}}",
+      "\\frac{\\partial L}{\\partial z^{[l]}} = \\frac{\\partial L}{\\partial a^{[l]}} \\odot \\sigma'(z^{[l]})",
+      "W^{[l]} := W^{[l]} - \\alpha \\frac{\\partial L}{\\partial W^{[l]}}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Forward Pass: Girdiyi network'ten geçir, her katmanın aktivasyonunu sakla",
+      "2. Loss Hesaplama: Çıktı ile gerçek değer arasındaki hatayı hesapla (L)",
+      "3. Output Gradient: ∂L/∂output hesapla (loss'un türevi)",
+      "4. Backward Pass: Her katman için geriye doğru git:",
+      "   a. ∂L/∂z = ∂L/∂a · σ'(z) hesapla (chain rule)",
+      "   b. ∂L/∂W = ∂L/∂z · a^T hesapla",
+      "   c. ∂L/∂a_prev = W^T · ∂L/∂z hesapla (bir önceki katmana aktar)",
+      "5. Weight Update: Her parametre için w := w - α·∂L/∂w uygula",
+      "6. Tekrarla: Convergence'a kadar devam et"
+    ],
+    "complexity": "Forward pass: O(N), Backward pass: O(N) - N toplam bağlantı sayısı. Backward pass forward'ın yaklaşık 2-3 katı zaman alır."
+  },
+  "levels": [
+    {
+      "level": 0,
+      "title": "Temel Kavram",
+      "content": "**Backpropagation (Geri Yayılım)** neural network'lerin nasıl öğrendiğini anlatan temel algoritmadır.\n\n**Ana fikir:**\n1. **Forward pass:** Girdiyi network'ten geçir, çıktıyı hesapla\n2. **Hata hesapla:** Gerçek değer ile tahmin arasındaki farkı bul (loss)\n3. **Backward pass:** Hatayı geriye götür, her ağırlığın hatadaki payını hesapla\n4. **Güncelle:** Ağırlıkları hata payına göre düzelt\n\n**Neden önemli?**\n- Multi-layer network'leri eğitmenin tek yolu\n- Gradient descent için gradientleri verimli hesaplar\n- Deep learning'in temel taşı\n\n**Basit benzetme:**\nBir fabrikada üretim hattında hata var. Hangi işçi ne kadar sorumlu? Backpropagation son üründen başlayarak geriye gider ve her istasyonun hata payını hesaplar.",
+      "keyPoints": [
+        "Forward pass: Girdi → Çıktı",
+        "Loss: Hata miktarını ölç",
+        "Backward pass: Hatayı geriye yayımlat",
+        "Her ağırlığın hata payını hesapla",
+        "Ağırlıkları güncelle"
+      ]
+    },
+    {
+      "level": 1,
+      "title": "Temel Prensip",
+      "content": "**Chain Rule (Zincir Kuralı)**\n\nBackpropagation'ın matematiksel temeli **chain rule**'dur. Türev zincirleme kuralı.\n\n**Örnek:**\n```\ny = f(g(x))\ndy/dx = (dy/dg) × (dg/dx)\n```\n\nNeural network'te birçok katman üst üste:\n```\nInput → Layer1 → Layer2 → Layer3 → Output → Loss\n```\n\n**Gradient Flow:**\n- Loss'tan başla\n- Her katmandan geriye doğru gradient'i hesapla\n- Chain rule ile çarp\n- En başa kadar git\n\n**Forward vs Backward:**\n\n**Forward Pass:**\n```\nz1 = W1 × x + b1\na1 = σ(z1)\nz2 = W2 × a1 + b2\ny = σ(z2)\nloss = (y - target)²\n```\n\n**Backward Pass:**\n```\n∂L/∂y → ∂L/∂z2 → ∂L/∂W2 → ∂L/∂a1 → ∂L/∂z1 → ∂L/∂W1\n```\n\nHer adımda chain rule uygulayarak bir önceki katmanın gradientini hesaplarsın.",
+      "keyPoints": [
+        "Chain rule: Türev zincirleme kuralı",
+        "Forward: Girdi → Çıktı (tahmin)",
+        "Backward: Loss → Gradients (öğrenme)",
+        "Her katman gradientini bir sonrakine aktarır",
+        "Efficient computation: Her hesap bir kez"
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Pratik Uygulama",
+      "content": "**PyTorch Autograd**\n\nModern framework'ler backpropagation'ı otomatik yapar. PyTorch'ta `loss.backward()` yeterli!\n\n**Computational Graph:**\n\nPyTorch her işlemi bir graph'ta tutar:\n```python\nx = torch.tensor([2.0], requires_grad=True)\ny = x ** 2\ny.backward()  # Otomatik backprop!\nprint(x.grad)  # dy/dx = 2x = 4.0\n```\n\n**Training Loop:**\n```python\nfor epoch in epochs:\n    # Forward pass\n    output = model(input)\n    loss = criterion(output, target)\n    \n    # Backward pass\n    optimizer.zero_grad()  # Gradientleri sıfırla\n    loss.backward()        # Backpropagation\n    optimizer.step()       # Ağırlıkları güncelle\n```\n\n**Gradient Accumulation:**\nBüyük modellerde bellek sınırlı. Çözüm: Gradientleri biriktir!\n\n```python\naccumulation_steps = 4\nfor i, (input, target) in enumerate(dataloader):\n    output = model(input)\n    loss = criterion(output, target) / accumulation_steps\n    loss.backward()  # Gradient birikir\n    \n    if (i + 1) % accumulation_steps == 0:\n        optimizer.step()\n        optimizer.zero_grad()\n```\n\n**Gradient Clipping:**\nExploding gradient'leri önle:\n```python\ntorch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n```",
+      "keyPoints": [
+        "PyTorch autograd: Otomatik backpropagation",
+        "Computational graph: İşlemleri izle",
+        "zero_grad() → backward() → step()",
+        "Gradient accumulation: Bellek tasarrufu",
+        "Gradient clipping: Exploding gradients önleme"
+      ]
+    },
+    {
+      "level": 3,
+      "title": "İleri Düzey",
+      "content": "**Matematiksel Türetme**\n\n**2-Layer Network:**\n\nNotasyon:\n- `W1, b1`: İlk katman ağırlıkları\n- `W2, b2`: İkinci katman ağırlıkları\n- `σ`: Aktivasyon fonksiyonu\n- `L`: Loss fonksiyonu\n\n**Forward:**\n```\nz1 = W1·x + b1\na1 = σ(z1)\nz2 = W2·a1 + b2\nŷ = σ(z2)\nL = (ŷ - y)²\n```\n\n**Backward (Chain Rule):**\n\n**Output layer:**\n```\n∂L/∂ŷ = 2(ŷ - y)\n∂L/∂z2 = ∂L/∂ŷ · σ'(z2)\n∂L/∂W2 = ∂L/∂z2 · a1ᵀ\n∂L/∂b2 = ∂L/∂z2\n```\n\n**Hidden layer:**\n```\n∂L/∂a1 = W2ᵀ · ∂L/∂z2\n∂L/∂z1 = ∂L/∂a1 · σ'(z1)\n∂L/∂W1 = ∂L/∂z1 · xᵀ\n∂L/∂b1 = ∂L/∂z1\n```\n\n**Jacobian Matrix:**\n\nBir vektör fonksiyonunun türevi:\n```\nJ = [∂f1/∂x1  ∂f1/∂x2  ...]\n    [∂f2/∂x1  ∂f2/∂x2  ...]\n    [  ...      ...    ...]\n```\n\nBackpropagation'da **Vector-Jacobian Product (VJP)** kullanılır:\n```\nvᵀJ yerine J·v hesaplanır (daha verimli)\n```\n\n**Vanishing Gradient:**\n\nSigmoid kullanımda problem:\n```\nσ'(x) ∈ [0, 0.25]\n```\n\nÇok katmanda:\n```\n∂L/∂W1 = ∂L/∂z_n · σ'(z_{n-1}) · ... · σ'(z1)\n```\n\nHer katman 0.25 ile çarpılır → gradient kaybolur!\n\n**Çözüm:** ReLU, ResNet, Batch Normalization",
+      "keyPoints": [
+        "Chain rule ile layer-by-layer türev",
+        "Jacobian: Vektör fonksiyonlarının türevi",
+        "VJP: Efficient gradient computation",
+        "Vanishing gradient: Derin networkler'de problem",
+        "ReLU ve ResNet çözüm sağlar"
+      ]
+    },
+    {
+      "level": 4,
+      "title": "Uzman Seviye",
+      "content": "**Advanced Backpropagation Teknikleri**\n\n**1. Gradient Checkpointing**\n\nProblem: Forward pass'te tüm aktivasyonları tutmak bellek yer.\n\nÇözüm: Sadece checkpoint'leri tut, gerektiğinde yeniden hesapla.\n\n```python\nimport torch.utils.checkpoint as checkpoint\n\nclass CheckpointedModel(nn.Module):\n    def forward(self, x):\n        # Normal forward\n        x = self.layer1(x)\n        \n        # Checkpointed forward (bellek tasarrufu)\n        x = checkpoint.checkpoint(self.layer2, x)\n        x = checkpoint.checkpoint(self.layer3, x)\n        \n        return self.output(x)\n```\n\n**Trade-off:** %40 bellek tasarrufu, %20 yavaşlama\n\n**2. Custom Backward Function**\n\nKendi türevinizi yazın:\n\n```python\nclass MyFunction(torch.autograd.Function):\n    @staticmethod\n    def forward(ctx, x, weight):\n        ctx.save_for_backward(x, weight)\n        output = x.mm(weight)\n        return output\n    \n    @staticmethod\n    def backward(ctx, grad_output):\n        x, weight = ctx.saved_tensors\n        grad_x = grad_output.mm(weight.t())\n        grad_weight = x.t().mm(grad_output)\n        return grad_x, grad_weight\n```\n\n**3. Mixed Precision Training**\n\nFP16'da forward/backward, FP32'de weight update:\n\n```python\nfrom torch.cuda.amp import autocast, GradScaler\n\nscaler = GradScaler()\n\nfor input, target in dataloader:\n    optimizer.zero_grad()\n    \n    with autocast():  # FP16 forward\n        output = model(input)\n        loss = criterion(output, target)\n    \n    scaler.scale(loss).backward()  # Scaled backward\n    scaler.step(optimizer)\n    scaler.update()\n```\n\n**4. Second-Order Methods (Hessian)**\n\nİkinci türev (curvature):\n```\nH = ∂²L/∂w²\n```\n\nNewton's method:\n```\nw_new = w_old - H⁻¹ · ∇L\n```\n\nÇok pahalı ama daha hızlı converge eder.\n\n**5. Distributed Backpropagation**\n\nModel parallelism:\n- Her GPU bir katman\n- Gradientler backward pass'te geri gönderilir\n\nData parallelism:\n- Her GPU full model\n- Gradientler average edilir (allreduce)\n\n**6. Gradient Analysis**\n\n```python\n# Gradient norm'ları izle\nfor name, param in model.named_parameters():\n    if param.grad is not None:\n        grad_norm = param.grad.norm().item()\n        print(f\"{name}: {grad_norm}\")\n```\n\nVanishing: norm << 1\nExploding: norm >> 1",
+      "keyPoints": [
+        "Gradient checkpointing: Bellek vs hız trade-off",
+        "Custom backward: Özel türev implementasyonu",
+        "Mixed precision: FP16 training",
+        "Second-order methods: Hessian kullanımı",
+        "Distributed training: Model/data parallelism",
+        "Gradient analysis: Debugging ve monitoring"
+      ]
+    }
+  ],
+  "codeExamples": [
+    {
+      "title": "Manuel Backpropagation (2-Layer)",
+      "language": "python",
+      "code": "import numpy as np\n\n# Sigmoid ve türevi\ndef sigmoid(x):\n    return 1 / (1 + np.exp(-x))\n\ndef sigmoid_derivative(x):\n    return sigmoid(x) * (1 - sigmoid(x))\n\n# Network parametreleri\nnp.random.seed(42)\nW1 = np.random.randn(2, 3)  # Input->Hidden (3 nöron)\nb1 = np.zeros((1, 3))\nW2 = np.random.randn(3, 1)  # Hidden->Output\nb2 = np.zeros((1, 1))\n\n# Training data\nX = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])  # XOR\ny = np.array([[0], [1], [1], [0]])\n\nlearning_rate = 0.5\n\nfor epoch in range(5000):\n    # ===== FORWARD PASS =====\n    # Hidden layer\n    z1 = X.dot(W1) + b1\n    a1 = sigmoid(z1)\n    \n    # Output layer\n    z2 = a1.dot(W2) + b2\n    a2 = sigmoid(z2)\n    \n    # Loss (MSE)\n    loss = np.mean((a2 - y) ** 2)\n    \n    # ===== BACKWARD PASS =====\n    # Output layer gradients\n    dL_da2 = 2 * (a2 - y) / y.shape[0]  # Loss türevi\n    dL_dz2 = dL_da2 * sigmoid_derivative(z2)  # Chain rule\n    dL_dW2 = a1.T.dot(dL_dz2)  # Weight gradient\n    dL_db2 = np.sum(dL_dz2, axis=0, keepdims=True)  # Bias gradient\n    \n    # Hidden layer gradients\n    dL_da1 = dL_dz2.dot(W2.T)  # Backpropagate error\n    dL_dz1 = dL_da1 * sigmoid_derivative(z1)  # Chain rule\n    dL_dW1 = X.T.dot(dL_dz1)  # Weight gradient\n    dL_db1 = np.sum(dL_dz1, axis=0, keepdims=True)  # Bias gradient\n    \n    # ===== UPDATE WEIGHTS =====\n    W2 -= learning_rate * dL_dW2\n    b2 -= learning_rate * dL_db2\n    W1 -= learning_rate * dL_dW1\n    b1 -= learning_rate * dL_db1\n    \n    if epoch % 1000 == 0:\n        print(f\"Epoch {epoch}, Loss: {loss:.4f}\")\n\n# Test\nprint(\"\\nPredictions:\")\nfor i, x in enumerate(X):\n    z1 = x.dot(W1) + b1\n    a1 = sigmoid(z1)\n    z2 = a1.dot(W2) + b2\n    pred = sigmoid(z2)\n    print(f\"Input: {x} → Prediction: {pred[0]:.3f} (Target: {y[i][0]})\")",
+      "explanation": "XOR problemini manuel backpropagation ile çözüyoruz. Forward pass'te aktivasyonları hesaplıyoruz, backward pass'te chain rule ile her katmanın gradientini bulup ağırlıkları güncelliyoruz. 5000 epoch'ta XOR'u öğreniyor!"
+    },
+    {
+      "title": "PyTorch Autograd Basit Örnek",
+      "language": "python",
+      "code": "import torch\n\n# Basit bir fonksiyon: y = x^2 + 2x + 1\nx = torch.tensor([2.0], requires_grad=True)\n\n# Forward pass\ny = x**2 + 2*x + 1\nprint(f\"x = {x.item()}, y = {y.item()}\")\n\n# Backward pass (otomatik türev!)\ny.backward()\n\n# dy/dx = 2x + 2\nprint(f\"dy/dx = {x.grad.item()}\")\nprint(f\"Expected: 2*{x.item()} + 2 = {2*x.item() + 2}\")\n\n# Daha karmaşık örnek\nx = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)\nW = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], requires_grad=True)\n\ny = torch.matmul(x, W)  # Linear transformation\nz = torch.sum(y**2)      # Loss\n\nprint(f\"\\nz = {z.item()}\")\nz.backward()\n\nprint(f\"∂z/∂x = {x.grad}\")\nprint(f\"∂z/∂W shape: {W.grad.shape}\")\n\n# Computational graph\nprint(f\"\\nIs y a leaf? {y.is_leaf}\")  # False (intermediate)\nprint(f\"Is x a leaf? {x.is_leaf}\")    # True (input)\nprint(f\"y.grad_fn: {y.grad_fn}\")      # MatmulBackward",
+      "explanation": "PyTorch'un autograd sistemi her işlemi izler ve backward() çağrıldığında otomatik olarak tüm gradientleri hesaplar. Computational graph oluşturur ve chain rule uygular."
+    },
+    {
+      "title": "Multi-Layer Backpropagation",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass SimpleNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layer1 = nn.Linear(10, 20)\n        self.layer2 = nn.Linear(20, 15)\n        self.layer3 = nn.Linear(15, 5)\n        self.layer4 = nn.Linear(5, 1)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        x = self.relu(self.layer1(x))\n        x = self.relu(self.layer2(x))\n        x = self.relu(self.layer3(x))\n        x = self.layer4(x)\n        return x\n\nmodel = SimpleNN()\ncriterion = nn.MSELoss()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.01)\n\n# Dummy data\nx = torch.randn(32, 10)  # Batch of 32\ny_true = torch.randn(32, 1)\n\n# Training step\noptimizer.zero_grad()  # Gradientleri sıfırla\n\n# Forward pass\ny_pred = model(x)\nloss = criterion(y_pred, y_true)\nprint(f\"Loss: {loss.item():.4f}\")\n\n# Backward pass\nloss.backward()  # Tüm gradientler hesaplanır!\n\n# Gradient kontrolü\nprint(\"\\nGradient norms:\")\nfor name, param in model.named_parameters():\n    if param.grad is not None:\n        grad_norm = param.grad.norm().item()\n        print(f\"{name}: {grad_norm:.4f}\")\n\n# Weight update\noptimizer.step()\n\nprint(\"\\nWeights updated!\")",
+      "explanation": "4 katmanlı bir neural network. backward() çağrıldığında PyTorch tüm katmanlardan geriye doğru gradientleri otomatik hesaplar. zero_grad() önemli çünkü PyTorch gradientleri accumulate eder."
+    },
+    {
+      "title": "Vanishing Gradient Gösterimi",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport matplotlib.pyplot as plt\n\n# Sigmoid kullanan derin network\nclass SigmoidDeepNN(nn.Module):\n    def __init__(self, depth=10):\n        super().__init__()\n        layers = []\n        for i in range(depth):\n            layers.append(nn.Linear(100, 100))\n            layers.append(nn.Sigmoid())\n        self.network = nn.Sequential(*layers)\n    \n    def forward(self, x):\n        return self.network(x)\n\n# ReLU kullanan network\nclass ReLUDeepNN(nn.Module):\n    def __init__(self, depth=10):\n        super().__init__()\n        layers = []\n        for i in range(depth):\n            layers.append(nn.Linear(100, 100))\n            layers.append(nn.ReLU())\n        self.network = nn.Sequential(*layers)\n    \n    def forward(self, x):\n        return self.network(x)\n\ndef analyze_gradients(model, name):\n    x = torch.randn(32, 100)\n    y = torch.randn(32, 100)\n    \n    # Forward + Backward\n    output = model(x)\n    loss = ((output - y)**2).mean()\n    loss.backward()\n    \n    # Her katmanın gradient norm'unu topla\n    gradient_norms = []\n    for param in model.parameters():\n        if param.grad is not None:\n            gradient_norms.append(param.grad.norm().item())\n    \n    print(f\"\\n{name}:\")\n    print(f\"First layer gradient: {gradient_norms[0]:.6f}\")\n    print(f\"Last layer gradient: {gradient_norms[-1]:.6f}\")\n    print(f\"Ratio (last/first): {gradient_norms[-1]/gradient_norms[0]:.6f}\")\n    \n    return gradient_norms\n\n# Karşılaştırma\nsigmoid_model = SigmoidDeepNN(depth=10)\nrelu_model = ReLUDeepNN(depth=10)\n\nsigmoid_grads = analyze_gradients(sigmoid_model, \"Sigmoid Network\")\nrelu_grads = analyze_gradients(relu_model, \"ReLU Network\")\n\nprint(\"\\n🔍 Sigmoid'de vanishing gradient görünüyor!\")\nprint(\"ReLU çok daha stabil gradient flow sağlıyor.\")",
+      "explanation": "Derin networkler'de sigmoid kullanınca gradientler hızla küçülür (vanishing). İlk katmanlara hemen hiç gradient ulaşmaz. ReLU bu problemi çözer çünkü türevi 0 ya da 1'dir."
+    },
+    {
+      "title": "Exploding Gradient ve Clipping",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass UnstableNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(10, 100),\n            nn.ReLU(),\n            nn.Linear(100, 100),\n            nn.ReLU(),\n            nn.Linear(100, 1)\n        )\n        # Ağırlıkları çok büyük başlat (exploding gradient için)\n        for layer in self.layers:\n            if isinstance(layer, nn.Linear):\n                nn.init.uniform_(layer.weight, -10, 10)\n    \n    def forward(self, x):\n        return self.layers(x)\n\nmodel = UnstableNN()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.1)\ncriterion = nn.MSELoss()\n\nx = torch.randn(32, 10)\ny = torch.randn(32, 1)\n\n# Gradient clipping OLMADAN\nprint(\"WITHOUT Gradient Clipping:\")\nfor step in range(5):\n    optimizer.zero_grad()\n    output = model(x)\n    loss = criterion(output, y)\n    loss.backward()\n    \n    # Gradient norm'u kontrol et\n    total_norm = 0\n    for p in model.parameters():\n        if p.grad is not None:\n            param_norm = p.grad.data.norm(2)\n            total_norm += param_norm.item() ** 2\n    total_norm = total_norm ** 0.5\n    \n    print(f\"Step {step}: Loss={loss.item():.4f}, Gradient Norm={total_norm:.2f}\")\n    \n    if total_norm > 1000:\n        print(\"  ⚠️  Exploding gradient detected!\")\n    \n    optimizer.step()\n\n# Yeni model, gradient clipping ile\nmodel = UnstableNN()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.1)\n\nprint(\"\\nWITH Gradient Clipping (max_norm=1.0):\")\nfor step in range(5):\n    optimizer.zero_grad()\n    output = model(x)\n    loss = criterion(output, y)\n    loss.backward()\n    \n    # Gradient clipping\n    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n    \n    # Gradient norm (clipping sonrası)\n    total_norm = 0\n    for p in model.parameters():\n        if p.grad is not None:\n            param_norm = p.grad.data.norm(2)\n            total_norm += param_norm.item() ** 2\n    total_norm = total_norm ** 0.5\n    \n    print(f\"Step {step}: Loss={loss.item():.4f}, Gradient Norm={total_norm:.4f}\")\n    print(\"  ✅ Gradient clipped!\")\n    \n    optimizer.step()",
+      "explanation": "Çok derin ya da kötü başlatılmış networkler'de gradientler patlar (exploding). clip_grad_norm_() gradientleri maksimum bir değerle sınırlar. RNN'lerde özellikle kritik!"
+    },
+    {
+      "title": "Custom Backward Function",
+      "language": "python",
+      "code": "import torch\n\n# Custom function with manual backward\nclass MyReLU(torch.autograd.Function):\n    \"\"\"\n    ReLU'yu kendimiz implement ediyoruz.\n    Forward ve backward pass'i manuel yazıyoruz.\n    \"\"\"\n    \n    @staticmethod\n    def forward(ctx, input):\n        \"\"\"\n        Forward pass: ReLU(x) = max(0, x)\n        ctx: Context object to save values for backward\n        \"\"\"\n        ctx.save_for_backward(input)  # Backward için input'u sakla\n        return input.clamp(min=0)\n    \n    @staticmethod\n    def backward(ctx, grad_output):\n        \"\"\"\n        Backward pass: d/dx ReLU(x) = 1 if x > 0 else 0\n        grad_output: Gradient from next layer (chain rule)\n        \"\"\"\n        input, = ctx.saved_tensors\n        grad_input = grad_output.clone()\n        grad_input[input < 0] = 0  # Negative'lerde gradient 0\n        return grad_input\n\n# Kullanım\nmy_relu = MyReLU.apply  # Function proxy\n\nx = torch.tensor([-2.0, -1.0, 0.0, 1.0, 2.0], requires_grad=True)\ny = my_relu(x)\nloss = y.sum()\n\nprint(f\"Input: {x}\")\nprint(f\"Output (MyReLU): {y}\")\n\nloss.backward()\nprint(f\"Gradient: {x.grad}\")\nprint(\"Negative'lerde gradient 0, positive'lerde 1\")\n\n# Daha karmaşık örnek: Custom Linear Layer\nclass MyLinear(torch.autograd.Function):\n    @staticmethod\n    def forward(ctx, input, weight, bias):\n        ctx.save_for_backward(input, weight, bias)\n        output = input.mm(weight.t())\n        if bias is not None:\n            output += bias.unsqueeze(0).expand_as(output)\n        return output\n    \n    @staticmethod\n    def backward(ctx, grad_output):\n        input, weight, bias = ctx.saved_tensors\n        \n        grad_input = grad_weight = grad_bias = None\n        \n        # Gradient wrt input\n        if ctx.needs_input_grad[0]:\n            grad_input = grad_output.mm(weight)\n        \n        # Gradient wrt weight\n        if ctx.needs_input_grad[1]:\n            grad_weight = grad_output.t().mm(input)\n        \n        # Gradient wrt bias\n        if bias is not None and ctx.needs_input_grad[2]:\n            grad_bias = grad_output.sum(0)\n        \n        return grad_input, grad_weight, grad_bias\n\n# Test\nx = torch.randn(5, 10, requires_grad=True)\nw = torch.randn(20, 10, requires_grad=True)\nb = torch.randn(20, requires_grad=True)\n\noutput = MyLinear.apply(x, w, b)\nloss = output.sum()\nloss.backward()\n\nprint(f\"\\nCustom Linear Layer:\")\nprint(f\"Input gradient shape: {x.grad.shape}\")\nprint(f\"Weight gradient shape: {w.grad.shape}\")\nprint(f\"Bias gradient shape: {b.grad.shape}\")",
+      "explanation": "torch.autograd.Function ile kendi backward pass'inizi yazabilirsiniz. Forward'da hesaplama yapın, backward'da gradientleri manuel hesaplayın. Custom operatörler, CUDA kernels için kullanılır."
+    },
+    {
+      "title": "Gradient Flow Analysis",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass AnalyzableNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layer1 = nn.Linear(100, 200)\n        self.bn1 = nn.BatchNorm1d(200)\n        self.layer2 = nn.Linear(200, 200)\n        self.bn2 = nn.BatchNorm1d(200)\n        self.layer3 = nn.Linear(200, 100)\n        self.bn3 = nn.BatchNorm1d(100)\n        self.layer4 = nn.Linear(100, 10)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        x = self.relu(self.bn1(self.layer1(x)))\n        x = self.relu(self.bn2(self.layer2(x)))\n        x = self.relu(self.bn3(self.layer3(x)))\n        x = self.layer4(x)\n        return x\n\ndef analyze_gradient_flow(model, x, y):\n    \"\"\"\n    Her katmanın gradient statistics'ini hesapla\n    \"\"\"\n    model.train()\n    optimizer = torch.optim.Adam(model.parameters())\n    criterion = nn.CrossEntropyLoss()\n    \n    optimizer.zero_grad()\n    output = model(x)\n    loss = criterion(output, y)\n    loss.backward()\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"GRADIENT FLOW ANALYSIS\")\n    print(\"=\"*60)\n    \n    layers = []\n    for name, param in model.named_parameters():\n        if param.grad is not None and 'weight' in name:\n            grad = param.grad\n            \n            # Statistics\n            mean = grad.mean().item()\n            std = grad.std().item()\n            norm = grad.norm().item()\n            max_val = grad.abs().max().item()\n            \n            # Vanishing check\n            vanishing = norm < 1e-7\n            exploding = norm > 100\n            \n            status = \"⚠️ VANISHING\" if vanishing else (\"💥 EXPLODING\" if exploding else \"✅ OK\")\n            \n            print(f\"\\n{name}:\")\n            print(f\"  Mean: {mean:.6f}\")\n            print(f\"  Std:  {std:.6f}\")\n            print(f\"  Norm: {norm:.6f}\")\n            print(f\"  Max:  {max_val:.6f}\")\n            print(f\"  Status: {status}\")\n            \n            layers.append({\n                'name': name,\n                'norm': norm,\n                'mean': mean,\n                'std': std\n            })\n    \n    return layers\n\n# Test\nmodel = AnalyzableNN()\nx = torch.randn(64, 100)  # Batch of 64\ny = torch.randint(0, 10, (64,))  # 10 classes\n\ngradient_stats = analyze_gradient_flow(model, x, y)\n\n# Özet\nprint(\"\\n\" + \"=\"*60)\nprint(\"SUMMARY\")\nprint(\"=\"*60)\nnorms = [s['norm'] for s in gradient_stats]\nprint(f\"Average gradient norm: {sum(norms)/len(norms):.6f}\")\nprint(f\"Min gradient norm: {min(norms):.6f}\")\nprint(f\"Max gradient norm: {max(norms):.6f}\")\nprint(f\"Ratio (max/min): {max(norms)/min(norms):.2f}\")\n\nif max(norms)/min(norms) > 1000:\n    print(\"\\n⚠️  Large gradient ratio! Consider:\")\n    print(\"   - Gradient clipping\")\n    print(\"   - Better weight initialization\")\n    print(\"   - Batch normalization\")\nelse:\n    print(\"\\n✅ Gradient flow looks healthy!\")",
+      "explanation": "Gradient flow'u analiz ederek vanishing/exploding gradient problemlerini erken tespit edebilirsiniz. Her katmanın gradient statistics'ini izleyin, ratio çok büyükse problem var demektir."
+    },
+    {
+      "title": "Gradient Checkpointing (Memory Efficient)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.utils.checkpoint as checkpoint\n\nclass NormalResBlock(nn.Module):\n    \"\"\"Normal ResNet block - tüm aktivasyonları tutar\"\"\"\n    def __init__(self, channels):\n        super().__init__()\n        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn1 = nn.BatchNorm2d(channels)\n        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn2 = nn.BatchNorm2d(channels)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        identity = x\n        out = self.relu(self.bn1(self.conv1(x)))\n        out = self.bn2(self.conv2(out))\n        out += identity\n        return self.relu(out)\n\nclass CheckpointedResBlock(nn.Module):\n    \"\"\"Checkpointed ResNet block - bellek tasarrufu\"\"\"\n    def __init__(self, channels):\n        super().__init__()\n        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn1 = nn.BatchNorm2d(channels)\n        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn2 = nn.BatchNorm2d(channels)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        # Checkpoint kullan - backward'da yeniden hesapla\n        return checkpoint.checkpoint(self._forward_impl, x, use_reentrant=False)\n    \n    def _forward_impl(self, x):\n        identity = x\n        out = self.relu(self.bn1(self.conv1(x)))\n        out = self.bn2(self.conv2(out))\n        out += identity\n        return self.relu(out)\n\nclass DeepNetwork(nn.Module):\n    def __init__(self, num_blocks=10, use_checkpointing=False):\n        super().__init__()\n        self.conv_in = nn.Conv2d(3, 64, 7, padding=3)\n        \n        # Blocks\n        blocks = []\n        BlockType = CheckpointedResBlock if use_checkpointing else NormalResBlock\n        for _ in range(num_blocks):\n            blocks.append(BlockType(64))\n        self.blocks = nn.Sequential(*blocks)\n        \n        self.pool = nn.AdaptiveAvgPool2d((1, 1))\n        self.fc = nn.Linear(64, 10)\n    \n    def forward(self, x):\n        x = self.conv_in(x)\n        x = self.blocks(x)\n        x = self.pool(x)\n        x = x.view(x.size(0), -1)\n        x = self.fc(x)\n        return x\n\n# Memory comparison\nif torch.cuda.is_available():\n    device = torch.device('cuda')\n    \n    # Normal model\n    print(\"Testing Normal Model...\")\n    torch.cuda.reset_peak_memory_stats()\n    model_normal = DeepNetwork(num_blocks=20, use_checkpointing=False).to(device)\n    x = torch.randn(16, 3, 224, 224).to(device)\n    y = torch.randint(0, 10, (16,)).to(device)\n    \n    output = model_normal(x)\n    loss = nn.CrossEntropyLoss()(output, y)\n    loss.backward()\n    \n    normal_memory = torch.cuda.max_memory_allocated() / 1024**2  # MB\n    print(f\"Peak memory (normal): {normal_memory:.2f} MB\")\n    \n    # Checkpointed model\n    print(\"\\nTesting Checkpointed Model...\")\n    torch.cuda.reset_peak_memory_stats()\n    model_checkpoint = DeepNetwork(num_blocks=20, use_checkpointing=True).to(device)\n    \n    output = model_checkpoint(x)\n    loss = nn.CrossEntropyLoss()(output, y)\n    loss.backward()\n    \n    checkpoint_memory = torch.cuda.max_memory_allocated() / 1024**2  # MB\n    print(f\"Peak memory (checkpointed): {checkpoint_memory:.2f} MB\")\n    \n    print(f\"\\nMemory savings: {(1 - checkpoint_memory/normal_memory)*100:.1f}%\")\nelse:\n    print(\"GPU not available. Checkpointing benefits are most visible on GPU.\")\n    print(\"\\nTrade-off:\")\n    print(\"  ✅ ~40% memory reduction\")\n    print(\"  ⚠️  ~20% slower (recomputation cost)\")",
+      "explanation": "Gradient checkpointing forward pass'te intermediate aktivasyonları kaydetmez. Backward pass'te gerektiğinde yeniden hesaplar. Büyük modellerde (GPT, BERT) kritik bellek tasarrufu sağlar."
+    },
+    {
+      "title": "Full Training Loop with Backpropagation",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.utils.data import DataLoader, TensorDataset\n\nclass MLP(nn.Module):\n    def __init__(self, input_size=784, hidden_sizes=[256, 128], num_classes=10):\n        super().__init__()\n        layers = []\n        prev_size = input_size\n        \n        for hidden_size in hidden_sizes:\n            layers.extend([\n                nn.Linear(prev_size, hidden_size),\n                nn.BatchNorm1d(hidden_size),\n                nn.ReLU(),\n                nn.Dropout(0.2)\n            ])\n            prev_size = hidden_size\n        \n        layers.append(nn.Linear(prev_size, num_classes))\n        self.network = nn.Sequential(*layers)\n    \n    def forward(self, x):\n        return self.network(x)\n\ndef train_epoch(model, dataloader, criterion, optimizer, device):\n    model.train()\n    total_loss = 0\n    correct = 0\n    total = 0\n    \n    for batch_idx, (data, target) in enumerate(dataloader):\n        data, target = data.to(device), target.to(device)\n        \n        # ===== BACKPROPAGATION LOOP =====\n        \n        # 1. Zero gradients\n        optimizer.zero_grad()\n        \n        # 2. Forward pass\n        output = model(data)\n        loss = criterion(output, target)\n        \n        # 3. Backward pass (BACKPROPAGATION!)\n        loss.backward()\n        \n        # 4. Gradient clipping (optional)\n        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n        \n        # 5. Optimizer step (weight update)\n        optimizer.step()\n        \n        # Statistics\n        total_loss += loss.item()\n        _, predicted = output.max(1)\n        total += target.size(0)\n        correct += predicted.eq(target).sum().item()\n        \n        if batch_idx % 10 == 0:\n            print(f\"Batch {batch_idx}/{len(dataloader)}, \"\n                  f\"Loss: {loss.item():.4f}\")\n    \n    avg_loss = total_loss / len(dataloader)\n    accuracy = 100. * correct / total\n    return avg_loss, accuracy\n\ndef validate(model, dataloader, criterion, device):\n    model.eval()  # Dropout/BN'yi kapat\n    total_loss = 0\n    correct = 0\n    total = 0\n    \n    with torch.no_grad():  # Gradient hesaplamayı kapat\n        for data, target in dataloader:\n            data, target = data.to(device), target.to(device)\n            output = model(data)\n            loss = criterion(output, target)\n            \n            total_loss += loss.item()\n            _, predicted = output.max(1)\n            total += target.size(0)\n            correct += predicted.eq(target).sum().item()\n    \n    avg_loss = total_loss / len(dataloader)\n    accuracy = 100. * correct / total\n    return avg_loss, accuracy\n\n# Setup\ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\nmodel = MLP().to(device)\n\n# Dummy data (MNIST-like)\nX_train = torch.randn(1000, 784)\ny_train = torch.randint(0, 10, (1000,))\nX_val = torch.randn(200, 784)\ny_val = torch.randint(0, 10, (200,))\n\ntrain_dataset = TensorDataset(X_train, y_train)\nval_dataset = TensorDataset(X_val, y_val)\n\ntrain_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)\nval_loader = DataLoader(val_dataset, batch_size=32)\n\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\nscheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)\n\n# Training loop\nnum_epochs = 3\nprint(f\"Training on {device}\\n\")\n\nfor epoch in range(num_epochs):\n    print(f\"\\nEpoch {epoch+1}/{num_epochs}\")\n    print(\"-\" * 50)\n    \n    train_loss, train_acc = train_epoch(model, train_loader, criterion, \n                                         optimizer, device)\n    val_loss, val_acc = validate(model, val_loader, criterion, device)\n    \n    scheduler.step()\n    \n    print(f\"\\nTrain Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%\")\n    print(f\"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%\")\n    print(f\"Learning Rate: {optimizer.param_groups[0]['lr']}\")\n\nprint(\"\\n\" + \"=\"*50)\nprint(\"Training complete!\")\nprint(\"Backpropagation successfully trained the network.\")",
+      "explanation": "Tam bir training loop. Her epoch'ta: zero_grad() → forward() → loss → backward() (backpropagation!) → step(). Validation'da backward yok. Gradient clipping ve learning rate scheduling ile."
+    },
+    {
+      "title": "Gradient Accumulation (Büyük Batch Simülasyonu)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\nclass LargeModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.network = nn.Sequential(\n            nn.Linear(1000, 2000),\n            nn.ReLU(),\n            nn.Linear(2000, 2000),\n            nn.ReLU(),\n            nn.Linear(2000, 100)\n        )\n    \n    def forward(self, x):\n        return self.network(x)\n\nmodel = LargeModel()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.MSELoss()\n\n# Dummy data\nX = torch.randn(128, 1000)  # 128 samples\ny = torch.randn(128, 100)\n\n# ===== Normal Training (Batch size = 32) =====\nprint(\"NORMAL TRAINING (Batch size = 32):\")\nprint(\"-\" * 50)\n\nfor i in range(0, 128, 32):\n    batch_X = X[i:i+32]\n    batch_y = y[i:i+32]\n    \n    optimizer.zero_grad()\n    output = model(batch_X)\n    loss = criterion(output, batch_y)\n    loss.backward()\n    optimizer.step()\n    \n    print(f\"Batch {i//32 + 1}: Loss = {loss.item():.4f}\")\n\n# Reset model\nmodel = LargeModel()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# ===== Gradient Accumulation (Effective batch = 128) =====\nprint(\"\\nGRADIENT ACCUMULATION (Batch=8, Accumulation=4):\")\nprint(\"Effective batch size = 8 × 4 = 32\")\nprint(\"-\" * 50)\n\naccumulation_steps = 4\nactual_batch_size = 8\n\nfor i in range(0, 128, actual_batch_size):\n    batch_X = X[i:i+actual_batch_size]\n    batch_y = y[i:i+actual_batch_size]\n    \n    # Forward + Backward (gradientler accumulate olur)\n    output = model(batch_X)\n    loss = criterion(output, batch_y) / accumulation_steps  # Scale loss!\n    loss.backward()  # Gradientler birikir\n    \n    # Her accumulation_steps'te bir update\n    if (i // actual_batch_size + 1) % accumulation_steps == 0:\n        print(f\"Accumulated {accumulation_steps} batches, updating weights...\")\n        optimizer.step()\n        optimizer.zero_grad()\n        print(f\"  Effective batch loss: {loss.item() * accumulation_steps:.4f}\")\n\nprint(\"\\n\" + \"=\"*50)\nprint(\"GRADIENT ACCUMULATION BENEFITS:\")\nprint(\"=\"*50)\nprint(\"✅ Larger effective batch size\")\nprint(\"✅ Less memory usage (small batches)\")\nprint(\"✅ Better gradient estimates\")\nprint(\"⚠️  More forward/backward calls\")\nprint(\"\\nUseful when:\")\nprint(\"  - Model is too large for big batches\")\nprint(\"  - Want large batch training benefits\")\nprint(\"  - Limited GPU memory\")",
+      "explanation": "Gradient accumulation küçük batch'lerle büyük batch effect'i yaratır. Her backward()'da gradientler toplanır, belirli adımda bir optimizer.step() yapılır. GPU belleği sınırlıyken çok kullanışlı!"
+    }
+  ],
+  "formulas": [
+    {
+      "title": "Chain Rule (Zincir Kuralı)",
+      "latex": "\\frac{\\partial L}{\\partial w} = \\frac{\\partial L}{\\partial y} \\cdot \\frac{\\partial y}{\\partial z} \\cdot \\frac{\\partial z}{\\partial w}",
+      "explanation": "Backpropagation'ın temel prensibi. Kompozit fonksiyonların türevi, her adımın türevlerinin çarpımı. Neural network'te her katman bir fonksiyon, chain rule ile geriye doğru gidiyoruz."
+    },
+    {
+      "title": "Weight Gradient (Output Layer)",
+      "latex": "\\frac{\\partial L}{\\partial W^{(L)}} = \\frac{\\partial L}{\\partial z^{(L)}} \\cdot (a^{(L-1)})^T",
+      "explanation": "Son katmanın ağırlık gradientini hesaplama. ∂L/∂z (local gradient) ile önceki katmanın aktivasyonlarının çarpımı. Matrix formunda: (m×n) gradient = (m×k) × (k×n)."
+    },
+    {
+      "title": "Bias Gradient",
+      "latex": "\\frac{\\partial L}{\\partial b^{(l)}} = \\sum_{i=1}^{m} \\frac{\\partial L}{\\partial z_i^{(l)}}",
+      "explanation": "Bias gradientleri ∂L/∂z'lerin toplamı. Her örnek için bias gradient'lerini topla. Batch size m üzerinden toplam."
+    },
+    {
+      "title": "Hidden Layer Error (Delta)",
+      "latex": "\\delta^{(l)} = (W^{(l+1)})^T \\delta^{(l+1)} \\odot \\sigma'(z^{(l)})",
+      "explanation": "Gizli katmanın error signal'i. Bir sonraki katmanın ağırlıkları transpose ile çarpılır, aktivasyon türevi ile element-wise çarpılır. Bu şekilde error geriye yayılır."
+    },
+    {
+      "title": "Weight Update Rule",
+      "latex": "W^{(l)} \\leftarrow W^{(l)} - \\alpha \\frac{\\partial L}{\\partial W^{(l)}}",
+      "explanation": "Gradient descent ile ağırlık güncelleme. α (learning rate) gradient'i scale eder. Gradient'in tersi yönünde hareket et (loss'u minimize et)."
+    },
+    {
+      "title": "Activation Function Derivative",
+      "latex": "\\frac{\\partial L}{\\partial z^{(l)}} = \\frac{\\partial L}{\\partial a^{(l)}} \\odot \\sigma'(z^{(l)})",
+      "explanation": "Pre-activation gradient'i hesaplama. Aktivasyon sonrası gradient ile aktivasyon fonksiyonunun türevinin element-wise çarpımı. Sigmoid için σ'(z) = σ(z)(1-σ(z))."
+    },
+    {
+      "title": "Jacobian Matrix (Vector-Valued Function)",
+      "latex": "J = \\begin{bmatrix} \\frac{\\partial f_1}{\\partial x_1} & \\cdots & \\frac{\\partial f_1}{\\partial x_n} \\\\ \\vdots & \\ddots & \\vdots \\\\ \\frac{\\partial f_m}{\\partial x_1} & \\cdots & \\frac{\\partial f_m}{\\partial x_n} \\end{bmatrix}",
+      "explanation": "Vektör fonksiyonlarının türev matrisi. Her output'un her input'a göre türevi. Neural network'te layer-wise Jacobian'lar chain rule ile çarpılır."
+    },
+    {
+      "title": "Full Backpropagation Formula",
+      "latex": "\\frac{\\partial L}{\\partial W^{(1)}} = \\frac{\\partial L}{\\partial a^{(L)}} \\prod_{l=L}^{2} \\left( (W^{(l)})^T \\odot \\sigma'(z^{(l-1)}) \\right) \\cdot x^T",
+      "explanation": "İlk katmanın gradientini hesaplamak için tüm katmanlardan geriye doğru chain rule uygulanır. Her katmanın ağırlık ve aktivasyon türevi çarpılır. Bu formül vanishing gradient problemini açıklar!"
+    }
+  ],
+  "visualizations": [
+    {
+      "title": "Forward vs Backward Pass",
+      "description": "Forward pass'te veri girişten çıkışa akar, backward pass'te gradient'ler çıkıştan girişe akar. Her katman forward'da aktivasyon hesaplar, backward'da gradient hesaplar.",
+      "type": "flow",
+      "id": "backpropagation-viz-1"
+    },
+    {
+      "title": "Gradient Flow Through Layers",
+      "description": "Deep network'te gradient'lerin katmanlar arasında nasıl aktığını gösterir. Her katman gradient'i bir öncekine aktarır. Vanishing gradient'te ilk katmanlara çok az gradient ulaşır.",
+      "type": "line",
+      "id": "backpropagation-viz-2"
+    },
+    {
+      "title": "Computational Graph",
+      "description": "Neural network'ün computational graph olarak gösterimi. Her node bir işlem, her edge bir değer. Forward pass graph'ı oluşturur, backward pass graph'tan geriye gider.",
+      "type": "network",
+      "id": "backpropagation-viz-3"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "optimizer.zero_grad() unutmak",
+      "why": "PyTorch gradientleri accumulate eder. zero_grad() çağrılmazsa gradientler toplanır ve yanlış update olur.",
+      "fix": "Her iteration başında optimizer.zero_grad() veya model.zero_grad() çağır."
+    },
+    {
+      "mistake": "Validation'da model.eval() kullanmamak",
+      "why": "train() modunda Dropout ve BatchNorm farklı davranır. Validation'da bunlar kapalı olmalı.",
+      "fix": "model.eval() ile evaluation mode'a geç, torch.no_grad() ile gradient computation'ı kapat."
+    },
+    {
+      "mistake": "Loss'u accumulation_steps'e bölmemek",
+      "why": "Gradient accumulation'da her mini-batch'in gradient'i toplanır. Scale etmezsen gradient çok büyür.",
+      "fix": "loss = criterion(output, target) / accumulation_steps"
+    },
+    {
+      "mistake": "Vanishing gradient'i görmezden gelmek",
+      "why": "Sigmoid gibi saturating activation'lar derin networkler'de gradient'i yok eder. İlk katmanlar öğrenemez.",
+      "fix": "ReLU kullan, ResNet/skip connections ekle, Batch Normalization kullan, gradient'leri monitör et."
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Backpropagation'ın matematiksel temeli nedir?",
+      "options": [
+        "Linear algebra",
+        "Chain rule (Zincirleme türev kuralı)",
+        "Probability theory",
+        "Fourier transform"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Backpropagation chain rule'a dayanır. Kompozit fonksiyonların türevini her adımın türevlerinin çarpımı olarak hesaplar: ∂L/∂w = ∂L/∂y · ∂y/∂z · ∂z/∂w",
+      "id": "q1",
+      "type": "multiple-choice",
+      "difficulty": 2
+    },
+    {
+      "question": "PyTorch'ta backpropagation için hangi metod çağrılır?",
+      "options": [
+        "loss.backprop()",
+        "loss.backward()",
+        "model.backward()",
+        "optimizer.backward()"
+      ],
+      "correctAnswer": 1,
+      "explanation": "loss.backward() PyTorch'un autograd sistemini tetikler ve computational graph üzerinden tüm gradientleri otomatik hesaplar.",
+      "id": "q2",
+      "type": "multiple-choice",
+      "difficulty": 2
+    },
+    {
+      "question": "Vanishing gradient problemi ne zaman ortaya çıkar?",
+      "why": "Derin networkler'de sigmoid gibi saturating aktivasyon fonksiyonları kullanıldığında gradient'ler katmanlar arasında küçülür ve ilk katmanlara ulaşmaz.",
+      "options": [
+        "Çok fazla data olduğunda",
+        "Learning rate çok büyük olduğunda",
+        "Derin networkler'de sigmoid kullanıldığında",
+        "Batch size çok küçük olduğunda"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Sigmoid'in türevi maksimum 0.25'tir. Her katmanda 0.25 ile çarpılınca 10 katmanlı networkde gradient 0.25^10 ≈ 0.000001 kadar küçülür. İlk katmanlar öğrenemez.",
+      "id": "q3",
+      "type": "multiple-choice",
+      "difficulty": 2
+    },
+    {
+      "question": "Gradient accumulation'ın amacı nedir?",
+      "options": [
+        "Training'i hızlandırmak",
+        "Küçük batch'lerle büyük batch effect'i yaratmak",
+        "Model accuracy'sini artırmak",
+        "Overfitting'i önlemek"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Gradient accumulation birkaç küçük batch'in gradient'lerini toplar, sonra bir kez update yapar. GPU belleği sınırlıyken büyük effective batch size sağlar.",
+      "id": "q4",
+      "type": "multiple-choice",
+      "difficulty": 2
+    },
+    {
+      "question": "optimizer.zero_grad() neden gerekli?",
+      "options": [
+        "Model ağırlıklarını sıfırlar",
+        "Loss'u sıfırlar",
+        "Önceki iteration'ın gradientlerini temizler",
+        "Learning rate'i sıfırlar"
+      ],
+      "correctAnswer": 2,
+      "explanation": "PyTorch gradientleri .grad attribute'larında accumulate eder. zero_grad() çağrılmazsa yeni gradientler eskilerin üzerine eklenir ve yanlış update olur.",
+      "id": "q5",
+      "type": "multiple-choice",
+      "difficulty": 2
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Backpropagation nedir?",
+      "back": "Neural network'lerin öğrenme algoritması. Loss fonksiyonunun gradientini her ağırlığa göre hesaplar. Chain rule kullanarak çıktıdaki hatayı geriye yayımlat ve her katmanın sorumluluğunu bulur."
+    },
+    {
+      "front": "Forward pass vs Backward pass",
+      "back": "Forward: Girdi → Katmanlar → Çıktı → Loss (tahmin)\nBackward: Loss → Gradientler → Her katman → Güncellemeler (öğrenme)\nForward prediction yapar, backward learning yapar."
+    },
+    {
+      "front": "Chain rule backpropagation'da nasıl kullanılır?",
+      "back": "Her katman bir fonksiyon: y = f(g(h(x)))\nChain rule: dy/dx = (dy/df) × (df/dg) × (dg/dh) × (dh/dx)\nSon katmandan başla, her katmanın türevini çarp, ilk katmana kadar git."
+    },
+    {
+      "front": "Vanishing gradient problemi nedir?",
+      "back": "Derin networkler'de gradient'ler geriye doğru giderken küçülür ve kaybolur. Sigmoid gibi saturating activation'lar sorumlu (türev ≤ 0.25). İlk katmanlar öğrenemez. Çözüm: ReLU, ResNet, BatchNorm."
+    },
+    {
+      "front": "Gradient checkpointing ne işe yarar?",
+      "back": "Forward pass'te tüm aktivasyonları tutmak yerine sadece checkpoint'leri tutar. Backward'da gerektiğinde yeniden hesaplar. ~40% bellek tasarrufu, ~20% yavaşlama. Büyük modellerde kritik!"
+    }
+  ],
+  "references": [
+    {
+      "title": "Backpropagation Original Paper",
+      "author": "Rumelhart, Hinton & Williams",
+      "year": 1986,
+      "description": "Backpropagation algoritmasını tanıtan klasik makale. Modern deep learning'in temeli."
+    },
+    {
+      "title": "PyTorch Autograd Documentation",
+      "url": "https://pytorch.org/docs/stable/autograd.html",
+      "description": "PyTorch'un automatic differentiation sistemi. Computational graph, backward pass, custom functions."
+    },
+    {
+      "title": "CS231n: Backpropagation",
+      "author": "Stanford University",
+      "url": "http://cs231n.github.io/optimization-2/",
+      "description": "Stanford'un ünlü deep learning dersinden backpropagation dersi. Detaylı anlatım ve görselleştirmeler."
+    },
+    {
+      "title": "Gradient Checkpointing Paper",
+      "author": "Chen et al.",
+      "year": 2016,
+      "description": "Training Deep Nets with Sublinear Memory Cost. Memory-efficient backpropagation teknikleri."
+    }
+  ],
+  "tags": [
+    "backpropagation",
+    "chain-rule",
+    "gradient",
+    "autograd",
+    "pytorch",
+    "neural-networks",
+    "deep-learning",
+    "optimization"
+  ],
+  "nextTopics": []
+}

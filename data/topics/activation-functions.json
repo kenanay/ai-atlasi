@@ -1,0 +1,287 @@
+{
+  "id": "activation-functions",
+  "title": "Aktivasyon Fonksiyonları",
+  "category": "neural-networks",
+  "level": 1,
+  "estimatedTime": 35,
+  "content": {
+    "level0_basic": "Aktivasyon fonksiyonu, bir nöronun 'ateşleyip ateşlemeyeceğine' karar veren fonksiyondur. Beyindeki nöronlar gibi: Ya aktif olur (1) ya da olmaz (0), ya da aralarında bir değer alır. Örneğin, bir resimde kedi var mı? Fonksiyon 0.9 dönerse 'evet büyük ihtimalle kedi' demektir. Neural network'ler bu fonksiyonlar sayesinde karmaşık kararlar alabilir.",
+    "level1_beginner": "Aktivasyon fonksiyonları, linear işlemlerin (matris çarpımı, toplama) ardından uygulanan non-linear fonksiyonlardır. Neural network'ün gücü bu non-linearity'den gelir.\n\n**Neden Gerekli?**\nAktivasyon olmasaydı, ne kadar layer eklerseniz ekleyin, network yine de tek bir linear fonksiyon olurdu. XOR problemi gibi basit non-linear problemleri bile çözemezdiniz.\n\n**Popüler Aktivasyon Fonksiyonları:**\n1. **Sigmoid**: σ(x) = 1/(1+e^(-x)) → [0,1] arası, olasılık yorumlanabilir\n2. **Tanh**: tanh(x) → [-1,1] arası, sigmoid'den daha iyi\n3. **ReLU**: max(0,x) → En popüler! Hızlı, basit, etkili\n4. **Leaky ReLU**: max(0.01x, x) → ReLU'nun iyileştirilmişi\n5. **Softmax**: e^xi / Σe^xj → Çıktıları olasılık dağılımına çevirir\n\nHer fonksiyonun artıları ve eksileri var. Modern network'ler çoğunlukla ReLU kullanır.",
+    "level2_application": "Aktivasyon fonksiyonları layer'lar arasında uygulanır:\n\n```\nInput → Linear (W1@x + b1) → ReLU → Linear (W2@x + b2) → ReLU → Output\n```\n\n**Ne Zaman Hangisi?**\n\n1. **Hidden Layers**: ReLU veya Leaky ReLU\n   - Avantaj: Hızlı, gradient flow iyi\n   - Dezavantaj: \"Dying ReLU\" problemi (nöronlar ölür)\n\n2. **Binary Classification (İkili Sınıflandırma)**: Sigmoid\n   - Output: 0-1 arası olasılık\n   - Loss: Binary Cross-Entropy ile uyumlu\n\n3. **Multi-class Classification (Çok Sınıflı)**: Softmax\n   - Output: Her sınıf için olasılık, toplamı 1\n   - Loss: Cross-Entropy ile uyumlu\n\n4. **Regression (Regresyon)**: Yok veya Linear\n   - Sayı tahmini için aktivasyon gerekmez\n\n**Modern Varyantlar:**\n- **GELU**: Transformer'larda (GPT, BERT)\n- **Swish**: f(x) = x * sigmoid(x)\n- **Mish**: f(x) = x * tanh(softplus(x))\n\n**Gradient Flow:**\nAktivasyon fonksiyonları backpropagation'da türev alınır. ReLU'nun türevi basit: x>0 ise 1, değilse 0. Sigmoid'in türevi karmaşık ve küçük (vanishing gradient).",
+    "level3_advanced": "Aktivasyon fonksiyonlarının matematiksel özellikleri ve türevleri:\n\n**1. Sigmoid:**\n$$\\sigma(x) = \\frac{1}{1 + e^{-x}}$$\n$$\\sigma'(x) = \\sigma(x)(1 - \\sigma(x))$$\n\nProblem: Saturasyon → x çok büyük/küçükken türev ~0 (vanishing gradient)\n\n**2. Tanh:**\n$$\\tanh(x) = \\frac{e^x - e^{-x}}{e^x + e^{-x}}$$\n$$\\tanh'(x) = 1 - \\tanh^2(x)$$\n\nSifir-merkezli (zero-centered), sigmoid'den daha iyi gradient flow.\n\n**3. ReLU:**\n$$\\text{ReLU}(x) = \\max(0, x)$$\n$$\\text{ReLU}'(x) = \\begin{cases} 1 & x > 0 \\\\ 0 & x \\leq 0 \\end{cases}$$\n\nBasit, hızlı, sparse activation. Problem: Dying ReLU (x<0'da gradient yok)\n\n**4. Leaky ReLU:**\n$$\\text{LeakyReLU}(x) = \\max(\\alpha x, x), \\quad \\alpha = 0.01$$\n$$\\text{LeakyReLU}'(x) = \\begin{cases} 1 & x > 0 \\\\ \\alpha & x \\leq 0 \\end{cases}$$\n\nNegatif tarafta küçük gradient, dying ReLU'yu önler.\n\n**5. Softmax:**\n$$\\text{softmax}(x_i) = \\frac{e^{x_i}}{\\sum_{j=1}^{n} e^{x_j}}$$\n$$\\frac{\\partial \\text{softmax}(x_i)}{\\partial x_j} = \\text{softmax}(x_i)(\\delta_{ij} - \\text{softmax}(x_j))$$\n\nÇıktı toplamı 1, olasılık yorumlanabilir.\n\n**Universal Approximation Theorem:**\nTek hidden layer + non-linear activation → Her sürekli fonksiyonu yaklaşık olarak temsil edebilir.",
+    "level4_expert": "Production ve optimizasyon detayları:\n\n**1. Hesaplama Verimliliği:**\n```python\n# Yavaş: Ayrı operasyon\nx = linear(x)\nx = activation(x)\n\n# Hızlı: Fused operation\nx = linear_activation(x)  # cuDNN fused kernel\n```\n\nModern kütüphaneler (cuDNN) fused operations kullanır: 2x hızlı.\n\n**2. Memory Optimization:**\n- **In-place ReLU**: `torch.nn.ReLU(inplace=True)` → Bellekten tasarruf\n- Ancak: Gradient checkpointing ile uyumsuz olabilir\n\n**3. Numerical Stability:**\nSoftmax overflow/underflow problemi:\n```python\n# Kötü\nexp(x) / sum(exp(x))  # x=1000 → inf\n\n# İyi (log-sum-exp trick)\nexp(x - max(x)) / sum(exp(x - max(x)))\n```\n\nPyTorch/TensorFlow otomatik stabilize eder.\n\n**4. Gradient Checkpointing:**\nBüyük modellerde aktivasyonları saklamak yerine, backward'da yeniden hesapla:\n- Memory: ↓ 50-80%\n- Time: ↑ 20-30%\n- Trade-off büyük modeller için değer\n\n**5. Mixed Precision:**\nFloat16 aktivasyonlar:\n- Sigmoid, Tanh: Overflow risk (scaling gerekir)\n- ReLU: Sorunsuz\n- Softmax: Log-softmax kullan\n\n**6. Quantization:**\nINT8 inference:\n- ReLU: Kolayca quantize edilir\n- Sigmoid, Tanh: Lookup table gerekir\n- Softmax: Yaklaşık yöntemler (Gumbel-Softmax)\n\n**7. Hardware Acceleration:**\n- Tensor Cores: ReLU, GELU optimize\n- SIMD instructions: Vektörize edilmiş exp, log\n- Custom kernels: Triton, CUDA\n\n**Benchmark (A100 GPU, batch=256, dim=4096):**\n- ReLU: 0.05ms\n- GELU: 0.08ms  \n- Sigmoid: 0.12ms\n- Softmax: 0.15ms",
+    "level1_beginner_extra": "Görsel olarak düşünün:\n\n**Sigmoid**: S harfi şeklinde bir eğri. Soldaki negatif değerler 0'a yakın, sağdaki pozitif değerler 1'e yakın, ortası 0.5.\n\n**ReLU**: Dirsek şeklinde. X<0 için düz çizgi (0), x>0 için 45 derece çizgi (y=x).\n\n**Tanh**: Sigmoid gibi ama -1 ile 1 arasında.\n\n**Softmax**: Birden fazla sayıyı olasılığa çevirir. [2.0, 1.0, 0.1] → [0.7, 0.2, 0.1] (toplamı 1)"
+  },
+  "whatIsIt": "Aktivasyon fonksiyonu, neural network'te her nöronun çıktısına uygulanan matematiksel bir fonksiyondur. Linear işlemleri (matris çarpımı) non-linear hale getirir. Bu non-linearity olmadan neural network sadece fancy bir linear regresyon olurdu. ReLU, Sigmoid, Tanh en popüler olanlarıdır.",
+  "whyNeeded": "Aktivasyon fonksiyonları olmadan, ne kadar deep network yaparsanız yapın, sonuçta tek bir linear fonksiyondan ibaret olur. XOR gibi basit non-linear problemleri bile çözemezsiniz. Aktivasyon, network'e karmaşık pattern'leri öğrenme gücü verir. Beynimizin nöronları da benzer şekilde: eşik değeri geçince ateşler.",
+  "realWorldAnalogy": "Aktivasyon fonksiyonu bir karar mekanizması gibidir. Örneğin, sabah kalkma kararı: Alarm 7'de çaldıysa (girdi) ve yeterince uyuduysanız (ağırlık), kalkmaya karar verirsiniz (aktivasyon=1). Ama hafta sonu ise (farklı ağırlık), alarm çalsa bile dönüp uyursunuz (aktivasyon=0). ReLU gibi: Eşik altı = 0 (uyumaya devam), eşik üstü = x (kalkma motivasyonu).",
+  "mathematics": {
+    "formulas": [
+      "\\sigma(x) = \\frac{1}{1 + e^{-x}}",
+      "\\tanh(x) = \\frac{e^x - e^{-x}}{e^x + e^{-x}}",
+      "\\text{ReLU}(x) = \\max(0, x)",
+      "\\text{LeakyReLU}(x) = \\max(\\alpha x, x), \\quad \\alpha = 0.01",
+      "\\text{softmax}(x_i) = \\frac{e^{x_i}}{\\sum_{j} e^{x_j}}",
+      "\\text{GELU}(x) = x \\cdot \\Phi(x)",
+      "\\sigma'(x) = \\sigma(x)(1 - \\sigma(x))",
+      "\\text{ReLU}'(x) = \\mathbb{1}_{x>0}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Linear Transformation: z = Wx + b (matris çarpımı)",
+      "2. Activation Application: a = f(z) (örneğin ReLU)",
+      "3. Forward Pass: Bir sonraki layer'a aktar",
+      "4. Backward Pass: Gradient hesapla ∂L/∂z = ∂L/∂a * f'(z)",
+      "5. Weight Update: Chain rule ile ağırlıkları güncelle"
+    ],
+    "complexity": "O(n) - Element-wise operation. N eleman için N işlem. GPU'da parallel yapılır, çok hızlı."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Aktivasyon Nedir?",
+      "code": "Girdi → Hesaplama → Aktivasyon → Çıktı\n\nÖrnek: x = 5\n\nReLU aktivasyon:\n- x > 0 ise: x'i olduğu gibi ver → 5\n- x < 0 ise: 0 ver\n\nSonuç: 5 (pozitif olduğu için değişmedi)\n\nÖrnek 2: x = -3\nReLU: max(0, -3) = 0 (negatifi sıfırla)",
+      "explanation": "Aktivasyon basitçe bir karar mekanizmasıdır."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Aktivasyon Fonksiyonları Manuel",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Girdiler\nx = np.linspace(-5, 5, 100)\n\n# Sigmoid\nsigmoid = 1 / (1 + np.exp(-x))\n\n# Tanh\ntanh = np.tanh(x)\n\n# ReLU\nrelu = np.maximum(0, x)\n\n# Leaky ReLU\nleaky_relu = np.where(x > 0, x, 0.01 * x)\n\nprint(\"x=2.0 için:\")\nprint(f\"  Sigmoid: {1/(1+np.exp(-2.0)):.4f}\")  # ~0.88\nprint(f\"  Tanh: {np.tanh(2.0):.4f}\")            # ~0.96\nprint(f\"  ReLU: {max(0, 2.0):.4f}\")             # 2.0\nprint(f\"  Leaky ReLU: {max(0.01*2.0, 2.0):.4f}\") # 2.0\n\nprint(\"\\nx=-2.0 için:\")\nprint(f\"  Sigmoid: {1/(1+np.exp(2.0)):.4f}\")    # ~0.12\nprint(f\"  Tanh: {np.tanh(-2.0):.4f}\")           # ~-0.96\nprint(f\"  ReLU: {max(0, -2.0):.4f}\")            # 0.0\nprint(f\"  Leaky ReLU: {max(0.01*-2.0, -2.0):.4f}\") # -0.02",
+      "explanation": "Her aktivasyon fonksiyonu farklı davranış gösterir. ReLU negatifleri sıfırlar, Sigmoid [0,1] aralığına sıkıştırır."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch ile Aktivasyon Kullanımı",
+      "code": "import torch\nimport torch.nn as nn\n\n# Aktivasyon fonksiyonları\nrelu = nn.ReLU()\nsigmoid = nn.Sigmoid()\ntanh = nn.Tanh()\nleaky_relu = nn.LeakyReLU(negative_slope=0.01)\nsoftmax = nn.Softmax(dim=-1)\n\n# Örnek tensor\nx = torch.tensor([-2.0, -1.0, 0.0, 1.0, 2.0])\n\nprint(\"Girdi:\", x)\nprint(\"\\nReLU:\", relu(x))\nprint(\"Sigmoid:\", sigmoid(x))\nprint(\"Tanh:\", tanh(x))\nprint(\"Leaky ReLU:\", leaky_relu(x))\n\n# Softmax - olasılık dağılımı\nlogits = torch.tensor([2.0, 1.0, 0.1])\nprobs = softmax(logits)\nprint(\"\\nLogits:\", logits)\nprint(\"Softmax (probabilities):\", probs)\nprint(\"Toplam:\", probs.sum())  # 1.0",
+      "explanation": "PyTorch'ta aktivasyon fonksiyonları nn.Module olarak kullanılır. Softmax çıktıları olasılığa çevirir."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Basit Neural Network",
+      "code": "import torch\nimport torch.nn as nn\n\n# 2 hidden layer network\nclass SimpleNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(10, 20)  # Input → Hidden1\n        self.fc2 = nn.Linear(20, 10)  # Hidden1 → Hidden2\n        self.fc3 = nn.Linear(10, 1)   # Hidden2 → Output\n        \n        self.relu = nn.ReLU()         # Activation\n        self.sigmoid = nn.Sigmoid()   # Output activation\n    \n    def forward(self, x):\n        # Layer 1\n        x = self.fc1(x)      # Linear\n        x = self.relu(x)     # Activation\n        \n        # Layer 2\n        x = self.fc2(x)      # Linear\n        x = self.relu(x)     # Activation\n        \n        # Output layer\n        x = self.fc3(x)      # Linear\n        x = self.sigmoid(x)  # Output: [0, 1]\n        return x\n\n# Test\nmodel = SimpleNet()\ninput_data = torch.randn(5, 10)  # Batch=5, features=10\noutput = model(input_data)\n\nprint(\"Input shape:\", input_data.shape)\nprint(\"Output shape:\", output.shape)\nprint(\"Output (probabilities):\")\nprint(output)",
+      "explanation": "Her linear layer sonrası aktivasyon eklenir. Output layer'da task'a göre aktivasyon seçilir: Binary classification → Sigmoid."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Farklı Task'larda Aktivasyon Seçimi",
+      "code": "import torch.nn as nn\n\n# 1. Binary Classification (İkili Sınıflandırma)\nclass BinaryClassifier(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(100, 50),\n            nn.ReLU(),           # Hidden: ReLU\n            nn.Linear(50, 1),\n            nn.Sigmoid()         # Output: Sigmoid [0,1]\n        )\n    def forward(self, x):\n        return self.layers(x)\n\n# 2. Multi-class Classification (Çok Sınıflı)\nclass MultiClassClassifier(nn.Module):\n    def __init__(self, num_classes=10):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(100, 50),\n            nn.ReLU(),           # Hidden: ReLU\n            nn.Linear(50, num_classes)\n            # Softmax genelde loss içinde (CrossEntropyLoss)\n        )\n    def forward(self, x):\n        return self.layers(x)  # Logits\n\n# 3. Regression (Regresyon - Sayı Tahmini)\nclass Regressor(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(100, 50),\n            nn.ReLU(),           # Hidden: ReLU\n            nn.Linear(50, 1)\n            # Output: No activation (raw number)\n        )\n    def forward(self, x):\n        return self.layers(x)\n\nprint(\"✓ Binary: Sigmoid output\")\nprint(\"✓ Multi-class: Softmax (in loss)\")\nprint(\"✓ Regression: No activation\")",
+      "explanation": "Task türüne göre output aktivasyon değişir. Hidden layer'larda genelde ReLU kullanılır."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Aktivasyon Türevleri (Gradient)",
+      "code": "import torch\n\n# Manuel türev hesaplama\ndef sigmoid(x):\n    return 1 / (1 + torch.exp(-x))\n\ndef sigmoid_derivative(x):\n    s = sigmoid(x)\n    return s * (1 - s)\n\ndef relu_derivative(x):\n    return (x > 0).float()\n\n# Test\nx = torch.tensor([-2.0, -1.0, 0.0, 1.0, 2.0], requires_grad=True)\n\n# Sigmoid forward\ny_sigmoid = sigmoid(x)\n\n# Backward\nloss = y_sigmoid.sum()\nloss.backward()\n\nprint(\"Sigmoid output:\", y_sigmoid.detach())\nprint(\"Sigmoid gradient (otomatik):\", x.grad)\nprint(\"Sigmoid gradient (manuel):\", sigmoid_derivative(x.detach()))\n\n# ReLU\nx2 = torch.tensor([-2.0, -1.0, 0.0, 1.0, 2.0], requires_grad=True)\ny_relu = torch.relu(x2)\nloss2 = y_relu.sum()\nloss2.backward()\n\nprint(\"\\nReLU output:\", y_relu.detach())\nprint(\"ReLU gradient (otomatik):\", x2.grad)\nprint(\"ReLU gradient (manuel):\", relu_derivative(x2.detach()))",
+      "explanation": "Backpropagation'da aktivasyon türevleri kullanılır. PyTorch otomatik hesaplar ama nasıl çalıştığını bilmek önemli."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Vanishing Gradient Problemi",
+      "code": "import torch\nimport torch.nn as nn\n\n# Derin sigmoid network (kötü)\ndeep_sigmoid = nn.Sequential(\n    *[nn.Sequential(nn.Linear(100, 100), nn.Sigmoid()) \n      for _ in range(10)]  # 10 layer\n)\n\n# Derin ReLU network (iyi)\ndeep_relu = nn.Sequential(\n    *[nn.Sequential(nn.Linear(100, 100), nn.ReLU()) \n      for _ in range(10)]  # 10 layer\n)\n\nx = torch.randn(32, 100, requires_grad=True)\n\n# Sigmoid network\nout_sigmoid = deep_sigmoid(x)\nloss_sigmoid = out_sigmoid.sum()\nloss_sigmoid.backward()\n\nprint(\"Sigmoid Network:\")\nprint(f\"  İlk layer gradient norm: {deep_sigmoid[0][0].weight.grad.norm():.6f}\")\nprint(f\"  Son layer gradient norm: {deep_sigmoid[-1][0].weight.grad.norm():.6f}\")\n\n# Temizle\nfor p in deep_sigmoid.parameters():\n    p.grad = None\n\n# ReLU network\nout_relu = deep_relu(x)\nloss_relu = out_relu.sum()\nloss_relu.backward()\n\nprint(\"\\nReLU Network:\")\nprint(f\"  İlk layer gradient norm: {deep_relu[0][0].weight.grad.norm():.6f}\")\nprint(f\"  Son layer gradient norm: {deep_relu[-1][0].weight.grad.norm():.6f}\")\n\nprint(\"\\nSonuç: Sigmoid'de gradientler çok küçük (vanishing)!\")\nprint(\"ReLU'da gradient flow daha iyi.\")",
+      "explanation": "Sigmoid derin network'lerde gradient'i öldürür. ReLU bu problemi çözer. Modern deep learning ReLU sayesinde mümkün oldu."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Optimized Activations (Production)",
+      "code": "import torch\nimport torch.nn as nn\nimport time\n\n# Standard ReLU\nclass StandardNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(1024, 1024),\n            nn.ReLU(),\n            nn.Linear(1024, 1024),\n            nn.ReLU(),\n            nn.Linear(1024, 512)\n        )\n    def forward(self, x):\n        return self.layers(x)\n\n# In-place ReLU (memory efficient)\nclass OptimizedNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.layers = nn.Sequential(\n            nn.Linear(1024, 1024),\n            nn.ReLU(inplace=True),  # In-place: Saves memory\n            nn.Linear(1024, 1024),\n            nn.ReLU(inplace=True),\n            nn.Linear(1024, 512)\n        )\n    def forward(self, x):\n        return self.layers(x)\n\n# Benchmark\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nprint(f\"Device: {device}\")\n\nmodel1 = StandardNet().to(device)\nmodel2 = OptimizedNet().to(device)\n\nx = torch.randn(128, 1024).to(device)\n\n# Warmup\nfor _ in range(10):\n    _ = model1(x)\n    _ = model2(x)\n\n# Benchmark standard\nstart = time.time()\nfor _ in range(100):\n    out = model1(x)\nstd_time = time.time() - start\n\n# Benchmark optimized\nstart = time.time()\nfor _ in range(100):\n    out = model2(x)\nopt_time = time.time() - start\n\nprint(f\"\\nStandard ReLU: {std_time:.4f}s\")\nprint(f\"In-place ReLU: {opt_time:.4f}s\")\nprint(f\"Speedup: {std_time/opt_time:.2f}x\")\nprint(\"\\n💡 In-place ReLU bellekten tasarruf sağlar!\")",
+      "explanation": "Production'da her milisaniye önemli. In-place operations bellek ve hız avantajı sağlar. Büyük batch'lerde fark belirginleşir."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Custom Activation (Advanced)",
+      "code": "import torch\nimport torch.nn as nn\n\n# Custom activation: Mish\nclass Mish(nn.Module):\n    \"\"\"Mish activation: x * tanh(softplus(x))\"\"\"\n    def forward(self, x):\n        return x * torch.tanh(nn.functional.softplus(x))\n\n# Custom activation with learnable parameter\nclass PReLU_Custom(nn.Module):\n    \"\"\"Parametric ReLU: learnable negative slope\"\"\"\n    def __init__(self, num_parameters=1, init=0.25):\n        super().__init__()\n        self.alpha = nn.Parameter(torch.ones(num_parameters) * init)\n    \n    def forward(self, x):\n        return torch.where(x > 0, x, self.alpha * x)\n\n# Test\nmish = Mish()\nprelu = PReLU_Custom(num_parameters=10)  # 10 ayrı alpha\n\nx = torch.randn(5, 10)\n\nprint(\"Input:\", x[0, :5])\nprint(\"\\nMish output:\", mish(x)[0, :5])\nprint(\"PReLU output:\", prelu(x)[0, :5])\nprint(\"\\nPReLU learnable alphas:\", prelu.alpha[:5])\n\n# Gradient flow\nx2 = torch.randn(5, 10, requires_grad=True)\nout = mish(x2)\nloss = out.sum()\nloss.backward()\n\nprint(\"\\nMish gradient (first 5):\", x2.grad[0, :5])\nprint(\"\\n✓ Custom activations özel use case'ler için kullanılır\")\nprint(\"✓ Research'te yeni activation'lar denenir\")",
+      "explanation": "Custom activation fonksiyonları research ve özel problemler için. Mish, Swish gibi modern varyantlar bazı task'larda ReLU'dan iyi. PReLU öğrenilebilir parametre içerir."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "activation-comparison",
+      "type": "interactive",
+      "title": "Aktivasyon Fonksiyonları Karşılaştırma",
+      "description": "Sigmoid, ReLU, Tanh grafiklerini interaktif görün",
+      "component": "FunctionPlot"
+    },
+    {
+      "id": "gradient-flow",
+      "type": "animation",
+      "title": "Gradient Flow Animasyonu",
+      "description": "Vanishing gradient problemini görselleştirin"
+    },
+    {
+      "id": "dying-relu",
+      "type": "diagram",
+      "title": "Dying ReLU Problemi",
+      "description": "ReLU nöronları nasıl 'ölür' gösterir"
+    }
+  ],
+  "prerequisites": [],
+  "nextTopics": [
+    "perceptron",
+    "loss-functions",
+    "backpropagation"
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Output layer'da yanlış aktivasyon",
+      "why": "Binary classification'da Softmax, Multi-class'ta Sigmoid kullanmak hatalı sonuçlar verir.",
+      "fix": "Binary → Sigmoid, Multi-class → Softmax (veya none + CrossEntropyLoss), Regression → None"
+    },
+    {
+      "mistake": "Tüm layer'larda Sigmoid kullanmak",
+      "why": "Vanishing gradient: Derin network'lerde gradient çok küçülür, öğrenme durur.",
+      "fix": "Hidden layer'larda ReLU veya LeakyReLU kullanın. Sigmoid sadece output'ta (binary classification)."
+    },
+    {
+      "mistake": "Dying ReLU'yu göz ardı etmek",
+      "why": "Learning rate çok yüksekse, nöronlar negatife kayar ve bir daha aktif olmaz.",
+      "fix": "LeakyReLU veya PReLU kullanın, veya learning rate'i düşürün, batch normalization ekleyin."
+    },
+    {
+      "mistake": "Softmax + CrossEntropyLoss tekrarı",
+      "why": "PyTorch'ta CrossEntropyLoss zaten softmax içerir. İki kere uygulamak hatalı.",
+      "fix": "Model output'unda softmax YOK, direkt logits dönün. Loss fonksiyonu softmax'ı kendi yapar."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "ReLU'nun en büyük avantajı nedir?",
+      "options": [
+        "Output'u [0,1] aralığına sıkıştırır",
+        "Basit, hızlı ve vanishing gradient problemini çözer",
+        "Negatif değerleri korur",
+        "Tüm değerleri sıfırlar"
+      ],
+      "explanation": "ReLU: max(0,x). Çok basit, türevi kolay (1 veya 0), gradient flow iyi. Sigmoid gibi saturasyon yok. Modern network'lerin başarısının anahtarı.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q2",
+      "question": "Binary classification (evet/hayır) için output layer'da hangi aktivasyon kullanılır?",
+      "options": [
+        "ReLU",
+        "Softmax",
+        "Sigmoid",
+        "Tanh"
+      ],
+      "explanation": "Binary classification: Sigmoid. Output [0,1] arası, olasılık olarak yorumlanabilir. 0.5'in üstü 'evet', altı 'hayır'.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 2
+    },
+    {
+      "id": "q3",
+      "question": "Vanishing gradient problemi ne demektir?",
+      "options": [
+        "Gradient'ler çok büyür ve model patlar",
+        "Gradient'ler layer'lar boyunca küçülür, ilk layer'lar öğrenemez",
+        "Aktivasyon fonksiyonu çalışmaz",
+        "Model çok hızlı converge olur"
+      ],
+      "explanation": "Vanishing gradient: Sigmoid gibi aktivasyonlar derin network'lerde gradient'i küçültür. Chain rule ile çarpıldıkça gradient ~0'a yaklaşır. İlk layer'lar öğrenemez. ReLU bu problemi çözer.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q4",
+      "question": "Softmax ne yapar?",
+      "options": [
+        "Negatif değerleri sıfırlar",
+        "Değerleri [0,1] arasına sıkıştırır",
+        "Vektörü olasılık dağılımına çevirir (toplamı 1)",
+        "En büyük değeri 1, diğerlerini 0 yapar"
+      ],
+      "explanation": "Softmax: Bir vektörü olasılık dağılımına çevirir. Her eleman [0,1] arası, toplam=1. Multi-class classification'da kullanılır. [2,1,0.1] → [0.7, 0.2, 0.1]",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 2
+    },
+    {
+      "id": "q5",
+      "question": "Neden aktivasyon fonksiyonu kullanırız?",
+      "options": [
+        "Hesaplamayı hızlandırmak için",
+        "Non-linearity eklemek için - yoksa network tek linear fonksiyon olur",
+        "GPU kullanımını optimize etmek için",
+        "Sadece output'u normalize etmek için"
+      ],
+      "explanation": "Aktivasyon non-linearity ekler. Olmasaydı, n tane layer = tek linear layer. XOR gibi basit non-linear problemler çözülemezdi. Neural network'ün gücü non-linearity'den gelir.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "ReLU formülü nedir?",
+      "back": "ReLU(x) = max(0, x)\n\nx > 0 → x\nx ≤ 0 → 0\n\nNegatif değerleri sıfırlar."
+    },
+    {
+      "id": "fc2",
+      "front": "Sigmoid ne zaman kullanılır?",
+      "back": "Binary classification output'unda.\n\nσ(x) = 1/(1+e^(-x))\nOutput: [0, 1] arası olasılık\nLoss: Binary Cross-Entropy"
+    },
+    {
+      "id": "fc3",
+      "front": "Vanishing gradient nedir?",
+      "back": "Gradient'lerin layer'lar boyunca küçülmesi.\n\nSebep: Sigmoid/Tanh türevleri <1\nSonuç: İlk layer'lar öğrenemez\nÇözüm: ReLU kullan"
+    },
+    {
+      "id": "fc4",
+      "front": "Dying ReLU nedir?",
+      "back": "Nöronların sürekli negatif kalıp 0 output vermesi.\n\nSebep: Büyük negatif ağırlıklar\nSonuç: Gradient=0, öğrenme durur\nÇözüm: LeakyReLU, PReLU"
+    },
+    {
+      "id": "fc5",
+      "front": "Softmax ne zaman kullanılır?",
+      "back": "Multi-class classification'da.\n\nsoftmax(x_i) = e^(x_i) / Σe^(x_j)\n\nÇıktı: Olasılık dağılımı (toplam=1)\nLoss: Cross-Entropy"
+    }
+  ],
+  "references": [
+    {
+      "title": "Deep Learning Book - Chapter 6",
+      "url": "https://www.deeplearningbook.org/contents/mlp.html",
+      "type": "book"
+    },
+    {
+      "title": "Understanding Activation Functions",
+      "url": "https://pytorch.org/docs/stable/nn.html#non-linear-activations",
+      "type": "documentation"
+    },
+    {
+      "title": "Visualizing Activation Functions",
+      "url": "https://dashee87.github.io/deep%20learning/visualising-activation-functions-in-neural-networks/",
+      "type": "article"
+    },
+    {
+      "title": "ReLU vs Sigmoid vs Tanh",
+      "url": "https://www.kaggle.com/code/dansbecker/rectified-linear-units-relu-in-deep-learning",
+      "type": "tutorial"
+    }
+  ],
+  "tags": [
+    "aktivasyon",
+    "relu",
+    "sigmoid",
+    "tanh",
+    "softmax",
+    "neural-network",
+    "vanishing-gradient",
+    "non-linearity",
+    "deep-learning",
+    "gradient-flow"
+  ]
+}

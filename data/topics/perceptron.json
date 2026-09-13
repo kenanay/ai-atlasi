@@ -1,0 +1,282 @@
+{
+  "id": "perceptron",
+  "title": "Perceptron ve Single Layer",
+  "category": "neural-networks",
+  "level": 1,
+  "estimatedTime": 45,
+  "content": {
+    "level0_basic": "Perceptron, yapay sinir ağlarının en basit yapı taşıdır. Beyindeki bir nöronu taklit eder: Girdiler alır, toplar, karar verir. Örneğin, 'Bu e-mail spam mi?' sorusuna cevap verir. Girdi özellikleri (kelimeler, linkler) × ağırlıklar → Toplam → Eşik kontrolü → Spam/Değil. İlk yapay öğrenme algoritmasıdır (1957)!",
+    "level1_beginner": "Perceptron, Frank Rosenblatt tarafından 1957'de icat edilen ilk yapay sinir ağı modelidir. Tek nöron = single layer perceptron.\n\n**Nasıl Çalışır?**\n\n1. **Girdiler (x):** Özellikleri temsil eder (örn: e-mail'de kelime sayısı)\n2. **Ağırlıklar (w):** Her özelliğin önemi\n3. **Toplam:** z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b (bias)\n4. **Aktivasyon:** y = f(z) → Binary output (0 veya 1)\n\n**Basit Formül:**\n```\ny = step(w · x + b)\n```\n\nBurada step fonksiyonu: z > 0 ise 1, değilse 0.\n\n**Ne Öğrenebilir?**\n- ✅ AND, OR gibi linearly separable problemler\n- ❌ XOR gibi non-linear problemler (tek layer yetmez!)\n\n**Öğrenme Kuralı:**\nHer yanlış tahmin için ağırlıkları güncelle:\n```\nw_new = w_old + α * (y_true - y_pred) * x\n```\n\nα = learning rate (öğrenme hızı)\n\n**Modern Kullanım:**\nTek perceptron kullanılmaz artık, ama neural network'lerin temelini oluşturur. Her nöron bir perceptron gibi çalışır.",
+    "level2_application": "Perceptron gerçek kodda nasıl görünür:\n\n**Binary Classification (İkili Sınıflandırma):**\n```python\nimport numpy as np\n\nclass Perceptron:\n    def __init__(self, input_size, lr=0.01):\n        self.w = np.random.randn(input_size)  # Ağırlıklar\n        self.b = 0  # Bias\n        self.lr = lr  # Learning rate\n    \n    def predict(self, x):\n        z = np.dot(self.w, x) + self.b  # Linear combination\n        return 1 if z > 0 else 0  # Step function\n    \n    def train(self, X, y, epochs=10):\n        for epoch in range(epochs):\n            for xi, yi in zip(X, y):\n                pred = self.predict(xi)\n                error = yi - pred\n                # Update rule\n                self.w += self.lr * error * xi\n                self.b += self.lr * error\n```\n\n**Modern PyTorch Versiyonu:**\n```python\nimport torch.nn as nn\n\n# Single layer = Linear layer\nmodel = nn.Sequential(\n    nn.Linear(input_size, 1),  # w·x + b\n    nn.Sigmoid()  # Smooth step (0-1)\n)\n```\n\n**Neden Single Layer Yetmez?**\nXOR problemi:\n```\nInput: (0,0) → 0\nInput: (0,1) → 1\nInput: (1,0) → 1\nInput: (1,1) → 0\n```\nTek düz çizgi ile bu 4 noktayı ayıramazsınız! Bu yüzden deep learning doğdu: Çok katman (multi-layer perceptron = MLP).\n\n**Multi-Layer Perceptron (MLP):**\n```python\nmodel = nn.Sequential(\n    nn.Linear(2, 4),   # Input → Hidden\n    nn.ReLU(),         # Activation\n    nn.Linear(4, 1),   # Hidden → Output\n    nn.Sigmoid()\n)\n```\n\nBu artık XOR'u çözebilir!\n\n**Perceptron vs Modern NN:**\n- Perceptron: Tek layer, step function, linear separable\n- Modern NN: Çok layer, ReLU/Sigmoid, non-linear\n\n**Tarihsel Önem:**\n1957: Perceptron icat edildi → Hype!\n1969: Minsky & Papert XOR problemini gösterdi → AI Winter\n1986: Backpropagation icat edildi → Revival\n2012: Deep learning patlaması (AlexNet) → Modern AI",
+    "level3_advanced": "Perceptron'un matematiksel analizi:\n\n**Karar Sınırı (Decision Boundary):**\n\nPerceptron şu denklemi öğrenir:\n$$w_1 x_1 + w_2 x_2 + b = 0$$\n\nBu 2D'de bir çizgi, 3D'de bir düzlem, n-D'de hyperplane.\n\n**Convergence Teoremi:**\n\nEğer veri linearly separable ise, perceptron **sonlu adımda** converge eder:\n$$t \\leq \\frac{R^2}{\\gamma^2}$$\n\nBurada:\n- $R$: Veri noktalarının maksimum normu\n- $\\gamma$: Margin (sınıfa en yakın nokta mesafesi)\n\nYani: Margin büyükse (kolay problem), hızlı converge olur.\n\n**Gradient Descent Yorumu:**\n\nPerceptron kuralı aslında gradient descent:\n\n**Loss Function:**\n$$L(w) = \\max(0, -y(w \\cdot x))$$\n\nBu hinge loss'un bir versiyonu.\n\n**Gradient:**\n$$\\frac{\\partial L}{\\partial w} = -y \\cdot x \\quad \\text{if } y(w \\cdot x) < 0$$\n\n**Update:**\n$$w \\leftarrow w - \\eta \\frac{\\partial L}{\\partial w} = w + \\eta y x$$\n\nTam perceptron kuralı!\n\n**Linear Separability:**\n\nİki sınıf linearly separable ⟺ ∃ hyperplane öyle ki:\n$$y_i(w \\cdot x_i + b) > 0 \\quad \\forall i$$\n\nXOR linearly separable değil:\n```\nClass 0: (0,0), (1,1)\nClass 1: (0,1), (1,0)\n```\nHiçbir tek çizgi bu 4 noktayı ayıramaz.\n\n**Dual Form (Kernel Trick İçin):**\n\nPerceptron ağırlıkları şu şekilde yazılabilir:\n$$w = \\sum_{i=1}^{n} \\alpha_i y_i x_i$$\n\nBurada $\\alpha_i$: Her örneğin katkısı.\n\nPrediction:\n$$y_{new} = \\text{sign}\\left(\\sum_{i=1}^{n} \\alpha_i y_i (x_i \\cdot x_{new})\\right)$$\n\nKernel trick: $x_i \\cdot x_{new}$ yerine $K(x_i, x_{new})$ kullan (SVM'de kullanılır).\n\n**VC Dimension:**\n\nPerceptron'un VC dimension'u: $d + 1$ (d = input dimension)\n\nYani n-D space'te n+1 nokta shatter edilebilir (her etiketlemeyi öğrenebilir).",
+    "level4_expert": "Production ve optimizasyon:\n\n**1. Efficient Implementation:**\n\n```python\n# Vectorized training (batch)\nclass BatchPerceptron:\n    def train_batch(self, X, y):\n        # X: (batch, features)\n        # y: (batch,)\n        z = X @ self.w + self.b  # Vectorized\n        predictions = (z > 0).astype(int)\n        errors = y - predictions\n        \n        # Batch update\n        self.w += self.lr * (X.T @ errors) / len(X)\n        self.b += self.lr * errors.mean()\n```\n\nVectorization 10-100x hızlı!\n\n**2. Averaged Perceptron:**\n\nVaryans azaltma için:\n```python\nself.w_avg = momentum * self.w_avg + (1-momentum) * self.w\n```\n\nDaha stable predictions.\n\n**3. Large-Scale Learning:**\n\n**Online Learning:** Veri stream'den\n```python\nfor x, y in data_stream:\n    pred = self.predict(x)\n    if pred != y:\n        self.update(x, y)\n```\n\nMemory O(d) sadece (d=features).\n\n**4. Multi-class Perceptron (One-vs-All):**\n\n```python\nclass MultiClassPerceptron:\n    def __init__(self, num_classes, input_size):\n        # Her sınıf için ayrı perceptron\n        self.perceptrons = [\n            Perceptron(input_size) \n            for _ in range(num_classes)\n        ]\n    \n    def predict(self, x):\n        scores = [p.score(x) for p in self.perceptrons]\n        return np.argmax(scores)\n```\n\n**5. Sparse Features (Text, NLP):**\n\n```python\n# Memory efficient: Sadece non-zero features\nclass SparsePerceptron:\n    def __init__(self):\n        self.w = defaultdict(float)  # Sparse dict\n    \n    def predict(self, x_sparse):\n        # x_sparse: {feature_id: value}\n        score = sum(self.w[f] * v for f, v in x_sparse.items())\n        return 1 if score > 0 else 0\n```\n\nMilyonlarca feature için ideal (text classification).\n\n**6. Hardware Acceleration:**\n\n```python\n# GPU\nimport cupy as cp\nw_gpu = cp.array(w)\nX_gpu = cp.array(X)\nz = X_gpu @ w_gpu  # GPU'da paralel\n```\n\n**7. Production Considerations:**\n\n- **Inference latency:** O(d) - Feature count\n- **Model size:** O(d) weights\n- **Quantization:** Float32 → Int8 (4x küçük)\n- **Pruning:** Sıfıra yakın weights sil\n\n**8. When to Use Perceptron:**\n\n✅ Linear separable data\n✅ Online learning gerekli\n✅ Interpretability önemli\n✅ Low latency critical\n\n❌ Non-linear patterns\n❌ Complex features\n❌ State-of-the-art accuracy gerekli\n\n**Modern Equivalents:**\n- Logistic Regression (smooth, probabilistic)\n- Linear SVM (max margin)\n- SGD Classifier (sklearn - perceptron + tricks)\n\n**Benchmark:**\n- MNIST (28×28=784 features)\n  - Perceptron: ~92% accuracy\n  - MLP (2 hidden layers): ~98%\n  - CNN: ~99.5%",
+    "level1_beginner_extra": "Görsel olarak:\n\n**2D Örnek:**\n```\nClass 0 (●): (1, 1), (2, 2)\nClass 1 (■): (3, 4), (4, 3)\n\nPerceptron bir çizgi çizer:\ny = -w₁/w₂ * x + b/w₂\n\nÇizginin üstü → Class 1\nÇizginin altı → Class 0\n```\n\n**Öğrenme Süreci:**\n1. Rastgele çizgi çiz\n2. Yanlış sınıflandırılan nokta bul\n3. Çizgiyi o noktaya doğru kaydır\n4. Tekrarla (tüm noktalar doğru olana kadar)"
+  },
+  "whatIsIt": "Perceptron, 1957'de icat edilen ilk yapay sinir ağı modelidir. Tek bir nöron gibi çalışır: Girdileri alır, ağırlıklarla çarpar, toplar, eşik kontrolü yapar. Binary classification (iki sınıfa ayırma) için kullanılır. Modern neural network'lerin atası. Her nöron temelinde bir perceptron'dur.",
+  "whyNeeded": "Perceptron AI tarihinin dönüm noktasıdır. İlk öğrenebilen makine! Bugün doğrudan kullanılmasa da, neural network'lerin temelini oluşturur. Her katmandaki her nöron bir perceptron gibi çalışır: weighted sum + activation. Perceptron'u anlamadan deep learning anlaşılmaz. Ayrıca online learning için hâlâ kullanılır (spam filtering).",
+  "realWorldAnalogy": "Bir kapı görevlisi düşünün. Gelenlerin özelliklerine bakar (kıyafet, davranış, saat) ve karar verir: İçeri alayım mı, almayayım mı? Her özelliğe bir ağırlık verir (kıyafet çok önemli=yüksek ağırlık, saat az önemli=düşük ağırlık). Tüm özellikleri toplar, eşik değeri geçerse içeri alır. Bazen yanılır, ama zamanla öğrenir: Yanlış birini içeri aldıysa, o kriterleri ayarlar. Perceptron da böyle: Özellikleri ağırlıklandır, topla, karar ver, yanlışlardan öğren!",
+  "mathematics": {
+    "formulas": [
+      "z = w_1 x_1 + w_2 x_2 + \\cdots + w_n x_n + b = w^T x + b",
+      "y = \\text{step}(z) = \\begin{cases} 1 & z > 0 \\\\ 0 & z \\leq 0 \\end{cases}",
+      "w_{new} = w_{old} + \\eta (y_{true} - y_{pred}) x",
+      "b_{new} = b_{old} + \\eta (y_{true} - y_{pred})",
+      "\\text{Decision Boundary: } w^T x + b = 0",
+      "\\text{Convergence: } t \\leq \\frac{R^2}{\\gamma^2}",
+      "\\text{Margin: } \\gamma = \\min_i \\frac{|w^T x_i + b|}{||w||}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Initialize: Ağırlıkları (w) ve bias'ı (b) rastgele başlat",
+      "2. Forward: z = w·x + b hesapla (weighted sum)",
+      "3. Predict: y_pred = step(z) → 0 veya 1",
+      "4. Error: error = y_true - y_pred hesapla",
+      "5. Update (eğer error ≠ 0): w += lr * error * x, b += lr * error",
+      "6. Repeat: Tüm örnekler doğru sınıflanana kadar (veya max epoch)"
+    ],
+    "complexity": "O(d) per update - d=feature count. Converge time: O(R²/γ²) iterations."
+  },
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "Perceptron Nasıl Çalışır?",
+      "code": "Girdi: Özellikler (örn: e-mail'de kaç link var?)\nAğırlıklar: Her özellik ne kadar önemli?\n\n1. Çarp: Özellik × Ağırlık\n2. Topla: Tüm çarpımları topla + bias\n3. Karar: Toplam > 0 ise Class 1, değilse Class 0\n\nÖrnek:\nÖzellikler: [link_sayısı=5, ünlem=3]\nAğırlıklar: [0.6, 0.4]\nBias: -2\n\nToplam = 5*0.6 + 3*0.4 + (-2) = 3 + 1.2 - 2 = 2.2\n2.2 > 0 → SPAM!",
+      "explanation": "Perceptron basit bir karar mekanizmasıdır. Özellikleri ağırlıklandırır, toplar, eşik kontrol eder."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Manuel Perceptron İmplementasyonu",
+      "code": "import numpy as np\n\nclass SimplePerceptron:\n    def __init__(self, input_size, learning_rate=0.01):\n        # Ağırlıklar rastgele başlat\n        self.weights = np.random.randn(input_size) * 0.1\n        self.bias = 0\n        self.lr = learning_rate\n    \n    def predict(self, x):\n        # Weighted sum\n        z = np.dot(self.weights, x) + self.bias\n        # Step function\n        return 1 if z > 0 else 0\n    \n    def train_step(self, x, y_true):\n        # Forward\n        y_pred = self.predict(x)\n        # Error\n        error = y_true - y_pred\n        \n        # Update (only if wrong)\n        if error != 0:\n            self.weights += self.lr * error * x\n            self.bias += self.lr * error\n            return True  # Updated\n        return False  # No update needed\n\n# Test: AND gate\nX = np.array([[0,0], [0,1], [1,0], [1,1]])\ny = np.array([0, 0, 0, 1])  # AND truth table\n\nperceptron = SimplePerceptron(input_size=2)\n\nprint(\"Training AND gate...\")\nfor epoch in range(10):\n    errors = 0\n    for xi, yi in zip(X, y):\n        if perceptron.train_step(xi, yi):\n            errors += 1\n    print(f\"Epoch {epoch+1}: {errors} errors\")\n\nprint(\"\\nTest:\")\nfor xi, yi in zip(X, y):\n    pred = perceptron.predict(xi)\n    print(f\"{xi} → {pred} (expected {yi})\")",
+      "explanation": "Manuel perceptron implementasyonu. AND gate gibi basit linear problemleri çözebilir."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "PyTorch ile Single Layer",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\n# Single layer perceptron\nmodel = nn.Sequential(\n    nn.Linear(2, 1),  # 2 input, 1 output\n    nn.Sigmoid()      # Smooth step (0-1)\n)\n\n# Loss ve optimizer\ncriterion = nn.BCELoss()\noptimizer = optim.SGD(model.parameters(), lr=0.1)\n\n# Data: AND gate\nX = torch.tensor([[0.,0.], [0.,1.], [1.,0.], [1.,1.]])\ny = torch.tensor([[0.], [0.], [0.], [1.]])\n\n# Training\nfor epoch in range(100):\n    # Forward\n    outputs = model(X)\n    loss = criterion(outputs, y)\n    \n    # Backward\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 20 == 0:\n        print(f'Epoch [{epoch+1}/100], Loss: {loss.item():.4f}')\n\n# Test\nprint(\"\\nResults:\")\nwith torch.no_grad():\n    predictions = model(X)\n    for xi, yi, pred in zip(X, y, predictions):\n        print(f\"{xi.numpy()} → {pred.item():.3f} (expected {yi.item()})\")",
+      "explanation": "PyTorch ile single layer network. Sigmoid smooth step function, gradient descent ile optimize edilir."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "XOR Problem - Single Layer Başarısız!",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\n# XOR: Non-linear problem\nX = torch.tensor([[0.,0.], [0.,1.], [1.,0.], [1.,1.]])\ny = torch.tensor([[0.], [1.], [1.], [0.]])  # XOR!\n\nprint(\"XOR Truth Table:\")\nfor xi, yi in zip(X, y):\n    print(f\"  {xi.numpy()} → {yi.item()}\")\n\n# Single layer - BAŞARISIZ!\nprint(\"\\n1. Single Layer (Linear) - FAIL:\")\nsingle_layer = nn.Sequential(\n    nn.Linear(2, 1),\n    nn.Sigmoid()\n)\n\noptimizer = optim.SGD(single_layer.parameters(), lr=0.5)\ncriterion = nn.BCELoss()\n\nfor epoch in range(500):\n    out = single_layer(X)\n    loss = criterion(out, y)\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n\nwith torch.no_grad():\n    pred = single_layer(X)\n    print(f\"Final loss: {criterion(pred, y).item():.4f}\")\n    for xi, yi, p in zip(X, y, pred):\n        print(f\"  {xi.numpy()} → {p.item():.3f} (expected {yi.item()})\")\n\n# Multi-layer - BAŞARILI!\nprint(\"\\n2. Multi-Layer (Non-linear) - SUCCESS:\")\nmulti_layer = nn.Sequential(\n    nn.Linear(2, 4),   # Hidden layer\n    nn.ReLU(),\n    nn.Linear(4, 1),\n    nn.Sigmoid()\n)\n\noptimizer = optim.Adam(multi_layer.parameters(), lr=0.01)\n\nfor epoch in range(1000):\n    out = multi_layer(X)\n    loss = criterion(out, y)\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n\nwith torch.no_grad():\n    pred = multi_layer(X)\n    print(f\"Final loss: {criterion(pred, y).item():.4f}\")\n    for xi, yi, p in zip(X, y, pred):\n        result = \"✓\" if abs(p.item() - yi.item()) < 0.1 else \"✗\"\n        print(f\"  {xi.numpy()} → {p.item():.3f} (expected {yi.item()}) {result}\")\n\nprint(\"\\n💡 Single layer XOR çözemez! Hidden layer gerekli.\")",
+      "explanation": "XOR problemi single layer'ın sınırını gösterir. Multi-layer (MLP) gereklidir. Bu AI winter'ın sebebiydi!"
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Karar Sınırını Görselleştirme",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Perceptron train edildi (örnek)\nweights = np.array([1.5, 1.0])  # w1, w2\nbias = -2.0\n\n# Decision boundary: w1*x1 + w2*x2 + b = 0\n# Solve for x2: x2 = -(w1*x1 + b) / w2\n\nx1_line = np.linspace(-1, 3, 100)\nx2_line = -(weights[0] * x1_line + bias) / weights[1]\n\n# Data points (örnek)\nclass_0 = np.array([[0, 0], [0.5, 0.5]])\nclass_1 = np.array([[1.5, 1.5], [2, 2]])\n\nplt.figure(figsize=(8, 6))\n\n# Plot data\nplt.scatter(class_0[:, 0], class_0[:, 1], \n           c='blue', marker='o', s=100, label='Class 0')\nplt.scatter(class_1[:, 0], class_1[:, 1], \n           c='red', marker='s', s=100, label='Class 1')\n\n# Plot decision boundary\nplt.plot(x1_line, x2_line, 'g--', linewidth=2, \n        label='Decision Boundary')\n\nplt.xlim(-0.5, 3)\nplt.ylim(-0.5, 3)\nplt.xlabel('Feature 1 (x₁)')\nplt.ylabel('Feature 2 (x₂)')\nplt.title('Perceptron Decision Boundary')\nplt.legend()\nplt.grid(True, alpha=0.3)\n\nprint(\"Weights:\", weights)\nprint(\"Bias:\", bias)\nprint(\"\\nDecision rule:\")\nprint(f\"If {weights[0]:.1f}*x1 + {weights[1]:.1f}*x2 + {bias:.1f} > 0 → Class 1\")\nprint(f\"Otherwise → Class 0\")\n\n# plt.show()  # Uncomment to display\nprint(\"\\n✓ Grafik oluşturuldu (plt.show() ile göster)\")",
+      "explanation": "Perceptron'un karar sınırı bir çizgidir (2D), düzlemdir (3D), hyperplane'dir (nD)."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Perceptron Convergence Demo",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\nclass PerceptronTracker:\n    \"\"\"Track convergence\"\"\"\n    def __init__(self, input_size):\n        self.w = np.zeros(input_size)\n        self.b = 0\n        self.errors_history = []\n    \n    def predict(self, x):\n        return 1 if (self.w @ x + self.b) > 0 else 0\n    \n    def train_epoch(self, X, y):\n        errors = 0\n        for xi, yi in zip(X, y):\n            pred = self.predict(xi)\n            if pred != yi:\n                error = yi - pred\n                self.w += error * xi\n                self.b += error\n                errors += 1\n        self.errors_history.append(errors)\n        return errors\n\n# Linearly separable data\nnp.random.seed(42)\nX_0 = np.random.randn(20, 2) + np.array([-2, -2])\nX_1 = np.random.randn(20, 2) + np.array([2, 2])\nX = np.vstack([X_0, X_1])\ny = np.array([0]*20 + [1]*20)\n\n# Train\nperceptron = PerceptronTracker(input_size=2)\n\nprint(\"Training perceptron...\")\nmax_epochs = 20\nfor epoch in range(max_epochs):\n    errors = perceptron.train_epoch(X, y)\n    print(f\"Epoch {epoch+1}: {errors} errors\")\n    if errors == 0:\n        print(f\"✓ Converged in {epoch+1} epochs!\")\n        break\n\n# Plot convergence\nplt.figure(figsize=(10, 4))\n\nplt.subplot(1, 2, 1)\nplt.plot(perceptron.errors_history, 'b-o')\nplt.xlabel('Epoch')\nplt.ylabel('Number of Errors')\nplt.title('Perceptron Convergence')\nplt.grid(True)\n\nplt.subplot(1, 2, 2)\nplt.scatter(X_0[:, 0], X_0[:, 1], c='blue', label='Class 0')\nplt.scatter(X_1[:, 0], X_1[:, 1], c='red', label='Class 1')\n\n# Decision boundary\nw = perceptron.w\nb = perceptron.b\nx_vals = np.linspace(-5, 5, 100)\ny_vals = -(w[0] * x_vals + b) / w[1]\nplt.plot(x_vals, y_vals, 'g--', linewidth=2, label='Boundary')\nplt.xlabel('x₁')\nplt.ylabel('x₂')\nplt.title('Final Decision Boundary')\nplt.legend()\nplt.grid(True)\n\nplt.tight_layout()\nprint(\"\\n✓ Grafik oluşturuldu\")\nprint(f\"Final weights: {w}\")\nprint(f\"Final bias: {b}\")",
+      "explanation": "Perceptron linearly separable data'da garantili converge olur. Error sayısı epoch'lar boyunca azalır."
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production: Sparse Perceptron (Text Classification)",
+      "code": "from collections import defaultdict\nimport numpy as np\n\nclass SparsePerceptron:\n    \"\"\"Memory-efficient perceptron for sparse features (text, NLP)\"\"\"\n    def __init__(self, learning_rate=0.01):\n        self.w = defaultdict(float)  # Sparse: only non-zero\n        self.b = 0.0\n        self.lr = learning_rate\n    \n    def _score(self, x_sparse):\n        \"\"\"x_sparse: {feature_id: value}\"\"\"\n        return sum(self.w[f] * v for f, v in x_sparse.items()) + self.b\n    \n    def predict(self, x_sparse):\n        return 1 if self._score(x_sparse) > 0 else 0\n    \n    def train(self, x_sparse, y_true):\n        y_pred = self.predict(x_sparse)\n        if y_pred != y_true:\n            error = y_true - y_pred\n            # Update only active features\n            for feature_id, value in x_sparse.items():\n                self.w[feature_id] += self.lr * error * value\n            self.b += self.lr * error\n            return True\n        return False\n    \n    def get_top_features(self, k=10):\n        \"\"\"Most important features\"\"\"\n        return sorted(self.w.items(), \n                     key=lambda x: abs(x[1]), \n                     reverse=True)[:k]\n\n# Example: Email spam classification\n# Features: word counts (sparse!)\nperceptron = SparsePerceptron(learning_rate=0.1)\n\n# Training data (sparse format)\ntraining_data = [\n    # (features, label)\n    ({100: 5, 234: 3, 567: 1}, 1),  # Spam (many links, \"free\")\n    ({100: 1, 888: 2}, 0),           # Not spam\n    ({234: 10, 567: 5, 999: 2}, 1), # Spam\n    ({888: 5, 777: 3}, 0),           # Not spam\n]\n\nprint(\"Training sparse perceptron...\")\nfor epoch in range(10):\n    updates = 0\n    for x, y in training_data:\n        if perceptron.train(x, y):\n            updates += 1\n    print(f\"Epoch {epoch+1}: {updates} updates\")\n\nprint(\"\\nTop features (word IDs):\")\nfor feature_id, weight in perceptron.get_top_features(5):\n    print(f\"  Feature {feature_id}: {weight:.3f}\")\n\nprint(\"\\n💡 Sparse perceptron:\")\nprint(\"  - Memory: O(non-zero features), not O(vocabulary)\")\nprint(\"  - Ideal for text (millions of words, few active)\")\nprint(\"  - Used in: Spam filtering, sentiment analysis\")\nprint(f\"\\nActive features: {len(perceptron.w)}\")",
+      "explanation": "Sparse perceptron text classification için ideal. Milyonlarca kelime olabilir ama her dokümanda birkaç yüz aktif. Memory efficient!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Averaged Perceptron (Variance Reduction)",
+      "code": "import numpy as np\n\nclass AveragedPerceptron:\n    \"\"\"Averaged perceptron - more stable predictions\"\"\"\n    def __init__(self, input_size, learning_rate=0.01):\n        self.w = np.zeros(input_size)\n        self.b = 0.0\n        \n        # Cumulative weights (for averaging)\n        self.w_sum = np.zeros(input_size)\n        self.b_sum = 0.0\n        self.count = 0\n        \n        self.lr = learning_rate\n    \n    def predict(self, x, use_average=False):\n        if use_average and self.count > 0:\n            # Use averaged weights\n            w_avg = self.w_sum / self.count\n            b_avg = self.b_sum / self.count\n            score = w_avg @ x + b_avg\n        else:\n            # Use current weights\n            score = self.w @ x + self.b\n        return 1 if score > 0 else 0\n    \n    def train(self, X, y, epochs=10):\n        for epoch in range(epochs):\n            for xi, yi in zip(X, y):\n                pred = self.predict(xi, use_average=False)\n                if pred != yi:\n                    error = yi - pred\n                    self.w += self.lr * error * xi\n                    self.b += self.lr * error\n                \n                # Accumulate for averaging\n                self.w_sum += self.w\n                self.b_sum += self.b\n                self.count += 1\n\n# Test\nnp.random.seed(42)\nX = np.random.randn(100, 2)\ny = (X[:, 0] + X[:, 1] > 0).astype(int)\n\n# Standard perceptron\nstandard = AveragedPerceptron(2)\nstandard.train(X, y, epochs=5)\n\n# Test accuracy\ntest_X = np.random.randn(20, 2)\ntest_y = (test_X[:, 0] + test_X[:, 1] > 0).astype(int)\n\n# Standard predictions\nstd_preds = [standard.predict(x, use_average=False) for x in test_X]\nstd_acc = np.mean(np.array(std_preds) == test_y)\n\n# Averaged predictions\navg_preds = [standard.predict(x, use_average=True) for x in test_X]\navg_acc = np.mean(np.array(avg_preds) == test_y)\n\nprint(\"Test Accuracy:\")\nprint(f\"  Standard perceptron: {std_acc:.2%}\")\nprint(f\"  Averaged perceptron: {avg_acc:.2%}\")\nprint(\"\\n💡 Averaged perceptron genelde daha stable.\")\nprint(\"  Özellikle noisy data'da faydalı.\")",
+      "explanation": "Averaged perceptron tüm epoch'lardaki weight'lerin ortalamasını kullanır. Daha stable predictions, variance azalır. Collins (2002) paper'ından."
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "perceptron-animation",
+      "type": "animation",
+      "title": "Perceptron Öğrenme Animasyonu",
+      "description": "Karar sınırının epoch'lar boyunca nasıl hareket ettiğini görün"
+    },
+    {
+      "id": "decision-boundary",
+      "type": "interactive",
+      "title": "2D Karar Sınırı",
+      "description": "Ağırlıkları değiştirin, sınırın nasıl kaydığını görün"
+    },
+    {
+      "id": "xor-problem",
+      "type": "diagram",
+      "title": "XOR Problemi Görselleştirmesi",
+      "description": "Neden tek çizgi XOR'u ayıramaz?"
+    }
+  ],
+  "prerequisites": [
+    "matrices-tensors",
+    "activation-functions"
+  ],
+  "nextTopics": [
+    "backpropagation",
+    "multi-layer-perceptron",
+    "neural-networks"
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "XOR gibi non-linear problemlerde single layer kullanmak",
+      "why": "Single layer sadece linearly separable problemleri çözebilir. XOR linearly separable değil.",
+      "fix": "Multi-layer perceptron (MLP) kullan: En az 1 hidden layer ekle + non-linear activation (ReLU)"
+    },
+    {
+      "mistake": "Learning rate çok yüksek seçmek",
+      "why": "Perceptron oscillate eder, converge olmaz. Weights sürekli sağa sola sıçrar.",
+      "fix": "Learning rate'i düşür (0.01-0.1 arası). Veya averaged perceptron kullan."
+    },
+    {
+      "mistake": "Bias'ı unutmak",
+      "why": "Bias olmadan decision boundary origin'den geçmek zorunda. Birçok problem çözülemez.",
+      "fix": "Her zaman bias terimi ekle: y = w·x + b"
+    },
+    {
+      "mistake": "Convergence garantisi olduğunu sanmak",
+      "why": "Sadece linearly separable data'da converge garantili. Non-separable'da sonsuz döngü!",
+      "fix": "Max epoch koy, veya validation loss monitor et. Non-separable data'da MLP kullan."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "Perceptron hangi tür problemleri çözebilir?",
+      "options": [
+        "Tüm classification problemlerini",
+        "Sadece linearly separable problemleri",
+        "Sadece XOR gibi non-linear problemleri",
+        "Sadece regression problemlerini"
+      ],
+      "explanation": "Perceptron sadece linearly separable problemleri çözebilir. Tek bir çizgi/düzlem ile ayırılabilir sınıflar. XOR gibi non-linear problemler için multi-layer gerekir.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q2",
+      "question": "Perceptron'un öğrenme kuralı nedir?",
+      "options": [
+        "w_new = w_old + lr * x",
+        "w_new = w_old + lr * (y_true - y_pred) * x",
+        "w_new = w_old - lr * gradient",
+        "w_new = random()"
+      ],
+      "explanation": "Perceptron update rule: w += lr * (y_true - y_pred) * x. Sadece yanlış tahminlerde günceller. Error * input ile weight ayarlanır.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q3",
+      "question": "XOR problemini tek layer perceptron çözebilir mi?",
+      "options": [
+        "Evet, kolayca çözer",
+        "Hayır, çünkü linearly separable değil",
+        "Evet ama çok epoch gerekir",
+        "Sadece learning rate yüksekse çözer"
+      ],
+      "explanation": "XOR linearly separable değil. Tek bir çizgi 4 noktayı ayıramaz. Bu Minsky & Papert'ın 1969'da gösterdiği problem (AI winter'ın sebebi). Multi-layer + non-linear activation gerekir.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q4",
+      "question": "Perceptron'da bias'ın (b) rolü nedir?",
+      "options": [
+        "Learning rate'i kontrol eder",
+        "Decision boundary'yi shift eder (origin dışına taşır)",
+        "Sadece görsel amaçlıdır",
+        "Gradient'i hızlandırır"
+      ],
+      "explanation": "Bias terimi decision boundary'yi shift eder. Bias olmadan boundary origin'den geçmek zorunda. Bias ile herhangi bir konumda olabilir. Çok kritik!",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    },
+    {
+      "id": "q5",
+      "question": "Modern deep learning'de perceptron nasıl kullanılır?",
+      "options": [
+        "Hiç kullanılmaz, eski teknoloji",
+        "Her nöron temelinde bir perceptron gibi çalışır",
+        "Sadece output layer'da",
+        "Sadece text classification'da"
+      ],
+      "explanation": "Modern neural network'lerde her nöron temelinde perceptron'dur: weighted sum + activation. Milyonlarca perceptron birlikte çalışır. Perceptron NN'lerin temel yapı taşıdır.",
+      "type": "multiple-choice",
+      "difficulty": 1,
+      "correctAnswer": 1
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "Perceptron formülü nedir?",
+      "back": "y = step(w·x + b)\n\nw: weights\nx: input features\nb: bias\nstep: z>0 ise 1, değilse 0"
+    },
+    {
+      "id": "fc2",
+      "front": "Perceptron update rule?",
+      "back": "w_new = w_old + lr * (y_true - y_pred) * x\n\nSadece yanlış tahminlerde günceller.\nerror = (y_true - y_pred)\nlearning_rate ile scale edilir."
+    },
+    {
+      "id": "fc3",
+      "front": "Linearly separable ne demek?",
+      "back": "Tek bir çizgi/düzlem ile ayırılabilir.\n\nÖrnek:\n✓ AND, OR → Linearly separable\n✗ XOR → Non-separable\n\nNon-separable → Multi-layer gerekir!"
+    },
+    {
+      "id": "fc4",
+      "front": "XOR neden single layer çözemez?",
+      "back": "XOR linearly separable değil.\n\n(0,0)→0, (0,1)→1\n(1,0)→1, (1,1)→0\n\nBu 4 noktayı tek çizgi ayıramaz!\nHidden layer + ReLU gerekir."
+    },
+    {
+      "id": "fc5",
+      "front": "Bias'ın (b) rolü nedir?",
+      "back": "Decision boundary'yi shift eder.\n\nBias olmadan:\n  Boundary origin'den geçer\n  \nBias ile:\n  Boundary istediğin yerde!\n  \nHer zaman bias ekle!"
+    }
+  ],
+  "references": [
+    {
+      "title": "The Perceptron: A Probabilistic Model (Original Paper 1958)",
+      "url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.335.3398",
+      "type": "paper"
+    },
+    {
+      "title": "Perceptron Learning Algorithm",
+      "url": "https://www.cs.toronto.edu/~hinton/csc321/notes/lec2.pdf",
+      "type": "lecture"
+    },
+    {
+      "title": "Why XOR Cannot Be Solved by Single Layer",
+      "url": "https://towardsdatascience.com/why-neural-networks-xor-problem-6e2fd716b44e",
+      "type": "article"
+    },
+    {
+      "title": "Averaged Perceptron (Collins 2002)",
+      "url": "https://www.aclweb.org/anthology/W02-1001.pdf",
+      "type": "paper"
+    }
+  ],
+  "tags": [
+    "perceptron",
+    "single-layer",
+    "linear-classifier",
+    "binary-classification",
+    "neural-network-basics",
+    "xor-problem",
+    "decision-boundary",
+    "convergence",
+    "online-learning",
+    "rosenblatt"
+  ]
+}

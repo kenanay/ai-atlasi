@@ -1,8 +1,40 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+}
+
+.dark {
+  --background: #090d16;
+  --foreground: #f1f5f9;
+  --card: #0f172a;
+  --card-foreground: #f1f5f9;
+  --border: #1e293b;
+  --input: #1e293b;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f1f5f9;
 }
 
 @theme inline {
@@ -12,15 +44,425 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* KaTeX Custom Styles */
+.katex {
+  font-size: 1.08em;
+}
+
+.katex-display {
+  margin: 1.25em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.dark .katex,
+.dark .katex * {
+  color: #f1f5f9 !important;
+}
+
+/* Markdown Content Styles */
+.markdown-content {
+  @apply text-slate-800 dark:text-slate-200 leading-relaxed;
+}
+
+.markdown-content h1 {
+  @apply text-3xl font-bold mt-8 mb-4 text-slate-900 dark:text-slate-100;
+}
+
+.markdown-content h2 {
+  @apply text-2xl font-bold mt-6 mb-3 text-slate-900 dark:text-slate-100;
+}
+
+.markdown-content h3 {
+  @apply text-xl font-semibold mt-4 mb-2 text-slate-900 dark:text-slate-100;
+}
+
+.markdown-content p {
+  @apply mb-4;
+}
+
+.markdown-content ul, .markdown-content ol {
+  @apply mb-4 ml-6;
+}
+
+.markdown-content ul {
+  @apply list-disc;
+}
+
+.markdown-content ol {
+  @apply list-decimal;
+}
+
+.markdown-content li {
+  @apply mb-2 text-slate-700 dark:text-slate-300;
+}
+
+.markdown-content code {
+  @apply bg-slate-100 dark:bg-slate-800 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded text-sm font-mono border border-slate-200 dark:border-slate-700;
+}
+
+.markdown-content pre {
+  @apply bg-slate-900 dark:bg-slate-950 text-slate-100 p-4 rounded-lg overflow-x-auto mb-4 border border-slate-800 dark:border-slate-800;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent text-slate-100 p-0 border-0;
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-blue-500 dark:border-blue-400 pl-4 italic text-slate-600 dark:text-slate-400 my-4 bg-blue-50/40 dark:bg-blue-950/20 py-1 rounded-r;
+}
+
+.markdown-content a {
+  @apply text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline underline-offset-2;
+}
+
+.markdown-content strong {
+  @apply font-semibold text-slate-900 dark:text-slate-100;
+}
+
+.markdown-content em {
+  @apply italic;
+}
+
+.markdown-content table {
+  @apply w-full border-collapse mb-4 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden;
+}
+
+.markdown-content th {
+  @apply bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-left font-semibold text-slate-900 dark:text-slate-100;
+}
+
+.markdown-content td {
+  @apply border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-slate-700 dark:text-slate-300;
+}
+
+/* ============================================
+   ✨ ENHANCED ANIMATIONS & TRANSITIONS
+   ============================================ */
+
+/* Smooth fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* Stagger animation delays */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+
+/* ============================================
+   🎯 ENHANCED HOVER EFFECTS
+   ============================================ */
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+              0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+              0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.dark .hover-glow:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+}
+
+/* ============================================
+   💫 SMOOTH TRANSITIONS
+   ============================================ */
+
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* ============================================
+   📱 MOBILE OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Reduce motion for mobile */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ============================================
+   🌙 ENHANCED DARK MODE
+   ============================================ */
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Smooth dark mode transition */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Better scrollbar in dark mode */
+.dark ::-webkit-scrollbar {
+  background-color: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 8px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* ============================================
+   🎨 GLASSMORPHISM EFFECTS
+   ============================================ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   ⚡ LOADING STATES
+   ============================================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 50%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 0%,
+    #334155 50%,
+    #1e293b 100%
+  );
+}
+
+/* ============================================
+   🎯 FOCUS STYLES
+   ============================================ */
+
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.dark *:focus-visible {
+  outline-color: #60a5fa;
+}
+
+/* ============================================
+   ✨ GRADIENT TEXT
+   ============================================ */
+
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   🌊 WAVE ANIMATION (for loading/hero)
+   ============================================ */
+
+@keyframes wave {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.wave {
+  animation: wave 2s ease-in-out infinite;
 }

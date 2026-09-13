@@ -1,0 +1,356 @@
+{
+  "id": "convolutional-neural-networks",
+  "title": "CNN (Convolutional Neural Networks)",
+  "category": "neural-networks",
+  "level": 3,
+  "estimatedTime": 75,
+  "description": "Görüntü işleme için özel tasarlanmış neural network. Convolutional layers, pooling, feature maps. Bilgisayar görüsünün (computer vision) temel yapı taşı.",
+  "content": {
+    "level0_basic": "CNN (Convolutional Neural Network), resimleri anlamak için tasarlanmış özel bir neural network'tür. Normal neural network her piksele ayrı ayrı bakar, ama CNN resimdeki pattern'leri (kenarlar, şekiller, objeler) görebilir. Nasıl? Küçük bir filtre ile resmin üzerinden geçer, her bölgede aynı pattern'i arar. İlk katman kenarları bulur, ikinci katman şekilleri, üçüncü katman objeleri tanır. Kedi resmi gösterirsen: ilk layer kulakların kenarlarını, ikinci layer kulak şeklini, üçüncü layer 'bu bir kedi' der. Bu yüzden yüz tanıma, otonom araçlar, tıbbi görüntü analizi hep CNN kullanır.",
+    "level1_beginner": "**CNN vs Normal (Fully Connected) Network:**\n\nNormal NN problemi: 224×224 renkli resim = 150,528 piksel\nİlk layer 1000 nöron olsa: 150 milyon parametre!\n- Çok yavaş\n- Çok fazla memory\n- Overfitting garantili\n- Spatial relationship kaybolur (komşu pikseller ilişkisiz)\n\n**CNN Çözümü: 3 Anahtar Kavram**\n\n**1. Convolution (Konvolüsyon):**\nKüçük bir filtre (3×3, 5×5) resmin üzerinden kaydırılır.\nHer pozisyonda: filtre ile resmin o bölgesi çarpılır, toplanır.\nÇıktı: Feature map (resimde o filtrenin bulduğu pattern'ler)\n\n```\nResim (5×5):        Filtre (3×3):\n1 2 3 4 5          1  0 -1\n2 3 4 5 6    *     1  0 -1    = Feature map (3×3)\n3 4 5 6 7          1  0 -1\n4 5 6 7 8\n5 6 7 8 9\n```\n\n**2. Pooling:**\nFeature map'i küçült (boyutu azalt, computation azalt)\n- Max pooling: Her 2×2 bölgeden en büyüğünü al\n- Average pooling: Ortalamayı al\n\n**3. Feature Hierarchy:**\n- Layer 1: Kenarlar, çizgiler (düşük seviye features)\n- Layer 2: Köşeler, şekiller (orta seviye)\n- Layer 3+: Objeler, yüzler (yüksek seviye)\n\n**Tipik CNN Mimarisi:**\n```\nInput (224×224×3)\n  ↓\nConv 64 filters (3×3) → ReLU → MaxPool\n  ↓\nConv 128 filters (3×3) → ReLU → MaxPool\n  ↓\nConv 256 filters (3×3) → ReLU → MaxPool\n  ↓\nFlatten → Fully Connected (1000) → Softmax\n  ↓\nOutput (1000 classes)\n```\n\n**Neden CNN Çalışır?**\n- **Parameter Sharing:** Aynı filtre tüm resimde kullanılır\n- **Local Connectivity:** Her nöron sadece küçük bir bölgeye bakar\n- **Translation Invariance:** Kedi sol köşede de sağ köşede de tanınır",
+    "level2_application": "**PyTorch ile CNN:**\n\n```python\nimport torch.nn as nn\n\nclass SimpleCNN(nn.Module):\n    def __init__(self, num_classes=10):\n        super().__init__()\n        \n        # Convolutional layers\n        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)\n        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)\n        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)\n        \n        # Pooling\n        self.pool = nn.MaxPool2d(2, 2)\n        \n        # Fully connected\n        self.fc1 = nn.Linear(128 * 4 * 4, 512)\n        self.fc2 = nn.Linear(512, num_classes)\n        \n        # Regularization\n        self.dropout = nn.Dropout(0.5)\n    \n    def forward(self, x):\n        # Input: 3×32×32\n        x = self.pool(torch.relu(self.conv1(x)))  # → 32×16×16\n        x = self.pool(torch.relu(self.conv2(x)))  # → 64×8×8\n        x = self.pool(torch.relu(self.conv3(x)))  # → 128×4×4\n        \n        x = x.view(-1, 128 * 4 * 4)  # Flatten\n        x = torch.relu(self.fc1(x))\n        x = self.dropout(x)\n        x = self.fc2(x)\n        return x\n```\n\n**Convolutional Layer Parametreleri:**\n\n- **in_channels:** Input feature maps (RGB resim: 3)\n- **out_channels:** Kaç filtre? (output feature maps)\n- **kernel_size:** Filtre boyutu (3×3, 5×5)\n- **stride:** Kaydırma adımı (1: her piksel, 2: her 2. piksel)\n- **padding:** Kenar dolgusu (boyutu korumak için)\n\n**Output Boyutu Hesaplama:**\n```\nOutput = (Input - Kernel + 2×Padding) / Stride + 1\n\nÖrnek: 32×32 resim, 3×3 kernel, padding=1, stride=1\nOutput = (32 - 3 + 2×1) / 1 + 1 = 32×32\n```\n\n**Data Augmentation (Çok Önemli!):**\n```python\ntransform = transforms.Compose([\n    transforms.RandomHorizontalFlip(),\n    transforms.RandomRotation(10),\n    transforms.ColorJitter(brightness=0.2, contrast=0.2),\n    transforms.ToTensor(),\n    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))\n])\n```\n\nAugmentation overfitting'i önler, daha robust model.",
+    "level3_advanced": "**Matematiksel Formalizasyon:**\n\n**Convolution Operation:**\n$$(f * g)[i, j] = \\sum_{m} \\sum_{n} f[m, n] \\cdot g[i - m, j - n]$$\n\nPratikte cross-correlation kullanılır:\n$$(I * K)[i, j] = \\sum_{m=0}^{k-1} \\sum_{n=0}^{k-1} I[i+m, j+n] \\cdot K[m, n]$$\n\n**Feature Map Boyutu:**\n$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2P - K}{S} \\right\\rfloor + 1$$\n$$W_{out} = \\left\\lfloor \\frac{W_{in} + 2P - K}{S} \\right\\rfloor + 1$$\n\nBurada:\n- $H_{in}, W_{in}$: Input height/width\n- $K$: Kernel size\n- $P$: Padding\n- $S$: Stride\n\n**Receptive Field:**\nBir nöronun input'ta \"gördüğü\" alan.\n\nDeep network → Geniş receptive field\n```\nLayer 1 (3×3): RF = 3×3\nLayer 2 (3×3): RF = 5×5\nLayer 3 (3×3): RF = 7×7\n```\n\nFormül:\n$$RF_l = RF_{l-1} + (K_l - 1) \\times \\prod_{i=1}^{l-1} S_i$$\n\n**1×1 Convolution:**\nDimension reduction, hesap azaltma:\n```\n256×256×512 → Conv1x1(64) → 256×256×64\n```\n\nParametreler: 512×64 = 32,768\nNormal 3×3: 512×64×9 = 294,912 (9x daha fazla!)\n\n**Depthwise Separable Convolution (MobileNet):**\n\nNormal conv: $K × K × C_{in} × C_{out}$\n\nSeparable:\n1. Depthwise: $K × K × C_{in}$ (her channel ayrı)\n2. Pointwise: $1 × 1 × C_{in} × C_{out}$ (channel'ları mix)\n\nParametre azalması: ~9x (3×3 için)\n\n**Dilated (Atrous) Convolution:**\nFiltre elemanları arasına boşluk ekle:\n```\nDilation=1 (normal):    Dilation=2:\n1 1 1                   1 . 1 . 1\n1 1 1                   . . . . .\n1 1 1                   1 . 1 . 1\n```\n\nReceptive field büyür, parameter artmaz!\n\n**Batch Normalization in CNN:**\n$$\\hat{x}_{nchw} = \\frac{x_{nchw} - \\mu_c}{\\sqrt{\\sigma_c^2 + \\epsilon}}$$\n\nHer channel için ayrı normalize (spatial dimension'larda paylaşılır).",
+    "level4_expert": "**Modern CNN Architectures:**\n\n**1. ResNet (Residual Networks):**\n```python\nclass ResidualBlock(nn.Module):\n    def __init__(self, channels):\n        super().__init__()\n        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn1 = nn.BatchNorm2d(channels)\n        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn2 = nn.BatchNorm2d(channels)\n    \n    def forward(self, x):\n        residual = x\n        out = torch.relu(self.bn1(self.conv1(x)))\n        out = self.bn2(self.conv2(out))\n        out += residual  # Skip connection!\n        out = torch.relu(out)\n        return out\n```\n\n**2. Inception Module (GoogLeNet):**\nParallel convolutions (1×1, 3×3, 5×5) + concat\n\n```python\nclass InceptionModule(nn.Module):\n    def __init__(self, in_channels):\n        super().__init__()\n        self.branch1x1 = nn.Conv2d(in_channels, 64, 1)\n        \n        self.branch3x3 = nn.Sequential(\n            nn.Conv2d(in_channels, 96, 1),\n            nn.Conv2d(96, 128, 3, padding=1)\n        )\n        \n        self.branch5x5 = nn.Sequential(\n            nn.Conv2d(in_channels, 16, 1),\n            nn.Conv2d(16, 32, 5, padding=2)\n        )\n        \n        self.branch_pool = nn.Sequential(\n            nn.MaxPool2d(3, stride=1, padding=1),\n            nn.Conv2d(in_channels, 32, 1)\n        )\n    \n    def forward(self, x):\n        branch1x1 = self.branch1x1(x)\n        branch3x3 = self.branch3x3(x)\n        branch5x5 = self.branch5x5(x)\n        branch_pool = self.branch_pool(x)\n        \n        outputs = [branch1x1, branch3x3, branch5x5, branch_pool]\n        return torch.cat(outputs, 1)\n```\n\n**3. Squeeze-and-Excitation (SENet):**\nChannel attention mechanism:\n\n```python\nclass SEBlock(nn.Module):\n    def __init__(self, channels, reduction=16):\n        super().__init__()\n        self.squeeze = nn.AdaptiveAvgPool2d(1)\n        self.excitation = nn.Sequential(\n            nn.Linear(channels, channels // reduction),\n            nn.ReLU(),\n            nn.Linear(channels // reduction, channels),\n            nn.Sigmoid()\n        )\n    \n    def forward(self, x):\n        b, c, _, _ = x.size()\n        y = self.squeeze(x).view(b, c)\n        y = self.excitation(y).view(b, c, 1, 1)\n        return x * y.expand_as(x)\n```\n\n**4. EfficientNet (Compound Scaling):**\nDepth + Width + Resolution'ı birlikte scale et:\n\n$$\\text{depth: } d = \\alpha^\\phi$$\n$$\\text{width: } w = \\beta^\\phi$$\n$$\\text{resolution: } r = \\gamma^\\phi$$\n$$\\text{s.t. } \\alpha \\cdot \\beta^2 \\cdot \\gamma^2 \\approx 2$$\n\n**Transfer Learning Best Practices:**\n\n```python\n# ImageNet pretrained model\nmodel = torchvision.models.resnet50(pretrained=True)\n\n# Freeze early layers\nfor param in model.parameters():\n    param.requires_grad = False\n\n# Replace final layer\nmodel.fc = nn.Linear(model.fc.in_features, num_classes)\n\n# Fine-tune strategies:\n# 1. Train only final layer (small dataset)\n# 2. Unfreeze last few blocks (medium dataset)\n# 3. Full fine-tuning with low LR (large dataset)\n```\n\n**Gradient Checkpointing (Memory Optimization):**\n```python\nfrom torch.utils.checkpoint import checkpoint\n\ndef forward(self, x):\n    # Trade compute for memory\n    x = checkpoint(self.layer1, x)\n    x = checkpoint(self.layer2, x)\n    return x\n```\n\n**Mixed Precision Training:**\n```python\nscaler = torch.cuda.amp.GradScaler()\n\nwith torch.cuda.amp.autocast():\n    output = model(input)\n    loss = criterion(output, target)\n\nscaler.scale(loss).backward()\nscaler.step(optimizer)\nscaler.update()\n```\n\n**Model Pruning (Compress):**\n```python\nimport torch.nn.utils.prune as prune\n\n# Remove 30% of weights\nprune.l1_unstructured(model.conv1, name='weight', amount=0.3)\n\n# Make permanent\nprune.remove(model.conv1, 'weight')\n```\n\n**ONNX Export (Production):**\n```python\ntorch.onnx.export(\n    model,\n    dummy_input,\n    'model.onnx',\n    input_names=['input'],\n    output_names=['output'],\n    dynamic_axes={'input': {0: 'batch_size'}}\n)\n```"
+  },
+  "whatIsIt": "CNN (Convolutional Neural Network), görüntü verisi için optimize edilmiş özel bir neural network türüdür. Normal fully-connected network'ten farkı: Spatial structure'ı korur, küçük filtreler ile local pattern'leri yakalar, parameter sharing ile çok daha az parametre kullanır. Convolution layer (filtre), pooling layer (downsampling) ve fully-connected layer'dan oluşur. Computer vision'ın temel yapı taşı: ImageNet, yüz tanıma, otonom araçlar, tıbbi görüntü analizi - hepsi CNN kullanır.",
+  "whyNeeded": "Normal neural network resimlerde çalışmaz! 224×224 RGB resim = 150K parametre sadece ilk layer'da. Çok yavaş, çok memory, overfitting garantili. Daha kötüsü: spatial structure kaybolur (komşu pikseller ilişkisiz treat edilir). CNN bunu çözer: (1) Parameter sharing - aynı filtre tüm resimde, (2) Local connectivity - her nöron küçük bölgeye bakar, (3) Translation invariance - obje nerede olursa olsun tanınır. Sonuç: 1000x daha az parametre, çok daha iyi accuracy!",
+  "realWorldAnalogy": "CNN bir dedektif gibidir. Resimde kedi aramak için: İlk önce yakından bakar (3×3 filtre), küçük ipuçları arar - kulak kenarı, burun çizgisi. Sonra geri çekilip daha büyük resme bakar (pooling), bu ipuçlarını birleştirir - 'kulak şekli var'. En son uzaktan bakar - 'bu parçalar birleşince kedi oluyor!' Her dedektif aynı ipuçlarını arar (parameter sharing), ama resmin farklı yerlerine bakar. Böylece kedi sol üstte de sağ altta da bulunur (translation invariance).",
+  "mathematics": {
+    "formulas": [
+      "(I * K)[i,j] = \\sum_{m=0}^{k-1} \\sum_{n=0}^{k-1} I[i+m, j+n] \\cdot K[m,n]",
+      "H_{out} = \\left\\lfloor \\frac{H_{in} + 2P - K}{S} \\right\\rfloor + 1",
+      "RF_l = RF_{l-1} + (K_l - 1) \\times \\prod_{i=1}^{l-1} S_i",
+      "\\text{Parameters} = K_h \\times K_w \\times C_{in} \\times C_{out} + C_{out}",
+      "\\text{MaxPool}(x) = \\max_{i,j \\in \\text{window}} x[i,j]",
+      "\\text{AvgPool}(x) = \\frac{1}{|W|} \\sum_{i,j \\in \\text{window}} x[i,j]"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Input: Resim (H×W×C) - örn: 224×224×3 RGB",
+      "2. Convolution: Filtreler (3×3, 5×5) ile feature extraction. Her filtre bir pattern arar",
+      "3. Activation: ReLU gibi non-linearity ekle",
+      "4. Pooling: Feature map'i küçült (MaxPool 2×2). Boyut azalır, translation invariance artar",
+      "5. Repeat: Conv → ReLU → Pool tekrarla. Her layer daha abstract features",
+      "6. Flatten: 3D feature maps'i 1D vector'e çevir",
+      "7. Fully Connected: Classification için standart NN layers",
+      "8. Output: Softmax ile class probabilities"
+    ],
+    "complexity": "Forward pass: O(K² × C_in × C_out × H × W) per layer. Training: 2-3x forward. GPU ile parallelize edilebilir, çok hızlı!"
+  },
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "activation-functions"
+  ],
+  "nextTopics": [
+    "advanced-cnn-architectures",
+    "object-detection",
+    "image-segmentation",
+    "transfer-learning"
+  ],
+  "relatedTopics": [
+    "recurrent-neural-networks",
+    "batch-normalization",
+    "data-augmentation"
+  ],
+  "tags": [
+    "cnn",
+    "convolutional-neural-networks",
+    "computer-vision",
+    "image-classification",
+    "convolution",
+    "pooling",
+    "feature-maps",
+    "resnet",
+    "pytorch",
+    "deep-learning"
+  ],
+  "codeExamples": [
+    {
+      "level": 0,
+      "language": "text",
+      "title": "CNN Temel Kavramlar",
+      "code": "Normal Neural Network:\nHer piksel → Her nöron (150K+ connection)\n- Çok fazla parametre\n- Spatial structure kaybolur\n- Yavaş, overfitting\n\nCNN:\n3×3 Filtre → Tüm resimde kayar\n- Aynı filtre paylaşılır (parameter sharing)\n- Komşu pikseller birlikte işlenir (local connectivity)\n- Obje nerede olursa olsun bulunur (translation invariance)\n\nCNN Katmanları:\n1. Convolution: Pattern'leri bul (kenarlar, şekiller)\n2. Pooling: Küçült (2×2 → 1)\n3. Fully Connected: Classify et\n\nÖrnek:\nResim 32×32×3 (RGB)\n→ Conv 32 filters → 32×32×32\n→ MaxPool 2×2 → 16×16×32\n→ Conv 64 filters → 16×16×64\n→ MaxPool 2×2 → 8×8×64\n→ Flatten → 4096\n→ FC(10) → 10 classes",
+      "explanation": "CNN görüntü işleme için özel tasarlanmış network. Filtreler ile local pattern'leri yakalar, pooling ile boyutu küçültür."
+    },
+    {
+      "level": 1,
+      "language": "python",
+      "title": "Basit CNN (CIFAR-10)",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SimpleCNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        # Convolutional layers\n        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)  # 3 RGB channels\n        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)\n        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)\n        \n        # Pooling\n        self.pool = nn.MaxPool2d(2, 2)\n        \n        # Fully connected\n        self.fc1 = nn.Linear(64 * 4 * 4, 64)\n        self.fc2 = nn.Linear(64, 10)  # 10 classes (CIFAR-10)\n    \n    def forward(self, x):\n        # Input: 3×32×32\n        x = self.pool(F.relu(self.conv1(x)))  # → 32×16×16\n        x = self.pool(F.relu(self.conv2(x)))  # → 64×8×8\n        x = self.pool(F.relu(self.conv3(x)))  # → 64×4×4\n        \n        x = x.view(-1, 64 * 4 * 4)  # Flatten\n        x = F.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\n# Model oluştur\nmodel = SimpleCNN()\n\n# Model summary\ntotal_params = sum(p.numel() for p in model.parameters())\nprint(f\"Total parameters: {total_params:,}\")\n\n# Test\nx = torch.randn(1, 3, 32, 32)\noutput = model(x)\nprint(f\"Input shape: {x.shape}\")\nprint(f\"Output shape: {output.shape}\")\nprint(f\"\\n✓ Simple CNN ready!\")",
+      "explanation": "Basit ama etkili CNN. 3 conv layer + pooling + 2 FC layer. CIFAR-10 (32×32 images) için tasarlanmış."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "CIFAR-10 Training Pipeline",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torchvision import datasets, transforms\nfrom torch.utils.data import DataLoader\n\n# Data preparation\ntransform_train = transforms.Compose([\n    transforms.RandomHorizontalFlip(),\n    transforms.RandomCrop(32, padding=4),\n    transforms.ToTensor(),\n    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))\n])\n\ntransform_test = transforms.Compose([\n    transforms.ToTensor(),\n    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))\n])\n\ntrain_dataset = datasets.CIFAR10('./data', train=True, download=True, transform=transform_train)\ntest_dataset = datasets.CIFAR10('./data', train=False, transform=transform_test)\n\ntrain_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=2)\ntest_loader = DataLoader(test_dataset, batch_size=100, shuffle=False, num_workers=2)\n\nprint(f\"Training samples: {len(train_dataset)}\")\nprint(f\"Test samples: {len(test_dataset)}\")\nprint(f\"Classes: {train_dataset.classes}\")\n\n# Model\nclass CNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)\n        self.conv2 = nn.Conv2d(64, 128, 3, padding=1)\n        self.conv3 = nn.Conv2d(128, 256, 3, padding=1)\n        self.pool = nn.MaxPool2d(2, 2)\n        self.fc1 = nn.Linear(256 * 4 * 4, 512)\n        self.fc2 = nn.Linear(512, 10)\n        self.dropout = nn.Dropout(0.5)\n    \n    def forward(self, x):\n        x = self.pool(torch.relu(self.conv1(x)))\n        x = self.pool(torch.relu(self.conv2(x)))\n        x = self.pool(torch.relu(self.conv3(x)))\n        x = x.view(-1, 256 * 4 * 4)\n        x = torch.relu(self.fc1(x))\n        x = self.dropout(x)\n        x = self.fc2(x)\n        return x\n\nmodel = CNN()\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Training\ndef train(epoch):\n    model.train()\n    running_loss = 0.0\n    correct = 0\n    total = 0\n    \n    for batch_idx, (data, target) in enumerate(train_loader):\n        optimizer.zero_grad()\n        output = model(data)\n        loss = criterion(output, target)\n        loss.backward()\n        optimizer.step()\n        \n        running_loss += loss.item()\n        _, predicted = output.max(1)\n        total += target.size(0)\n        correct += predicted.eq(target).sum().item()\n        \n        if batch_idx % 100 == 0:\n            print(f'Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)}] '\n                  f'Loss: {loss.item():.3f} | Acc: {100.*correct/total:.2f}%')\n\n# Test\ndef test():\n    model.eval()\n    test_loss = 0\n    correct = 0\n    with torch.no_grad():\n        for data, target in test_loader:\n            output = model(data)\n            test_loss += criterion(output, target).item()\n            pred = output.argmax(dim=1)\n            correct += pred.eq(target).sum().item()\n    \n    test_loss /= len(test_loader)\n    accuracy = 100. * correct / len(test_loader.dataset)\n    print(f'\\nTest: Average loss: {test_loss:.4f}, Accuracy: {accuracy:.2f}%\\n')\n    return accuracy\n\n# Run\nfor epoch in range(1, 11):\n    train(epoch)\n    acc = test()\n\nprint(\"\\n✓ Training complete! Expected accuracy: ~75-80%\")",
+      "explanation": "Tam CIFAR-10 training pipeline. Data augmentation, dropout, Adam optimizer. 10 epoch'ta ~75-80% accuracy."
+    },
+    {
+      "level": 2,
+      "language": "python",
+      "title": "Feature Map Visualization",
+      "code": "import torch\nimport torch.nn as nn\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom torchvision import datasets, transforms\n\n# Load sample image\ntransform = transforms.ToTensor()\ndataset = datasets.CIFAR10('./data', train=False, download=True, transform=transform)\nimage, label = dataset[0]\n\nprint(f\"Image shape: {image.shape}\")\nprint(f\"Label: {dataset.classes[label]}\")\n\n# Simple CNN\nclass VisualizeCNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)\n        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)\n        self.pool = nn.MaxPool2d(2, 2)\n    \n    def forward(self, x):\n        x1 = torch.relu(self.conv1(x))\n        x1_pooled = self.pool(x1)\n        x2 = torch.relu(self.conv2(x1_pooled))\n        x2_pooled = self.pool(x2)\n        return x1, x1_pooled, x2, x2_pooled\n\nmodel = VisualizeCNN()\n\n# Forward pass\nwith torch.no_grad():\n    conv1_out, pool1_out, conv2_out, pool2_out = model(image.unsqueeze(0))\n\n# Visualize\ndef show_feature_maps(feature_maps, title, num_maps=8):\n    feature_maps = feature_maps.squeeze(0)  # Remove batch dimension\n    num_maps = min(num_maps, feature_maps.shape[0])\n    \n    fig, axes = plt.subplots(2, 4, figsize=(12, 6))\n    fig.suptitle(title)\n    \n    for i in range(num_maps):\n        ax = axes[i // 4, i % 4]\n        ax.imshow(feature_maps[i].numpy(), cmap='viridis')\n        ax.axis('off')\n        ax.set_title(f'Filter {i+1}')\n    \n    plt.tight_layout()\n    return fig\n\nprint(\"\\nFeature Map Shapes:\")\nprint(f\"Conv1 output: {conv1_out.shape}\")  # [1, 16, 32, 32]\nprint(f\"Pool1 output: {pool1_out.shape}\")  # [1, 16, 16, 16]\nprint(f\"Conv2 output: {conv2_out.shape}\")  # [1, 32, 16, 16]\nprint(f\"Pool2 output: {pool2_out.shape}\")  # [1, 32, 8, 8]\n\nprint(\"\\n\" + \"=\"*50)\nprint(\"FEATURE MAPS EXPLAINED:\")\nprint(\"=\"*50)\nprint(\"Layer 1 filters: Detect edges, lines, simple patterns\")\nprint(\"Layer 2 filters: Detect shapes, textures, complex patterns\")\nprint(\"Pooling: Reduces size, increases translation invariance\")\nprint(\"\\nEach filter learns different feature!\")\n\n# Show original image\nimg_np = image.permute(1, 2, 0).numpy()\nimg_np = (img_np - img_np.min()) / (img_np.max() - img_np.min())\n\nplt.figure(figsize=(4, 4))\nplt.imshow(img_np)\nplt.title(f'Original Image: {dataset.classes[label]}')\nplt.axis('off')\n\n# Note: In actual execution, uncomment to display:\n# show_feature_maps(conv1_out, 'Conv1 Feature Maps (16 filters)')\n# show_feature_maps(conv2_out, 'Conv2 Feature Maps (32 filters)')\n# plt.show()\n\nprint(\"\\n✓ Feature maps ready for visualization!\")",
+      "explanation": "CNN'in içini görselleştir! Her filter farklı pattern yakalar. Layer 1: kenarlar, Layer 2: şekiller. Feature map'leri görmek öğrenmeyi kolaylaştırır."
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Receptive Field Hesaplama",
+      "code": "def calculate_receptive_field(layers):\n    \"\"\"\n    Calculate receptive field for each layer.\n    layers: list of (kernel_size, stride, padding)\n    \"\"\"\n    rf = 1  # Initial receptive field\n    jump = 1  # Initial jump (stride product)\n    \n    print(\"Layer-by-layer Receptive Field:\\n\" + \"=\"*50)\n    print(f\"Input: RF = {rf}\")\n    \n    for i, (k, s, p) in enumerate(layers):\n        # Update receptive field\n        rf = rf + (k - 1) * jump\n        # Update jump\n        jump = jump * s\n        \n        layer_type = \"Conv\" if s == 1 else \"Pool\"\n        print(f\"Layer {i+1} ({layer_type} k={k}, s={s}, p={p}): RF = {rf}, Jump = {jump}\")\n    \n    return rf\n\n# Example: AlexNet-like architecture\nalexnet_layers = [\n    (11, 4, 0),  # Conv1: 11×11, stride=4\n    (3, 2, 0),   # Pool1: 3×3, stride=2\n    (5, 1, 2),   # Conv2: 5×5, stride=1, padding=2\n    (3, 2, 0),   # Pool2: 3×3, stride=2\n    (3, 1, 1),   # Conv3: 3×3, stride=1, padding=1\n    (3, 1, 1),   # Conv4: 3×3, stride=1, padding=1\n    (3, 1, 1),   # Conv5: 3×3, stride=1, padding=1\n    (3, 2, 0),   # Pool3: 3×3, stride=2\n]\n\nprint(\"\\nALEXNET RECEPTIVE FIELD:\")\nrf_alexnet = calculate_receptive_field(alexnet_layers)\nprint(f\"\\nFinal Receptive Field: {rf_alexnet}×{rf_alexnet}\")\n\n# Example: VGG-like (all 3×3)\nvgg_layers = [\n    (3, 1, 1),   # Conv1\n    (3, 1, 1),   # Conv2\n    (2, 2, 0),   # Pool1\n    (3, 1, 1),   # Conv3\n    (3, 1, 1),   # Conv4\n    (2, 2, 0),   # Pool2\n    (3, 1, 1),   # Conv5\n    (3, 1, 1),   # Conv6\n    (3, 1, 1),   # Conv7\n    (2, 2, 0),   # Pool3\n]\n\nprint(\"\\n\" + \"=\"*50)\nprint(\"VGG RECEPTIVE FIELD:\")\nrf_vgg = calculate_receptive_field(vgg_layers)\nprint(f\"\\nFinal Receptive Field: {rf_vgg}×{rf_vgg}\")\n\nprint(\"\\n\" + \"=\"*50)\nprint(\"KEY INSIGHTS:\")\nprint(\"=\"*50)\nprint(\"✓ Deeper networks → Larger receptive field\")\nprint(\"✓ Larger kernels → Faster RF growth (but more parameters)\")\nprint(\"✓ VGG strategy: Many small kernels (3×3) → Deep network\")\nprint(\"✓ Two 3×3 conv = Same RF as one 5×5, but fewer parameters!\")\nprint(\"\\nReceptive field determines what input region affects each neuron.\")",
+      "explanation": "Receptive field: Bir nöronun input'ta 'gördüğü' alan. Deep network büyük RF sağlar. İki 3×3 conv, bir 5×5 ile aynı RF ama daha az parametre!"
+    },
+    {
+      "level": 3,
+      "language": "python",
+      "title": "Transfer Learning (ResNet Pretrained)",
+      "code": "import torch\nimport torch.nn as nn\nimport torchvision.models as models\nfrom torchvision import datasets, transforms\nfrom torch.utils.data import DataLoader\n\n# Load pretrained ResNet18\nmodel = models.resnet18(pretrained=True)\n\nprint(\"Original ResNet18:\")\nprint(f\"Final layer: {model.fc}\")\nprint(f\"Trained on ImageNet (1000 classes)\")\n\n# Freeze all layers\nfor param in model.parameters():\n    param.requires_grad = False\n\n# Replace final layer for our task (10 classes)\nnum_features = model.fc.in_features\nmodel.fc = nn.Linear(num_features, 10)\n\nprint(f\"\\nModified for CIFAR-10:\")\nprint(f\"New final layer: {model.fc}\")\n\n# Count trainable parameters\ntrainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)\ntotal_params = sum(p.numel() for p in model.parameters())\n\nprint(f\"\\nTrainable parameters: {trainable_params:,} / {total_params:,}\")\nprint(f\"({100 * trainable_params / total_params:.2f}% of total)\")\n\n# Data preparation\ntransform = transforms.Compose([\n    transforms.Resize(224),  # ResNet expects 224×224\n    transforms.ToTensor(),\n    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # ImageNet stats\n])\n\ntrain_dataset = datasets.CIFAR10('./data', train=True, download=True, transform=transform)\ntrain_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)\n\n# Training setup\ncriterion = nn.CrossEntropyLoss()\noptimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)  # Only train FC layer\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"TRANSFER LEARNING STRATEGY:\")\nprint(\"=\"*60)\nprint(\"1. Use pretrained weights (ImageNet features)\")\nprint(\"2. Freeze early layers (they know generic features)\")\nprint(\"3. Train only final layer (task-specific)\")\nprint(\"4. Result: Faster training, better accuracy, less data needed!\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"FINE-TUNING OPTIONS:\")\nprint(\"=\"*60)\nprint(\"Small dataset (<10K): Freeze all, train only FC\")\nprint(\"Medium dataset (10-100K): Unfreeze last few blocks\")\nprint(\"Large dataset (>100K): Full fine-tuning with low LR\")\n\n# Example: Unfreeze last ResNet block\ndef unfreeze_last_block(model):\n    # Unfreeze layer4 (last residual block)\n    for param in model.layer4.parameters():\n        param.requires_grad = True\n    \n    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)\n    print(f\"\\nAfter unfreezing last block: {trainable:,} trainable parameters\")\n\n# unfreeze_last_block(model)  # Uncomment for medium dataset\n\nprint(\"\\n✓ Transfer learning model ready!\")\nprint(\"Expected accuracy on CIFAR-10: ~85-90% (vs ~75-80% from scratch)\")",
+      "explanation": "Transfer learning: Pretrained model'i kendi task'ına adapt et. ImageNet'te öğrenilmiş features kullan, sadece son layer'ı train et. Çok daha hızlı ve daha iyi!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "ResNet Implementation (Residual Blocks)",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass BasicBlock(nn.Module):\n    \"\"\"ResNet basic block with skip connection\"\"\"\n    expansion = 1\n    \n    def __init__(self, in_channels, out_channels, stride=1):\n        super().__init__()\n        \n        # Main path\n        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, stride=stride, padding=1, bias=False)\n        self.bn1 = nn.BatchNorm2d(out_channels)\n        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, stride=1, padding=1, bias=False)\n        self.bn2 = nn.BatchNorm2d(out_channels)\n        \n        # Shortcut path\n        self.shortcut = nn.Sequential()\n        if stride != 1 or in_channels != out_channels:\n            self.shortcut = nn.Sequential(\n                nn.Conv2d(in_channels, out_channels, 1, stride=stride, bias=False),\n                nn.BatchNorm2d(out_channels)\n            )\n    \n    def forward(self, x):\n        out = F.relu(self.bn1(self.conv1(x)))\n        out = self.bn2(self.conv2(out))\n        out += self.shortcut(x)  # Skip connection!\n        out = F.relu(out)\n        return out\n\nclass ResNet(nn.Module):\n    def __init__(self, block, num_blocks, num_classes=10):\n        super().__init__()\n        self.in_channels = 64\n        \n        # Initial convolution\n        self.conv1 = nn.Conv2d(3, 64, 3, stride=1, padding=1, bias=False)\n        self.bn1 = nn.BatchNorm2d(64)\n        \n        # Residual layers\n        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)\n        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)\n        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)\n        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)\n        \n        # Final classifier\n        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))\n        self.fc = nn.Linear(512 * block.expansion, num_classes)\n    \n    def _make_layer(self, block, out_channels, num_blocks, stride):\n        strides = [stride] + [1] * (num_blocks - 1)\n        layers = []\n        for stride in strides:\n            layers.append(block(self.in_channels, out_channels, stride))\n            self.in_channels = out_channels * block.expansion\n        return nn.Sequential(*layers)\n    \n    def forward(self, x):\n        out = F.relu(self.bn1(self.conv1(x)))\n        out = self.layer1(out)\n        out = self.layer2(out)\n        out = self.layer3(out)\n        out = self.layer4(out)\n        out = self.avgpool(out)\n        out = out.view(out.size(0), -1)\n        out = self.fc(out)\n        return out\n\ndef ResNet18(num_classes=10):\n    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes)\n\ndef ResNet34(num_classes=10):\n    return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)\n\n# Create model\nmodel = ResNet18(num_classes=10)\n\nprint(\"ResNet18 Architecture:\")\nprint(\"=\"*60)\nprint(model)\n\ntotal_params = sum(p.numel() for p in model.parameters())\nprint(f\"\\nTotal parameters: {total_params:,}\")\n\n# Test forward pass\nx = torch.randn(1, 3, 32, 32)\nout = model(x)\nprint(f\"\\nInput: {x.shape} → Output: {out.shape}\")\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"RESIDUAL LEARNING:\")\nprint(\"=\"*60)\nprint(\"Problem: Very deep networks hard to train (vanishing gradient)\")\nprint(\"Solution: Skip connections (residual connections)\")\nprint(\"\\nInstead of learning H(x), learn F(x) = H(x) - x\")\nprint(\"Then: H(x) = F(x) + x\")\nprint(\"\\nBenefit: Gradient flows directly through skip connection!\")\nprint(\"Result: Can train 100+ layer networks\")\nprint(\"\\nResNet won ImageNet 2015 with 152 layers!\")",
+      "explanation": "ResNet implementation with skip connections. Residual learning vanishing gradient'i çözer, çok derin network'ler mümkün olur. ImageNet champion!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Depthwise Separable Convolution (MobileNet)",
+      "code": "import torch\nimport torch.nn as nn\n\nclass DepthwiseSeparableConv(nn.Module):\n    \"\"\"Efficient convolution for mobile/edge devices\"\"\"\n    def __init__(self, in_channels, out_channels, stride=1):\n        super().__init__()\n        \n        # Depthwise: Each input channel convolved separately\n        self.depthwise = nn.Conv2d(\n            in_channels, in_channels,\n            kernel_size=3, stride=stride, padding=1,\n            groups=in_channels,  # Key: groups = in_channels\n            bias=False\n        )\n        self.bn1 = nn.BatchNorm2d(in_channels)\n        \n        # Pointwise: 1×1 conv to mix channels\n        self.pointwise = nn.Conv2d(\n            in_channels, out_channels,\n            kernel_size=1, stride=1, padding=0,\n            bias=False\n        )\n        self.bn2 = nn.BatchNorm2d(out_channels)\n    \n    def forward(self, x):\n        x = torch.relu(self.bn1(self.depthwise(x)))\n        x = torch.relu(self.bn2(self.pointwise(x)))\n        return x\n\n# Compare: Standard Conv vs Depthwise Separable\nclass StandardConv(nn.Module):\n    def __init__(self, in_channels, out_channels):\n        super().__init__()\n        self.conv = nn.Conv2d(in_channels, out_channels, 3, padding=1)\n    \n    def forward(self, x):\n        return self.conv(x)\n\n# Parameter comparison\nin_ch, out_ch = 128, 256\nk = 3  # kernel size\n\nstandard_params = k * k * in_ch * out_ch\ndepthwise_params = k * k * in_ch + in_ch * out_ch  # Depthwise + Pointwise\n\nprint(\"PARAMETER COMPARISON (3×3 conv, 128→256 channels):\")\nprint(\"=\"*60)\nprint(f\"Standard Convolution: {standard_params:,} parameters\")\nprint(f\"Depthwise Separable: {depthwise_params:,} parameters\")\nprint(f\"\\nReduction: {standard_params / depthwise_params:.2f}x\")\nprint(f\"Savings: {100 * (1 - depthwise_params / standard_params):.1f}%\")\n\n# MobileNet-like block\nclass MobileNetBlock(nn.Module):\n    def __init__(self, in_channels, out_channels, stride=1):\n        super().__init__()\n        self.conv = DepthwiseSeparableConv(in_channels, out_channels, stride)\n    \n    def forward(self, x):\n        return self.conv(x)\n\nclass SimpleMobileNet(nn.Module):\n    def __init__(self, num_classes=10):\n        super().__init__()\n        \n        self.conv1 = nn.Conv2d(3, 32, 3, stride=1, padding=1)\n        \n        self.blocks = nn.Sequential(\n            MobileNetBlock(32, 64, stride=1),\n            MobileNetBlock(64, 128, stride=2),\n            MobileNetBlock(128, 128, stride=1),\n            MobileNetBlock(128, 256, stride=2),\n            MobileNetBlock(256, 256, stride=1),\n            MobileNetBlock(256, 512, stride=2),\n        )\n        \n        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))\n        self.fc = nn.Linear(512, num_classes)\n    \n    def forward(self, x):\n        x = torch.relu(self.conv1(x))\n        x = self.blocks(x)\n        x = self.avgpool(x)\n        x = x.view(x.size(0), -1)\n        x = self.fc(x)\n        return x\n\nmobile_model = SimpleMobileNet()\nstandard_model = StandardConv(128, 256)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"MOBILENET ADVANTAGES:\")\nprint(\"=\"*60)\nprint(\"✓ 8-9x fewer parameters than standard convolution\")\nprint(\"✓ 8-9x fewer computations (FLOPs)\")\nprint(\"✓ Faster inference on mobile/edge devices\")\nprint(\"✓ Lower memory footprint\")\nprint(\"✓ Minimal accuracy loss (<2% on ImageNet)\")\nprint(\"\\nPerfect for: Phones, embedded systems, real-time apps\")\n\n# Speed comparison (dummy)\nimport time\nx = torch.randn(1, 128, 56, 56)\n\nstandard_conv = nn.Conv2d(128, 256, 3, padding=1)\ndepthwise_sep = DepthwiseSeparableConv(128, 256)\n\nprint(\"\\n\" + \"=\"*60)\nprint(\"COMPUTATIONAL COST:\")\nprint(\"=\"*60)\nprint(f\"Input: {x.shape}\")\n\nwith torch.no_grad():\n    out_std = standard_conv(x)\n    out_sep = depthwise_sep(x)\n\nprint(f\"Output: {out_std.shape} (same for both)\")\nprint(\"\\nMobileNet achieves similar accuracy with fraction of cost!\")",
+      "explanation": "Depthwise Separable Convolution: Standard conv'u 2 adıma böl - depthwise + pointwise. 8-9x daha az parametre, mobile devices için ideal!"
+    },
+    {
+      "level": 4,
+      "language": "python",
+      "title": "Production: Mixed Precision + Gradient Checkpointing",
+      "code": "import torch\nimport torch.nn as nn\nfrom torch.cuda.amp import autocast, GradScaler\nfrom torch.utils.checkpoint import checkpoint\nimport time\n\nclass EfficientResidualBlock(nn.Module):\n    \"\"\"Residual block with gradient checkpointing\"\"\"\n    def __init__(self, channels):\n        super().__init__()\n        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn1 = nn.BatchNorm2d(channels)\n        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)\n        self.bn2 = nn.BatchNorm2d(channels)\n    \n    def forward(self, x):\n        residual = x\n        out = torch.relu(self.bn1(self.conv1(x)))\n        out = self.bn2(self.conv2(out))\n        out += residual\n        out = torch.relu(out)\n        return out\n\nclass ProductionCNN(nn.Module):\n    def __init__(self, num_classes=1000, use_checkpointing=True):\n        super().__init__()\n        self.use_checkpointing = use_checkpointing\n        \n        self.conv1 = nn.Conv2d(3, 64, 7, stride=2, padding=3)\n        self.bn1 = nn.BatchNorm2d(64)\n        self.maxpool = nn.MaxPool2d(3, stride=2, padding=1)\n        \n        # Many residual blocks (memory intensive!)\n        self.blocks = nn.ModuleList([\n            EfficientResidualBlock(64) for _ in range(20)\n        ])\n        \n        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))\n        self.fc = nn.Linear(64, num_classes)\n    \n    def forward(self, x):\n        x = torch.relu(self.bn1(self.conv1(x)))\n        x = self.maxpool(x)\n        \n        for block in self.blocks:\n            if self.use_checkpointing and self.training:\n                # Gradient checkpointing: Trade compute for memory\n                x = checkpoint(block, x)\n            else:\n                x = block(x)\n        \n        x = self.avgpool(x)\n        x = x.view(x.size(0), -1)\n        x = self.fc(x)\n        return x\n\ndef train_with_mixed_precision(model, data, target, criterion, optimizer, scaler):\n    \"\"\"Training with automatic mixed precision (AMP)\"\"\"\n    optimizer.zero_grad()\n    \n    # Forward pass in FP16\n    with autocast():\n        output = model(data)\n        loss = criterion(output, target)\n    \n    # Backward pass with scaled gradients\n    scaler.scale(loss).backward()\n    \n    # Gradient clipping (optional but recommended)\n    scaler.unscale_(optimizer)\n    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n    \n    # Optimizer step with scaler\n    scaler.step(optimizer)\n    scaler.update()\n    \n    return loss.item()\n\n# Setup\nif torch.cuda.is_available():\n    device = torch.device('cuda')\n    \n    # Model with checkpointing\n    model = ProductionCNN(use_checkpointing=True).to(device)\n    criterion = nn.CrossEntropyLoss()\n    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)\n    scaler = GradScaler()\n    \n    print(\"PRODUCTION CNN SETUP:\")\n    print(\"=\"*60)\n    print(f\"Device: {device}\")\n    print(f\"Model parameters: {sum(p.numel() for p in model.parameters()):,}\")\n    print(f\"Mixed Precision: Enabled (FP16/FP32)\")\n    print(f\"Gradient Checkpointing: Enabled\")\n    \n    # Dummy training\n    x = torch.randn(16, 3, 224, 224).to(device)\n    y = torch.randint(0, 1000, (16,)).to(device)\n    \n    print(\"\\nTraining iteration...\")\n    start = time.time()\n    loss = train_with_mixed_precision(model, x, y, criterion, optimizer, scaler)\n    end = time.time()\n    \n    print(f\"Loss: {loss:.4f}\")\n    print(f\"Time: {(end - start)*1000:.2f}ms\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"OPTIMIZATION TECHNIQUES:\")\n    print(\"=\"*60)\n    print(\"✓ Mixed Precision (FP16): 2x faster, 2x less memory\")\n    print(\"✓ Gradient Checkpointing: Trade compute for memory\")\n    print(\"✓ Gradient Clipping: Prevent exploding gradients\")\n    print(\"✓ Batch Normalization: Faster convergence\")\n    print(\"✓ Residual Connections: Enable very deep networks\")\n    \n    print(\"\\n\" + \"=\"*60)\n    print(\"TYPICAL SPEEDUPS:\")\n    print(\"=\"*60)\n    print(\"Mixed Precision: 1.5-2x faster training\")\n    print(\"Gradient Checkpointing: 30-50% memory reduction\")\n    print(\"Combined: Train bigger models or larger batches!\")\n    \nelse:\n    print(\"GPU not available. These optimizations require CUDA.\")\n    print(\"\\nBut concepts apply to any framework/hardware!\")\n\nprint(\"\\n✓ Production-ready CNN with all optimizations!\")",
+      "explanation": "Production CNN optimizasyonları: Mixed precision (2x hız), gradient checkpointing (memory tasarrufu), gradient clipping. Büyük modeller için gerekli!"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "CNN'de convolution operation'ın amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Sadece resmi küçültmek",
+        "Local pattern'leri (kenarlar, şekiller) tespit etmek",
+        "Renkleri değiştirmek",
+        "Sadece boyutu artırmak"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Convolution filtreler ile local pattern'leri yakalar. Her filtre farklı bir feature arar (kenar, köşe, şekil). Bu yüzden CNN görüntü işlemede çok başarılı!",
+      "difficulty": 1
+    },
+    {
+      "id": "q2",
+      "question": "32×32 input, 3×3 kernel, stride=1, padding=1 → Output boyutu nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "30×30",
+        "32×32",
+        "34×34",
+        "28×28"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Output = (Input - Kernel + 2×Padding) / Stride + 1 = (32 - 3 + 2×1) / 1 + 1 = 32. Padding=1 boyutu korur!",
+      "difficulty": 2
+    },
+    {
+      "id": "q3",
+      "question": "MaxPooling'in amacı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Feature map'i büyütmek",
+        "Feature map'i küçültmek ve translation invariance artırmak",
+        "Activation function olmak",
+        "Renk normalize etmek"
+      ],
+      "correctAnswer": 1,
+      "explanation": "MaxPooling (örn: 2×2) feature map'i küçültür (downsampling), hesap azalır. Ayrıca translation invariance artar - obje biraz kaysa da tanınır. Tipik: Her conv layer'dan sonra pooling.",
+      "difficulty": 2
+    },
+    {
+      "id": "q4",
+      "question": "Normal conv'a göre Depthwise Separable Convolution'ın avantajı nedir?",
+      "type": "multiple-choice",
+      "options": [
+        "Daha yüksek accuracy",
+        "8-9x daha az parametre ve computation",
+        "Daha büyük receptive field",
+        "Daha kolay implement"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Depthwise Separable: Standard conv'u depthwise + pointwise'a böler. 8-9x daha az parametre, 8-9x daha az FLOPs. Accuracy minimal kayıp (~1-2%). MobileNet'in temel prensibi!",
+      "difficulty": 3
+    },
+    {
+      "id": "q5",
+      "question": "Transfer learning'de hangi strateji küçük dataset için uygundur?",
+      "type": "multiple-choice",
+      "options": [
+        "Tüm network'ü scratch'ten train et",
+        "Tüm layer'ları freeze et, sadece final layer'ı train et",
+        "Tüm layer'ları unfreeze et, yüksek LR kullan",
+        "Sadece ilk layer'ı train et"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Küçük dataset (<10K): Tüm pretrained layer'ları freeze et, sadece final classification layer'ı train et. Pretrained features kullan, overfitting'i önle. Büyük dataset'te daha fazla layer unfreeze edilebilir.",
+      "difficulty": 2
+    },
+    {
+      "id": "q6",
+      "question": "Receptive field nedir ve neden önemlidir?",
+      "type": "multiple-choice",
+      "options": [
+        "Network'ün toplam parametre sayısı",
+        "Bir nöronun input image'de 'gördüğü' alan",
+        "Feature map'in boyutu",
+        "Learning rate'in büyüklüğü"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Receptive field: Bir nöronun output'unun hangi input pikselleri etkilediği. Deep network → Büyük RF → Daha geniş context. İki 3×3 conv, bir 5×5 ile aynı RF ama daha az parametre!",
+      "difficulty": 3
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc1",
+      "front": "CNN vs Fully Connected NN farkı?",
+      "back": "Fully Connected: Her piksel → Her nöron\n- 150K+ parametre (224×224 RGB)\n- Spatial structure kaybolur\n- Yavaş, overfitting\n\nCNN:\n- Parameter sharing (aynı filtre tüm resimde)\n- Local connectivity (küçük bölgelere bak)\n- Translation invariance (obje nerede olursa olsun)\n- 1000x daha az parametre!"
+    },
+    {
+      "id": "fc2",
+      "front": "Convolution operation nedir?",
+      "back": "Küçük filtre (3×3, 5×5) resmin üzerinden kaydırılır:\n\nHer pozisyonda:\n- Filtre ile resim bölgesi element-wise çarpılır\n- Sonuçlar toplanır\n- Tek sayı (feature value)\n\nÇıktı: Feature map\nHer filtre farklı pattern arar (kenar, köşe, şekil)"
+    },
+    {
+      "id": "fc3",
+      "front": "CNN feature hierarchy?",
+      "back": "Layer 1 (shallow): Kenarlar, çizgiler, basit pattern'ler\n\nLayer 2 (middle): Köşeler, şekiller, dokular\n\nLayer 3+ (deep): Objeler, yüzler, kompleks pattern'ler\n\nHer layer öncekinin öğrendiklerini kullanır!\nDeep network → Abstract features"
+    },
+    {
+      "id": "fc4",
+      "front": "Output boyutu formülü?",
+      "back": "H_out = ⌊(H_in + 2P - K) / S⌋ + 1\n\nH_in: Input height\nK: Kernel size\nP: Padding\nS: Stride\n\nÖrnek: 32×32, K=3, P=1, S=1\n→ (32 + 2 - 3) / 1 + 1 = 32×32\n\nPadding=1 boyutu korur!"
+    },
+    {
+      "id": "fc5",
+      "front": "MaxPooling ne yapar?",
+      "back": "Her bölgeden (örn: 2×2) maksimumu al:\n\n4 6\n3 8  →  8\n\n32×32 → MaxPool(2×2) → 16×16\n\nFaydalar:\n✓ Boyut küçülür (computation azalır)\n✓ Translation invariance artar\n✓ Dominant features korunur\n✓ Overfitting azalır"
+    },
+    {
+      "id": "fc6",
+      "front": "Receptive Field?",
+      "back": "Bir nöronun input'ta 'gördüğü' alan.\n\nLayer 1 (3×3): RF = 3×3\nLayer 2 (3×3): RF = 5×5  \nLayer 3 (3×3): RF = 7×7\n\nDeep network → Geniş RF\n\nİki 3×3 conv = Bir 5×5 conv (RF aynı)\nAma 2×(9C²) < 25C² parametre!"
+    },
+    {
+      "id": "fc7",
+      "front": "Transfer Learning ne zaman kullan?",
+      "back": "Limited data: Pretrained model'i kullan!\n\nKüçük (<10K): Freeze all, train FC only\nOrta (10-100K): Unfreeze last blocks\nBüyük (>100K): Full fine-tune, low LR\n\nFaydalar:\n✓ Faster training\n✓ Better accuracy\n✓ Less data needed\n✓ ImageNet features → Your task"
+    },
+    {
+      "id": "fc8",
+      "front": "Depthwise Separable Conv?",
+      "back": "Standard conv'u 2 adıma böl:\n\n1. Depthwise: Her channel ayrı (3×3)\n2. Pointwise: Mix channels (1×1)\n\nParameters:\nStandard: K²×C_in×C_out\nSeparable: K²×C_in + C_in×C_out\n\nReduction: ~8-9x (3×3 için)\nMobileNet'in temel prensibi!"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Padding kullanmamak (boyut hep küçülür)",
+      "why": "Her conv layer boyutu küçültür: 32→30→28... Birkaç layer sonra çok küçük kalır!",
+      "fix": "Padding=1 kullan (3×3 için), boyutu koru. Ya da stride>1 ile kontrollü küçült. Modern networks hep padding kullanır."
+    },
+    {
+      "mistake": "Data augmentation yapmamak",
+      "why": "Limited data → Overfitting. Model training set'i ezberlemiş, test'te kötü.",
+      "fix": "RandomHorizontalFlip, RandomCrop, ColorJitter, Rotation ekle. Dataset effectively 10x büyür, overfitting azalır!"
+    },
+    {
+      "mistake": "Çok derin network ama skip connection yok",
+      "why": "20+ layer → Vanishing gradient. İlk layer'lar hiç öğrenemiyor.",
+      "fix": "Residual connections (ResNet) kullan: y = F(x) + x. Gradient direkt geriye akabilir, 100+ layer mümkün!"
+    },
+    {
+      "mistake": "ImageNet pretrained model'e küçük resim vermek",
+      "why": "ResNet/VGG 224×224 için trained. 32×32 verirsen ilk layer'lar çöker!",
+      "fix": "transforms.Resize(224) ekle. Ya da CIFAR-10 için tasarlanmış küçük architecture kullan (custom CNN)."
+    },
+    {
+      "mistake": "Batch Normalization'ı yanlış yerde kullanmak",
+      "why": "BN, activation'dan önce mi sonra mı? Karışıyor!",
+      "fix": "Standard pattern: Conv → BN → ReLU → Dropout. Bu sıra en yaygın ve well-tested. Original paper önce diyor ama pratikte sonra da çalışır."
+    },
+    {
+      "mistake": "Çok fazla pooling (feature map çok küçülüyor)",
+      "why": "Her layer'da MaxPool(2×2) → 224→112→56→28→14→7→3→1. Spatial information kaybolur!",
+      "fix": "Pooling'i stratejik kullan: Her 2-3 conv'dan sonra. Ya da stride=2 conv kullan (learnable downsampling)."
+    },
+    {
+      "mistake": "Normalization yapmamak",
+      "why": "Pixel values [0, 255] → Çok büyük gradients → Training unstable.",
+      "fix": "transforms.Normalize((mean), (std)) kullan. ImageNet için: mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)"
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "conv-animation",
+      "type": "animation",
+      "title": "Convolution Operation Animation",
+      "description": "3×3 filtrenin resim üzerinde nasıl kaydığını ve feature map oluşturduğunu görün"
+    },
+    {
+      "id": "feature-maps",
+      "type": "interactive",
+      "title": "CNN Feature Maps Visualizer",
+      "description": "Her layer'ın hangi pattern'leri yakaladığını görselleştirin"
+    },
+    {
+      "id": "receptive-field",
+      "type": "plot",
+      "title": "Receptive Field Growth",
+      "description": "Layer derinliği arttıkça receptive field'in nasıl büyüdüğünü görün"
+    },
+    {
+      "id": "architecture-comparison",
+      "type": "diagram",
+      "title": "CNN Architectures (AlexNet, VGG, ResNet, MobileNet)",
+      "description": "Farklı CNN mimarilerini yan yana karşılaştırın"
+    }
+  ],
+  "references": [
+    {
+      "title": "ImageNet Classification with Deep CNNs (AlexNet)",
+      "url": "https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html",
+      "type": "paper",
+      "author": "Krizhevsky et al., 2012"
+    },
+    {
+      "title": "Deep Residual Learning (ResNet)",
+      "url": "https://arxiv.org/abs/1512.03385",
+      "type": "paper",
+      "author": "He et al., 2015"
+    },
+    {
+      "title": "MobileNets: Efficient CNNs for Mobile",
+      "url": "https://arxiv.org/abs/1704.04861",
+      "type": "paper",
+      "author": "Howard et al., 2017"
+    },
+    {
+      "title": "CS231n: Convolutional Neural Networks",
+      "url": "http://cs231n.github.io/convolutional-networks/",
+      "type": "tutorial",
+      "author": "Stanford University"
+    },
+    {
+      "title": "PyTorch CNN Tutorial",
+      "url": "https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html",
+      "type": "documentation"
+    }
+  ]
+}

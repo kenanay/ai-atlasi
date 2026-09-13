@@ -1,0 +1,304 @@
+{
+  "id": "image-segmentation",
+  "title": "Image Segmentation (U-Net, Mask R-CNN)",
+  "category": "computer-vision",
+  "level": 3,
+  "estimatedTime": 75,
+  "description": "Image Segmentation: Her pixel'i classify et! Semantic segmentation (pixel-level classification), Instance segmentation (individual objects). U-Net (encoder-decoder with skip connections, medical imaging star!), Mask R-CNN (Faster R-CNN + segmentation branch), DeepLab (atrous convolutions). Applications: Medical imaging (tumor segmentation), Autonomous driving (road/sidewalk), Background removal, Satellite imagery. Dice loss, IoU metrics, boundary refinement.",
+  "content": {
+    "level0_basic": "Image Segmentation: Her pixel için class prediction! 3 types: (1) Semantic Segmentation: Pixel-level classification, no instance distinction. All 'person' pixels same class. (2) Instance Segmentation: Separate each object instance. Person 1, Person 2 farklı! (3) Panoptic Segmentation: Semantic + Instance combined. Key architecture: U-Net! Encoder (downsampling) + Decoder (upsampling) + Skip Connections. Medical imaging'de breakthrough - tumor, organ segmentation. Mask R-CNN: Faster R-CNN + mask branch. Object detection + instance segmentation together! Applications: Medical (organ/tumor segmentation), Autonomous driving (drivable area), Photo editing (background removal), Satellite imagery (building/road extraction), Agriculture (crop monitoring). Metrics: IoU (Intersection over Union), Dice coefficient (2×overlap / total pixels). Loss: Cross-entropy per pixel, Dice loss, Focal loss.",
+    "level1_beginner": "**Segmentation Types:**\n\n```\nSemantic Segmentation:\n  Input: Street image\n  Output: Pixel mask\n    - All road pixels: Class 0\n    - All car pixels: Class 1\n    - All person pixels: Class 2\n  \n  Problem: Can't distinguish individuals!\n    5 people → all same class\n\nInstance Segmentation:\n  Input: Street image\n  Output: Instance masks\n    - Person 1: Mask 1\n    - Person 2: Mask 2\n    - Car 1: Mask 3\n    - Car 2: Mask 4\n  \n  Benefit: Individual objects separated!\n\nPanoptic Segmentation:\n  Semantic + Instance combined\n  Background (semantic) + Objects (instance)\n```\n\n**U-Net Architecture:**\n\n```\nEncoder (Contracting Path):\n  Input (572×572×3)\n  ↓ Conv + Pool\n  (284×284×64)\n  ↓ Conv + Pool\n  (140×140×128)\n  ↓ Conv + Pool\n  (68×68×256)\n  ↓ Conv + Pool\n  Bottleneck (32×32×512)\n\nDecoder (Expanding Path):\n  Bottleneck (32×32×512)\n  ↑ Upsample + Conv ←┐\n  (68×68×256)         │ Skip Connection!\n  ↑ Upsample + Conv ←┤\n  (140×140×128)       │\n  ↑ Upsample + Conv ←┤\n  (284×284×64)        │\n  ↑ Upsample + Conv ←┘\n  Output (572×572×num_classes)\n\nSkip Connections:\n  Encoder features → Decoder\n  Preserve spatial details!\n  Critical for precise boundaries\n```\n\n**Why U-Net Works:**\n\n1. **Encoder:** Captures context (what/where)\n2. **Decoder:** Reconstructs spatial details (precise location)\n3. **Skip Connections:** Combines high-level + low-level features\n\n**Loss Functions:**\n\n```python\n# Cross-Entropy (per pixel)\nCE = -Σ y_true × log(y_pred)\n\n# Dice Loss (overlap-based)\nDice = 1 - (2×|X∩Y|) / (|X|+|Y|)\n\n# Combined Loss\nTotal = α×CE + (1-α)×Dice\n```\n\n**Evaluation Metrics:**\n\n```\nIoU (Intersection over Union):\n  IoU = TP / (TP + FP + FN)\n  \n  Per class:\n    Road IoU = 0.95 (excellent!)\n    Person IoU = 0.78 (good)\n    Tree IoU = 0.65 (moderate)\n  \n  Mean IoU (mIoU) = average across classes\n\nDice Coefficient:\n  Dice = 2×TP / (2×TP + FP + FN)\n  \n  Similar to IoU, popular in medical imaging\n  Range: 0 (no overlap) to 1 (perfect)\n\nPixel Accuracy:\n  Correct pixels / Total pixels\n  \n  Problem: Imbalanced classes!\n  99% background → 99% accuracy even if\n  all foreground wrong!\n```",
+    "level2_application": "**U-Net Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass UNet(nn.Module):\n    def __init__(self, in_channels=3, num_classes=2):\n        super().__init__()\n        \n        # Encoder (downsampling)\n        self.enc1 = self.conv_block(in_channels, 64)\n        self.enc2 = self.conv_block(64, 128)\n        self.enc3 = self.conv_block(128, 256)\n        self.enc4 = self.conv_block(256, 512)\n        \n        # Bottleneck\n        self.bottleneck = self.conv_block(512, 1024)\n        \n        # Decoder (upsampling)\n        self.upconv4 = nn.ConvTranspose2d(1024, 512, 2, stride=2)\n        self.dec4 = self.conv_block(1024, 512)  # 1024: concat with enc4\n        \n        self.upconv3 = nn.ConvTranspose2d(512, 256, 2, stride=2)\n        self.dec3 = self.conv_block(512, 256)\n        \n        self.upconv2 = nn.ConvTranspose2d(256, 128, 2, stride=2)\n        self.dec2 = self.conv_block(256, 128)\n        \n        self.upconv1 = nn.ConvTranspose2d(128, 64, 2, stride=2)\n        self.dec1 = self.conv_block(128, 64)\n        \n        # Final output\n        self.out = nn.Conv2d(64, num_classes, 1)\n        \n        self.pool = nn.MaxPool2d(2, 2)\n    \n    def conv_block(self, in_ch, out_ch):\n        return nn.Sequential(\n            nn.Conv2d(in_ch, out_ch, 3, padding=1),\n            nn.BatchNorm2d(out_ch),\n            nn.ReLU(inplace=True),\n            nn.Conv2d(out_ch, out_ch, 3, padding=1),\n            nn.BatchNorm2d(out_ch),\n            nn.ReLU(inplace=True)\n        )\n    \n    def forward(self, x):\n        # Encoder with skip connections\n        enc1 = self.enc1(x)        # (B, 64, H, W)\n        enc2 = self.enc2(self.pool(enc1))  # (B, 128, H/2, W/2)\n        enc3 = self.enc3(self.pool(enc2))  # (B, 256, H/4, W/4)\n        enc4 = self.enc4(self.pool(enc3))  # (B, 512, H/8, W/8)\n        \n        # Bottleneck\n        bottleneck = self.bottleneck(self.pool(enc4))  # (B, 1024, H/16, W/16)\n        \n        # Decoder with skip connections\n        dec4 = self.upconv4(bottleneck)  # (B, 512, H/8, W/8)\n        dec4 = torch.cat([dec4, enc4], dim=1)  # Skip connection!\n        dec4 = self.dec4(dec4)\n        \n        dec3 = self.upconv3(dec4)\n        dec3 = torch.cat([dec3, enc3], dim=1)\n        dec3 = self.dec3(dec3)\n        \n        dec2 = self.upconv2(dec3)\n        dec2 = torch.cat([dec2, enc2], dim=1)\n        dec2 = self.dec2(dec2)\n        \n        dec1 = self.upconv1(dec2)\n        dec1 = torch.cat([dec1, enc1], dim=1)\n        dec1 = self.dec1(dec1)\n        \n        # Output\n        out = self.out(dec1)  # (B, num_classes, H, W)\n        return out\n\n# Usage\nmodel = UNet(in_channels=3, num_classes=2)  # Binary segmentation\nx = torch.randn(1, 3, 256, 256)\noutput = model(x)\nprint(f\"Output shape: {output.shape}\")  # (1, 2, 256, 256)\n```\n\n**Dice Loss Implementation:**\n\n```python\ndef dice_loss(pred, target, smooth=1e-6):\n    '''\n    Dice Loss for segmentation\n    Better than CE for imbalanced classes\n    '''\n    pred = torch.sigmoid(pred)  # Convert logits to probs\n    \n    # Flatten\n    pred = pred.view(-1)\n    target = target.view(-1)\n    \n    # Intersection\n    intersection = (pred * target).sum()\n    \n    # Dice coefficient\n    dice = (2. * intersection + smooth) / \\\n           (pred.sum() + target.sum() + smooth)\n    \n    # Return loss (1 - dice)\n    return 1 - dice\n\ndef combined_loss(pred, target, alpha=0.5):\n    '''Combine Cross-Entropy + Dice'''\n    ce = nn.CrossEntropyLoss()(pred, target)\n    dice = dice_loss(pred, target)\n    return alpha * ce + (1 - alpha) * dice\n```",
+    "level3_advanced": "**Mask R-CNN Implementation:**\n\n```python\nimport torch\nimport torch.nn as nn\nimport torchvision\n\nclass MaskRCNN(nn.Module):\n    def __init__(self, num_classes=81):\n        super().__init__()\n        \n        # Backbone\n        self.backbone = torchvision.models.resnet50(pretrained=True)\n        self.backbone = nn.Sequential(*list(self.backbone.children())[:-2])\n        \n        # RPN (Region Proposal Network)\n        self.rpn = RegionProposalNetwork(2048)\n        \n        # RoI Align (better than RoI Pool)\n        self.roi_align = torchvision.ops.RoIAlign(\n            output_size=(7, 7),\n            spatial_scale=1/32,\n            sampling_ratio=2\n        )\n        \n        # Detection head\n        self.bbox_head = nn.Sequential(\n            nn.Linear(2048 * 7 * 7, 1024),\n            nn.ReLU(),\n            nn.Linear(1024, num_classes * 4)  # Box regression\n        )\n        \n        self.cls_head = nn.Sequential(\n            nn.Linear(2048 * 7 * 7, 1024),\n            nn.ReLU(),\n            nn.Linear(1024, num_classes)  # Classification\n        )\n        \n        # Mask head (FCN for each RoI)\n        self.mask_head = self._build_mask_head(2048, num_classes)\n    \n    def _build_mask_head(self, in_channels, num_classes):\n        '''FCN for mask prediction'''\n        return nn.Sequential(\n            # Upsample with deconv\n            nn.ConvTranspose2d(in_channels, 256, 2, stride=2),\n            nn.ReLU(),\n            nn.Conv2d(256, 256, 3, padding=1),\n            nn.ReLU(),\n            nn.ConvTranspose2d(256, 256, 2, stride=2),\n            nn.ReLU(),\n            nn.Conv2d(256, num_classes, 1)  # 28×28 masks\n        )\n    \n    def forward(self, images, targets=None):\n        # Extract features\n        features = self.backbone(images)\n        \n        # Generate proposals\n        proposals, _ = self.rpn(features)\n        \n        # RoI Align\n        pooled = self.roi_align(features, proposals)\n        \n        # Flatten\n        pooled_flat = pooled.view(pooled.size(0), -1)\n        \n        # Detection\n        bbox_pred = self.bbox_head(pooled_flat)\n        class_logits = self.cls_head(pooled_flat)\n        \n        # Mask prediction\n        masks = self.mask_head(pooled)\n        \n        return {\n            'boxes': bbox_pred,\n            'labels': class_logits,\n            'masks': masks\n        }\n```\n\n**DeepLabv3+ with Atrous Convolutions:**\n\n```python\nclass AtrousConv(nn.Module):\n    '''Atrous (Dilated) Convolution'''\n    def __init__(self, in_ch, out_ch, rate=1):\n        super().__init__()\n        self.conv = nn.Conv2d(\n            in_ch, out_ch, 3,\n            padding=rate,\n            dilation=rate  # Atrous rate\n        )\n        self.bn = nn.BatchNorm2d(out_ch)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        return self.relu(self.bn(self.conv(x)))\n\nclass ASPP(nn.Module):\n    '''Atrous Spatial Pyramid Pooling'''\n    def __init__(self, in_ch, out_ch):\n        super().__init__()\n        \n        # Multiple atrous rates\n        self.conv1 = AtrousConv(in_ch, out_ch, rate=1)\n        self.conv6 = AtrousConv(in_ch, out_ch, rate=6)\n        self.conv12 = AtrousConv(in_ch, out_ch, rate=12)\n        self.conv18 = AtrousConv(in_ch, out_ch, rate=18)\n        \n        # Global pooling\n        self.global_pool = nn.Sequential(\n            nn.AdaptiveAvgPool2d(1),\n            nn.Conv2d(in_ch, out_ch, 1),\n            nn.BatchNorm2d(out_ch),\n            nn.ReLU()\n        )\n        \n        # Fusion\n        self.conv_out = nn.Conv2d(out_ch * 5, out_ch, 1)\n    \n    def forward(self, x):\n        size = x.shape[2:]\n        \n        # Parallel atrous convolutions\n        feat1 = self.conv1(x)\n        feat6 = self.conv6(x)\n        feat12 = self.conv12(x)\n        feat18 = self.conv18(x)\n        \n        # Global features\n        feat_global = self.global_pool(x)\n        feat_global = F.interpolate(\n            feat_global, size=size, mode='bilinear'\n        )\n        \n        # Concatenate\n        out = torch.cat([\n            feat1, feat6, feat12, feat18, feat_global\n        ], dim=1)\n        \n        return self.conv_out(out)\n```",
+    "level4_expert": "**Advanced Techniques:**\n\n```python\n# 1. Boundary Refinement\nclass BoundaryRefinement(nn.Module):\n    '''Refine segmentation boundaries'''\n    def __init__(self, in_ch):\n        super().__init__()\n        self.conv1 = nn.Conv2d(in_ch, 64, 3, padding=1)\n        self.conv2 = nn.Conv2d(64, 64, 3, padding=1)\n        self.conv3 = nn.Conv2d(64, 1, 1)\n    \n    def forward(self, x, mask):\n        # Concatenate features + mask\n        x = torch.cat([x, mask], dim=1)\n        \n        # Refine boundaries\n        x = F.relu(self.conv1(x))\n        x = F.relu(self.conv2(x))\n        refined = torch.sigmoid(self.conv3(x))\n        \n        return refined\n\n# 2. Test-Time Augmentation\ndef tta_segmentation(model, image, num_augs=8):\n    '''Multi-scale + flip TTA'''\n    predictions = []\n    \n    scales = [0.75, 1.0, 1.25]\n    \n    for scale in scales:\n        # Scale\n        h, w = image.shape[2:]\n        new_h, new_w = int(h * scale), int(w * scale)\n        scaled = F.interpolate(image, size=(new_h, new_w))\n        \n        # Forward\n        with torch.no_grad():\n            pred = model(scaled)\n        \n        # Back to original size\n        pred = F.interpolate(pred, size=(h, w))\n        predictions.append(pred)\n        \n        # Horizontal flip\n        flipped = torch.flip(scaled, dims=[3])\n        pred_flip = model(flipped)\n        pred_flip = torch.flip(pred_flip, dims=[3])\n        pred_flip = F.interpolate(pred_flip, size=(h, w))\n        predictions.append(pred_flip)\n    \n    # Average\n    final = torch.stack(predictions).mean(0)\n    return final\n```"
+  },
+  "whatIsIt": "Image Segmentation: Her pixel için class prediction! Semantic: Pixel-level classification (all 'car' pixels same). Instance: Individual object separation (car 1, car 2). U-Net: Encoder-decoder + skip connections, medical imaging champion! Mask R-CNN: Faster R-CNN + mask branch, instance segmentation. DeepLab: Atrous convolutions, multi-scale. Output: Pixel mask (H×W). Loss: Cross-entropy per pixel, Dice loss. Metrics: IoU, Dice coefficient. Applications: Medical (organ/tumor), Autonomous driving (drivable area), Photo editing (background removal). Pixel-level understanding!",
+  "whyNeeded": "Object detection gives boxes - but we need EXACT boundaries! Self-driving: 'Road' class için her pixel gerekli (drivable area). Medical: Tumor exact shape/size critical for surgery planning. Photo editing: Precise background removal (hair-level precision!). Satellite imagery: Building footprints exact. Agriculture: Crop disease spread pixel-by-pixel. Classification: 'What?'. Detection: 'What + Where (box)?'. Segmentation: 'What + Exact shape (every pixel)!'. Medical breakthrough: U-Net tumor segmentation 95%+ Dice! Autonomous driving: Lane keeping, obstacle avoidance. Instance segmentation: Count + measure each object separately. Panoptic: Complete scene understanding!",
+  "realWorldAnalogy": "Segmentation coloring book gibidir. Image Classification = 'Bu sayfada ne var?' (dog). Object Detection = 'Köpek nerede?' (bounding box çiz). Semantic Segmentation = Her pixel'i color by class (all dog pixels mavi, all cat pixels kırmızı). Dikkatli boyama! Instance Segmentation = Her DOG ayrı renk (dog 1 mavi, dog 2 yeşil, dog 3 sarı). Individuals separated. U-Net medical imaging'de = Doktor MRI scan'e bakıyor, tumor sınırlarını pixel-by-pixel çiziyor. Skip connections = Hem big picture (context) hem fine details (boundaries) görüyor. Dice loss = Ne kadar iyi boyamışsın? (overlap score).",
+  "mathematics": {
+    "formulas": [
+      "\\text{IoU} = \\frac{|X \\cap Y|}{|X \\cup Y|} = \\frac{TP}{TP + FP + FN}",
+      "\\text{Dice} = \\frac{2|X \\cap Y|}{|X| + |Y|} = \\frac{2 \\cdot TP}{2 \\cdot TP + FP + FN}",
+      "\\text{Pixel CE Loss} = -\\frac{1}{HW} \\sum_{i,j} \\sum_c y_{i,j,c} \\log(\\hat{y}_{i,j,c})",
+      "\\text{Dice Loss} = 1 - \\text{Dice Coefficient}",
+      "\\text{Focal Loss (pixel)} = -\\alpha(1-p_t)^\\gamma \\log(p_t)",
+      "\\text{Atrous Conv:} y[i] = \\sum_k x[i + r \\cdot k] w[k], \\quad r = \\text{dilation rate}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. Preprocess image (resize, normalize)",
+      "2. Encoder: Downsample, extract features (conv + pool)",
+      "3. Bottleneck: Lowest resolution, highest channels",
+      "4. Decoder: Upsample, reconstruct spatial resolution",
+      "5. Skip connections: Concat encoder features to decoder",
+      "6. Final conv: Reduce to num_classes channels",
+      "7. Softmax/Sigmoid: Per-pixel probabilities",
+      "8. Argmax: Get class per pixel → segmentation mask",
+      "9. Post-process: CRF refinement (optional), morphology"
+    ],
+    "complexity": "U-Net forward: O(HW×C) where H×W resolution, C channels. Encoder: O(HW log(HW)), Decoder: O(HW log(HW)). Memory: O(HW×C) for skip connections. Inference: ~50-200ms per image."
+  },
+  "prerequisites": [
+    "convolutional-neural-networks",
+    "resnet-skip-connections",
+    "object-detection"
+  ],
+  "nextTopics": [
+    "panoptic-segmentation",
+    "video-segmentation",
+    "3d-segmentation"
+  ],
+  "relatedTopics": [
+    "object-detection",
+    "transfer-learning",
+    "data-augmentation"
+  ],
+  "tags": [
+    "image-segmentation",
+    "unet",
+    "mask-rcnn",
+    "semantic-segmentation",
+    "instance-segmentation",
+    "medical-imaging",
+    "encoder-decoder",
+    "skip-connections",
+    "dice-loss",
+    "computer-vision"
+  ],
+  "codeExamples": [
+    {
+      "title": "Basic U-Net Training Loop",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.utils.data import DataLoader\n\n# U-Net model (simplified)\nmodel = UNet(in_channels=3, num_classes=2)\nmodel = model.to('cuda')\n\n# Combined loss\ndef combined_loss(pred, target):\n    ce = nn.CrossEntropyLoss()(pred, target)\n    dice = dice_loss(pred[:, 1], target.float())\n    return 0.5 * ce + 0.5 * dice\n\n# Optimizer\noptimizer = optim.Adam(model.parameters(), lr=1e-4)\n\n# Training loop\nfor epoch in range(100):\n    model.train()\n    total_loss = 0\n    \n    for images, masks in train_loader:\n        images = images.to('cuda')  # (B, 3, H, W)\n        masks = masks.to('cuda')    # (B, H, W)\n        \n        # Forward\n        outputs = model(images)  # (B, num_classes, H, W)\n        loss = combined_loss(outputs, masks)\n        \n        # Backward\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n        \n        total_loss += loss.item()\n    \n    print(f\"Epoch {epoch}: Loss = {total_loss/len(train_loader):.4f}\")\n\n# Inference\nmodel.eval()\nwith torch.no_grad():\n    test_image = torch.randn(1, 3, 256, 256).to('cuda')\n    output = model(test_image)\n    pred_mask = torch.argmax(output, dim=1)  # (1, H, W)\n    print(f\"Predicted mask shape: {pred_mask.shape}\")",
+      "level": 0,
+      "explanation": "Basic U-Net Training Loop code"
+    },
+    {
+      "title": "Dice Loss & IoU Metrics",
+      "language": "python",
+      "code": "import torch\nimport torch.nn.functional as F\n\ndef dice_loss(pred, target, smooth=1e-6):\n    '''\n    Dice Loss: 1 - Dice Coefficient\n    Better for imbalanced segmentation\n    '''\n    pred = torch.sigmoid(pred)\n    \n    # Flatten\n    pred = pred.view(-1)\n    target = target.view(-1)\n    \n    # Intersection\n    intersection = (pred * target).sum()\n    \n    # Dice coefficient\n    dice = (2. * intersection + smooth) / (pred.sum() + target.sum() + smooth)\n    \n    return 1 - dice\n\ndef iou_score(pred, target, threshold=0.5):\n    '''\n    IoU (Intersection over Union)\n    '''\n    pred = (torch.sigmoid(pred) > threshold).float()\n    target = target.float()\n    \n    intersection = (pred * target).sum()\n    union = pred.sum() + target.sum() - intersection\n    \n    iou = (intersection + 1e-6) / (union + 1e-6)\n    return iou.item()\n\n# Example usage\npred = torch.randn(4, 1, 256, 256)  # Logits\ntarget = torch.randint(0, 2, (4, 1, 256, 256)).float()\n\nloss = dice_loss(pred, target)\niou = iou_score(pred[0], target[0])\n\nprint(f\"Dice Loss: {loss:.4f}\")\nprint(f\"IoU Score: {iou:.4f}\")",
+      "level": 1,
+      "explanation": "Dice Loss & IoU Metrics code"
+    },
+    {
+      "title": "Complete U-Net with Skip Connections",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\nclass DoubleConv(nn.Module):\n    '''Two Conv + BN + ReLU blocks'''\n    def __init__(self, in_ch, out_ch):\n        super().__init__()\n        self.conv = nn.Sequential(\n            nn.Conv2d(in_ch, out_ch, 3, padding=1),\n            nn.BatchNorm2d(out_ch),\n            nn.ReLU(inplace=True),\n            nn.Conv2d(out_ch, out_ch, 3, padding=1),\n            nn.BatchNorm2d(out_ch),\n            nn.ReLU(inplace=True)\n        )\n    \n    def forward(self, x):\n        return self.conv(x)\n\nclass UNet(nn.Module):\n    def __init__(self, in_channels=3, num_classes=1):\n        super().__init__()\n        \n        # Encoder\n        self.enc1 = DoubleConv(in_channels, 64)\n        self.enc2 = DoubleConv(64, 128)\n        self.enc3 = DoubleConv(128, 256)\n        self.enc4 = DoubleConv(256, 512)\n        \n        # Bottleneck\n        self.bottleneck = DoubleConv(512, 1024)\n        \n        # Decoder\n        self.upconv4 = nn.ConvTranspose2d(1024, 512, 2, stride=2)\n        self.dec4 = DoubleConv(1024, 512)\n        \n        self.upconv3 = nn.ConvTranspose2d(512, 256, 2, stride=2)\n        self.dec3 = DoubleConv(512, 256)\n        \n        self.upconv2 = nn.ConvTranspose2d(256, 128, 2, stride=2)\n        self.dec2 = DoubleConv(256, 128)\n        \n        self.upconv1 = nn.ConvTranspose2d(128, 64, 2, stride=2)\n        self.dec1 = DoubleConv(128, 64)\n        \n        # Output\n        self.out = nn.Conv2d(64, num_classes, 1)\n        \n        self.pool = nn.MaxPool2d(2)\n    \n    def forward(self, x):\n        # Encoder\n        enc1 = self.enc1(x)\n        enc2 = self.enc2(self.pool(enc1))\n        enc3 = self.enc3(self.pool(enc2))\n        enc4 = self.enc4(self.pool(enc3))\n        \n        # Bottleneck\n        bottleneck = self.bottleneck(self.pool(enc4))\n        \n        # Decoder with skip connections\n        dec4 = self.upconv4(bottleneck)\n        dec4 = torch.cat([dec4, enc4], dim=1)  # Skip!\n        dec4 = self.dec4(dec4)\n        \n        dec3 = self.upconv3(dec4)\n        dec3 = torch.cat([dec3, enc3], dim=1)\n        dec3 = self.dec3(dec3)\n        \n        dec2 = self.upconv2(dec3)\n        dec2 = torch.cat([dec2, enc2], dim=1)\n        dec2 = self.dec2(dec2)\n        \n        dec1 = self.upconv1(dec2)\n        dec1 = torch.cat([dec1, enc1], dim=1)\n        dec1 = self.dec1(dec1)\n        \n        return self.out(dec1)\n\n# Test\nmodel = UNet(in_channels=3, num_classes=1)\nx = torch.randn(2, 3, 256, 256)\nout = model(x)\nprint(f\"Output: {out.shape}\")  # (2, 1, 256, 256)",
+      "level": 2,
+      "explanation": "Complete U-Net with Skip Connections code"
+    },
+    {
+      "title": "Mask R-CNN Inference",
+      "language": "python",
+      "code": "import torch\nimport torchvision\nfrom torchvision.models.detection import maskrcnn_resnet50_fpn\nfrom PIL import Image\nimport numpy as np\n\n# Load pretrained Mask R-CNN\nmodel = maskrcnn_resnet50_fpn(pretrained=True)\nmodel.eval()\n\n# Load image\nimage = Image.open('test.jpg').convert('RGB')\nimage_tensor = torchvision.transforms.ToTensor()(image)\n\n# Inference\nwith torch.no_grad():\n    predictions = model([image_tensor])\n\n# Extract results\nboxes = predictions[0]['boxes'].cpu().numpy()\nlabels = predictions[0]['labels'].cpu().numpy()\nscores = predictions[0]['scores'].cpu().numpy()\nmasks = predictions[0]['masks'].cpu().numpy()  # (N, 1, H, W)\n\n# Filter by confidence\nthreshold = 0.5\nfor i, score in enumerate(scores):\n    if score > threshold:\n        box = boxes[i]\n        label = labels[i]\n        mask = masks[i, 0]  # (H, W)\n        \n        # Binary mask\n        binary_mask = (mask > 0.5).astype(np.uint8)\n        \n        print(f\"Object {i}: Label={label}, Score={score:.2f}\")\n        print(f\"Box: {box}\")\n        print(f\"Mask shape: {binary_mask.shape}\")\n        print(f\"Mask pixels: {binary_mask.sum()}\")\n        print()\n\n# Visualize (combine all masks)\ncombined_mask = np.zeros_like(masks[0, 0])\nfor i, score in enumerate(scores):\n    if score > threshold:\n        combined_mask = np.maximum(combined_mask, masks[i, 0])\n\nprint(f\"Combined mask: {combined_mask.shape}\")",
+      "level": 3,
+      "explanation": "Mask R-CNN Inference code"
+    },
+    {
+      "title": "Test-Time Augmentation (TTA)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn.functional as F\n\ndef tta_predict(model, image, scales=[0.75, 1.0, 1.25]):\n    '''\n    Test-Time Augmentation for better predictions\n    Multi-scale + horizontal flip\n    '''\n    model.eval()\n    predictions = []\n    \n    original_size = image.shape[2:]\n    \n    with torch.no_grad():\n        for scale in scales:\n            # Scale image\n            h, w = original_size\n            new_h, new_w = int(h * scale), int(w * scale)\n            scaled = F.interpolate(image, size=(new_h, new_w), mode='bilinear')\n            \n            # 1. Normal prediction\n            pred = model(scaled)\n            pred = F.interpolate(pred, size=original_size, mode='bilinear')\n            predictions.append(torch.sigmoid(pred))\n            \n            # 2. Horizontal flip\n            flipped = torch.flip(scaled, dims=[3])\n            pred_flip = model(flipped)\n            pred_flip = torch.flip(pred_flip, dims=[3])\n            pred_flip = F.interpolate(pred_flip, size=original_size, mode='bilinear')\n            predictions.append(torch.sigmoid(pred_flip))\n    \n    # Average all predictions\n    final_pred = torch.stack(predictions).mean(0)\n    return final_pred\n\n# Usage\nmodel = UNet(in_channels=3, num_classes=1)\ntest_image = torch.randn(1, 3, 256, 256)\n\n# Normal inference\nnormal_pred = torch.sigmoid(model(test_image))\n\n# TTA inference\ntta_pred = tta_predict(model, test_image)\n\nprint(f\"Normal prediction: {normal_pred.shape}\")\nprint(f\"TTA prediction: {tta_pred.shape}\")\nprint(f\"Difference: {(tta_pred - normal_pred).abs().mean():.4f}\")",
+      "level": 3,
+      "explanation": "Test-Time Augmentation (TTA) code"
+    },
+    {
+      "title": "Advanced: DeepLab with Atrous Convolutions",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass AtrousConv(nn.Module):\n    '''Dilated/Atrous Convolution'''\n    def __init__(self, in_ch, out_ch, rate):\n        super().__init__()\n        self.conv = nn.Conv2d(in_ch, out_ch, 3, padding=rate, dilation=rate)\n        self.bn = nn.BatchNorm2d(out_ch)\n    \n    def forward(self, x):\n        return F.relu(self.bn(self.conv(x)))\n\nclass ASPP(nn.Module):\n    '''Atrous Spatial Pyramid Pooling'''\n    def __init__(self, in_ch, out_ch):\n        super().__init__()\n        \n        # Multi-rate atrous convolutions\n        self.conv1 = AtrousConv(in_ch, out_ch, rate=1)\n        self.conv6 = AtrousConv(in_ch, out_ch, rate=6)\n        self.conv12 = AtrousConv(in_ch, out_ch, rate=12)\n        self.conv18 = AtrousConv(in_ch, out_ch, rate=18)\n        \n        # Global average pooling\n        self.global_pool = nn.Sequential(\n            nn.AdaptiveAvgPool2d(1),\n            nn.Conv2d(in_ch, out_ch, 1),\n            nn.BatchNorm2d(out_ch),\n            nn.ReLU()\n        )\n        \n        # Fusion\n        self.conv_out = nn.Conv2d(out_ch * 5, out_ch, 1)\n        self.bn = nn.BatchNorm2d(out_ch)\n    \n    def forward(self, x):\n        size = x.shape[2:]\n        \n        # Parallel branches\n        feat1 = self.conv1(x)\n        feat6 = self.conv6(x)\n        feat12 = self.conv12(x)\n        feat18 = self.conv18(x)\n        \n        # Global branch\n        feat_global = self.global_pool(x)\n        feat_global = F.interpolate(feat_global, size=size, mode='bilinear')\n        \n        # Concatenate all\n        out = torch.cat([feat1, feat6, feat12, feat18, feat_global], dim=1)\n        out = self.conv_out(out)\n        out = self.bn(out)\n        return F.relu(out)\n\n# Test ASPP\naspp = ASPP(in_ch=2048, out_ch=256)\nx = torch.randn(2, 2048, 32, 32)\nout = aspp(x)\nprint(f\"ASPP output: {out.shape}\")  # (2, 256, 32, 32)\nprint(\"Multi-scale features captured!\")",
+      "level": 4,
+      "explanation": "Advanced: DeepLab with Atrous Convolutions code"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Semantic Segmentation ile Instance Segmentation arasındaki temel fark nedir?",
+      "options": [
+        "Semantic her pixel'i classify eder ama individual objects ayırt edemez",
+        "Instance daha hızlıdır",
+        "Semantic daha accurate'tir",
+        "Instance sadece binary segmentation yapar"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Semantic Segmentation: Pixel-level classification, all 'person' pixels same class. Instance Segmentation: Her object instance ayrı! Person 1, Person 2 farklı masklar. Semantic: 'What class?', Instance: 'Which object?'"
+    },
+    {
+      "question": "U-Net'te Skip Connections neden critical?",
+      "options": [
+        "Training speed'i artırır",
+        "Encoder'dan spatial details'i decoder'a taşır, precise boundaries sağlar",
+        "Model size'ı küçültür",
+        "Overfitting'i tamamen önler"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Skip Connections: Encoder features (high-resolution, fine details) → Decoder (low-resolution, semantic info). Combine both! Precise boundaries için critical. Without skip connections: Blurry boundaries, detail loss. Medical imaging'de tumor boundary precision için essential!"
+    },
+    {
+      "question": "IoU ve Dice Coefficient arasındaki ilişki nedir?",
+      "options": [
+        "Tamamen farklı metricslerdir",
+        "IoU = 2×Dice formülüyle ilişkilidir",
+        "İkisi de aynı overlap'i measure eder, farklı formüllerle. Dice medical imaging'de preferred",
+        "Dice sadece binary segmentation için kullanılır"
+      ],
+      "correctAnswer": 2,
+      "explanation": "IoU = |X∩Y|/|X∪Y|, Dice = 2|X∩Y|/(|X|+|Y|). Both measure overlap! Similar values, different formulations. Dice: More sensitive to small objects, popular in medical imaging. IoU: COCO dataset standard. Dice ∈ [0,1], IoU ∈ [0,1]. High Dice ≈ High IoU."
+    },
+    {
+      "question": "Mask R-CNN'de RoI Align, RoI Pooling'den neden daha iyi?",
+      "options": [
+        "Daha hızlıdır",
+        "Quantization error'ı eliminate eder, pixel-level alignment sağlar",
+        "Daha az memory kullanır",
+        "Sadece instance segmentation için çalışır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "RoI Pool: Quantization (rounding) → misalignment! Pixel-level tasks'ta problem. RoI Align: Bilinear interpolation kullanır, exact locations preserve eder. No rounding! Mask prediction için critical. 1-2% mAP improvement. Instance segmentation'da precise boundaries gerektiği için essential!"
+    },
+    {
+      "question": "Dice Loss, Cross-Entropy Loss'a göre imbalanced segmentation'da neden daha iyi?",
+      "options": [
+        "Daha hızlı converge eder",
+        "Overlap-based: Small objects'e daha sensitive, class imbalance'den az etkilenir",
+        "Gradient'ler daha stable'dır",
+        "Multi-class segmentation için design edilmiştir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Cross-Entropy: Per-pixel loss. 99% background → loss dominated by background! Small tumor (1% pixels) ignored. Dice Loss: Overlap-based (intersection/union), region-level metric. Small object'lere equal importance! Medical imaging'de critical: Tiny tumor detection. Practice: Combined loss (CE + Dice) often best!"
+    },
+    {
+      "question": "Image Segmentation'ın real-world applications'ları nelerdir?",
+      "options": [
+        "Sadece medical imaging",
+        "Medical imaging, autonomous driving, photo editing, satellite imagery, agriculture monitoring",
+        "Sadece object detection replacement",
+        "Sadece binary classification tasks"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Applications: (1) Medical: Tumor/organ segmentation, surgery planning. (2) Autonomous Driving: Drivable area, lane detection. (3) Photo Editing: Background removal, portrait mode. (4) Satellite: Building/road extraction, land use. (5) Agriculture: Crop monitoring, disease detection. (6) AR/VR: Scene understanding. Pixel-level understanding → precise boundaries needed!"
+    }
+  ],
+  "flashcards": [
+    {
+      "front": "Semantic Segmentation vs Instance Segmentation",
+      "back": "**Semantic:** Pixel-level classification. All 'car' pixels → same class. No individual distinction!\n\n**Instance:** Each object separately. Car 1, Car 2 farklı masks!\n\n**Panoptic:** Semantic + Instance combined. Complete scene understanding!"
+    },
+    {
+      "front": "U-Net Architecture",
+      "back": "**Encoder:** Downsample (conv+pool), capture context\n\n**Bottleneck:** Lowest resolution, highest channels\n\n**Decoder:** Upsample (transposed conv), reconstruct spatial\n\n**Skip Connections:** Encoder → Decoder. Combine high-level semantics + low-level details!\n\nMedical imaging champion! 🏥"
+    },
+    {
+      "front": "Skip Connections Purpose",
+      "back": "**Problem:** Decoder loses fine spatial details during downsampling\n\n**Solution:** Concatenate encoder features to decoder\n\n**Benefit:** High-resolution details + semantic understanding = Precise boundaries!\n\nWithout skip: Blurry masks ❌\nWith skip: Sharp boundaries ✓"
+    },
+    {
+      "front": "Dice Loss Formula & Why",
+      "back": "**Formula:** Dice = 1 - (2×|X∩Y|)/(|X|+|Y|)\n\n**Why Better:**\n- Overlap-based (not pixel-by-pixel)\n- Small objects: Equal importance!\n- Class imbalance: Less affected\n\n**When:** Medical imaging (tiny tumors), imbalanced classes\n\n**Practice:** Combined loss = α×CE + (1-α)×Dice"
+    },
+    {
+      "front": "IoU (Intersection over Union)",
+      "back": "**Formula:** IoU = |X∩Y|/|X∪Y| = TP/(TP+FP+FN)\n\n**Range:** 0 (no overlap) to 1 (perfect)\n\n**Usage:** Segmentation evaluation metric\n\n**mIoU:** Mean IoU across all classes\n\n**Threshold:** IoU > 0.5 typically 'good', > 0.7 'excellent'"
+    },
+    {
+      "front": "Mask R-CNN Architecture",
+      "back": "**Base:** Faster R-CNN (object detection)\n\n**Addition:** Mask branch!\n\n**Pipeline:**\n1. Backbone: Feature extraction\n2. RPN: Propose regions\n3. RoI Align: Extract features (no quantization!)\n4. Head: Box + Class + Mask\n\n**Output:** Boxes + Labels + Instance masks!"
+    },
+    {
+      "front": "Atrous (Dilated) Convolution",
+      "back": "**Idea:** Expand receptive field WITHOUT increasing parameters!\n\n**How:** Insert 'holes' between kernel weights\n\n**Rate r:** Spacing between weights\n\n**Benefit:** Multi-scale context, no resolution loss\n\n**DeepLab:** ASPP (Atrous Spatial Pyramid Pooling) - parallel rates (6,12,18)"
+    },
+    {
+      "front": "Segmentation Applications",
+      "back": "**Medical:** Tumor/organ segmentation, surgery planning\n\n**Autonomous Driving:** Drivable area, lane detection\n\n**Photo Editing:** Background removal, portrait mode\n\n**Satellite:** Building extraction, land use\n\n**Agriculture:** Crop monitoring, disease detection\n\nPixel-level understanding = Precise boundaries! 🎯"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Skip connections kullanmamak",
+      "why": "Decoder spatial details kaybeder → blurry boundaries! U-Net'in gücü skip connections'tan gelir.",
+      "fix": "Her encoder level'dan decoder'a skip connection ekle. Concatenate features! Fine details + semantic understanding birleşir. Medical imaging'de boundary precision critical!"
+    },
+    {
+      "mistake": "Sadece Cross-Entropy loss kullanmak imbalanced classes'ta",
+      "why": "99% background → loss dominated! Small objects (tumor, person) ignored. Model background predict ediyor, foreground öğrenmiyor.",
+      "fix": "Dice Loss veya Combined Loss (CE + Dice) kullan. Overlap-based metrics small objects'e equal importance verir. Medical imaging: Dice Loss standard!"
+    },
+    {
+      "mistake": "Class imbalance'ı ignore etmek",
+      "why": "Background 95%, foreground 5% → model always predicts background, 95% accuracy! But foreground (critical part) totally wrong.",
+      "fix": "Weighted loss (class weights), Focal loss (hard examples'a focus), Online hard example mining, Data augmentation (crop foreground), Dice loss kullan!"
+    },
+    {
+      "mistake": "Input/Output resolution mismatch",
+      "why": "U-Net: Input 572×572 → Output 388×388 (valid convolutions). Direct comparison impossible! Training breaks.",
+      "fix": "Padding='same' kullan veya center crop! Input/output same size olmalı. Modern U-Net: Padding='same', output size = input size."
+    },
+    {
+      "mistake": "Test-time augmentation (TTA) kullanmamak",
+      "why": "Single prediction: Model uncertainty high. Especially boundary regions noisy! Medical imaging'de precision critical.",
+      "fix": "Multi-scale + flip TTA: [0.75, 1.0, 1.25] scales, horizontal flip. Average predictions → smoother, more confident masks. 1-2% improvement!"
+    },
+    {
+      "mistake": "RoI Pooling kullanmak (Mask R-CNN'de)",
+      "why": "Quantization (rounding) → pixel misalignment! Mask prediction pixel-level, misalignment critical error. RoI Pool object detection için OK, segmentation için NO!",
+      "fix": "RoI Align kullan! Bilinear interpolation, exact locations. No quantization. Mask R-CNN'de standard! 1-2% mAP gain."
+    },
+    {
+      "mistake": "Post-processing ignore etmek",
+      "why": "Raw predictions noisy: Holes, small artifacts, jagged boundaries. Direct kullanım poor visual quality!",
+      "fix": "CRF (Conditional Random Fields) for boundary refinement, Morphological operations (opening/closing) for noise removal, Connected components for false positives, Test-time augmentation!"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture",
+      "title": "U-Net Encoder-Decoder with Skip Connections",
+      "description": "U-Net architecture visualization: Encoder downsamples (context), Decoder upsamples (localization), Skip connections preserve spatial details"
+    },
+    {
+      "type": "comparison",
+      "title": "Semantic vs Instance vs Panoptic Segmentation",
+      "description": "Visual comparison: Semantic (all 'person' same class), Instance (person 1, person 2 separate), Panoptic (semantic + instance combined)"
+    },
+    {
+      "type": "metric",
+      "title": "IoU and Dice Coefficient Calculation",
+      "description": "Interactive visualization: Prediction vs Ground Truth overlap, IoU = Intersection/Union, Dice = 2×Intersection/(Pred+GT)"
+    },
+    {
+      "type": "algorithm",
+      "title": "Atrous Convolution Receptive Field",
+      "description": "Dilated convolution visualization: Rate 1, 2, 4, 8 comparison. Same parameters, larger receptive field!"
+    }
+  ],
+  "references": [
+    {
+      "title": "U-Net: Convolutional Networks for Biomedical Image Segmentation",
+      "authors": "Ronneberger et al.",
+      "year": 2015,
+      "link": "https://arxiv.org/abs/1505.04597",
+      "type": "paper"
+    },
+    {
+      "title": "Mask R-CNN",
+      "authors": "He et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1703.06870",
+      "type": "paper"
+    },
+    {
+      "title": "DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs",
+      "authors": "Chen et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1606.00915",
+      "type": "paper"
+    },
+    {
+      "title": "PyTorch Segmentation Models",
+      "authors": "Pavel Iakubovskii",
+      "year": 2023,
+      "link": "https://github.com/qubvel/segmentation_models.pytorch",
+      "type": "code"
+    }
+  ]
+}
