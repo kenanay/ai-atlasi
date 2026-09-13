@@ -64,8 +64,10 @@ export interface Visualization {
 export interface Topic {
   id: string;
   title: string;
+  shortTitle?: string; // Kısa başlık (graflar için)
   category: TopicCategory;
   level: TopicLevel;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced'; // Zorluk seviyesi
   estimatedTime: number; // dakika cinsinden
   description?: string; // Kısa açıklama
   

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Brain, Search, BookOpen, Settings, Home, TrendingUp, Code, Award } from 'lucide-react';
+import { Brain, Search, BookOpen, Settings, Home, TrendingUp, Code, Award, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
@@ -12,6 +12,7 @@ export function Header() {
   const navItems = [
     { href: '/', label: 'Ana Sayfa', icon: Home },
     { href: '/topics', label: 'Konular', icon: BookOpen },
+    { href: '/learning-map', label: 'Öğrenme Haritası', icon: Map },
     { href: '/analytics', label: 'Analitik', icon: TrendingUp },
     { href: '/badges', label: 'Rozetler', icon: Award },
     { href: '/code-lab', label: 'Kod Lab', icon: Code },

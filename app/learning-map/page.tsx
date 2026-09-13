@@ -1,0 +1,257 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { getAllTopics } from '@/lib/topics';
+import { useProgress } from '@/lib/use-progress';
+import LearningMapGraph from '@/components/learning-map/LearningMapGraph';
+import { CATEGORY_INFO } from '@/lib/utils';
+
+export default function LearningMapPage() {
+  const router = useRouter();
+  const topics = getAllTopics();
+  const progressData = useProgress();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  // Tamamlanmış konuları al
+  const completedTopics = useMemo(() => {
+    return progressData
+      .filter(p => p.status === 'completed')
+      .map(p => p.topicId);
+  }, [progressData]);
+  
+  // Konsolide kategorileri al
+  const categories = useMemo(() => {
+    const categorySet = new Set<string>();
+    topics.forEach(topic => {
+      const categoryName = CATEGORY_INFO[topic.category]?.name || topic.category;
+      categorySet.add(categoryName);
+    });
+    return Array.from(categorySet).sort();
+  }, [topics]);
+  
+  // Seçili kategoriye göre konuları filtrele
+  const filteredTopics = useMemo(() => {
+    if (!selectedCategory) return topics;
+    
+    return topics.filter(topic => {
+      const categoryName = CATEGORY_INFO[topic.category]?.name || topic.category;
+      return categoryName === selectedCategory;
+    });
+  }, [topics, selectedCategory]);
+  
+  // İstatistikler
+  const stats = useMemo(() => {
+    const completed = completedTopics.length;
+    const total = topics.length;
+    const unlocked = topics.filter(topic => 
+      topic.prerequisites.length === 0 || 
+      topic.prerequisites.every(prereq => completedTopics.includes(prereq))
+    ).length;
+    const locked = total - unlocked;
+    
+    return {
+      completed,
+      total,
+      unlocked: unlocked - completed,
+      locked,
+      percentage: Math.round((completed / total) * 100),
+    };
+  }, [topics, completedTopics]);
+  
+  const handleTopicClick = (topicId: string) => {
+    router.push(`/topic/${topicId}`);
+  };
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            🗺️ Öğrenme Haritası
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Tüm konuların önkoşul ilişkilerini görsel olarak keşfedin
+          </p>
+        </div>
+        
+        {/* İstatistikler */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <span className="text-xl">✓</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {stats.completed}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Tamamlandı</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <span className="text-xl">→</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {stats.unlocked}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Açık</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <span className="text-xl">🔒</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                  {stats.locked}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Kilitli</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <span className="text-xl">📊</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {stats.percentage}%
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">İlerleme</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Kategori Filtresi */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`
+              px-4 py-2 rounded-lg font-medium transition-all
+              ${!selectedCategory 
+                ? 'bg-blue-600 text-white shadow-lg scale-105' 
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }
+            `}
+          >
+            Tümü ({topics.length})
+          </button>
+          
+          {categories.map(category => {
+            const categoryTopics = topics.filter(t => {
+              const catName = CATEGORY_INFO[t.category]?.name || t.category;
+              return catName === category;
+            });
+            
+            // İkon bul
+            const sampleTopic = categoryTopics[0];
+            const icon = sampleTopic ? (CATEGORY_INFO[sampleTopic.category]?.icon || '📚') : '📚';
+            
+            return (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`
+                  px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2
+                  ${selectedCategory === category
+                    ? 'bg-blue-600 text-white shadow-lg scale-105' 
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }
+                `}
+              >
+                <span>{icon}</span>
+                <span>{category}</span>
+                <span className="text-xs opacity-75">({categoryTopics.length})</span>
+              </button>
+            );
+          })}
+        </div>
+        
+        {/* Lejant */}
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Lejant:</h3>
+          <div className="flex flex-wrap gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-green-500"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                ✓ Tamamlanmış Konu
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-blue-500"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                → Açık Konu (Başlayabilirsiniz)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gray-400"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                🔒 Kilitli Konu (Önkoşulları tamamlayın)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-0.5 bg-green-500"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Tamamlanmış Önkoşul
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-0.5 bg-gray-400"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Bekleyen Önkoşul
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Graf */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {selectedCategory 
+                ? `${filteredTopics.length} konu gösteriliyor` 
+                : `Toplam ${topics.length} konu`}
+            </p>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              💡 İpucu: Fare tekerleği ile zoom, sürükleyerek hareket ettirin
+            </div>
+          </div>
+          
+          <LearningMapGraph
+            topics={filteredTopics}
+            completedTopics={completedTopics}
+            onTopicClick={handleTopicClick}
+          />
+        </div>
+        
+        {/* Yardım */}
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+          <h3 className="font-semibold mb-2 text-blue-900 dark:text-blue-100 flex items-center gap-2">
+            <span>💡</span>
+            Nasıl Kullanılır?
+          </h3>
+          <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <li>• <strong>Konuya tıklayın</strong> → Detay sayfasına gidin</li>
+            <li>• <strong>Oklar</strong> → Önkoşul ilişkilerini gösterir</li>
+            <li>• <strong>Renkler</strong> → Tamamlanan (yeşil), açık (mavi), kilitli (gri)</li>
+            <li>• <strong>Kategori filtreleri</strong> → Belirli bir alanı odaklayın</li>
+            <li>• <strong>Mini harita</strong> (sağ alt) → Hızlı navigasyon</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
