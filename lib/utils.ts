@@ -16,23 +16,46 @@ export const LEVEL_INFO = {
 
 // Kategori bilgilerini döndür
 export const CATEGORY_INFO: Record<string, { name: string; icon: string; color: string }> = {
-  'computer-science': { name: 'Bilgisayar Bilimine Giriş', icon: '💻', color: 'bg-slate-100' },
-  'python': { name: 'Python Temelleri', icon: '🐍', color: 'bg-yellow-100' },
+  // Matematik
+  'math': { name: 'Matematik', icon: '🔢', color: 'bg-blue-100' },
+  'matematik': { name: 'Matematik', icon: '🔢', color: 'bg-blue-100' },
   'linear-algebra': { name: 'Lineer Cebir', icon: '📐', color: 'bg-blue-100' },
   'calculus': { name: 'Kalkülüs', icon: '∫', color: 'bg-green-100' },
   'probability': { name: 'Olasılık ve İstatistik', icon: '🎲', color: 'bg-purple-100' },
-  'optimization': { name: 'Optimizasyon', icon: '📈', color: 'bg-orange-100' },
-  'data-preparation': { name: 'Veri Hazırlama', icon: '🗂️', color: 'bg-cyan-100' },
+  'fundamentals': { name: 'Temel Matematik', icon: '📐', color: 'bg-blue-100' },
+  
+  // Klasik ML
+  'classical-ml': { name: 'Klasik ML', icon: '📊', color: 'bg-cyan-100' },
   'supervised-learning': { name: 'Gözetimli Öğrenme', icon: '🎯', color: 'bg-pink-100' },
   'unsupervised-learning': { name: 'Gözetimsiz Öğrenme', icon: '🔍', color: 'bg-indigo-100' },
+  'reinforcement-learning': { name: 'Pekiştirmeli Öğrenme', icon: '🎮', color: 'bg-amber-100' },
+  
+  // Deep Learning
+  'deep-learning': { name: 'Derin Öğrenme', icon: '🧠', color: 'bg-red-100' },
   'neural-networks': { name: 'Yapay Sinir Ağları', icon: '🧠', color: 'bg-red-100' },
   'cnn': { name: 'Konvolüsyonel Ağlar', icon: '🖼️', color: 'bg-teal-100' },
   'rnn': { name: 'Tekrarlayan Ağlar', icon: '🔄', color: 'bg-lime-100' },
   'transformer': { name: 'Transformer', icon: '⚡', color: 'bg-amber-100' },
+  'computer-vision': { name: 'Bilgisayarlı Görü', icon: '👁️', color: 'bg-teal-100' },
+  
+  // NLP & LLM
+  'nlp': { name: 'Doğal Dil İşleme', icon: '💬', color: 'bg-violet-100' },
+  'natural-language-processing': { name: 'Doğal Dil İşleme', icon: '💬', color: 'bg-violet-100' },
+  'llm': { name: 'Büyük Dil Modelleri', icon: '🤖', color: 'bg-violet-100' },
+  'generative-models': { name: 'Üretken Modeller', icon: '🎨', color: 'bg-fuchsia-100' },
   'generative-ai': { name: 'Üretken Yapay Zeka', icon: '🎨', color: 'bg-fuchsia-100' },
-  'llm': { name: 'Büyük Dil Modelleri', icon: '💬', color: 'bg-violet-100' },
-  'hardware': { name: 'Donanım ve Sistem', icon: '⚙️', color: 'bg-gray-100' },
+  
+  // System & Production
+  'optimization': { name: 'Optimizasyon', icon: '📈', color: 'bg-orange-100' },
   'mlops': { name: 'MLOps', icon: '🚀', color: 'bg-emerald-100' },
+  'hardware': { name: 'Donanım ve Sistem', icon: '⚙️', color: 'bg-gray-100' },
+  'advanced': { name: 'İleri Konular', icon: '🎓', color: 'bg-slate-100' },
+  'applications': { name: 'Uygulamalar', icon: '💼', color: 'bg-indigo-100' },
+  
+  // Legacy (backward compat)
+  'computer-science': { name: 'Bilgisayar Bilimine Giriş', icon: '💻', color: 'bg-slate-100' },
+  'python': { name: 'Python Temelleri', icon: '🐍', color: 'bg-yellow-100' },
+  'data-preparation': { name: 'Veri Hazırlama', icon: '🗂️', color: 'bg-cyan-100' },
 };
 
 // Süre formatla
