@@ -1,4 +1,5 @@
 import { Topic, TopicCategory } from '@/types';
+import { CATEGORY_INFO } from './utils';
 import vectorsData from '@/data/topics/vectors.json';
 import matricesTensorsData from '@/data/topics/matrices-tensors.json';
 import derivativeData from '@/data/topics/derivative.json';
@@ -185,9 +186,6 @@ const topics: Topic[] = [
 // Kategori bazlı gruplama (CATEGORY_INFO'dan konsolide grup adını kullanır)
 export function getTopicsByCategory(): Map<string, Topic[]> {
   const grouped = new Map<string, Topic[]>();
-  
-  // CATEGORY_INFO'yu import et
-  const { CATEGORY_INFO } = require('./utils');
   
   topics.forEach(topic => {
     // Ham kategori kodu yerine CATEGORY_INFO'daki konsolide grup adını kullan
