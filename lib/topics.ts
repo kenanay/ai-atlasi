@@ -77,6 +77,12 @@ import svdData from '@/data/topics/svd.json';
 import ragVectorDatabasesData from '@/data/topics/rag-vector-databases.json';
 import aiAgentsToolCallingData from '@/data/topics/ai-agents-tool-calling.json';
 
+// SPRINT 4 - Critical Topics (Advanced ML/LLM)
+import xgboostGradientBoostingData from '@/data/topics/xgboost-gradient-boosting.json';
+import loraQloraPeftData from '@/data/topics/lora-qlora-peft.json';
+import rlhfDpoAlignmentData from '@/data/topics/rlhf-dpo-alignment.json';
+import tsneUmapManifoldData from '@/data/topics/tsne-umap-manifold.json';
+
 // Tüm konular (şu an statik, ileride DB'den gelecek)
 const topics: Topic[] = [
   vectorsData as unknown as Topic,
@@ -156,6 +162,12 @@ const topics: Topic[] = [
   svdData as unknown as Topic,
   ragVectorDatabasesData as unknown as Topic,
   aiAgentsToolCallingData as unknown as Topic,
+  
+  // SPRINT 4 - Advanced ML/LLM Topics
+  xgboostGradientBoostingData as unknown as Topic,
+  loraQloraPeftData as unknown as Topic,
+  rlhfDpoAlignmentData as unknown as Topic,
+  tsneUmapManifoldData as unknown as Topic,
 ];
 
 // Kategori bazlı gruplama

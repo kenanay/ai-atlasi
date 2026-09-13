@@ -1,5 +1,55 @@
 # Changelog
 
+## [2.6.0] - Sprint 4 - 2024-01-XX
+
+### 🎉 Major Features Completed
+
+#### Advanced ML/LLM Topics Added (4 Critical Topics)
+
+1. **XGBoost & Gradient Boosting** - Level 3
+   - Gradient boosting theory ve XGBoost optimization techniques
+   - Tree building algorithm, regularization, approximate split finding
+   - Hyperparameter tuning (max_depth, learning_rate, lambda, alpha)
+   - Real-world: Kaggle winner algorithm, tabular data king
+   - Performance: 10-100x faster than traditional boosting
+
+2. **LoRA & QLoRA (PEFT)** - Level 3
+   - Parameter-Efficient Fine-Tuning (PEFT) methodology
+   - Low-Rank Adaptation (LoRA): ΔW = B × A decomposition
+   - QLoRA: 4-bit quantization + LoRA (65B models on single GPU!)
+   - Hyperparameters: rank, alpha, target_modules
+   - Real-world: 50K+ adapters on HuggingFace, 10-50x cost reduction
+
+3. **RLHF & DPO (Alignment)** - Level 3
+   - Reinforcement Learning from Human Feedback (RLHF)
+   - 3-stage pipeline: SFT → Reward Model → PPO
+   - Direct Preference Optimization (DPO): Single-stage alternative
+   - Constitutional AI: Self-improvement loop
+   - Real-world: ChatGPT, Claude, Llama 2 Chat alignment
+
+4. **t-SNE & UMAP (Manifold Learning)** - Level 3
+   - Nonlinear dimensionality reduction for visualization
+   - t-SNE: Stochastic Neighbor Embedding with t-distribution
+   - UMAP: 10-100x faster, generalizable to new data
+   - Hyperparameters: perplexity (t-SNE), n_neighbors (UMAP)
+   - Real-world: scRNA-seq, word embeddings, genomics
+
+### 📊 Statistics
+- **Total Topics**: 75 (was 71) ✅ Target achieved!
+- **Sprint 4 Additions**: 4 critical topics
+- **Categories**: 8 consolidated categories
+- **Build**: TypeScript 0 errors, 10 routes generated
+- **File Sizes**: XGBoost (49KB), LoRA (45KB), RLHF (48KB), t-SNE (42KB)
+
+### 🎯 Sprint Goals Achieved
+- ✅ XGBoost & Gradient Boosting (ensemble methods, Kaggle essential)
+- ✅ LoRA & QLoRA (modern LLM fine-tuning standard)
+- ✅ RLHF & DPO (ChatGPT's secret sauce)
+- ✅ t-SNE & UMAP (visualization beyond PCA)
+- ✅ 71 → 75 topics milestone reached
+
+---
+
 ## [2.5.0] - Sprint 3 - 2024-01-XX
 
 ### 🎉 Major Features Added
@@ -105,13 +155,11 @@
 
 ## Future Roadmap
 
-### Sprint 4 (Planned)
-- [ ] Decision Tree Building Visualizer
-- [ ] CNN Convolution Filter Animation
-- [ ] t-SNE/UMAP Embedding Projection
-- [ ] Neural Network Forward/Backward Pass Animation
-- [ ] XGBoost topic
-- [ ] PEFT (LoRA/QLoRA) detailed topic
+### Sprint 5 (Next)
+- [ ] DBSCAN & Hierarchical Clustering (unsupervised learning)
+- [ ] LLM Inference Optimization (vLLM, KV Cache, PagedAttention)
+- [ ] Speech AI (Whisper, ASR, TTS)
+- [ ] Additional visualizers (Decision Tree, CNN filters, NN forward/backward)
 
 ### Long-term
 - [ ] AI Chatbot/Teacher Mode (topic-specific Q&A)

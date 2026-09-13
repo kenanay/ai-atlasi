@@ -16,11 +16,11 @@
   - Seviye 3: İleri - Matematiksel türetimler
   - Seviye 4: Uzman - Mimari, performans, üretim
 
-- **71 Kapsamlı Konu**
+- **71 Kapsamlı Konu** → **75 Kapsamlı Konu** ✅
   - Matematik Altyapısı (Vektörler, Matrisler, Türev, Gradient Descent, Özdeğer/Özvektör, **SVD**)
-  - Makine Öğrenmesi (Regresyon, Sınıflandırma, Kümeleme, PCA, K-Means)
+  - Makine Öğrenmesi (Regresyon, Sınıflandırma, **XGBoost & Boosting**, Kümeleme, PCA, **t-SNE/UMAP**)
   - Derin Öğrenme (CNN, RNN, Transformer, Attention)
-  - Büyük Dil Modelleri (LLM, BERT, GPT, Prompt Engineering, **RAG & Vektör DB**, **AI Agents**)
+  - Büyük Dil Modelleri (LLM, BERT, GPT, Prompt Engineering, **RAG & Vektör DB**, **AI Agents**, **LoRA/QLoRA**, **RLHF/DPO**)
   - Model Optimizasyonu ve Sistem Altyapısı
 
 #### 🎮 İnteraktif Özellikler (Sprint 2 & 3 - YENİ!)
