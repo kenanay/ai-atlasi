@@ -46,7 +46,7 @@
   "prerequisites": [
     "generative-adversarial-networks",
     "autoencoders-vae",
-    "attention-mechanisms"
+    "attention-mechanisms-detail"
   ],
   "nextTopics": [
     "video-generation",

@@ -281,8 +281,7 @@
     "complexity": "Training: O(n·d·log(n)·T) where T=trees, n=samples, d=features. Single tree: O(n·d·log n). Prediction: O(log(n)·T). Space: O(nodes·T). Typically log(n)=depth. RF trains in parallel!"
   },
   "prerequisites": [
-    "supervised-learning-basics",
-    "information-theory"
+    "linear-regression"
   ],
   "nextTopics": [
     "gradient-boosting",

@@ -5,8 +5,17 @@
   "level": 1,
   "estimatedTime": 35,
   "description": "CPU ve GPU architecture farkları. Parallelization, CUDA programming, tensor cores, memory hierarchy. GPU utilization optimization, training acceleration.",
-  "prerequisites": ["matrix-operations"],
-  "tags": ["gpu", "cuda", "parallel", "hardware", "optimization", "performance"],
+  "prerequisites": [
+    "matrices-tensors"
+  ],
+  "tags": [
+    "gpu",
+    "cuda",
+    "parallel",
+    "hardware",
+    "optimization",
+    "performance"
+  ],
   "content": {
     "level0_basic": "CPU: Sequential tasks için optimal, few powerful cores. GPU: Parallel tasks için! Thousands of small cores, matrix ops perfect! AI/ML training GPU'da 10-100× faster. CUDA: NVIDIA GPU programming. Modern GPUs tensor cores var (matrix multiply hardware acceleration). Memory hierarchy: GPU memory fast ama limited. CPU-GPU data transfer bottleneck olabilir!",
     "level1_beginner": "**CPU vs GPU Architecture**\n\n**CPU (Central Processing Unit):**\n\n**Design:**\n- 4-32 cores (high-end)\n- Each core: Very powerful, complex\n- High clock speed (3-5 GHz)\n- Large cache (MB per core)\n- Optimized for: Sequential tasks, branching, complex logic\n\n**Structure:**\n```\n     CPU\n┌──────────────┐\n│ Core 1 [====]│ ← Powerful\n│ Core 2 [====]│\n│ Core 4 [====]│\n│ ...          │\n│ Core 16 [===]│\n└──────────────┘\n   Few cores\n```\n\n**GPU (Graphics Processing Unit):**\n\n**Design:**\n- 1000s-10000s of cores\n- Each core: Simple, less powerful\n- Lower clock speed (1-2 GHz)\n- Smaller cache\n- Optimized for: Parallel tasks, data processing\n\n**Structure:**\n```\n       GPU\n┌──────────────┐\n│[=][=][=][=]  │ ← Many\n│[=][=][=][=]  │   simple\n│[=][=][=][=]  │   cores\n│... (1000s)   │\n└──────────────┘\n  Massive parallelism\n```\n\n**Why GPU for AI/ML?**\n\n**Matrix multiplication:**\n\nDeep learning = tons of matrix ops!\n\n```python\n# Forward pass\nZ = W @ X  # Matrix multiply!\n```\n\n**CPU approach:**\nSequential, row-by-row.\n\n**GPU approach:**\nAll elements parallel!\n\n**Example:** 1000×1000 matrix multiply\n- CPU: ~1000 operations serially\n- GPU: 1000 operations parallel → ~1000× faster!\n\n**Speedup:**\n```\nTask              | CPU Time | GPU Time | Speedup\n------------------|----------|----------|--------\nMatrix multiply   | 1.0s     | 0.01s    | 100×\nConvolution       | 5.0s     | 0.05s    | 100×\nNeural net train  | 10 hours | 30 min   | 20×\n```\n\n**GPU Memory Hierarchy:**\n\n**1. Global Memory (VRAM):**\n- Size: 8-80 GB\n- Speed: Slow (~1 TB/s)\n- Accessible by all cores\n\n**2. Shared Memory:**\n- Size: KB per block\n- Speed: Fast (~10 TB/s)\n- Shared within thread block\n\n**3. Registers:**\n- Size: Few KB per thread\n- Speed: Very fast\n- Private to thread\n\n**Hierarchy:**\n```\n┌──────────────────┐\n│   Registers      │ ← Fastest, smallest\n├──────────────────┤\n│ Shared Memory    │ ← Fast, KB\n├──────────────────┤\n│ Global Memory    │ ← Slower, GB\n│   (VRAM)         │\n└──────────────────┘\n```\n\n**Key concept:** Minimize global memory access, maximize register/shared memory use!",

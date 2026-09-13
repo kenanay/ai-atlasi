@@ -5,8 +5,19 @@
   "level": 2,
   "estimatedTime": 45,
   "description": "Learning rate'i training sırasında dinamik ayarlama. Step decay, exponential decay, cosine annealing, warmup strategies. Convergence hızlandırma, fine-tuning optimization.",
-  "prerequisites": ["gradient-descent", "backpropagation", "optimization-algorithms"],
-  "tags": ["learning-rate", "scheduling", "optimization", "training", "convergence", "warmup"],
+  "prerequisites": [
+    "gradient-descent",
+    "backpropagation",
+    "optimizers"
+  ],
+  "tags": [
+    "learning-rate",
+    "scheduling",
+    "optimization",
+    "training",
+    "convergence",
+    "warmup"
+  ],
   "content": {
     "level0_basic": "Learning rate: gradient descent step size! Fixed LR problem: Başlangıç çok büyük → unstable, sonra çok küçük → slow. Solution: Schedule! Başlangıç büyük (fast progress), sonra küçült (fine convergence). Step decay: Her N epoch LR/10. Cosine annealing: Smooth decrease. Warmup: Başlangıç küçük, sonra artır (stability). Modern training'de critical!",
     "level1_beginner": "**Problem: Fixed Learning Rate**\n\nFixed LR suboptimal:\n- **LR too high:** Training unstable, overshoots minimum\n- **LR too low:** Training too slow, stuck in plateaus\n- **Ideal:** High LR initially (fast), low LR later (precise)\n\n**Solution: LR Scheduling**\n\nLR'yi training sırasında adjust et!\n\n**Basic Strategies:**\n\n**1. Step Decay:**\n\nHer N epoch'ta LR'yi factor ile çarp.\n\n$$\\text{LR}_{\\text{epoch}} = \\text{LR}_0 \\times \\gamma^{\\lfloor \\text{epoch} / \\text{step\\_size} \\rfloor}$$\n\n**Example:**\n- LR₀ = 0.1\n- Step size = 30\n- γ = 0.1\n\n```\nEpoch   0-29:  LR = 0.1\nEpoch  30-59:  LR = 0.01\nEpoch  60-89:  LR = 0.001\nEpoch 90-119:  LR = 0.0001\n```\n\n**Pros:** Simple, widely used\n**Cons:** Abrupt changes, manual step_size tuning\n\n**2. Exponential Decay:**\n\nSmooth exponential decrease.\n\n$$\\text{LR}_t = \\text{LR}_0 \\times e^{-\\lambda t}$$\n\n- λ: decay rate\n- t: epoch/iteration\n\n**Example:** LR₀ = 0.1, λ = 0.01\n```\nEpoch   0: LR = 0.1000\nEpoch  50: LR = 0.0607\nEpoch 100: LR = 0.0368\nEpoch 150: LR = 0.0223\n```\n\n**Pros:** Smooth, continuous\n**Cons:** Still needs λ tuning\n\n**3. Polynomial Decay:**\n\n$$\\text{LR}_t = \\text{LR}_0 \\times \\left(1 - \\frac{t}{T}\\right)^p$$\n\n- T: total epochs\n- p: power (usually 0.9 or 1.0)\n\n**Linear (p=1):**\nSmooth linear decrease to 0.\n\n**When to use:**\n- Step decay: Classification, proven baseline\n- Exponential: When smooth decay preferred\n- Polynomial: Fixed training duration known",

@@ -43,7 +43,7 @@
   "prerequisites": [
     "neural-networks",
     "convolutional-neural-networks",
-    "deep-learning-frameworks"
+    "model-compression-pruning"
   ],
   "nextTopics": [
     "kubernetes-ml",

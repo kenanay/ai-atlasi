@@ -5,8 +5,18 @@
   "level": 1,
   "estimatedTime": 40,
   "description": "Model performance'ını güvenilir şekilde değerlendirme. K-Fold, Stratified K-Fold, Leave-One-Out, Time Series CV. Overfitting detection, hyperparameter tuning.",
-  "prerequisites": ["train-test-split", "evaluation-metrics"],
-  "tags": ["cross-validation", "k-fold", "stratified", "evaluation", "overfitting", "model-selection"],
+  "prerequisites": [
+    "data-preprocessing-features",
+    "evaluation-metrics"
+  ],
+  "tags": [
+    "cross-validation",
+    "k-fold",
+    "stratified",
+    "evaluation",
+    "overfitting",
+    "model-selection"
+  ],
   "content": {
     "level0_basic": "Model'ini train et, test et - basit! Ama tek bir split şans eseri iyi/kötü olabilir. Cross-validation çözüm: Data'yı K parçaya böl (örn. 5), 4 parça train 1 parça test, rotate et, 5 kere yap. Her veri parçası hem train hem test olur. Ortalama performance → reliable! K-Fold en yaygın. İmbalanced data → Stratified K-Fold (her fold'ta class balance korunur). Time series → özel CV (future tahmin et, geçmiş kullan).",
     "level1_beginner": "**Problem: Single Train-Test Split**\n\nTek split şansa bağlı:\n- Lucky split → overoptimistic\n- Unlucky split → pessimistic\n- Variance high, unreliable!\n\n**Solution: Cross-Validation**\n\nMultiple splits, average results → robust estimate!\n\n**K-Fold Cross-Validation:**\n\n**Algorithm:**\n1. Data'yı K equal folds'a böl\n2. For each fold k:\n   - Fold k = test set\n   - Remaining K-1 folds = train set\n   - Train model, evaluate on fold k\n3. Average K scores\n\n**Example: 5-Fold CV**\n```\nIteration 1: [Test][Train][Train][Train][Train]\nIteration 2: [Train][Test][Train][Train][Train]\nIteration 3: [Train][Train][Test][Train][Train]\nIteration 4: [Train][Train][Train][Test][Train]\nIteration 5: [Train][Train][Train][Train][Test]\n```\n\n**Result:**\n$$\\text{CV Score} = \\frac{1}{K}\\sum_{i=1}^{K} \\text{Score}_i$$\n\n**Standard Error:**\n$$SE = \\frac{\\sigma}{\\sqrt{K}}$$\n\nReport: Mean ± SE\n\n**Typical K values:**\n- K=5: Fast, reasonable\n- K=10: More robust, standard\n- K=n (LOOCV): Maximum data use, expensive\n\n**Pros:**\n✓ Every example used for both train and test\n✓ Reliable performance estimate\n✓ Reduced variance\n\n**Cons:**\n❌ K times slower than single split\n❌ Not for very large datasets\n\n**Stratified K-Fold:**\n\nİmbalanced classes için!\n\n**Problem:** Random K-Fold → some folds may have no minority class!\n\n**Solution:** Preserve class distribution in each fold.\n\n**Example:** 100 samples (90 class 0, 10 class 1)\n- Each fold: 9 class 0, 1 class 1\n- Proportions preserved!\n\n**When to use:**\n- Classification with imbalanced classes\n- Small dataset with rare classes\n- Always safer than random K-Fold\n\n**Leave-One-Out CV (LOOCV):**\n\nK = n (every sample is a fold!)\n\n**Pros:**\n✓ Maximum data for training (n-1)\n✓ Deterministic (no randomness)\n✓ Nearly unbiased estimate\n\n**Cons:**\n❌ Very expensive (n iterations!)\n❌ High variance\n❌ Not for large datasets\n\n**Use:** Small datasets (<100 samples)",

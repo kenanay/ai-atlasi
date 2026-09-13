@@ -147,9 +147,9 @@ export function TopicRightPanel({ topic, level }: TopicRightPanelProps) {
                 return <FunctionPlot key={viz.id} title={viz.title} />;
               } else if (viz.component === 'MatrixVisualizer') {
                 return <MatrixVisualizer key={viz.id} title={viz.title} />;
-              } else if (viz.component === 'PCAVisualizer') {
+              } else if (viz.component === 'PCAVisualizer' || topic.id === 'pca-dimensionality-reduction') {
                 return <PCAVisualizer key={viz.id} title={viz.title} />;
-              } else if (viz.component === 'KMeansAnimator') {
+              } else if (viz.component === 'KMeansAnimator' || topic.id === 'kmeans-clustering') {
                 return <KMeansAnimator key={viz.id} title={viz.title} />;
               }
               

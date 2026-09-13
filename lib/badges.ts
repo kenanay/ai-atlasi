@@ -355,28 +355,23 @@ export function checkAndUnlockBadges(progress: UserProgress[]): UserBadge[] {
     }
   }
 
-  // Category mastery badges
-  const categoryMap: Record<string, BadgeType> = {
-    'linear-algebra': 'category_master_math',
-    'calculus': 'category_master_math', 
-    'math': 'category_master_math',
-    'matematik': 'category_master_math',
-    'supervised-learning': 'category_master_ml',
-    'unsupervised-learning': 'category_master_ml',
-    'classical-ml': 'category_master_ml',
-    'neural-networks': 'category_master_dl',
-    'deep-learning': 'category_master_dl'
+  // Category mastery badges - FIX: Multiple categories should be combined
+  const categoryBadgeMap: Partial<Record<BadgeType, string[]>> = {
+    'category_master_math': ['linear-algebra', 'calculus', 'math', 'matematik'],
+    'category_master_ml': ['supervised-learning', 'unsupervised-learning', 'classical-ml'],
+    'category_master_dl': ['neural-networks', 'deep-learning']
   };
 
-  for (const [category, badgeId] of Object.entries(categoryMap)) {
-    const categoryTopics = allTopics.filter(t => t.category === category);
+  for (const [badgeId, categories] of Object.entries(categoryBadgeMap)) {
+    // Get ALL topics from ALL these categories
+    const categoryTopics = allTopics.filter(t => categories.includes(t.category));
     const completedCategoryTopics = categoryTopics.filter(t =>
       progress.find(p => p.topicId === t.id)?.status === 'completed'
     );
 
-    if (categoryTopics.length > 0 && completedCategoryTopics.length === categoryTopics.length && !unlockedIds.has(badgeId)) {
-      newBadges.push({ badgeId, unlockedAt: now, isNew: true });
-      unlockedIds.add(badgeId);
+    if (categoryTopics.length > 0 && completedCategoryTopics.length === categoryTopics.length && !unlockedIds.has(badgeId as BadgeType)) {
+      newBadges.push({ badgeId: badgeId as BadgeType, unlockedAt: now, isNew: true });
+      unlockedIds.add(badgeId as BadgeType);
     }
   }
 

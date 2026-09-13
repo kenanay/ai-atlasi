@@ -5,8 +5,17 @@
   "level": 1,
   "estimatedTime": 50,
   "description": "Machine learning'in matematiksel temeli: probability distributions, Bayes theorem, statistical inference, hypothesis testing. Expected value, variance, correlation.",
-  "prerequisites": ["linear-algebra"],
-  "tags": ["probability", "statistics", "distributions", "bayes", "inference", "hypothesis-testing"],
+  "prerequisites": [
+    "matrices-tensors"
+  ],
+  "tags": [
+    "probability",
+    "statistics",
+    "distributions",
+    "bayes",
+    "inference",
+    "hypothesis-testing"
+  ],
   "content": {
     "level0_basic": "Bir zar atıyorsun, 6 gelme olasılığı 1/6. Bu probability! İki zar atarsan toplam 7 gelme olasılığı en yüksek (6/36). Statistics data'dan pattern bulur: 100 kişinin boy ortalaması, maaş dağılımı. Machine learning tamamen probability & statistics üzerine kurulu! Model predictions probabilistic, loss functions statistical, Naive Bayes Bayes theorem kullanır. Uncertainty modeling, confidence intervals, A/B testing - hepsi statistics!",
     "level1_beginner": "**Probability Temelleri:**\n\n**Probability:** Bir event'in gerçekleşme olasılığı.\n\n$$P(A) = \\frac{\\text{# favorable outcomes}}{\\text{# total outcomes}}$$\n\n**Örnek:** Zar atmak\n- P(6 gelmesi) = 1/6\n- P(çift sayı) = 3/6 = 1/2\n\n**Axioms:**\n1. $0 \\leq P(A) \\leq 1$\n2. $P(\\Omega) = 1$ (kesin event)\n3. $P(A \\cup B) = P(A) + P(B)$ (disjoint events)\n\n**Conditional Probability:**\n\nA olduğunu biliyorsan B'nin olasılığı:\n\n$$P(B|A) = \\frac{P(A \\cap B)}{P(A)}$$\n\n**Chain Rule:**\n$$P(A \\cap B) = P(B|A) \\cdot P(A)$$\n\n**Independence:**\nA ve B independent ise:\n$$P(A \\cap B) = P(A) \\cdot P(B)$$\n$$P(B|A) = P(B)$$\n\n**Bayes' Theorem:**\n\nEn önemli formül!\n\n$$P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}$$\n\n- $P(A)$: Prior (önceden bilinen)\n- $P(B|A)$: Likelihood (data verdiğinde)\n- $P(A|B)$: Posterior (data'dan sonra)\n- $P(B)$: Evidence (normalization)\n\n**Örnek: Medical Test**\n- Disease prevalence: P(Disease) = 0.01 (1%)\n- Test accuracy: P(Positive|Disease) = 0.99\n- False positive: P(Positive|Healthy) = 0.05\n\nPositive test sonrası gerçekten hasta olma:\n\n$$P(Disease|Positive) = \\frac{P(Positive|Disease) \\cdot P(Disease)}{P(Positive)}$$\n\n$$= \\frac{0.99 \\times 0.01}{0.99 \\times 0.01 + 0.05 \\times 0.99} \\approx 0.166$$\n\nSadece %16.6! Çünkü hastalık nadir.\n\n**Random Variables:**\n\n**Discrete:** Finite values (zar: 1,2,3,4,5,6)\n\n**Probability Mass Function (PMF):**\n$$P(X = x)$$\n\n**Continuous:** Infinite values (boy, ağırlık)\n\n**Probability Density Function (PDF):**\n$$P(a \\leq X \\leq b) = \\int_a^b f(x) dx$$\n\n**Expected Value (Mean):**\n\n$$\\mathbb{E}[X] = \\sum_x x \\cdot P(X=x) \\quad \\text{(discrete)}$$\n\n$$\\mathbb{E}[X] = \\int x \\cdot f(x) dx \\quad \\text{(continuous)}$$\n\n**Variance:**\n\n$$\\text{Var}(X) = \\mathbb{E}[(X - \\mu)^2] = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2$$\n\n**Standard Deviation:**\n$$\\sigma = \\sqrt{\\text{Var}(X)}$$",
