@@ -19,14 +19,18 @@ export default function TopicsPage() {
   const topicsByCategory = getTopicsByCategory();
   const completedTopics = getCompletedTopicIds(allProgress);
   
-  const [selectedCategory, setSelectedCategory] = useState<TopicCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
   const [selectedLevel, setSelectedLevel] = useState<TopicLevel | 'all'>('all');
   const [showLockedTopics, setShowLockedTopics] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Filtreleme
   const filteredTopics = allTopics.filter((topic) => {
-    if (selectedCategory !== 'all' && topic.category !== selectedCategory) return false;
+    // Kategori filtresi - konsolide grup adını kontrol et
+    if (selectedCategory !== 'all') {
+      const groupName = CATEGORY_INFO[topic.category]?.name || topic.category;
+      if (groupName !== selectedCategory) return false;
+    }
     if (selectedLevel !== 'all' && topic.level !== selectedLevel) return false;
     
     const isLocked = !isTopicUnlocked(topic.id, completedTopics);
@@ -79,15 +83,22 @@ export default function TopicsPage() {
                 {/* Category Filter */}
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value as TopicCategory | 'all')}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
                   className="px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 cursor-pointer"
                 >
                   <option value="all">Tüm Kategoriler</option>
-                  {Array.from(topicsByCategory.keys()).map((category) => (
-                    <option key={category} value={category}>
-                      {CATEGORY_INFO[category]?.icon} {CATEGORY_INFO[category]?.name}
-                    </option>
-                  ))}
+                  {Array.from(topicsByCategory.keys()).map((categoryName) => {
+                    // İlk konuyu bul ve ikonunu al
+                    const topics = topicsByCategory.get(categoryName) || [];
+                    const firstTopic = topics[0];
+                    const icon = firstTopic ? (CATEGORY_INFO[firstTopic.category]?.icon || '📚') : '📚';
+                    
+                    return (
+                      <option key={categoryName} value={categoryName}>
+                        {icon} {categoryName}
+                      </option>
+                    );
+                  })}
                 </select>
                 
                 {/* Level Filter */}
