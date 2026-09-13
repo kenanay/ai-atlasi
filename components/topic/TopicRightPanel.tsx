@@ -5,7 +5,7 @@ import { Topic, TopicLevel } from '@/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { CodeEditor } from '@/components/ui/CodeEditor';
-import { VectorPlot, GradientDescentPlot, FunctionPlot, MatrixVisualizer } from '@/components/visualization';
+import { VectorPlot, GradientDescentPlot, FunctionPlot, MatrixVisualizer, PCAVisualizer, KMeansAnimator } from '@/components/visualization';
 import { 
   Code2, 
   ChevronDown, 
@@ -147,6 +147,10 @@ export function TopicRightPanel({ topic, level }: TopicRightPanelProps) {
                 return <FunctionPlot key={viz.id} title={viz.title} />;
               } else if (viz.component === 'MatrixVisualizer') {
                 return <MatrixVisualizer key={viz.id} title={viz.title} />;
+              } else if (viz.component === 'PCAVisualizer') {
+                return <PCAVisualizer key={viz.id} title={viz.title} />;
+              } else if (viz.component === 'KMeansAnimator') {
+                return <KMeansAnimator key={viz.id} title={viz.title} />;
               }
               
               // Varsayılan placeholder

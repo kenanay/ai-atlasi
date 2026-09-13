@@ -3,7 +3,7 @@
   "title": "t-SNE & UMAP - Manifold Learning (Boyut Azaltma)",
   "category": "unsupervised-learning",
   "description": "Yüksek boyutlu veriyi 2D/3D'de görselleştirmenin modern standartları",
-  "prerequisites": ["pca", "k-means-clustering"],
+  "prerequisites": ["pca-dimensionality-reduction", "kmeans-clustering"],
   "difficulty": "advanced",
   "level": 3,
   "estimatedTime": 40,

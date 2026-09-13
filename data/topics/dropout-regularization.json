@@ -5,7 +5,7 @@
   "level": 2,
   "estimatedTime": 40,
   "description": "Neural network'lerde overfitting'i önleyen güçlü regularization tekniği. Training'de random olarak neuron'ları devre dışı bırakır, ensemble learning effect yaratır.",
-  "prerequisites": ["neural-networks", "backpropagation", "overfitting"],
+  "prerequisites": ["neural-networks", "backpropagation"],
   "tags": ["regularization", "dropout", "overfitting", "deep-learning", "ensemble"],
   "content": {
     "level0_basic": "Bir sınava çalışırken hep aynı arkadaşından kopya çekersen, o arkadaş sınava gelmezse ne yaparsın? Hiçbir şey bilemezsin! Neural network'ler de aynı probleme sahip: bazı neuron'lar çok güçlü olur, diğerleri onlara 'güvenir', kendi öğrenmez (co-adaptation). Dropout bu problemi çözer: training sırasında random olarak neuron'ları kapat (%50 vs). Her neuron artık tek başına öğrenmek zorunda, kimseye güvenemez! Test'te hepsini aç. Sonuç: çok daha robust model, overfitting azalır!",

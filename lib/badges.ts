@@ -357,13 +357,19 @@ export function checkAndUnlockBadges(progress: UserProgress[]): UserBadge[] {
 
   // Category mastery badges
   const categoryMap: Record<string, BadgeType> = {
+    'linear-algebra': 'category_master_math',
+    'calculus': 'category_master_math', 
+    'math': 'category_master_math',
     'matematik': 'category_master_math',
-    'machine learning': 'category_master_ml',
-    'deep learning': 'category_master_dl'
+    'supervised-learning': 'category_master_ml',
+    'unsupervised-learning': 'category_master_ml',
+    'classical-ml': 'category_master_ml',
+    'neural-networks': 'category_master_dl',
+    'deep-learning': 'category_master_dl'
   };
 
   for (const [category, badgeId] of Object.entries(categoryMap)) {
-    const categoryTopics = allTopics.filter(t => t.category.toLowerCase() === category);
+    const categoryTopics = allTopics.filter(t => t.category === category);
     const completedCategoryTopics = categoryTopics.filter(t =>
       progress.find(p => p.topicId === t.id)?.status === 'completed'
     );

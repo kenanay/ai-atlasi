@@ -5,7 +5,7 @@
   "level": 3,
   "estimatedTime": 50,
   "description": "Reinforcement learning'in temel algoritması Q-Learning ve deep learning ile kombinasyonu DQN. Agent'lar environment'ta optimal policy öğrenir, Atari games'te human-level performance.",
-  "prerequisites": ["neural-networks", "optimization"],
+  "prerequisites": ["neural-networks", "gradient-descent"],
   "tags": ["reinforcement-learning", "q-learning", "dqn", "deep-q-networks", "atari", "bellman-equation"],
   "content": {
     "level0_basic": "Bir oyun oynamayı düşün: Her adımda bir aksiyon seç (yukarı, aşağı, sol, sağ), bir sonuç gör (puan, yenilgi). Nasıl öğrenirsin? Deneme-yanılma! Q-Learning tam bunu yapar: her (state, action) çifti için 'quality' (Q-value) öğrenir. Yüksek Q = iyi aksiyon. Zamanla optimal strateji (policy) öğrenir. DQN (Deep Q-Network) Q-table yerine neural network kullanır → milyonlarca state handle edebilir! Atari Breakout, Space Invaders gibi oyunları human-level oynayabilir!",

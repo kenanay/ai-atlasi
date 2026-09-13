@@ -3,7 +3,7 @@
   "title": "AI Agents & Tool Calling",
   "category": "llm",
   "description": "Otonom karar alan ve tool'lar kullanabilen AI Agent sistemleri",
-  "prerequisites": ["transformers", "prompt-engineering"],
+  "prerequisites": ["transformers-attention", "prompt-engineering"],
   "difficulty": "advanced",
   "level": 3,
   "estimatedTime": 50,

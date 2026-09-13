@@ -5,7 +5,7 @@
   "level": 3,
   "estimatedTime": 50,
   "description": "Variable-length input'u variable-length output'a map eden architecture. Machine translation, text summarization, chatbots için temel. Encoder-Decoder + Attention mechanism.",
-  "prerequisites": ["rnn", "lstm", "word-embeddings", "attention"],
+  "prerequisites": ["recurrent-neural-networks", "lstm-gru-networks", "word-embeddings", "transformers-attention"],
   "tags": ["seq2seq", "encoder-decoder", "machine-translation", "attention", "rnn", "lstm"],
   "content": {
     "level0_basic": "Bir cümleyi başka bir dile çevirmek istersen ne yaparsın? 'Hello' → 'Merhaba', 'How are you?' → 'Nasılsın?'. Giriş ve çıkış farklı uzunlukta! Traditional models fixed-size input/output bekler. Seq2Seq bunu çözer: Encoder input'u okur, anlam context vector'üne kodlar. Decoder bu context'ten output generate eder, word by word. İngilizce → Türkçe, soru → cevap, text → summary - hepsi seq2seq!",

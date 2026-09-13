@@ -3,7 +3,7 @@
   "title": "LoRA & QLoRA (Parameter-Efficient Fine-Tuning)",
   "category": "llm",
   "description": "LLM'leri tek GPU'da fine-tune etmenin modern standardı - Low-Rank Adaptation",
-  "prerequisites": ["svd", "large-language-models-basics", "transformers"],
+  "prerequisites": ["svd", "large-language-models-basics", "transformers-attention"],
   "difficulty": "advanced",
   "level": 3,
   "estimatedTime": 45,

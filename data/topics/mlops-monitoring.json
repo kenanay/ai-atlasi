@@ -5,7 +5,7 @@
   "level": 1,
   "estimatedTime": 40,
   "description": "Production ML model monitoring! Data drift detection, model performance degradation, prediction quality tracking. Alerting systems, retraining triggers, observability.",
-  "prerequisites": ["model-evaluation", "deployment"],
+  "prerequisites": ["evaluation-metrics", "model-deployment-production"],
   "tags": ["mlops", "monitoring", "drift", "production", "observability", "alerts"],
   "content": {
     "level0_basic": "Model deploy ettikten sonra monitoring critical! Real-world data değişir (data drift), model performance düşer. Monitor: Prediction accuracy, latency, data distribution shifts. Alerts set et: accuracy drop → retrain! Metrics: precision/recall, feature distributions, prediction confidence. Continuous monitoring → production ML success!",

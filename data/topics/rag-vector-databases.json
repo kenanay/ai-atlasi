@@ -3,7 +3,7 @@
   "title": "RAG & Vektör Veritabanları",
   "category": "llm",
   "description": "Retrieval-Augmented Generation - Modern LLM uygulamalarının #1 pattern'i",
-  "prerequisites": ["word-embeddings", "transformers"],
+  "prerequisites": ["word-embeddings", "transformers-attention"],
   "difficulty": "intermediate",
   "level": 2,
   "estimatedTime": 40,
