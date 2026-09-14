@@ -4,262 +4,346 @@
   "category": "neural-networks",
   "level": 4,
   "estimatedTime": 80,
-  "description": "Attention Mechanisms: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Attention mechanisms: Neural networks'te önemli bilgiye focus. Self-attention, multi-head attention, cross-attention. Transformers'ın temeli (BERT, GPT, Vision Transformers). Seq2seq, NLP, computer vision.",
   "content": {
-    "level0_basic": "Attention Mechanisms basics: Core concepts explained simply.",
-    "level1_beginner": "Attention Mechanisms fundamentals with examples and code snippets.",
-    "level2_application": "Practical Attention Mechanisms implementation with real-world applications.",
-    "level3_advanced": "Advanced Attention Mechanisms techniques and optimizations.",
-    "level4_expert": "Expert-level Attention Mechanisms architectures and research directions."
+    "level0_basic": "Attention Mechanism, model'in input'un hangi kısmına focus edeceğini dinamik olarak öğrenmesini sağlar. RNN/LSTM'de problem: Uzun sequence'lerde information bottleneck (tüm bilgi son hidden state'te). Attention çözümü: Her time step'e doğrudan erişim, weighted sum (önemli parts'a daha fazla weight). Örnek: Machine translation 'The cat sat on the mat' → 'Le chat'. 'cat' translate ederken source'ta 'cat'e attention verir. Query-Key-Value paradigm: Query (ne arıyorum?), Key (ne var?), Value (içerik). Attention score = similarity(Query, Key), output = weighted sum of Values.",
+    "level1_beginner": "Attention türleri: (1) **Additive Attention (Bahdanau)**: score = v^T·tanh(W_q·Q + W_k·K). Neural network ile similarity. (2) **Multiplicative Attention (Luong)**: score = Q·K^T. Dot product, daha hızlı. (3) **Scaled Dot-Product**: score = (Q·K^T)/√d_k. Scale factor (stability). (4) **Self-Attention**: Query=Key=Value=input. Sequence içi relationships (her token diğerlerine attend eder). (5) **Multi-Head Attention**: Parallel attention'lar (8-16 heads). Farklı representation subspaces. (6) **Cross-Attention**: Query≠Key/Value. Encoder-decoder (decoder encoder'a attend eder). Softmax → attention weights (sum=1). Output = Σ(weight_i · value_i). Transformers: Self-attention + position encoding + feedforward → state-of-the-art NLP.",
+    "level2_application": "Pratik uygulamalar: (1) **Machine Translation**: Seq2seq + attention. Encoder (source) → decoder (target), cross-attention (decoder encoder'a bakar). BLEU score improvement %10-20. (2) **Text Summarization**: Self-attention (long document), cross-attention (summary → source). BERT, T5. (3) **Question Answering**: Query (question), Key/Value (context). Cross-attention, answer span extraction. (4) **Image Captioning**: Vision encoder (CNN/ViT) → text decoder. Cross-attention (decoder image features'a attend). (5) **Vision Transformers (ViT)**: Image patches → self-attention. No convolution, pure attention. ImageNet SOTA. (6) **Speech Recognition**: Audio frames → self-attention → text. Wav2Vec 2.0, Whisper. (7) **Recommendation**: User-item interaction, self-attention (sequence modeling). Next item prediction. Framework'ler: PyTorch (nn.MultiheadAttention), Transformers (Hugging Face), JAX (Flax).",
+    "level3_advanced": "İleri seviye: (1) **Positional Encoding**: Self-attention position-agnostic. Solution: Sinusoidal encoding, learned embeddings. PE(pos, 2i) = sin(pos/10000^(2i/d)), PE(pos, 2i+1) = cos. Relative position (Transformer-XL, T5). (2) **Masking**: (a) Padding mask (variable length). (b) Causal mask (autoregressive, GPT-style, no future leakage). (c) Attention mask (custom patterns). (3) **Efficient Attention**: (a) Sparse attention (Sparse Transformer, local+strided). (b) Linformer (low-rank projection, O(N)). (c) Performer (kernel approximation, O(N)). (d) Flash Attention (IO-aware, GPU memory efficient). (4) **Relative Position**: T5, Transformer-XL. Bias term: score += relative_position_bias(i-j). Better extrapolation (longer sequences). (5) **Rotary Position Embedding (RoPE)**: LLaMA, GPT-NeoX. Rotation matrix, multiplicative. Length extrapolation. (6) **Cross-Attention Variants**: (a) Co-attention (both directions). (b) Bidirectional cross-attention. (c) Memory-augmented (external memory). (7) **Layer Normalization**: Pre-norm vs post-norm. Pre-norm (GPT-3, stability), post-norm (original Transformer).",
+    "level4_expert": "Expert seviyede, architecture variants, optimization ve research frontiers önemlidir. (1) **Architecture Variants**: (a) Encoder-only (BERT, RoBERTa) - bidirectional, classification/understanding. (b) Decoder-only (GPT, LLaMA) - autoregressive, generation. (c) Encoder-decoder (T5, BART) - seq2seq. (2) **Optimization**: (a) Flash Attention (IO-aware, 2-4x faster, memory efficient). (b) Multi-query attention (shared Key/Value, faster inference). (c) Grouped-query attention (LLaMA 2, middle ground). (d) KV cache (inference, cache Key/Value, avoid recomputation). (3) **Long Context**: (a) Sparse attention (local + global). (b) Sliding window (Longformer, 4K-16K tokens). (c) Recurrence (Transformer-XL, segment-level). (d) Compression (Compressive Transformer, memory compression). (e) Retrieval-augmented (RAG, external memory). (4) **Vision**: (a) ViT (patch-based, 16x16 patches). (b) Swin Transformer (hierarchical, shifted windows). (c) DETR (object detection, set prediction). (d) Mask2Former (segmentation). (5) **Cross-Modal**: (a) CLIP (image-text, contrastive). (b) Flamingo (vision-language, few-shot). (c) Perceiver (arbitrary modalities, cross-attention to latents). (6) **Training Stability**: (a) Warm-up (learning rate). (b) Gradient clipping. (c) Pre-norm (layer norm before attention). (d) Weight initialization (Xavier, He). Research: **Mixture of Experts** (MoE, conditional computation), **State Space Models** (Mamba, sub-quadratic), **Hyena** (convolution-based, no attention), **RetNet** (retention, linear complexity)."
   },
-  "whatIsIt": "Attention Mechanisms: Technical definition and core concepts.",
-  "whyNeeded": "Why Attention Mechanisms matters: Applications and use cases.",
-  "realWorldAnalogy": "Attention Mechanisms explained through real-world analogy.",
+  "whatIsIt": "Attention Mechanism: Weighted sum of values, weights = similarity(query, keys). Matematiksel: Attention(Q,K,V) = softmax((Q·K^T)/√d_k)·V. Query (d_q), Key (d_k), Value (d_v). Score = Q·K^T (dot product), scale by √d_k (stability), softmax (normalize), multiply by V. Multi-head: Parallel attention (h heads), concat, project. Self-attention: Q=K=V=input. Cross-attention: Q≠K=V. Complexity: O(N²·D) (N=sequence length, D=dimension). Memory: O(N²) attention matrix.",
+  "whyNeeded": "Attention kritik çünkü: (1) **Long-Range Dependencies**: RNN/LSTM'de vanishing gradient, information bottleneck. Attention: Direct connection, path length O(1). (2) **Parallelization**: RNN sequential (t_i depends t_{i-1}). Attention: Paralel computation (all positions simultaneously). Training 10-100x faster. (3) **Interpretability**: Attention weights görselleştirilebilir. Model hangi input'a focus ediyor? Explainability. (4) **SOTA Performance**: Transformers NLP'de dominant (BERT, GPT-4, T5). Vision (ViT, Swin). Speech (Whisper). (5) **Flexibility**: Seq2seq, classification, generation, multi-modal. Architecture versatile. (6) **Transfer Learning**: Pre-training (BERT/GPT) → fine-tuning. Few-shot, zero-shot (GPT-3/4). Foundation models. (7) **Scale**: Attention scales with model size. GPT-4 (1.7T parameters), LLaMA (70B). Emergent abilities (reasoning, math).",
+  "realWorldAnalogy": "Attention'ı bir konferansta not almaya benzetebiliriz. **Durum**: 3 saatlik konferans (long sequence), her şeyi ezberleyemezsin (information bottleneck). **RNN yaklaşımı**: Her cümleyi dinle, önceki not'a ekle → son not tüm bilgiyi içermeli (impossible, 3 saat sıkıştır!). **Attention yaklaşımı**: (1) **Query**: 'ML optimization nedir?' diye soruyorsun (ne arıyorum?). (2) **Keys**: Konferans tüm slides (available information). (3) **Similarity**: Her slide'a bak, query ile ilgili mi? 'Optimization' keyword içeren slides → high score. (4) **Attention Weights**: İlgili slides'lara %80 attention, irrelevant'lara %20. (5) **Values**: İlgili slides'ın içeriğini weighted sum → cevap. **Multi-Head**: 8 farklı kişi 8 farklı soru soruyor (farklı perspectives). Bir kişi 'optimization', diğeri 'deep learning', diğeri 'applications'. Her head farklı aspect'e focus → birleştir → comprehensive understanding. **Self-Attention**: Slides arası relationships (slide 5 slide 2'ye refer eder). **Cross-Attention**: Soru-cevap (question → slides).",
   "mathematics": {
     "formulas": [
-      "\\text{Attention Mechanisms formula}",
-      "\\text{Key equation}"
+      "\\text{Scaled Dot-Product Attention}: \\quad \\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{Q K^T}{\\sqrt{d_k}}\\right) V",
+      "\\text{Attention Score}: \\quad s_{ij} = \\frac{q_i \\cdot k_j}{\\sqrt{d_k}} \\quad \\text{(scaled dot product)}",
+      "\\text{Attention Weights}: \\quad \\alpha_{ij} = \\frac{\\exp(s_{ij})}{\\sum_{k=1}^N \\exp(s_{ik})} \\quad \\text{(softmax normalization)}",
+      "\\text{Output}: \\quad o_i = \\sum_{j=1}^N \\alpha_{ij} v_j \\quad \\text{(weighted sum of values)}",
+      "\\text{Multi-Head Attention}: \\quad \\text{MultiHead}(Q,K,V) = \\text{Concat}(\\text{head}_1, ..., \\text{head}_h) W^O \\quad \\text{where } \\text{head}_i = \\text{Attention}(Q W_i^Q, K W_i^K, V W_i^V)",
+      "\\text{Positional Encoding}: \\quad PE_{(pos, 2i)} = \\sin\\left(\\frac{pos}{10000^{2i/d}}\\right), \\quad PE_{(pos, 2i+1)} = \\cos\\left(\\frac{pos}{10000^{2i/d}}\\right)",
+      "\\text{Additive Attention (Bahdanau)}: \\quad s_{ij} = v^T \\tanh(W_q q_i + W_k k_j) \\quad \\text{(neural network scoring)}",
+      "\\text{Complexity}: \\quad \\mathcal{O}(N^2 \\cdot D) \\quad \\text{(N=seq length, D=dimension)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Input Preparation**: Input sequence X ∈ R^(N×D). Embedding layer (tokens → vectors). Add positional encoding (position information). Result: X' = Embedding(X) + PE.",
+      "2. **Linear Projections**: Query, Key, Value projections. Q = X'·W_Q (N×d_q), K = X'·W_K (N×d_k), V = X'·W_V (N×d_v). Typically d_q = d_k = d_v = d_model/h (h=num heads).",
+      "3. **Compute Scores**: Attention scores = Q·K^T (N×N matrix). Each element s_ij = q_i·k_j (dot product, measures similarity). Scale: scores / √d_k (prevent large values, softmax stability).",
+      "4. **Apply Mask (optional)**: (a) Padding mask: Mask padding tokens (set score = -inf → softmax = 0). (b) Causal mask: Autoregressive (GPT), mask future positions (lower triangular). (c) Custom mask: Application-specific.",
+      "5. **Softmax**: Attention weights α = softmax(scores). Each row sums to 1 (probability distribution). α_ij = exp(s_ij) / Σ_k exp(s_ik). High score → high weight.",
+      "6. **Weighted Sum**: Output O = α·V (N×d_v). Each output vector o_i = Σ_j α_ij·v_j (weighted average of values). Attended representation.",
+      "7. **Multi-Head (if applicable)**: Repeat steps 2-6 for h heads (parallel). Each head: different W_Q, W_K, W_V. Concat outputs (N×(h·d_v)), project: O_final = Concat(head_1,...,head_h)·W_O.",
+      "8. **Residual Connection**: Output + input (X' + O_final). Skip connection, gradient flow. Prevents vanishing gradients in deep networks.",
+      "9. **Layer Normalization**: LayerNorm(X' + O_final). Normalize across feature dimension (mean=0, std=1). Stabilizes training. Pre-norm (modern) vs post-norm (original).",
+      "10. **Feedforward Network**: MLP(LayerNorm(X' + O_final)). Two linear layers + activation (ReLU, GELU). Expand (4x), compress. Residual + LayerNorm. Complete Transformer block."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: Attention: O(N²·D) (N=seq length, D=model dimension). Q·K^T: O(N²·D), softmax: O(N²), α·V: O(N²·D). Multi-head (h heads): O(h·N²·D) = O(N²·D) (typically D_total = h·d_head). **Uzay**: Attention matrix: O(N²) (dominant for long sequences). KV cache (inference): O(N·D) per layer. Model parameters: O(D²) (projection matrices). **Efficient Variants**: Sparse attention: O(N·√N) or O(N·log N), Linformer: O(N·D), Performer/Flash: O(N·D). **Parallelization**: Fully parallel (all positions simultaneously), unlike RNN O(N) sequential. Training: 10-100x faster. **Inference**: O(N²·D) per token (autoregressive). KV cache: avoid recomputation. Batch processing: throughput ↑."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "neural-networks",
+    "recurrent-neural-networks",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "transformers-attention",
+    "bert-language-models",
+    "vision-transformers"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "bert-language-models",
+    "neural-networks"
+  ],
   "tags": [
-    "attention"
+    "attention",
+    "self-attention",
+    "multi-head-attention",
+    "transformers",
+    "nlp",
+    "query-key-value"
   ],
   "codeExamples": [
     {
-      "title": "Basic Attention Mechanisms",
+      "title": "Scaled Dot-Product Attention (NumPy)",
       "language": "python",
-      "code": "# Attention Mechanisms example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Attention Mechanisms code"
-    },
-    {
-      "title": "Attention Mechanisms Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import numpy as np\n\ndef scaled_dot_product_attention(Q, K, V, mask=None):\n    \"\"\"\n    Q: Query (batch, seq_len, d_k)\n    K: Key (batch, seq_len, d_k)\n    V: Value (batch, seq_len, d_v)\n    mask: Optional mask (batch, seq_len, seq_len)\n    \"\"\"\n    d_k = Q.shape[-1]\n    \n    # Compute attention scores\n    scores = np.matmul(Q, K.transpose(0, 2, 1)) / np.sqrt(d_k)\n    print(f'Scores shape: {scores.shape}')\n    print(f'Scores (before softmax):\\n{scores[0, 0, :5]}')  # First 5\n    \n    # Apply mask (if provided)\n    if mask is not None:\n        scores = np.where(mask == 0, -1e9, scores)\n    \n    # Softmax\n    attention_weights = np.exp(scores - np.max(scores, axis=-1, keepdims=True))\n    attention_weights = attention_weights / np.sum(attention_weights, axis=-1, keepdims=True)\n    \n    print(f'\\nAttention weights (after softmax):\\n{attention_weights[0, 0, :5]}')\n    print(f'Sum: {attention_weights[0, 0].sum():.4f} (should be 1.0)')\n    \n    # Weighted sum\n    output = np.matmul(attention_weights, V)\n    \n    return output, attention_weights\n\n# Example\nbatch_size = 1\nseq_len = 8\nd_k = 64\nd_v = 64\n\nnp.random.seed(42)\nQ = np.random.randn(batch_size, seq_len, d_k)\nK = np.random.randn(batch_size, seq_len, d_k)\nV = np.random.randn(batch_size, seq_len, d_v)\n\nprint('=== Scaled Dot-Product Attention ===')\nprint(f'Input shapes: Q={Q.shape}, K={K.shape}, V={V.shape}')\n\noutput, weights = scaled_dot_product_attention(Q, K, V)\n\nprint(f'\\nOutput shape: {output.shape}')\nprint('\\nAttention mechanism: weighted sum of Values based on Query-Key similarity')",
       "level": 2,
-      "explanation": "Attention Mechanisms Application code"
+      "explanation": "Scaled dot-product attention: Core mechanism. Q·K^T (similarity), scale by √d_k, softmax (weights), multiply by V. Numpy implementation."
     },
     {
-      "title": "Advanced Attention Mechanisms",
+      "title": "Multi-Head Attention (PyTorch)",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass MultiHeadAttention(nn.Module):\n    def __init__(self, d_model=512, num_heads=8):\n        super().__init__()\n        assert d_model % num_heads == 0, 'd_model must be divisible by num_heads'\n        \n        self.d_model = d_model\n        self.num_heads = num_heads\n        self.d_k = d_model // num_heads\n        \n        # Linear projections\n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        self.W_o = nn.Linear(d_model, d_model)\n    \n    def split_heads(self, x, batch_size):\n        \"\"\"Split last dimension into (num_heads, d_k)\"\"\"\n        x = x.view(batch_size, -1, self.num_heads, self.d_k)\n        return x.transpose(1, 2)  # (batch, num_heads, seq_len, d_k)\n    \n    def forward(self, Q, K, V, mask=None):\n        batch_size = Q.size(0)\n        \n        # Linear projections\n        Q = self.W_q(Q)  # (batch, seq_len, d_model)\n        K = self.W_k(K)\n        V = self.W_v(V)\n        \n        # Split into multiple heads\n        Q = self.split_heads(Q, batch_size)  # (batch, num_heads, seq_len, d_k)\n        K = self.split_heads(K, batch_size)\n        V = self.split_heads(V, batch_size)\n        \n        # Scaled dot-product attention\n        scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(self.d_k, dtype=torch.float32))\n        \n        if mask is not None:\n            scores = scores.masked_fill(mask == 0, -1e9)\n        \n        attention_weights = F.softmax(scores, dim=-1)\n        output = torch.matmul(attention_weights, V)  # (batch, num_heads, seq_len, d_k)\n        \n        # Concat heads\n        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)\n        \n        # Final projection\n        output = self.W_o(output)\n        \n        return output, attention_weights\n\n# Example\nd_model = 512\nnum_heads = 8\nseq_len = 10\nbatch_size = 2\n\nX = torch.randn(batch_size, seq_len, d_model)\n\nmha = MultiHeadAttention(d_model, num_heads)\noutput, weights = mha(X, X, X)  # Self-attention\n\nprint(f'Input shape: {X.shape}')\nprint(f'Output shape: {output.shape}')\nprint(f'Attention weights shape: {weights.shape}')  # (batch, num_heads, seq_len, seq_len)\nprint(f'\\nNum parameters: {sum(p.numel() for p in mha.parameters()):,}')\nprint('\\nMulti-head attention: 8 parallel attention mechanisms, different perspectives')",
       "level": 3,
-      "explanation": "Advanced Attention Mechanisms code"
+      "explanation": "Multi-head attention: h parallel attentions (8 heads typical). Farklı representation subspaces. Concat + project. Transformers'ın core component."
     },
     {
-      "title": "Attention Mechanisms Optimization",
+      "title": "Self-Attention with Masking",
       "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
+      "code": "import torch\nimport torch.nn.functional as F\nimport matplotlib.pyplot as plt\nimport numpy as np\n\ndef self_attention(X, mask_type='none'):\n    \"\"\"\n    X: Input (batch, seq_len, d_model)\n    mask_type: 'none', 'causal', or 'padding'\n    \"\"\"\n    batch_size, seq_len, d_model = X.shape\n    \n    # Simple projection (for demo, use X directly as Q, K, V)\n    Q = K = V = X\n    \n    # Scores\n    d_k = d_model\n    scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))\n    \n    # Apply mask\n    if mask_type == 'causal':\n        # Autoregressive: no future information\n        mask = torch.tril(torch.ones(seq_len, seq_len))\n        scores = scores.masked_fill(mask == 0, -1e9)\n        print('Causal mask applied (lower triangular)')\n    elif mask_type == 'padding':\n        # Padding mask (last 3 positions are padding)\n        padding_mask = torch.ones(batch_size, seq_len)\n        padding_mask[:, -3:] = 0  # Last 3 tokens are padding\n        padding_mask = padding_mask.unsqueeze(1).unsqueeze(2)  # (batch, 1, 1, seq_len)\n        scores = scores.masked_fill(padding_mask == 0, -1e9)\n        print('Padding mask applied (last 3 positions)')\n    \n    # Softmax\n    attention_weights = F.softmax(scores, dim=-1)\n    \n    # Output\n    output = torch.matmul(attention_weights, V)\n    \n    return output, attention_weights\n\n# Example\ntorch.manual_seed(42)\nseq_len = 8\nd_model = 64\nX = torch.randn(1, seq_len, d_model)\n\nprint('=== Self-Attention with Different Masks ===\\n')\n\n# No mask\noutput_none, weights_none = self_attention(X, mask_type='none')\nprint(f'No mask - Attention weights shape: {weights_none.shape}')\n\n# Causal mask (GPT-style)\noutput_causal, weights_causal = self_attention(X, mask_type='causal')\n\n# Padding mask\noutput_padding, weights_padding = self_attention(X, mask_type='padding')\n\n# Visualize\nfig, axes = plt.subplots(1, 3, figsize=(15, 4))\n\nfor ax, weights, title in zip(axes, \n                               [weights_none[0,0], weights_causal[0,0], weights_padding[0,0]],\n                               ['No Mask', 'Causal Mask', 'Padding Mask']):\n    im = ax.imshow(weights.detach().numpy(), cmap='viridis')\n    ax.set_title(title)\n    ax.set_xlabel('Key position')\n    ax.set_ylabel('Query position')\n    plt.colorbar(im, ax=ax)\n\nplt.tight_layout()\nplt.show()\n\nprint('\\nCausal mask: Autoregressive (GPT), no future info')\nprint('Padding mask: Ignore padding tokens')",
       "level": 3,
-      "explanation": "Attention Mechanisms Optimization code"
+      "explanation": "Masking: Causal (autoregressive, GPT), Padding (variable length), Custom. Mask score → -inf, softmax → 0. Critical for different tasks."
     },
     {
-      "title": "Attention Mechanisms Visualization",
+      "title": "Positional Encoding",
       "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import torch\nimport numpy as np\nimport matplotlib.pyplot as plt\n\ndef positional_encoding(seq_len, d_model):\n    \"\"\"\n    Sinusoidal positional encoding\n    PE(pos, 2i) = sin(pos / 10000^(2i/d_model))\n    PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))\n    \"\"\"\n    position = torch.arange(seq_len).unsqueeze(1)  # (seq_len, 1)\n    div_term = torch.exp(torch.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))\n    \n    pe = torch.zeros(seq_len, d_model)\n    pe[:, 0::2] = torch.sin(position * div_term)\n    pe[:, 1::2] = torch.cos(position * div_term)\n    \n    return pe\n\n# Generate\nseq_len = 100\nd_model = 128\n\npe = positional_encoding(seq_len, d_model)\n\nprint(f'Positional encoding shape: {pe.shape}')\nprint(f'First position encoding (first 10 dims):\\n{pe[0, :10]}')\nprint(f'\\nSecond position encoding (first 10 dims):\\n{pe[1, :10]}')\n\n# Visualize\nplt.figure(figsize=(12, 6))\n\nplt.subplot(1, 2, 1)\nplt.imshow(pe.T.numpy(), aspect='auto', cmap='coolwarm')\nplt.xlabel('Position')\nplt.ylabel('Dimension')\nplt.title('Positional Encoding Heatmap')\nplt.colorbar()\n\nplt.subplot(1, 2, 2)\nfor i in range(0, d_model, 16):\n    plt.plot(pe[:, i].numpy(), label=f'dim {i}')\nplt.xlabel('Position')\nplt.ylabel('Value')\nplt.title('PE Values Over Position')\nplt.legend()\nplt.grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()\n\nprint('\\nPositional encoding: Inject position information')\nprint('Sinusoidal: Different frequencies, learns relative positions')\nprint('Usage: X_input = Embedding(tokens) + PE')",
       "level": 2,
-      "explanation": "Attention Mechanisms Visualization code"
+      "explanation": "Positional Encoding: Self-attention position-agnostic. Sinusoidal encoding (sin/cos, different frequencies). Add to embeddings. Relative position learning."
     },
     {
-      "title": "Production Attention Mechanisms",
+      "title": "Attention Visualization",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import torch\nimport torch.nn as nn\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Simple attention model\nclass SimpleAttention(nn.Module):\n    def __init__(self, d_model=64):\n        super().__init__()\n        self.W_q = nn.Linear(d_model, d_model)\n        self.W_k = nn.Linear(d_model, d_model)\n        self.W_v = nn.Linear(d_model, d_model)\n        self.d_k = d_model\n    \n    def forward(self, X):\n        Q = self.W_q(X)\n        K = self.W_k(X)\n        V = self.W_v(X)\n        \n        scores = torch.matmul(Q, K.transpose(-2, -1)) / np.sqrt(self.d_k)\n        attention_weights = torch.softmax(scores, dim=-1)\n        output = torch.matmul(attention_weights, V)\n        \n        return output, attention_weights\n\n# Example sentence\nsentence = ['The', 'cat', 'sat', 'on', 'the', 'mat']\nseq_len = len(sentence)\nd_model = 64\n\n# Random embeddings (in practice: learned embeddings)\ntorch.manual_seed(42)\nX = torch.randn(1, seq_len, d_model)\n\n# Model\nmodel = SimpleAttention(d_model)\noutput, attention_weights = model(X)\n\nprint(f'Sentence: {\" \".join(sentence)}')\nprint(f'\\nAttention weights shape: {attention_weights.shape}')\n\n# Visualize\nweights = attention_weights[0].detach().numpy()\n\nplt.figure(figsize=(8, 6))\nplt.imshow(weights, cmap='Blues')\nplt.xticks(range(seq_len), sentence)\nplt.yticks(range(seq_len), sentence)\nplt.xlabel('Key (attending to)')\nplt.ylabel('Query (from)')\nplt.title('Self-Attention Weights Visualization')\nplt.colorbar(label='Attention Weight')\n\n# Add text annotations\nfor i in range(seq_len):\n    for j in range(seq_len):\n        plt.text(j, i, f'{weights[i, j]:.2f}', \n                ha='center', va='center', \n                color='white' if weights[i, j] > 0.5 else 'black',\n                fontsize=8)\n\nplt.tight_layout()\nplt.show()\n\nprint('\\nInterpretation: Each row shows what that token attends to')\nprint('Example: \"cat\" might attend strongly to \"The\" and \"sat\"')\nprint('Diagonal: Self-attention (token to itself)')",
+      "level": 2,
+      "explanation": "Attention Visualization: Heatmap (Query × Key). Interpretability: Model hangi token'lara attend ediyor? Explainability, debugging için kritik."
+    },
+    {
+      "title": "Efficient Attention: Flash Attention Concept",
+      "language": "python",
+      "code": "import torch\nimport time\n\ndef standard_attention(Q, K, V):\n    \"\"\"Standard attention: materializes N x N attention matrix\"\"\"\n    d_k = Q.size(-1)\n    scores = torch.matmul(Q, K.transpose(-2, -1)) / (d_k ** 0.5)\n    attention = torch.softmax(scores, dim=-1)\n    output = torch.matmul(attention, V)\n    return output\n\ndef flash_attention_concept(Q, K, V, block_size=256):\n    \"\"\"\n    Flash Attention concept: Block-wise computation\n    Reduces memory from O(N^2) to O(N)\n    In practice: use official FlashAttention implementation\n    \"\"\"\n    batch_size, seq_len, d_k = Q.shape\n    output = torch.zeros_like(Q)\n    \n    # Process in blocks (simplified, not actual Flash Attention)\n    num_blocks = (seq_len + block_size - 1) // block_size\n    \n    for i in range(num_blocks):\n        start_i = i * block_size\n        end_i = min((i + 1) * block_size, seq_len)\n        Q_block = Q[:, start_i:end_i, :]\n        \n        for j in range(num_blocks):\n            start_j = j * block_size\n            end_j = min((j + 1) * block_size, seq_len)\n            K_block = K[:, start_j:end_j, :]\n            V_block = V[:, start_j:end_j, :]\n            \n            # Block attention\n            scores = torch.matmul(Q_block, K_block.transpose(-2, -1)) / (d_k ** 0.5)\n            attention = torch.softmax(scores, dim=-1)\n            output[:, start_i:end_i, :] += torch.matmul(attention, V_block)\n    \n    return output\n\n# Benchmark\nseq_len = 1024\nd_model = 64\nbatch_size = 1\n\nQ = torch.randn(batch_size, seq_len, d_model)\nK = torch.randn(batch_size, seq_len, d_model)\nV = torch.randn(batch_size, seq_len, d_model)\n\nprint(f'Sequence length: {seq_len}, d_model: {d_model}')\nprint(f'Attention matrix size: {seq_len}x{seq_len} = {seq_len**2:,} elements')\nprint(f'Memory: {seq_len**2 * 4 / 1e6:.2f} MB (FP32)\\n')\n\n# Standard attention\nstart = time.time()\noutput_std = standard_attention(Q, K, V)\nstd_time = time.time() - start\n\n# Flash attention (concept)\nstart = time.time()\noutput_flash = flash_attention_concept(Q, K, V, block_size=256)\nflash_time = time.time() - start\n\nprint(f'Standard attention: {std_time*1000:.2f} ms')\nprint(f'Flash attention (concept): {flash_time*1000:.2f} ms')\n\nprint('\\n=== Flash Attention Benefits ===')\nprint('1. Memory: O(N^2) → O(N) (block-wise)')\nprint('2. Speed: 2-4x faster (IO-aware, GPU memory hierarchy)')\nprint('3. Exact: Same output as standard attention')\nprint('4. Long sequences: Enables 16K-100K tokens')\nprint('\\nUse: pip install flash-attn (official implementation)')",
       "level": 4,
-      "explanation": "Production Attention Mechanisms code"
+      "explanation": "Flash Attention: IO-aware, block-wise computation. Memory O(N²)→O(N), 2-4x faster. Critical for long sequences (16K-100K tokens). GPU memory efficient."
     }
   ],
   "quiz": [
     {
-      "question": "What is Attention Mechanisms?",
+      "question": "Attention mechanism'in temel prensibi nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her token'a eşit weight",
+        "Weighted sum of values, weights = similarity(query, keys). Önemli bilgiye focus",
+        "Sadece son hidden state",
+        "Random weighting"
       ],
       "correctAnswer": 1,
-      "explanation": "Attention Mechanisms explanation.",
-      "id": "attention-mechanisms-detail-q1"
+      "explanation": "Attention: Query-Key similarity → weights (softmax), weighted sum of Values. Dinamik focus (önemli bilgi >> weight). RNN bottleneck çözümü.",
+      "id": "att-q1"
     },
     {
-      "question": "When to use Attention Mechanisms?",
+      "question": "Self-attention vs cross-attention farkı?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "İkisi de aynı",
+        "Self-attention: Q=K=V=input (sequence içi). Cross-attention: Q≠K=V (iki farklı sequence)",
+        "Self-attention her zaman daha iyi",
+        "Cross-attention daha hızlı"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "attention-mechanisms-detail-q2"
+      "explanation": "Self-attention: Sequence içi relationships (Q=K=V). Cross-attention: İki sequence arası (örn: decoder → encoder, Q≠K=V). Seq2seq'te critical.",
+      "id": "att-q2"
     },
     {
-      "question": "Attention Mechanisms advantage?",
+      "question": "Multi-head attention neden kullanılır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece hız için",
+        "Farklı representation subspaces (8-16 heads). Her head farklı aspect'e focus. Parallel attention",
+        "Tek head yeterli",
+        "Daha az parametre"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "attention-mechanisms-detail-q3"
+      "explanation": "Multi-head: h parallel attention (8 heads typical). Farklı perspectives (syntax, semantics, etc.). Concat + project. Richer representation.",
+      "id": "att-q3"
     },
     {
-      "question": "Attention Mechanisms limitation?",
+      "question": "Scaled dot-product'ta √d_k neden kullanılır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Hız için",
+        "Softmax stability. Büyük d_k → large dot products → softmax saturates (gradient ≈0). Scale prevents",
+        "Sadece convention",
+        "Accuracy artırır"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "attention-mechanisms-detail-q4"
+      "explanation": "Scale by √d_k: Dot product variance = d_k. √d_k ile normalize → variance=1. Softmax stability (no saturation), gradient flow better.",
+      "id": "att-q4"
     },
     {
-      "question": "Best practice for Attention Mechanisms?",
+      "question": "Positional encoding neden gerekli?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece ekstra feature",
+        "Self-attention position-agnostic (permutation invariant). PE inject position info. Sinusoidal: relative position",
+        "Accuracy düşürür",
+        "Sadece NLP'de"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "attention-mechanisms-detail-q5"
+      "explanation": "Self-attention position-agnostic (order bilmiyor). PE ekle: Sinusoidal (sin/cos, different frequencies) veya learned. Relative position learning.",
+      "id": "att-q5"
     },
     {
-      "question": "Attention Mechanisms vs alternatives?",
+      "question": "Causal masking ne için kullanılır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece padding",
+        "Autoregressive models (GPT). No future information leak. Lower triangular mask (position i sadece ≤i'ye attend)",
+        "Her modelde gerekli",
+        "Sadece training"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "attention-mechanisms-detail-q6"
+      "explanation": "Causal mask: Autoregressive (GPT, language generation). Position i sadece ≤i'ye attend (no future). Lower triangular. Training/inference consistent.",
+      "id": "att-q6"
+    },
+    {
+      "question": "Attention complexity nedir?",
+      "options": [
+        "O(N)",
+        "O(N²·D). N=seq length, D=dimension. Attention matrix N×N. Bottleneck for long sequences",
+        "O(N·log N)",
+        "O(D²)"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Complexity: O(N²·D). Q·K^T: O(N²·D), softmax: O(N²), α·V: O(N²·D). Memory: O(N²) attention matrix. Long seq problem (16K tokens → 256M elements).",
+      "id": "att-q7"
+    },
+    {
+      "question": "Flash Attention'ın avantajı nedir?",
+      "options": [
+        "Daha fazla parametre",
+        "IO-aware, block-wise. Memory O(N²)→O(N), 2-4x faster. Long sequences (16K-100K tokens) enable",
+        "Accuracy artırır",
+        "Sadece GPU'da"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Flash Attention: Block-wise computation, IO-aware (GPU memory hierarchy). Memory O(N²)→O(N), 2-4x speedup. Long context (16K+ tokens). Exact output.",
+      "id": "att-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Attention Mechanisms",
-      "back": "Core concept summary"
+      "front": "Attention Mechanism",
+      "back": "Weighted sum: Attention(Q,K,V) = softmax((Q·K^T)/√d_k)·V. Query-Key similarity → weights, weighted sum of Values. Dynamic focus."
     },
     {
-      "front": "Attention Mechanisms Key Idea",
-      "back": "Main concept"
+      "front": "Self-Attention",
+      "back": "Q=K=V=input. Sequence içi relationships. Her token diğerlerine attend. Transformers core. Position-agnostic (PE gerekir)."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "Multi-Head Attention",
+      "back": "h parallel attention (8 heads). Farklı W_Q, W_K, W_V. Farklı subspaces (syntax, semantics). Concat + project. Richer representation."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Cross-Attention",
+      "back": "Q≠K=V. İki sequence arası. Decoder → Encoder (seq2seq). Image captioning (text → image features). Query from one, Key/Value from another."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Scaled Dot-Product",
+      "back": "Score = (Q·K^T)/√d_k. Scale factor: softmax stability (prevent saturation). √d_k: normalize variance. Softmax → weights."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Positional Encoding",
+      "back": "Inject position info. Sinusoidal: PE(pos,2i)=sin(pos/10000^(2i/d)), PE(pos,2i+1)=cos. Learned embeddings alternative. Relative position."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Causal Masking",
+      "back": "Autoregressive (GPT). No future leak. Lower triangular mask (position i → ≤i). Score → -inf, softmax → 0. Training/inference consistent."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Attention Complexity",
+      "back": "O(N²·D). N=seq length, D=dimension. Attention matrix N×N (memory O(N²)). Long sequences problem. Efficient: Sparse, Linformer, Flash."
+    },
+    {
+      "front": "Flash Attention",
+      "back": "IO-aware, block-wise. Memory O(N²)→O(N), 2-4x faster. GPU memory efficient. Long context (16K-100K tokens). Exact output."
+    },
+    {
+      "front": "KV Cache",
+      "back": "Inference optimization. Cache Key/Value (autoregressive). Avoid recomputation. Memory: O(N·D) per layer. Faster generation."
+    },
+    {
+      "front": "Sparse Attention",
+      "back": "O(N²) → O(N·√N) or O(N·log N). Local + strided (Sparse Transformer), sliding window (Longformer). Long sequences (4K-16K)."
+    },
+    {
+      "front": "Query-Key-Value",
+      "back": "Q: ne arıyorum? K: ne var? V: içerik. Similarity(Q,K) → weights. Weighted sum(V) → output. Information retrieval paradigm."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Positional encoding'i unutmak",
+      "why": "Self-attention position-agnostic (permutation invariant). PE olmadan: 'cat sat' = 'sat cat'. Order bilgisi kaybolur. NLP/seq tasks fail.",
+      "fix": "PE ekle: Sinusoidal (Transformer original), learned embeddings (BERT), relative position (T5, Transformer-XL). X_input = Embedding + PE. Always!"
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Causal mask unutmak (autoregressive)",
+      "why": "GPT-style models: Training'de future bilgisi leak olur (cheating). Test'te olmaz → train/test mismatch. Model fail.",
+      "fix": "Causal mask: Lower triangular (position i → ≤i). Training/inference both. mask = torch.tril(torch.ones(N,N)). scores.masked_fill(mask==0, -inf)."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "√d_k ile scale etmemek",
+      "why": "Büyük d_k (512, 1024): Dot product variance ↑ (∝ d_k). Softmax saturates (one hot), gradients ≈0. Training instability.",
+      "fix": "Scale: scores / √d_k. Variance normalize (→1). Softmax stable, gradients flow. Standard practice (Transformer paper)."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Attention matrix'i materialize (long sequences)",
+      "why": "O(N²) memory. 16K tokens → 256M elements (1GB FP32!). OOM (out of memory). GPU memory limited.",
+      "fix": "Efficient attention: Flash Attention (block-wise, O(N)), Sparse (local+strided), Linformer (low-rank), Performer (kernel). Or: chunk sequences."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Single head kullanmak",
+      "why": "Single head: Tek perspective. Çeşitli linguistic phenomena capture edemez (syntax, semantics, coreference). Expressiveness limited.",
+      "fix": "Multi-head (8-16 heads typical). Farklı subspaces, richer representation. Concat + project. BERT (12 heads), GPT-3 (96 heads). Standard."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "KV cache kullanmamak (inference)",
+      "why": "Autoregressive inference: Her token generation'da tüm sequence recompute (redundant). O(N²·D·L) (L=layers). Slow (GPT-3: 175B params).",
+      "fix": "KV cache: Key/Value'ları cache et (reuse). Sadece yeni token compute. O(N·D·L) → O(D·L). 10-100x faster inference. HuggingFace Transformers default."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Padding mask ignore etmek",
+      "why": "Variable length sequences: Padding tokens (0 veya [PAD]). Attention padding'e de attend eder (meaningless). Noise, accuracy ↓.",
+      "fix": "Padding mask: Padding positions → score = -inf, softmax = 0. No attention to padding. padding_mask = (input == PAD_TOKEN). Critical for batching."
     }
   ],
   "visualizations": [
     {
+      "type": "interactive",
+      "title": "Attention Playground",
+      "description": "User inputs sentence. Visualize attention weights (heatmap). Select token → shows what it attends to. Multi-head: switch heads (1-8). Compare self vs cross-attention."
+    },
+    {
       "type": "diagram",
-      "title": "Attention Mechanisms Overview",
-      "description": "Visual explanation"
+      "title": "Attention Mechanism Flow",
+      "description": "Flowchart: Input → Q/K/V projections → Score (Q·K^T) → Scale (√d_k) → Mask (optional) → Softmax → Weighted sum (α·V) → Output. Multi-head: parallel branches, concat."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
+      "title": "Attention Variants",
+      "description": "Self vs Cross vs Sparse vs Flash. Complexity (O(N²) vs O(N)), memory, use cases. Table: Pros/cons, when to use."
     },
     {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
-    },
-    {
-      "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "type": "animation",
+      "title": "Self-Attention Animation",
+      "description": "Token-by-token: 'The cat sat' → each token attends to others. Dynamic weights update. Show Query, Key similarity computation. Weighted sum visualization. Position encoding impact."
     }
   ],
   "references": [
     {
-      "title": "Attention Mechanisms Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Attention Is All You Need (Transformer)",
+      "authors": "Vaswani, A. et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1706.03762",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "Neural Machine Translation by Jointly Learning to Align and Translate",
+      "authors": "Bahdanau, D. et al.",
+      "year": 2015,
+      "link": "https://arxiv.org/abs/1409.0473",
+      "type": "paper"
+    },
+    {
+      "title": "FlashAttention: Fast and Memory-Efficient Exact Attention",
+      "authors": "Dao, T. et al.",
+      "year": 2022,
+      "link": "https://arxiv.org/abs/2205.14135",
+      "type": "paper"
+    },
+    {
+      "title": "The Illustrated Transformer",
+      "authors": "Alammar, J.",
+      "year": 2018,
+      "link": "http://jalammar.github.io/illustrated-transformer/",
+      "type": "blog"
     }
   ]
 }
