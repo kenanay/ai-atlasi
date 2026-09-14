@@ -4,262 +4,345 @@
   "category": "mlops",
   "level": 3,
   "estimatedTime": 70,
-  "description": "Model Compression & Pruning: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Model compression: Büyük modelleri küçültme (size ↓, speed ↑, accuracy ~). Pruning (weights remove), quantization (precision ↓), knowledge distillation (teacher→student). Mobile, edge, production deployment.",
   "content": {
-    "level0_basic": "Model Compression & Pruning basics: Core concepts explained simply.",
-    "level1_beginner": "Model Compression & Pruning fundamentals with examples and code snippets.",
-    "level2_application": "Practical Model Compression & Pruning implementation with real-world applications.",
-    "level3_advanced": "Advanced Model Compression & Pruning techniques and optimizations.",
-    "level4_expert": "Expert-level Model Compression & Pruning architectures and research directions."
+    "level0_basic": "Model Compression, büyük modelleri küçültme işlemidir. Amaç: Model size ↓ (100MB → 10MB), inference speed ↑ (10ms → 2ms), accuracy ~ (minimal loss). Teknikler: (1) **Pruning**: Gereksiz weights/neurons remove (sparse matrix). (2) **Quantization**: FP32 → INT8 (4x smaller, 2-4x faster). (3) **Knowledge Distillation**: Büyük teacher model → küçük student model. (4) **Low-Rank Factorization**: Matrix decomposition (W = UV). Kullanım: Mobile (iOS, Android), edge devices (IoT, Raspberry Pi), production (latency critical).",
+    "level1_beginner": "Compression teknikleri detay: (1) **Pruning**: (a) Weight pruning: Küçük weights'i sıfırla (|w|<threshold). (b) Neuron pruning: Tüm neuron'u remove. (c) Structured pruning: Channel/filter pruning (CNN). Unstructured (sparse, 50-90% sparsity) vs structured (dense, 30-50% faster). (2) **Quantization**: (a) Post-training quantization (PTQ): Train sonrası convert (FP32→INT8). (b) Quantization-aware training (QAT): Train sırasında quantization simulate. INT8: 4x smaller, 2-4x faster, <1% accuracy loss. (3) **Knowledge Distillation**: Teacher (büyük, accurate) → Student (küçük, fast). Loss = student_loss + α·distillation_loss (soft labels). (4) **Architecture Search**: MobileNet, EfficientNet (compact design). Metrikler: Model size (MB), FLOPs, inference time (ms), accuracy drop (%).",
+    "level2_application": "Pratik uygulamalar: (1) **Mobile ML**: iOS CoreML, Android TFLite. MobileNet, EfficientNet. Quantization (INT8), pruning (50% sparsity). Real-time (<100ms). (2) **Edge Devices**: IoT, Raspberry Pi. TinyML. Extreme compression (1-10MB models). INT8/INT4 quantization. (3) **Production Serving**: Latency critical (search, recommendation). Model size ↓ → memory usage ↓ → more models per server. Batch processing faster. (4) **NLP**: BERT (340MB) → DistilBERT (207MB), TinyBERT (57MB), ALBERT (12MB). Quantization + distillation. 2-5x faster, <3% accuracy loss. (5) **Computer Vision**: ResNet-50 (98MB) → MobileNetV3 (20MB), EfficientNet-B0 (29MB). Pruning + quantization. Real-time video. (6) **Voice Assistants**: On-device wake word detection. Tiny models (<1MB). Low power. Framework'ler: TensorFlow Lite, ONNX Runtime, PyTorch Mobile, TensorRT (NVIDIA).",
+    "level3_advanced": "İleri seviye: (1) **Pruning Types**: (a) Magnitude-based (basit, |w|<threshold). (b) Gradient-based (importance via gradient). (c) Lottery Ticket Hypothesis (sparse subnetwork, retrain from scratch). (d) Structured (channel/filter, hardware-friendly). (e) Iterative pruning (gradual, finetune after each step). (2) **Quantization Advanced**: (a) Mixed precision (critical layers FP16, others INT8). (b) Dynamic quantization (runtime). (c) Static quantization (calibration dataset). (d) QAT vs PTQ (QAT better accuracy, PTQ easier). (e) INT4/INT2 (extreme, research). (3) **Distillation Variants**: (a) Response-based (output logits). (b) Feature-based (intermediate layers). (c) Relation-based (sample relationships). (d) Self-distillation (ensemble → single). (e) Progressive distillation (multi-step). (4) **Neural Architecture Search (NAS)**: AutoML, search compact architectures. MobileNet, EfficientNet (compound scaling). (5) **Low-Rank Factorization**: SVD, Tucker decomposition. Matrix W (m×n) → U(m×k)·V(k×n), k<<m,n. (6) **Hardware-Aware**: Target hardware (CPU/GPU/TPU/NPU). Operator fusion, memory layout optimization.",
+    "level4_expert": "Expert seviyede, production deployment, hardware co-design ve research frontiers önemlidir. (1) **Production Pipeline**: Train (FP32) → Prune (50-90% sparsity) → Finetune → Quantize (INT8/INT4) → Calibrate → Validate (accuracy drop <1-3%) → Deploy (TFLite/ONNX/TensorRT) → Monitor (latency, throughput, accuracy). (2) **Hardware Co-Design**: (a) Sparse accelerators (NVIDIA Ampere sparse tensor cores). (b) INT8 support (most modern chips). (c) Custom chips (Google TPU, Apple Neural Engine). (d) Operator fusion (reduce memory bandwidth). (3) **Multi-Objective Optimization**: Trade-off: Size vs Speed vs Accuracy. Pareto frontier. AutoML (NAS + pruning + quantization). (4) **Extreme Compression**: Binary networks (1-bit weights), ternary networks (3 values: -1,0,+1). Extreme quantization (INT4, INT2). Model size <1MB (TinyML). (5) **Dynamic Models**: Dynamic depth (early exit), dynamic width (adaptive channels). Conditional computation (MoE). (6) **Fairness & Robustness**: Compression'ın bias'a etkisi. Protected groups'ta accuracy drop? Adversarial robustness (pruned models more vulnerable?). (7) **Federated Compression**: Edge devices'ta compression (communication cost ↓). On-device training + compression. Research: **Lottery Ticket Hypothesis** (winning tickets), **Zero-cost NAS** (no training), **Gradient-free optimization**, **Neural ODE compression**."
   },
-  "whatIsIt": "Model Compression & Pruning: Technical definition and core concepts.",
-  "whyNeeded": "Why Model Compression & Pruning matters: Applications and use cases.",
-  "realWorldAnalogy": "Model Compression & Pruning explained through real-world analogy.",
+  "whatIsIt": "Model Compression: Model size/complexity azaltma, accuracy preserve. Matematiksel: Sparse model: ||W||_0 << parameters (L0 norm). Quantization: W ∈ {-127,...,127} (INT8), 256 values. Knowledge Distillation: L = L_CE(y, ŷ_student) + α·L_KL(ŷ_teacher, ŷ_student). Low-Rank: W ≈ U·V^T, rank(W) = k << min(m,n). Metrikler: Compression ratio (original/compressed), FLOPs reduction (%), inference speedup (x), accuracy drop (%).",
+  "whyNeeded": "Model compression kritik çünkü: (1) **Mobile Deployment**: Smartphones memory limited (100MB-1GB models too big). App size limit (iOS 150MB). Battery (inference energy). (2) **Edge Devices**: IoT, cameras, drones. Memory <512MB, compute limited. Real-time (<100ms). (3) **Latency Critical**: Search (50ms SLA), recommendation (10ms), autonomous driving (<10ms). Smaller model → faster inference. (4) **Cost**: Cloud inference cost ∝ model size. 10x smaller → 10x cheaper. More models per server (GPU memory). (5) **Privacy**: On-device inference (no data sent to cloud). Medical, financial data. (6) **Energy**: Data centers (training+inference) carbon footprint. Smaller models → less energy. Green AI. (7) **Democratization**: Large models (GPT-4, 1.7T params) inaccessible. Compressed models (distillation) → everyone can use.",
+  "realWorldAnalogy": "Model compression'ı seyahat bagajına benzetebiliriz. **Durum**: 100kg eşya (büyük model), uçak bagaj limit 20kg (mobile device memory). **Hedef**: 20kg'a indir, önemli şeyleri koru. **Teknikler**: (1) **Pruning (Çıkar)**: Gereksiz eşyaları at (nadir kullanılan, duplicate). Weight magnitude: Rarely used items → remove. 50-90% eşya gider ama functionality ~. (2) **Quantization (Sıkıştır)**: Vacuum bag (havayı çıkar). FP32 → INT8: Her item'ı 4x küçült (detay kaybı minimal). Şişman sweater → compressed. (3) **Knowledge Distillation (Öğret)**: Büyük valize (teacher) bak, küçük valize (student) önemli bilgiyi aktar. Student teacher'ı taklit eder, %90-95 functionality. (4) **Low-Rank (Reorganize)**: Matrix decomposition. Eşyaları smart organize et (overlap, efficient packing). **Trade-off**: Çok aggressive compression → önemli eşya kaybolur (accuracy drop). Balance: Size ↓, utility ~.",
   "mathematics": {
     "formulas": [
-      "\\text{Model Compression & Pruning formula}",
-      "\\text{Key equation}"
+      "\\text{Sparsity}: \\quad s = \\frac{\\#\\text{zero weights}}{\\#\\text{total weights}} \\quad \\text{(50-90% typical)}",
+      "\\text{Pruning (Magnitude)}: \\quad W_{\\text{pruned}} = \\begin{cases} W & \\text{if } |W| > \\tau \\\\ 0 & \\text{otherwise} \\end{cases}",
+      "\\text{Quantization}: \\quad W_{\\text{INT8}} = \\text{round}\\left(\\frac{W - \\min(W)}{\\max(W) - \\min(W)} \\cdot 255\\right) - 128",
+      "\\text{Knowledge Distillation}: \\quad \\mathcal{L} = (1-\\alpha) \\cdot \\mathcal{L}_{\\text{CE}}(y, \\hat{y}_{\\text{student}}) + \\alpha \\cdot T^2 \\cdot \\mathcal{L}_{\\text{KL}}(\\text{softmax}(z_{\\text{teacher}}/T), \\text{softmax}(z_{\\text{student}}/T))",
+      "\\text{Low-Rank Factorization}: \\quad W \\in \\mathbb{R}^{m \\times n} \\approx U \\in \\mathbb{R}^{m \\times k} \\cdot V^T \\in \\mathbb{R}^{k \\times n}, \\quad k \\ll \\min(m,n)",
+      "\\text{Compression Ratio}: \\quad r = \\frac{\\text{Size}_{\\text{original}}}{\\text{Size}_{\\text{compressed}}} \\quad \\text{(e.g., 10x)}",
+      "\\text{FLOPs Reduction}: \\quad \\text{Reduction} = 1 - \\frac{\\text{FLOPs}_{\\text{compressed}}}{\\text{FLOPs}_{\\text{original}}} \\quad \\text{(e.g., 75%)}",
+      "\\text{Accuracy Drop}: \\quad \\Delta_{\\text{acc}} = \\text{Acc}_{\\text{original}} - \\text{Acc}_{\\text{compressed}} \\quad \\text{(target: <1-3%)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Baseline**: Original model train et (FP32, full size). Baseline metrics: Model size (MB), FLOPs, inference time (ms), accuracy (%). Hardware target: Mobile (iOS/Android), Edge (Raspberry Pi), Cloud (GPU/CPU).",
+      "2. **Compression Strategy**: (a) Latency critical + mobile → Quantization (INT8) + structured pruning. (b) Memory critical + edge → Aggressive pruning (90% sparsity) + quantization (INT4). (c) Accuracy critical + cloud → Knowledge distillation + mild pruning. (d) Extreme → TinyML (binary/ternary networks, <1MB).",
+      "3. **Pruning**: (a) Magnitude-based: Compute |W|, sort, prune bottom 50-90%. (b) Structured: Remove entire channels/filters (CNN), neurons (FC). (c) Iterative: Prune 10-20%, finetune, repeat. (d) Sensitivity analysis: Per-layer sparsity (critical layers less pruning). (e) Finetune: 5-10 epochs, lower LR.",
+      "4. **Knowledge Distillation**: (a) Train teacher (large, accurate). (b) Teacher inference (soft labels, temperature T=3-5). (c) Train student (small), loss = CE(y, ŷ_student) + α·KL(teacher, student), α=0.5-0.9. (d) Student mimics teacher distribution. (e) Validate: Accuracy drop <3%.",
+      "5. **Quantization**: (a) Post-Training Quantization (PTQ): Model trained (FP32), convert to INT8 (calibration dataset 100-1000 samples). Fast, <1% accuracy loss (typical). (b) Quantization-Aware Training (QAT): Simulate quantization during training (fake quantization). Better accuracy (<0.5% loss), longer training. (c) Dynamic vs Static: Dynamic (runtime), Static (calibration, faster).",
+      "6. **Hybrid**: Pruning + Quantization + Distillation. (a) Distill (teacher→student), (b) Prune student (50-70%), (c) Finetune, (d) Quantize (INT8), (e) Validate. Stacking techniques → higher compression (10-20x).",
+      "7. **Validation**: Test set evaluation (original distribution). Metrikler: (a) Model size (MB, compression ratio). (b) FLOPs (compute reduction). (c) Inference time (ms, speedup). (d) Accuracy (drop <1-3%). (e) Per-class accuracy (fairness). Hardware: Actual device (mobile/edge), not only simulation.",
+      "8. **Conversion**: Export compressed model. (a) TensorFlow → TFLite (mobile), TF-TRT (NVIDIA). (b) PyTorch → ONNX → ONNX Runtime (cross-platform). (c) TensorRT (NVIDIA GPU, high performance). (d) CoreML (iOS), NNAPI (Android). Operator support check (some ops not supported).",
+      "9. **Optimization**: Hardware-specific. (a) Operator fusion (conv+BN+ReLU → single op). (b) Memory layout (NCHW vs NHWC). (c) Multi-threading (CPU). (d) GPU/NPU acceleration. (e) Batch size tuning (latency vs throughput). Profiling: TensorFlow Profiler, PyTorch Profiler.",
+      "10. **Production Deployment**: (a) A/B test (compressed vs original). (b) Monitor: Latency (p50, p99), throughput (QPS), accuracy (online metrics). (c) Rollback plan (if accuracy drops). (d) Gradual rollout (1% → 10% → 100%). (e) Retraining: New data → retrain compressed model."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Model Size**: Pruning: s·params (sparsity s=0.5-0.9), Quantization: 4-8x smaller (FP32→INT8), Distillation: student params (e.g., 0.5x teacher), Combined: 10-100x. **Inference Time**: Pruning: Unstructured (sparse, 1.5-2x speedup with sparse kernels), Structured (dense, 2-3x speedup), Quantization: 2-4x speedup (INT8 vs FP32), Distillation: depends on student size, Combined: 5-10x speedup. **Training Time**: Pruning: +10-20% (iterative finetune), Distillation: +50-100% (teacher inference + student training), QAT: +20-50% (fake quantization overhead). **Uzay**: Pruning: Sparse storage (COO, CSR formats), Quantization: 4x less memory, Low-Rank: k·(m+n) vs m·n. **Hardware**: Sparse: NVIDIA Ampere (sparse tensor cores), INT8: Most modern CPUs/GPUs, TensorRT: NVIDIA GPU optimization."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "neural-networks",
+    "convolutional-neural-networks",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "edge-ai-mobile",
+    "distributed-training"
+  ],
+  "relatedTopics": [
+    "neural-networks",
+    "edge-ai-mobile",
+    "distributed-training"
+  ],
   "tags": [
-    "model"
+    "model-compression",
+    "pruning",
+    "quantization",
+    "knowledge-distillation",
+    "mobile-ml",
+    "edge-ai"
   ],
   "codeExamples": [
     {
-      "title": "Basic Model Compression & Pruning",
+      "title": "Magnitude-Based Pruning (PyTorch)",
       "language": "python",
-      "code": "# Model Compression & Pruning example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Model Compression & Pruning code"
-    },
-    {
-      "title": "Model Compression & Pruning Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.utils.prune as prune\nimport copy\n\n# Simple model\nclass SimpleNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 256)\n        self.fc2 = nn.Linear(256, 128)\n        self.fc3 = nn.Linear(128, 10)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = torch.relu(self.fc2(x))\n        return self.fc3(x)\n\nmodel = SimpleNet()\n\n# Count parameters\ndef count_parameters(model):\n    return sum(p.numel() for p in model.parameters())\n\ndef count_nonzero(model):\n    return sum((p != 0).sum().item() for p in model.parameters())\n\nprint(f'Original parameters: {count_parameters(model):,}')\nprint(f'Non-zero: {count_nonzero(model):,}')\n\n# Magnitude-based pruning (50% sparsity)\nfor name, module in model.named_modules():\n    if isinstance(module, nn.Linear):\n        prune.l1_unstructured(module, name='weight', amount=0.5)\n        prune.remove(module, 'weight')  # Make pruning permanent\n\nsparsity = 1 - count_nonzero(model) / count_parameters(model)\nprint(f'\\nAfter 50% pruning:')\nprint(f'Non-zero: {count_nonzero(model):,}')\nprint(f'Sparsity: {sparsity*100:.1f}%')\nprint(f'Compression ratio: {1/(1-sparsity):.1f}x')\n\nprint('\\nNote: Unstructured pruning requires sparse kernels for speedup.')",
       "level": 2,
-      "explanation": "Model Compression & Pruning Application code"
+      "explanation": "Magnitude pruning: Küçük weights'i (|w|<threshold) sıfırla. 50% sparsity → 2x compression (with sparse storage). Finetune gerekir."
     },
     {
-      "title": "Advanced Model Compression & Pruning",
+      "title": "Post-Training Quantization (TensorFlow)",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
-      "level": 3,
-      "explanation": "Advanced Model Compression & Pruning code"
-    },
-    {
-      "title": "Model Compression & Pruning Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Model Compression & Pruning Optimization code"
-    },
-    {
-      "title": "Model Compression & Pruning Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import tensorflow as tf\nimport numpy as np\nimport os\n\n# Create simple model\nmodel = tf.keras.Sequential([\n    tf.keras.layers.Dense(128, activation='relu', input_shape=(784,)),\n    tf.keras.layers.Dense(64, activation='relu'),\n    tf.keras.layers.Dense(10, activation='softmax')\n])\n\nmodel.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])\n\n# Dummy training (replace with real data)\nX_train = np.random.randn(1000, 784).astype('float32')\ny_train = np.random.randint(0, 10, 1000)\nmodel.fit(X_train, y_train, epochs=5, verbose=0)\n\nprint('Original model:')\nprint(f'Size: {os.path.getsize(\"temp_model.h5\")/1e6:.2f} MB' if os.path.exists('temp_model.h5') else 'Not saved yet')\n\n# Save original\nmodel.save('temp_model.h5')\noriginal_size = os.path.getsize('temp_model.h5')\nprint(f'Original size: {original_size/1e6:.2f} MB')\n\n# Post-Training Quantization\nconverter = tf.lite.TFLiteConverter.from_keras_model(model)\nconverter.optimizations = [tf.lite.Optimize.DEFAULT]  # Quantize to INT8\n\n# Representative dataset for calibration\ndef representative_dataset():\n    for i in range(100):\n        yield [X_train[i:i+1]]\n\nconverter.representative_dataset = representative_dataset\nconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]\nconverter.inference_input_type = tf.int8\nconverter.inference_output_type = tf.int8\n\ntflite_model = converter.convert()\n\n# Save quantized\nwith open('quantized_model.tflite', 'wb') as f:\n    f.write(tflite_model)\n\nquantized_size = os.path.getsize('quantized_model.tflite')\nprint(f'\\nQuantized size: {quantized_size/1e6:.2f} MB')\nprint(f'Compression ratio: {original_size/quantized_size:.1f}x')\nprint(f'Reduction: {(1 - quantized_size/original_size)*100:.1f}%')\n\nprint('\\nQuantization: FP32 → INT8 (4x smaller, 2-4x faster)')\n\n# Cleanup\nos.remove('temp_model.h5')\nos.remove('quantized_model.tflite')",
       "level": 2,
-      "explanation": "Model Compression & Pruning Visualization code"
+      "explanation": "Post-Training Quantization: FP32→INT8. 4x smaller, 2-4x faster inference. <1% accuracy loss (typical). TFLite for mobile."
     },
     {
-      "title": "Production Model Compression & Pruning",
+      "title": "Knowledge Distillation (PyTorch)",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\n\n# Teacher: Large model\nclass TeacherNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 512)\n        self.fc2 = nn.Linear(512, 256)\n        self.fc3 = nn.Linear(256, 10)\n    \n    def forward(self, x):\n        x = F.relu(self.fc1(x))\n        x = F.relu(self.fc2(x))\n        return self.fc3(x)\n\n# Student: Small model\nclass StudentNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 64)\n        self.fc2 = nn.Linear(64, 10)\n    \n    def forward(self, x):\n        x = F.relu(self.fc1(x))\n        return self.fc2(x)\n\n# Distillation loss\ndef distillation_loss(student_logits, teacher_logits, labels, T=3, alpha=0.7):\n    # Soft targets (teacher)\n    soft_loss = F.kl_div(\n        F.log_softmax(student_logits / T, dim=1),\n        F.softmax(teacher_logits / T, dim=1),\n        reduction='batchmean'\n    ) * (T * T)\n    \n    # Hard targets (labels)\n    hard_loss = F.cross_entropy(student_logits, labels)\n    \n    return alpha * soft_loss + (1 - alpha) * hard_loss\n\n# Models\nteacher = TeacherNet()\nstudent = StudentNet()\n\nprint(f'Teacher params: {sum(p.numel() for p in teacher.parameters()):,}')\nprint(f'Student params: {sum(p.numel() for p in student.parameters()):,}')\nprint(f'Compression: {sum(p.numel() for p in teacher.parameters())/sum(p.numel() for p in student.parameters()):.1f}x smaller')\n\n# Dummy data\nX = torch.randn(100, 784)\ny = torch.randint(0, 10, (100,))\n\n# Assume teacher is trained\nteacher.eval()\n\n# Train student\noptimizer = torch.optim.Adam(student.parameters(), lr=0.001)\n\nprint('\\nTraining student with distillation...')\nfor epoch in range(50):\n    student.train()\n    optimizer.zero_grad()\n    \n    student_logits = student(X)\n    with torch.no_grad():\n        teacher_logits = teacher(X)\n    \n    loss = distillation_loss(student_logits, teacher_logits, y, T=3, alpha=0.7)\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 10 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')\n\nprint('\\nDistillation: Student mimics teacher (soft labels). Smaller model, ~accuracy.')",
+      "level": 3,
+      "explanation": "Knowledge Distillation: Teacher (big, accurate) → Student (small, fast). Soft labels (temperature T). Loss = hard + α·soft. Student 5-10x smaller, <3% accuracy drop."
+    },
+    {
+      "title": "Structured Pruning (Channel Pruning)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\n# Conv model\nclass ConvNet(nn.Module):\n    def __init__(self, channels1=64, channels2=128):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, channels1, 3, padding=1)\n        self.bn1 = nn.BatchNorm2d(channels1)\n        self.conv2 = nn.Conv2d(channels1, channels2, 3, padding=1)\n        self.bn2 = nn.BatchNorm2d(channels2)\n        self.fc = nn.Linear(channels2 * 8 * 8, 10)\n    \n    def forward(self, x):\n        x = F.relu(self.bn1(self.conv1(x)))\n        x = F.max_pool2d(x, 2)\n        x = F.relu(self.bn2(self.conv2(x)))\n        x = F.max_pool2d(x, 2)\n        x = x.view(x.size(0), -1)\n        return self.fc(x)\n\n# Original\nmodel_original = ConvNet(channels1=64, channels2=128)\nprint('Original model:')\nprint(f'Conv1: 64 channels, Conv2: 128 channels')\nprint(f'Parameters: {sum(p.numel() for p in model_original.parameters()):,}')\n\n# Pruned: 50% channels\nmodel_pruned = ConvNet(channels1=32, channels2=64)\nprint('\\nPruned model (50% channels):')\nprint(f'Conv1: 32 channels, Conv2: 64 channels')\nprint(f'Parameters: {sum(p.numel() for p in model_pruned.parameters()):,}')\n\ncompression = sum(p.numel() for p in model_original.parameters()) / sum(p.numel() for p in model_pruned.parameters())\nprint(f'\\nCompression ratio: {compression:.1f}x')\n\n# Dummy inference time\nimport time\nX = torch.randn(1, 3, 32, 32)\n\nmodel_original.eval()\nstart = time.time()\nfor _ in range(100):\n    _ = model_original(X)\noriginal_time = (time.time() - start) / 100\n\nmodel_pruned.eval()\nstart = time.time()\nfor _ in range(100):\n    _ = model_pruned(X)\npruned_time = (time.time() - start) / 100\n\nprint(f'\\nInference time:')\nprint(f'Original: {original_time*1000:.2f} ms')\nprint(f'Pruned: {pruned_time*1000:.2f} ms')\nprint(f'Speedup: {original_time/pruned_time:.1f}x')\n\nprint('\\nStructured pruning: Remove entire channels/filters. Dense (hardware-friendly), 2-3x speedup.')",
+      "level": 3,
+      "explanation": "Structured Pruning: Tüm channel/filter remove. Dense matrix, hardware-friendly. 2-3x speedup, 30-50% smaller. Unstructured'dan daha practical."
+    },
+    {
+      "title": "Quantization-Aware Training (QAT)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.quantization as quantization\n\n# Model\nclass SimpleNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.quant = quantization.QuantStub()\n        self.fc1 = nn.Linear(784, 128)\n        self.relu = nn.ReLU()\n        self.fc2 = nn.Linear(128, 10)\n        self.dequant = quantization.DeQuantStub()\n    \n    def forward(self, x):\n        x = self.quant(x)\n        x = self.relu(self.fc1(x))\n        x = self.fc2(x)\n        x = self.dequant(x)\n        return x\n\nmodel = SimpleNet()\nmodel.train()\n\nprint('Original model (FP32):')\nprint(f'Parameters: {sum(p.numel() for p in model.parameters()):,}')\n\n# QAT: Prepare\nmodel.qconfig = quantization.get_default_qat_qconfig('fbgemm')\nquantization.prepare_qat(model, inplace=True)\n\nprint('\\nQAT prepared (fake quantization):')\nprint('Training simulates INT8 quantization...')\n\n# Dummy training\nX = torch.randn(100, 784)\ny = torch.randint(0, 10, (100,))\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.CrossEntropyLoss()\n\nfor epoch in range(10):\n    optimizer.zero_grad()\n    outputs = model(X)\n    loss = criterion(outputs, y)\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 5 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')\n\n# Convert to quantized\nmodel.eval()\nquantization.convert(model, inplace=True)\n\nprint('\\nConverted to INT8:')\nprint('Model now uses INT8 for inference.')\nprint('Benefits: 4x smaller, 2-4x faster, <0.5% accuracy loss')\nprint('\\nQAT vs PTQ: QAT better accuracy (trains with quantization), PTQ easier.')",
       "level": 4,
-      "explanation": "Production Model Compression & Pruning code"
+      "explanation": "Quantization-Aware Training: Train sırasında quantization simulate (fake quant). Better accuracy (<0.5% drop) vs PTQ. FP32→INT8, 4x smaller, 2-4x faster."
+    },
+    {
+      "title": "Model Size & FLOPs Analysis",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nfrom torchsummary import summary  # pip install torchsummary\nimport numpy as np\n\n# Model\nclass CNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)\n        self.conv2 = nn.Conv2d(64, 128, 3, padding=1)\n        self.fc1 = nn.Linear(128 * 8 * 8, 256)\n        self.fc2 = nn.Linear(256, 10)\n    \n    def forward(self, x):\n        x = torch.relu(self.conv1(x))\n        x = torch.max_pool2d(x, 2)\n        x = torch.relu(self.conv2(x))\n        x = torch.max_pool2d(x, 2)\n        x = x.view(x.size(0), -1)\n        x = torch.relu(self.fc1(x))\n        return self.fc2(x)\n\nmodel = CNN()\n\n# Model size\nprint('=== Model Analysis ===')\nprint(f'\\nParameters: {sum(p.numel() for p in model.parameters()):,}')\n\n# Size in MB (FP32)\nsize_fp32 = sum(p.numel() * 4 for p in model.parameters()) / 1e6  # 4 bytes per FP32\nsize_int8 = sum(p.numel() for p in model.parameters()) / 1e6  # 1 byte per INT8\n\nprint(f'\\nModel Size:')\nprint(f'FP32: {size_fp32:.2f} MB')\nprint(f'INT8 (quantized): {size_int8:.2f} MB ({size_fp32/size_int8:.1f}x smaller)')\n\n# FLOPs (approximate)\ndef count_flops(model, input_size=(1, 3, 32, 32)):\n    total_flops = 0\n    x = torch.randn(*input_size)\n    \n    # Conv1: (C_out * C_in * K * K * H_out * W_out)\n    # FC: (in_features * out_features)\n    \n    # Simplified (actual FLOPs higher with activations, etc.)\n    for module in model.modules():\n        if isinstance(module, nn.Conv2d):\n            out_h = input_size[2] // 2  # Assuming pooling\n            out_w = input_size[3] // 2\n            flops = module.out_channels * module.in_channels * module.kernel_size[0] * module.kernel_size[1] * out_h * out_w\n            total_flops += flops\n        elif isinstance(module, nn.Linear):\n            flops = module.in_features * module.out_features\n            total_flops += flops\n    \n    return total_flops\n\nflops = count_flops(model)\nprint(f'\\nFLOPs (approximate): {flops/1e6:.2f} M')\n\nprint('\\nCompression impact:')\nprint('50% pruning → 2x smaller, 2x fewer FLOPs')\nprint('INT8 quantization → 4x smaller, 2-4x faster inference')\nprint('Combined (pruning + quantization) → 8x smaller, 4-8x faster')",
+      "level": 2,
+      "explanation": "Model Analysis: Parameters, size (FP32/INT8), FLOPs. Compression: Pruning (2x), Quantization (4x), Combined (8x). Evaluate size, speed, accuracy trade-off."
     }
   ],
   "quiz": [
     {
-      "question": "What is Model Compression & Pruning?",
+      "question": "Model compression'ın temel amaçları nelerdir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece accuracy arttırma",
+        "Model size ↓, inference speed ↑, accuracy ~ (minimal loss). Mobile/edge deployment",
+        "Sadece training hızlandırma",
+        "Model complexity arttırma"
       ],
       "correctAnswer": 1,
-      "explanation": "Model Compression & Pruning explanation.",
-      "id": "model-compression-pruning-q1"
+      "explanation": "Compression: Size ↓ (100MB→10MB), speed ↑ (10ms→2ms), accuracy ~ (<1-3% loss). Mobile, edge, production için kritik.",
+      "id": "comp-q1"
     },
     {
-      "question": "When to use Model Compression & Pruning?",
+      "question": "Pruning nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model'i duplicate etme",
+        "Gereksiz weights/neurons remove (sparsity 50-90%). Magnitude-based, structured/unstructured",
+        "Sadece quantization",
+        "Training hızlandırma"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "model-compression-pruning-q2"
+      "explanation": "Pruning: Küçük weights sıfırla (|w|<threshold). Unstructured (sparse, 50-90%), Structured (channels, 30-50%). Finetune gerekir.",
+      "id": "comp-q2"
     },
     {
-      "question": "Model Compression & Pruning advantage?",
+      "question": "Quantization nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model'i kopyalar",
+        "Precision azaltma: FP32→INT8 (4x smaller, 2-4x faster). PTQ vs QAT",
+        "Sadece pruning",
+        "Accuracy artırır"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "model-compression-pruning-q3"
+      "explanation": "Quantization: FP32 (32-bit) → INT8 (8-bit). 4x smaller, 2-4x faster. <1% accuracy loss. PTQ (post-training), QAT (training-aware).",
+      "id": "comp-q3"
     },
     {
-      "question": "Model Compression & Pruning limitation?",
+      "question": "Knowledge Distillation prensibi?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model'i büyütür",
+        "Teacher (büyük) → Student (küçük). Soft labels (temperature). Student mimics teacher",
+        "Sadece pruning",
+        "Accuracy feda edilir"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "model-compression-pruning-q4"
+      "explanation": "Distillation: Teacher (accurate) → Student (compact). Loss = CE(hard) + α·KL(soft). Student 5-10x smaller, <3% accuracy drop.",
+      "id": "comp-q4"
     },
     {
-      "question": "Best practice for Model Compression & Pruning?",
+      "question": "Structured vs Unstructured pruning?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "İkisi de aynı",
+        "Structured: Entire channels/filters remove (dense, hardware-friendly, 2-3x speedup). Unstructured: Individual weights (sparse, 1.5-2x)",
+        "Structured her zaman kötü",
+        "Unstructured her zaman better"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "model-compression-pruning-q5"
+      "explanation": "Structured: Channel/filter pruning (dense matrix, hardware-friendly). Unstructured: Weight pruning (sparse, sparse kernels gerekir). Structured more practical.",
+      "id": "comp-q5"
     },
     {
-      "question": "Model Compression & Pruning vs alternatives?",
+      "question": "INT8 quantization'ın avantajları?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece size küçültür",
+        "4x smaller (vs FP32), 2-4x faster inference, <1% accuracy loss. Most modern hardware supports",
+        "Accuracy çok düşer",
+        "Training hızlandırır"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "model-compression-pruning-q6"
+      "explanation": "INT8: 256 values (-128 to 127). 4x smaller, 2-4x faster (CPU/GPU accelerated). <1% accuracy loss (PTQ). <0.5% (QAT).",
+      "id": "comp-q6"
+    },
+    {
+      "question": "TinyML nedir?",
+      "options": [
+        "Büyük model",
+        "Extreme compression (<1MB models). Binary/ternary networks, INT4. IoT, edge devices",
+        "Sadece mobile",
+        "Cloud için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "TinyML: <1MB models. Extreme quantization (INT4/INT2, binary), aggressive pruning. IoT, Raspberry Pi, microcontrollers. Low power.",
+      "id": "comp-q7"
+    },
+    {
+      "question": "Production compression pipeline?",
+      "options": [
+        "Sadece train et",
+        "Train(FP32) → Prune → Finetune → Quantize → Validate → Deploy(TFLite/ONNX) → Monitor",
+        "Compress sonra train",
+        "Test etme"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Pipeline: (1) Train full model, (2) Prune (50-90%), (3) Finetune, (4) Quantize (INT8), (5) Validate (accuracy <1-3% drop), (6) Deploy (TFLite/ONNX/TensorRT), (7) Monitor.",
+      "id": "comp-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Model Compression & Pruning",
-      "back": "Core concept summary"
+      "front": "Model Compression nedir?",
+      "back": "Model size/complexity azaltma, accuracy preserve. Techniques: Pruning, Quantization, Distillation, Low-Rank. Mobile, edge, production için."
     },
     {
-      "front": "Model Compression & Pruning Key Idea",
-      "back": "Main concept"
+      "front": "Pruning",
+      "back": "Gereksiz weights/neurons remove. Magnitude-based (|w|<threshold). Unstructured (sparse 50-90%), Structured (channels 30-50%). Finetune gerekir."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "Quantization",
+      "back": "Precision azaltma: FP32→INT8 (4x smaller, 2-4x faster). PTQ (post-training, easy), QAT (training-aware, better accuracy <0.5% drop)."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Knowledge Distillation",
+      "back": "Teacher (big) → Student (small). Soft labels (T=3-5). Loss = CE(hard) + α·KL(soft). Student 5-10x smaller, <3% accuracy drop."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Structured Pruning",
+      "back": "Entire channel/filter remove. Dense matrix, hardware-friendly, 2-3x speedup. Less compression (30-50%) vs unstructured (50-90%)."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "PTQ vs QAT",
+      "back": "PTQ: Post-training, FP32→INT8, calibration (100-1000 samples), <1% loss, fast. QAT: Training-aware, fake quantization, <0.5% loss, longer."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Compression Ratio",
+      "back": "r = Size_original / Size_compressed. Pruning: 2x, Quantization: 4x, Distillation: 5-10x, Combined: 10-100x. Target: <3% accuracy drop."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "TensorFlow Lite",
+      "back": "Mobile ML framework (iOS, Android). Quantization, operator optimization, NNAPI/GPU delegate. PTQ, QAT support. <50MB models typical."
+    },
+    {
+      "front": "FLOPs Reduction",
+      "back": "Computational cost azaltma. Pruning: 50% weights → 50% FLOPs. Structured: 50% channels → 75% FLOPs (quadratic). Latency ↓."
+    },
+    {
+      "front": "Low-Rank Factorization",
+      "back": "Matrix decomposition: W (m×n) ≈ U(m×k)·V(k×n), k<<min(m,n). Parameters: mn → k(m+n). SVD, Tucker decomposition."
+    },
+    {
+      "front": "Hardware-Aware Compression",
+      "back": "Target hardware (CPU/GPU/NPU). Operator fusion, memory layout (NCHW vs NHWC), multi-threading, sparse kernels (NVIDIA Ampere)."
+    },
+    {
+      "front": "TinyML",
+      "back": "Extreme compression (<1MB). Binary/ternary networks (1-bit), INT4/INT2. IoT, microcontrollers (Arduino, STM32). Low power (<1mW)."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Aggressive pruning without finetuning",
+      "why": "90% pruning → accuracy collapse. Model can't recover without finetuning. Weights removed, network capacity lost.",
+      "fix": "Iterative pruning: Prune 10-20%, finetune 5-10 epochs, repeat. Monitor accuracy. Per-layer sensitivity (critical layers less pruning). Gradual sparsity."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Quantization without calibration",
+      "why": "PTQ requires calibration dataset (100-1000 samples). No calibration → poor range estimation → accuracy drop >5%.",
+      "fix": "Calibration: Representative dataset (similar to training distribution). Static quantization (calibration), not dynamic (runtime). QAT for <0.5% loss."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Test on simulation, not actual device",
+      "why": "Simulation (laptop GPU) ≠ actual device (mobile CPU). Operator support, memory, latency different. False confidence.",
+      "fix": "Test on target hardware: iOS (CoreML), Android (TFLite), Edge (Raspberry Pi). Measure actual latency (ms), memory (MB), battery. Profile (TensorFlow Profiler)."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Compress first, distill later",
+      "why": "Compression (pruning, quantization) → accuracy drop. Distillation after → student learns from damaged teacher. Sub-optimal.",
+      "fix": "Correct order: (1) Distill (teacher → student), (2) Prune student, (3) Finetune, (4) Quantize, (5) Validate. Or: Prune teacher first, then distill."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Unstructured pruning for production",
+      "why": "Unstructured (sparse) requires sparse kernels (limited support). CPU/GPU don't accelerate sparse. 50% sparsity → 1.5x speedup (not 2x).",
+      "fix": "Structured pruning (channels, filters) → dense matrix, hardware-friendly, 2-3x speedup. Or: Use sparse-aware hardware (NVIDIA Ampere sparse tensor cores)."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Ignore per-class accuracy",
+      "why": "Compression can bias towards majority class. Rare classes (minority) accuracy drop >> average. Fairness issue.",
+      "fix": "Monitor per-class accuracy. Protected groups check. Balanced validation set. Distillation: Multi-task loss (per-class weights). Finetune on hard examples."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Deploy compressed model without A/B test",
+      "why": "Offline accuracy (test set) ≠ online accuracy (production). User behavior, data drift. Rollback zor.",
+      "fix": "A/B test: Compressed vs original (1% → 10% → 100%). Monitor online metrics (CTR, conversion, latency). Gradual rollout, rollback plan."
     }
   ],
   "visualizations": [
     {
-      "type": "diagram",
-      "title": "Model Compression & Pruning Overview",
-      "description": "Visual explanation"
-    },
-    {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "Compression Techniques",
+      "description": "Pruning vs Quantization vs Distillation. Size reduction, speedup, accuracy drop, ease of implementation. Use case fit (mobile, edge, cloud)."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Pruning Simulator",
+      "description": "User uploads model. Interactive: Prune 0-90% (slider). Real-time: Model size, FLOPs, accuracy (simulated). Structured vs unstructured comparison."
+    },
+    {
+      "type": "diagram",
+      "title": "Compression Pipeline",
+      "description": "Flowchart: Train → Prune → Finetune → Quantize → Validate → Deploy. Decision nodes (PTQ vs QAT, structured vs unstructured). Framework outputs (TFLite, ONNX, TensorRT)."
+    },
+    {
+      "type": "metric",
+      "title": "Compression Dashboard",
+      "description": "Model size (MB), FLOPs, inference time (ms), accuracy, per-class accuracy. Comparison: Original vs compressed. Hardware: CPU/GPU/Mobile latency."
     }
   ],
   "references": [
     {
-      "title": "Model Compression & Pruning Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "The Lottery Ticket Hypothesis",
+      "authors": "Frankle, J. & Carbin, M.",
+      "year": 2019,
+      "link": "https://arxiv.org/abs/1803.03635",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "Distilling the Knowledge in a Neural Network",
+      "authors": "Hinton, G. et al.",
+      "year": 2015,
+      "link": "https://arxiv.org/abs/1503.02531",
+      "type": "paper"
+    },
+    {
+      "title": "TensorFlow Lite",
+      "authors": "Google",
+      "year": 2024,
+      "link": "https://www.tensorflow.org/lite",
+      "type": "tool"
+    },
+    {
+      "title": "PyTorch Mobile",
+      "authors": "Meta",
+      "year": 2024,
+      "link": "https://pytorch.org/mobile",
+      "type": "tool"
     }
   ]
 }
