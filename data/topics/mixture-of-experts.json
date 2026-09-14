@@ -1,0 +1,176 @@
+{
+  "id": "mixture-of-experts",
+  "title": "Mixture of Experts (MoE)",
+  "category": "llm",
+  "level": 4,
+  "estimatedTime": 65,
+  "description": "Mixture of Experts (MoE): Sparse activation, conditional computation. Router seçer hangi expert'leri aktive edecek. Mixtral, GPT-4, Switch Transformers. Massive scale (1.6T params), cost-efficient inference.",
+  "content": {
+    "level0_basic": "Mixture of Experts (MoE): Model birden fazla uzman (expert) içerir, her input için sadece 1-2 expert aktive edilir (sparse activation). Router: Input'a bakarak hangi expert'in çalışacağına karar verir (gating network). Dense model: Tüm parametreler her input için kullanılır (expensive). MoE: Toplam parametre çok (1.6T), ama her input için az (8 expert'ten 2'si aktive → 13B param). Avantaj: (1) Massive scale (daha fazla bilgi), (2) Cost-efficient (inference hızlı, FLOPs az). Dezavantaj: Load balancing (bazı expert'ler overuse), communication cost (distributed training). Örnekler: Mixtral 8x7B, GPT-4 (rumored), Switch Transformers, GShard.",
+    "level1_beginner": "Architecture: (1) Router/Gate: Softmax veya Top-K selection (hangi expert'ler aktive?). (2) Experts: N adet FFN (feedforward network, her biri ayrı parametreler). (3) Output: Weighted sum of expert outputs (router weights ile). Sparse MoE: Top-K experts (K=1,2), geri kalanı inactive. Token routing: Her token farklı expert'e gidebilir (token-level routing). Load balancing: Router'ı dengelemek için auxiliary loss (tüm expert'ler eşit kullanılsın). Training: Distributed (model sharding, expert parallelism), gradient aggregation. Inference: Expert cache (aktif expert'ler GPU'da, diğerleri CPU/disk). Variants: (1) Top-1 MoE (tek expert), (2) Top-K (K expert weighted sum), (3) Soft MoE (tüm expert'ler hafif aktive).",
+    "level2_application": "Use cases: (1) Large Language Models (Mixtral 8x7B, GPT-4 MoE rumored). (2) Multilingual models (her dil bir expert). (3) Multi-modal (vision expert, text expert). (4) Domain-specific (code expert, math expert, chat expert). Deployment: (1) Inference: Expert caching (memory efficient). (2) Serving: Route batching (same experts → batch together). (3) Latency: Top-1 faster than Top-2. (4) Cost: FLOPs 1/8 of dense (13B active vs 104B total). Frameworks: Hugging Face Transformers (Mixtral), Fairseq (MoE layers), Mesh TensorFlow (Switch Transformers). Trade-offs: (1) Capacity: More params → better performance. (2) Routing: Top-K higher quality, Top-1 faster. (3) Experts: 8-128 experts (8 typical, 2048 in Switch-XXL).",
+    "level3_advanced": "Training details: (1) Load balancing loss: L_aux = α·Σ f_i·P_i (f_i: fraction routed to expert i, P_i: router probability). Goal: f_i ≈ 1/N (uniform). (2) Expert capacity: Buffer size per expert (C = (tokens/expert)·capacity_factor). Overflow → dropped tokens. (3) Gradient noise: Sparse routing → noisy gradients. Solution: Auxiliary loss, increased batch size. (4) Router z-loss: Penalize large router logits (numerical stability). Inference optimization: (1) Expert caching: Keep Top-K experts on GPU. (2) Speculative routing: Predict next token's expert (pipelining). (3) Quantization: INT8 experts (memory efficient). (4) Expert pruning: Remove unused experts (fine-tuning). Load balancing strategies: (1) Random routing (tie-breaking). (2) Auxiliary loss (L_aux). (3) Expert capacity limits. (4) Token dropping (if expert full).",
+    "level4_expert": "Production: (1) Model sharding: Expert parallelism (each GPU/node hosts subset of experts). Data parallelism (replicate router). (2) Communication: All-to-all (expensive, bottleneck). Hierarchical routing (reduce comm). (3) Serving: Dynamic batching (route similar tokens together), expert replication (popular experts 2x), load balancer (distribute experts). (4) Monitoring: Expert utilization (which experts used?), load imbalance (coefficient of variation), throughput (tokens/sec). Research: (1) Soft MoE (differentiable, all experts contribute). (2) MoE-LLaMA (LLaMA + MoE layers). (3) Multi-gate MoE (different gates per layer). (4) Expert merging (compress 8 experts → 4). (5) Routing interpretability (what does each expert learn?). Benchmarks: Mixtral 8x7B (outperforms LLaMA 70B, faster inference), Switch-C (1.6T params, SOTA machine translation), GLaM (1.2T, few-shot learning). Challenges: (1) Training instability (router collapse). (2) Expert specialization (diverse experts). (3) Communication overhead (distributed). (4) Memory fragmentation (expert buffers)."
+  },
+  "whatIsIt": "Mixture of Experts (MoE): N expert networks (typically FFN), router/gate selects Top-K experts per input. Sparse activation: Only K experts active (K=1,2), rest dormant. Architecture: Input → Router (softmax/Top-K) → Experts (parallel FFN) → Weighted sum → Output. Math: y = Σ G(x)_i · Expert_i(x), G(x) = Top-K(Softmax(W_g·x)). Total params: N·|Expert|, active params: K·|Expert|. Example: Mixtral 8x7B (8 experts, 7B each, Top-2 active → 13B FLOPs, 56B total params). Dense equivalent: 13B params, same FLOPs. Advantage: Massive capacity (56B knowledge), efficient compute (13B FLOPs). Load balancing: Auxiliary loss L_aux = α·Σ(f_i - 1/N)² (f_i: expert utilization).",
+  "whyNeeded": "MoE critical çünkü: (1) **Scalability**: Dense model 1T params → GPU memory impossible (80GB VRAM). MoE: 1.6T params, only 13B active → feasible. (2) **Cost-efficiency**: Mixtral 8x7B inference cost = LLaMA 13B (same FLOPs), quality = LLaMA 70B. (3) **Specialization**: Experts learn different skills (code, math, languages). Better than single dense model. (4) **Multilingual**: 100 languages → 100 experts (language-specific routing). No interference. (5) **Multi-modal**: Vision expert, text expert, audio expert. Conditional compute. (6) **Training speed**: Expert parallelism (8 experts on 8 GPUs → 8x faster). (7) **Long-tail**: Rare domains (medical, legal) → dedicated expert. Dense model forgets. (8) **Inference**: Sparse activation → lower latency (Top-1 MoE fastest). Mobile/edge deployment. (9) **Research**: GPT-4 rumored MoE (8-16 experts). Mixtral SOTA open-source. (10) **Future**: Trillion-param models (MoE only way).",
+  "realWorldAnalogy": "MoE'yi bir **konsültasyon merkezi**'ne benzetebiliriz. **Durum**: Bir hastane (model), 8 uzman doktor (experts) var: Kardiolog, Nörolog, Ortopedist, Dermatoloji, Psikiyatri, Pediatri, Onkoloji, Gastroenteroloji. **Dense Model (Klasik)**: Her hasta geldiğinde **tüm 8 doktor birlikte** muayene eder (expensive, slow). Kardiyak problem için bile 8 doktor çalışır → Zaman ve maliyet israfı. **MoE Model**: Hastane **Resepsiyonist (router)** hasta'ya bakar, hangi uzmanlara gitmesi gerektiğine karar verir (gating). Örnek: Hasta kalp ağrısı → Router: 'Kardiolog ve Gastroenteroloji'ye gönderir (Top-2). Sadece 2 doktor çalışır, diğer 6 doktor boşta (sparse activation). **Load Balancing**: Eğer tüm hastalar Kardiolog'a giderse → Overload (load imbalance). Router'a auxiliary loss eklenir: 'Tüm doktorlar eşit sayıda hasta görsün'. **Expert Capacity**: Her doktor günde max 50 hasta görebilir (capacity factor). 51. hasta → Overflow, başka doktora yönlendirilir veya beklenir (token dropping). **Specialization**: Kardiolog kalp konusunda uzman, Nörolog beyin. MoE'de her expert farklı token pattern'lerinde uzmanlaşır (code, math, language). **Inference**: Resepsiyonist (router) hızlı karar verir (Top-K selection), sadece ilgili doktorlar çalışır → Hızlı, efficient. **Distributed**: 8 doktor farklı binalarda (distributed GPUs). Resepsiyonist hastayı doğru binaya yönlendirir (expert parallelism).",
+  "mathematics": {
+    "formulas": [
+      "\\text{MoE Output}: \\quad y = \\sum_{i=1}^{N} G(x)_i \\cdot E_i(x) \\quad \\text{(weighted sum of experts)}",
+      "\\text{Router (Gating)}: \\quad G(x) = \\text{Softmax}(W_g \\cdot x) \\quad \\text{or} \\quad G(x) = \\text{Top-K}(\\text{Softmax}(W_g \\cdot x)) \\quad \\text{(K active)}",
+      "\\text{Top-K Selection}: \\quad G(x)_i = \\begin{cases} \\frac{\\exp(s_i)}{\\sum_{j \\in \\text{Top-K}} \\exp(s_j)} & \\text{if } i \\in \\text{Top-K} \\\\ 0 & \\text{otherwise} \\end{cases}",
+      "\\text{Load Balancing Loss}: \\quad \\mathcal{L}_{\\text{aux}} = \\alpha \\sum_{i=1}^{N} f_i \\cdot P_i \\quad \\text{where } f_i = \\frac{1}{T}\\sum_{t=1}^{T} \\mathbb{1}[\\text{expert}_i \\text{ used for token } t], \\; P_i = \\frac{1}{T}\\sum_{t=1}^{T} G(x_t)_i",
+      "\\text{Total Loss}: \\quad \\mathcal{L} = \\mathcal{L}_{\\text{task}} + \\alpha \\cdot \\mathcal{L}_{\\text{aux}} \\quad \\text{(α = 0.01 typical)}",
+      "\\text{Expert Capacity}: \\quad C = \\left(\\frac{T}{N}\\right) \\cdot \\text{capacity\\_factor} \\quad \\text{(T tokens, N experts, factor=1.25 typical)}",
+      "\\text{FLOPs (MoE)}: \\quad \\text{FLOPs}_{\\text{MoE}} = K \\cdot \\text{FLOPs}_{\\text{expert}} \\quad \\text{(K active experts)}",
+      "\\text{Router z-loss}: \\quad \\mathcal{L}_{z} = \\frac{1}{T}\\sum_{t=1}^{T} \\left(\\log \\sum_{i=1}^{N} \\exp(z_i^{(t)})\\right)^2 \\quad \\text{(penalize large logits)}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. **Input**: Token embedding x ∈ R^d (d=model dimension)",
+      "2. **Router Logits**: Compute routing scores z = W_g·x (W_g ∈ R^{N×d}, N=num experts). Shape: (N,) logits per expert",
+      "3. **Top-K Selection**: G(x) = Top-K(Softmax(z), K). Select K experts with highest scores. Mask others → 0. Softmax over Top-K only (sum=1)",
+      "4. **Expert Computation**: For each expert i in Top-K: y_i = Expert_i(x) (typically 2-layer FFN with expand/compress). Parallel execution (different GPUs if distributed)",
+      "5. **Weighted Sum**: y = Σ_{i in Top-K} G(x)_i · y_i. Output ∈ R^d (same dimension as input)",
+      "6. **Load Balancing**: Track f_i (fraction of tokens routed to expert i). Compute auxiliary loss: L_aux = α·Σ f_i·P_i (P_i=mean router probability). Add to task loss: L_total = L_task + α·L_aux",
+      "7. **Expert Capacity** (optional): If expert buffer full (C tokens), drop overflow tokens OR route to next-best expert",
+      "8. **Backward Pass**: Gradient flows through active experts only. Router gradient: ∂L/∂W_g (Top-K differentiable via straight-through estimator). Load balance gradient: ∂L_aux/∂W_g",
+      "9. **Expert Update**: Each expert updated only by tokens routed to it (sparse gradients). Distributed: All-to-all communication (gather expert outputs)",
+      "10. **Inference**: Same forward pass. Cache Top-K experts in GPU memory (frequently used). Evict unused experts to CPU/disk"
+    ],
+    "complexity": "**Zaman**: Router: O(N·d) (N experts, d dimension). Top-K: O(N log K). Expert forward: O(K·d·d_ff) (K active, d_ff=FFN hidden). Total: O(N·d + K·d·d_ff). Inference: Same as dense K-expert model. **Uzay**: Total params: N·|Expert| (e.g., 8×7B=56B). Active params: K·|Expert| (e.g., 2×7B=14B). Memory: Expert buffers O(C·d) per expert (C=capacity). **Parallelization**: Expert parallelism (N experts on N GPUs). Data parallelism (router replicated). Communication: All-to-all O(B·d) per batch (B=batch size). **Load Balancing**: f_i: O(T) compute (T tokens). Auxiliary loss: O(N) per batch. **Comparison**: Dense 56B: 56B FLOPs. MoE 8x7B (Top-2): 14B FLOPs (4x faster)."
+  },
+  "prerequisites": [
+    "transformers-attention",
+    "neural-networks",
+    "large-language-models-basics"
+  ],
+  "nextTopics": [
+    "distributed-training",
+    "model-parallelism"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "large-language-models-basics",
+    "distributed-training"
+  ],
+  "tags": [
+    "mixture-of-experts",
+    "moe",
+    "sparse-models",
+    "conditional-computation",
+    "mixtral",
+    "routing"
+  ],
+  "codeExamples": [
+    {
+      "title": "Simple MoE Layer (PyTorch)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass Expert(nn.Module):\n    \"\"\"Single expert: 2-layer FFN\"\"\"\n    def __init__(self, d_model, d_ff):\n        super().__init__()\n        self.fc1 = nn.Linear(d_model, d_ff)\n        self.fc2 = nn.Linear(d_ff, d_model)\n    \n    def forward(self, x):\n        return self.fc2(F.relu(self.fc1(x)))\n\nclass MoELayer(nn.Module):\n    \"\"\"Mixture of Experts layer with Top-K routing\"\"\"\n    def __init__(self, d_model, d_ff, num_experts=8, top_k=2):\n        super().__init__()\n        self.num_experts = num_experts\n        self.top_k = top_k\n        \n        # Router/Gate\n        self.router = nn.Linear(d_model, num_experts)\n        \n        # Experts\n        self.experts = nn.ModuleList([Expert(d_model, d_ff) for _ in range(num_experts)])\n    \n    def forward(self, x):\n        \"\"\"\n        x: (batch_size, seq_len, d_model)\n        \"\"\"\n        batch_size, seq_len, d_model = x.shape\n        x_flat = x.view(-1, d_model)  # (batch*seq_len, d_model)\n        \n        # Router logits\n        router_logits = self.router(x_flat)  # (batch*seq_len, num_experts)\n        \n        # Top-K selection\n        top_k_logits, top_k_indices = torch.topk(router_logits, self.top_k, dim=-1)\n        top_k_gates = F.softmax(top_k_logits, dim=-1)  # (batch*seq_len, top_k)\n        \n        # Expert outputs\n        expert_outputs = torch.stack([expert(x_flat) for expert in self.experts], dim=1)\n        # Shape: (batch*seq_len, num_experts, d_model)\n        \n        # Gather Top-K expert outputs\n        selected_experts = torch.gather(\n            expert_outputs,\n            1,\n            top_k_indices.unsqueeze(-1).expand(-1, -1, d_model)\n        )  # (batch*seq_len, top_k, d_model)\n        \n        # Weighted sum\n        output_flat = torch.sum(top_k_gates.unsqueeze(-1) * selected_experts, dim=1)\n        # Shape: (batch*seq_len, d_model)\n        \n        output = output_flat.view(batch_size, seq_len, d_model)\n        return output\n\n# Example\nd_model = 512\nd_ff = 2048\nnum_experts = 8\ntop_k = 2\n\nmoe_layer = MoELayer(d_model, d_ff, num_experts, top_k)\n\n# Input\nbatch_size = 4\nseq_len = 10\nx = torch.randn(batch_size, seq_len, d_model)\n\n# Forward\noutput = moe_layer(x)\n\nprint(f'Input shape: {x.shape}')\nprint(f'Output shape: {output.shape}')\nprint(f'Num experts: {num_experts}, Top-K: {top_k}')\nprint(f'Active params per token: {top_k}/{num_experts} experts = {top_k/num_experts*100:.0f}%')\nprint(f'\\nTotal MoE params: {sum(p.numel() for p in moe_layer.parameters()):,}')\nprint(f'Active params (Top-{top_k}): ~{sum(p.numel() for p in moe_layer.experts[0].parameters()) * top_k:,}')",
+      "level": 2,
+      "explanation": "Simple MoE: Router (linear layer) seçer Top-K experts. Her token için K expert aktive edilir (sparse). Weighted sum: Router weights ile expert outputs'ları birleştirir. Bu örnekte: 8 expert, Top-2 aktive → 25% params aktif. Real-world: Mixtral 8x7B (8 experts, 7B each, Top-2 → 13B active FLOPs)."
+    },
+    {
+      "title": "MoE with Load Balancing Loss",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass MoEWithBalancing(nn.Module):\n    \"\"\"MoE with auxiliary load balancing loss\"\"\"\n    def __init__(self, d_model, d_ff, num_experts=8, top_k=2, alpha=0.01):\n        super().__init__()\n        self.num_experts = num_experts\n        self.top_k = top_k\n        self.alpha = alpha  # Load balance coefficient\n        \n        self.router = nn.Linear(d_model, num_experts)\n        self.experts = nn.ModuleList([nn.Sequential(\n            nn.Linear(d_model, d_ff),\n            nn.ReLU(),\n            nn.Linear(d_ff, d_model)\n        ) for _ in range(num_experts)])\n    \n    def forward(self, x):\n        \"\"\"\n        x: (batch_size, seq_len, d_model)\n        Returns: output, load_balancing_loss\n        \"\"\"\n        batch_size, seq_len, d_model = x.shape\n        num_tokens = batch_size * seq_len\n        x_flat = x.view(num_tokens, d_model)\n        \n        # Router logits\n        router_logits = self.router(x_flat)  # (num_tokens, num_experts)\n        router_probs = F.softmax(router_logits, dim=-1)  # (num_tokens, num_experts)\n        \n        # Top-K\n        top_k_logits, top_k_indices = torch.topk(router_logits, self.top_k, dim=-1)\n        top_k_gates = F.softmax(top_k_logits, dim=-1)  # Normalize Top-K\n        \n        # Expert outputs\n        output_flat = torch.zeros_like(x_flat)\n        \n        # Load balancing metrics\n        f_i = torch.zeros(self.num_experts, device=x.device)  # Fraction routed\n        P_i = router_probs.mean(dim=0)  # Mean router probability\n        \n        for i in range(self.num_experts):\n            # Find tokens routed to expert i\n            mask = (top_k_indices == i).any(dim=-1)  # (num_tokens,)\n            f_i[i] = mask.float().mean()  # Fraction of tokens\n            \n            if mask.sum() > 0:\n                # Expert forward\n                expert_input = x_flat[mask]\n                expert_output = self.experts[i](expert_input)\n                \n                # Get gates for this expert\n                token_indices = torch.where(mask)[0]\n                expert_gates = torch.zeros(mask.sum(), device=x.device)\n                for j, token_idx in enumerate(token_indices):\n                    expert_pos = (top_k_indices[token_idx] == i).nonzero(as_tuple=True)[0]\n                    if len(expert_pos) > 0:\n                        expert_gates[j] = top_k_gates[token_idx, expert_pos[0]]\n                \n                # Weighted contribution\n                output_flat[mask] += expert_gates.unsqueeze(-1) * expert_output\n        \n        # Load balancing loss: Σ f_i * P_i (encourage uniform usage)\n        load_balance_loss = self.alpha * (f_i * P_i).sum()\n        \n        output = output_flat.view(batch_size, seq_len, d_model)\n        \n        # Statistics\n        stats = {\n            'load_balance_loss': load_balance_loss.item(),\n            'expert_usage': f_i.cpu().tolist(),\n            'mean_router_probs': P_i.cpu().tolist()\n        }\n        \n        return output, load_balance_loss, stats\n\n# Training example\nmoe = MoEWithBalancing(d_model=512, d_ff=2048, num_experts=8, top_k=2, alpha=0.01)\noptimizer = torch.optim.Adam(moe.parameters(), lr=0.001)\n\n# Dummy data\nx = torch.randn(4, 10, 512)\ny_true = torch.randn(4, 10, 512)\n\nfor epoch in range(5):\n    optimizer.zero_grad()\n    \n    # Forward\n    y_pred, load_balance_loss, stats = moe(x)\n    \n    # Task loss (e.g., MSE)\n    task_loss = F.mse_loss(y_pred, y_true)\n    \n    # Total loss\n    total_loss = task_loss + load_balance_loss\n    \n    # Backward\n    total_loss.backward()\n    optimizer.step()\n    \n    print(f'Epoch {epoch+1}: Task Loss={task_loss:.4f}, '\n          f'Load Balance Loss={stats[\"load_balance_loss\"]:.4f}')\n    print(f'  Expert usage: {[f\"{u:.2f}\" for u in stats[\"expert_usage\"]]}')\n\nprint('\\nLoad balancing prevents expert collapse (all tokens to 1-2 experts)')\nprint('Ideal: Each expert ~12.5% usage (1/8 experts)')",
+      "level": 3,
+      "explanation": "Load Balancing Loss: L_aux = α·Σ(f_i·P_i), f_i=fraction of tokens routed to expert i, P_i=mean router probability. Goal: Uniform expert usage (f_i ≈ 1/N). Without balancing: Router collapse (all tokens → 1-2 favorite experts, other experts unused). α=0.01 typical. Production: Monitor expert usage (DevOps dashboard), alert if imbalance >2x."
+    },
+    {
+      "title": "Mixtral-style MoE (Hugging Face)",
+      "language": "python",
+      "code": "# pip install transformers\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\nimport torch\n\n# Load Mixtral 8x7B (MoE model)\nmodel_name = 'mistralai/Mixtral-8x7B-v0.1'\ntokenizer = AutoTokenizer.from_pretrained(model_name)\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=torch.float16,\n    device_map='auto',  # Auto distribute experts across GPUs\n    load_in_8bit=True   # Quantization (memory efficient)\n)\n\nprint(f'Model: {model_name}')\nprint(f'Total params: {model.num_parameters() / 1e9:.1f}B')\nprint(f'Num experts: 8 (per MoE layer)')\nprint(f'Expert size: ~7B params each')\nprint(f'Top-K: 2 (2 experts active per token)')\nprint(f'Active FLOPs: ~13B (2x 7B experts)\\n')\n\n# Inference\nprompt = \"Explain mixture of experts in machine learning:\"\ninputs = tokenizer(prompt, return_tensors='pt').to(model.device)\n\nprint(f'Prompt: {prompt}')\nprint('\\nGenerating...')\n\nwith torch.no_grad():\n    outputs = model.generate(\n        **inputs,\n        max_new_tokens=150,\n        temperature=0.7,\n        top_p=0.9,\n        do_sample=True\n    )\n\nresponse = tokenizer.decode(outputs[0], skip_special_tokens=True)\nprint(f'\\n{response}')\n\n# MoE Benefits:\nprint('\\n=== MoE Advantages ===')\nprint('1. Inference cost: Same as 13B dense model (2 experts active)')\nprint('2. Model quality: Outperforms LLaMA 70B on many benchmarks')\nprint('3. Memory: 56B params total, but only 13B active (sparse)')\nprint('4. Specialization: Each expert learns different patterns')\nprint('5. Scalability: Can scale to 128+ experts (Switch Transformers)')\nprint('\\n=== Deployment ===')\nprint('- GPU: 2x A100 (40GB each) with 8-bit quantization')\nprint('- Latency: ~30 tokens/sec (similar to dense 13B)')\nprint('- Cost: 4x cheaper than serving LLaMA 70B')\nprint('- Open-source: Apache 2.0 license (commercial use OK)')",
+      "level": 2,
+      "explanation": "Mixtral 8x7B: SOTA open-source MoE model. 8 experts (7B each), Top-2 aktive → 13B FLOPs (dense 13B ile aynı hız), quality LLaMA 70B'ye yakın. Deployment: device_map='auto' (experts distributed across GPUs), load_in_8bit (quantization, memory efficient). Use case: Production LLM serving (cost-efficient, high quality). Benchmark: Mixtral outperforms LLaMA 2 70B on MMLU, GSM8K, HumanEval."
+    },
+    {
+      "title": "Expert Usage Visualization",
+      "language": "python",
+      "code": "import torch\nimport torch.nn.functional as F\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Simulate MoE routing over time\nnum_experts = 8\nnum_tokens = 1000\ntop_k = 2\n\n# Random router logits (simulate learned routing)\ntorch.manual_seed(42)\nrouter_logits = torch.randn(num_tokens, num_experts)\n\n# Add bias to simulate load imbalance (without balancing loss)\n# Expert 0 and 1 favored\nrouter_logits[:, 0] += 0.5\nrouter_logits[:, 1] += 0.3\n\n# Top-K selection\ntop_k_logits, top_k_indices = torch.topk(router_logits, top_k, dim=-1)\n\n# Count expert usage\nexpert_counts = torch.zeros(num_experts)\nfor i in range(num_experts):\n    expert_counts[i] = (top_k_indices == i).sum().item()\n\nexpert_usage_pct = expert_counts / (num_tokens * top_k) * 100\n\nprint('=== Expert Usage (Without Load Balancing) ===')\nfor i in range(num_experts):\n    print(f'Expert {i}: {expert_usage_pct[i]:.1f}% ({int(expert_counts[i])} tokens)')\n\n# Visualization\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Left: Expert usage bar chart\naxes[0].bar(range(num_experts), expert_usage_pct.numpy(), color='steelblue')\naxes[0].axhline(100/num_experts, color='red', linestyle='--', linewidth=2, label=f'Ideal ({100/num_experts:.1f}%)')\naxes[0].set_xlabel('Expert ID', fontsize=12)\naxes[0].set_ylabel('Usage (%)', fontsize=12)\naxes[0].set_title('Expert Load Distribution (No Balancing)', fontsize=14, fontweight='bold')\naxes[0].legend()\naxes[0].grid(alpha=0.3, axis='y')\n\n# Right: Routing heatmap (first 50 tokens)\nrouting_matrix = torch.zeros(50, num_experts)\nfor token_idx in range(50):\n    for expert_idx in top_k_indices[token_idx]:\n        routing_matrix[token_idx, expert_idx] = 1\n\nim = axes[1].imshow(routing_matrix.T.numpy(), aspect='auto', cmap='Blues', interpolation='nearest')\naxes[1].set_xlabel('Token Index', fontsize=12)\naxes[1].set_ylabel('Expert ID', fontsize=12)\naxes[1].set_title('Token → Expert Routing (First 50 tokens)', fontsize=14, fontweight='bold')\naxes[1].set_yticks(range(num_experts))\nplt.colorbar(im, ax=axes[1], label='Routed (1) or Not (0)')\n\nplt.tight_layout()\nplt.show()\n\nprint('\\n=== Analysis ===')\nprint(f'Load imbalance: Expert 0 and 1 overused ({expert_usage_pct[0]:.1f}%, {expert_usage_pct[1]:.1f}%)')\nprint(f'Underused: Expert 6 and 7 ({expert_usage_pct[6]:.1f}%, {expert_usage_pct[7]:.1f}%)')\nprint('\\nSolution: Load balancing loss (L_aux) encourages uniform distribution')\nprint('Ideal: Each expert ~12.5% (1/8 experts, Top-2 routing → 25% total)')",
+      "level": 3,
+      "explanation": "Expert Load Imbalance: Without load balancing, router favors 1-2 experts (expert collapse). Heatmap: Her satır bir token, her sütun bir expert. Mavi: Routed. Ideal: Uniform distribution (her expert eşit kullanım). Production monitoring: Expert utilization dashboard (Grafana), alert if coefficient of variation > 0.5. Mitigation: Auxiliary loss (L_aux), expert capacity limits, random tie-breaking."
+    }
+  ],
+  "quiz": [
+    {
+      "question": "MoE'nin temel prensibi nedir?",
+      "options": [
+        "Tüm expert'ler her input için aktive edilir",
+        "Router Top-K expert seçer, sadece K expert aktive (sparse activation). Diğerleri dormant",
+        "Tek bir büyük model",
+        "Expert'ler birbirinden bağımsız eğitilir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "MoE: Router/gate Top-K expert seçer (K=1,2 typical). Sadece seçilen K expert forward pass yapar (sparse activation). Diğer (N-K) expert dormant → Memory efficient, fast inference.",
+      "id": "moe-q1"
+    },
+    {
+      "question": "Load balancing loss neden gereklidir?",
+      "options": [
+        "Router her zaman dengeli",
+        "Expert collapse'i önler: Tüm token'lar 1-2 expert'e gitmemeli. L_aux = α·Σ(f_i·P_i) uniform usage sağlar",
+        "Sadece training speed için",
+        "Gereksiz"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Load Balancing Loss (L_aux): Router collapse → tüm token'lar 1-2 favori expert'e gider, diğer expert'ler unused. L_aux = α·Σ(f_i·P_i) penalize eder imbalance'ı. Goal: f_i ≈ 1/N (uniform).",
+      "id": "moe-q2"
+    },
+    {
+      "question": "Mixtral 8x7B'nin avantajı nedir?",
+      "options": [
+        "Dense 56B model ile aynı cost",
+        "8 expert (7B each), Top-2 aktive → 13B FLOPs (dense 13B ile aynı cost), quality LLaMA 70B'ye yakın. 4x cheaper",
+        "Sadece research için",
+        "Daha yavaş"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Mixtral 8x7B: Total 56B params (8×7B), Top-2 active → 13B FLOPs. Inference cost = dense 13B (aynı compute), quality ≈ LLaMA 70B (çok daha iyi). Production: 4x cheaper than LLaMA 70B.",
+      "id": "moe-q3"
+    },
+    {
+      "question": "MoE inference optimization stratejisi?",
+      "options": [
+        "Tüm expert'leri GPU'da tut",
+        "Expert caching (Top-K GPU'da, diğerleri CPU/disk), speculative routing, quantization (INT8), dynamic batching",
+        "Sadece CPU kullan",
+        "Optimization gereksiz"
+      ],
+      "correctAnswer": 1,
+      "explanation": "MoE Inference Optimization: (1) Expert caching (frequently used experts GPU'da, evict unused), (2) Speculative routing (predict next expert), (3) INT8 quantization, (4) Dynamic batching (route similar tokens together → reduce comm).",
+      "id": "moe-q4"
+    },
+    {
+      "question": "MoE vs Dense model trade-off?",
+      "options": [
+        "MoE her zaman daha iyi",
+        "MoE: Daha fazla total params (knowledge), sparse activation (efficient inference). Dense: Basit, no routing overhead. Trade-off: Capacity vs simplicity",
+        "Dense her zaman daha iyi",
+        "Aynılar"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Trade-off: MoE (56B total, 13B active) → Massive capacity, specialist experts, efficient inference. Dense (13B) → Simpler, no routing, lower memory. MoE wins when scale matters (GPT-4, Mixtral). Dense wins when simplicity matters (mobile, small tasks).",
+      "id": "moe-q5"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "architecture-diagram",
+      "title": "MoE Architecture",
+      "description": "Input → Router (Top-K selection) → 8 Experts (parallel) → Weighted sum → Output. Sparse: Only 2 experts active per token."
+    },
+    {
+      "type": "routing-heatmap",
+      "title": "Token → Expert Routing",
+      "description": "Heatmap: Rows=tokens, Columns=experts. Blue=routed. Shows which experts process which tokens. Load balancing visible."
+    },
+    {
+      "type": "expert-utilization",
+      "title": "Expert Load Distribution",
+      "description": "Bar chart: Expert usage percentage. Ideal: Uniform (12.5% each for 8 experts, Top-2). Load imbalance: Some experts overused."
+    }
+  ]
+}
