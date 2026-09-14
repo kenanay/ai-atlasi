@@ -1,265 +1,349 @@
 {
   "id": "pca-dimensionality-reduction",
-  "title": "PCA & Dimensionality Reduction",
+  "title": "PCA & Boyut İndirgeme",
   "category": "unsupervised-learning",
   "level": 2,
   "estimatedTime": 60,
-  "description": "PCA & Dimensionality Reduction: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Principal Component Analysis (PCA) ve boyut indirgeme teknikleri. Yüksek boyutlu veriyi daha düşük boyutlara projeksiyon ile dönüştürme, varyans maksimizasyonu ve özellik çıkarımı.",
   "content": {
-    "level0_basic": "PCA & Dimensionality Reduction basics: Core concepts explained simply.",
-    "level1_beginner": "PCA & Dimensionality Reduction fundamentals with examples and code snippets.",
-    "level2_application": "Practical PCA & Dimensionality Reduction implementation with real-world applications.",
-    "level3_advanced": "Advanced PCA & Dimensionality Reduction techniques and optimizations.",
-    "level4_expert": "Expert-level PCA & Dimensionality Reduction architectures and research directions."
+    "level0_basic": "PCA (Temel Bileşen Analizi), çok boyutlu veriyi daha az boyuta indirgeyen bir tekniktir. Örneğin 100 özellikli bir veri setini 2-3 boyuta düşürerek görselleştirilebilir hale getirir. En önemli bilgiyi korurken gereksiz boyutları atar.",
+    "level1_beginner": "PCA, veri setindeki en büyük varyansı yakalayan yönleri (temel bileşenleri) bulur. İlk bileşen, verinin en çok değiştiği yöndür. İkinci bileşen, birinciye dik olan ve en çok varyansı yakalayan ikinci yöndür. Bu şekilde n boyutlu veriyi k boyuta (k < n) indirgeyerek veri boyutunu küçültür, gürültüyü azaltır ve görselleştirme imkanı sağlar. Özellikle görüntü işleme, yüz tanıma ve öneri sistemlerinde yaygın kullanılır.",
+    "level2_application": "PCA uygulaması, veriyi önce merkezleme (ortalama çıkarma), ardından kovaryans matrisi hesaplama ve özdeğer ayrıştırması (eigendecomposition) adımlarını içerir. En büyük özdeğerlere karşılık gelen özvektörler, temel bileşenleri oluşturur. Gerçek dünya uygulamalarında scikit-learn kütüphanesi ile kolayca uygulanır. PCA, veri ön işleme, özellik mühendisliği ve makine öğrenmesi pipeline'larının kritik bir parçasıdır. Örneğin, 784 boyutlu MNIST rakam görüntüleri 50 boyuta indirgenebilir ve %95+ bilgi korunabilir.",
+    "level3_advanced": "İleri seviye PCA kullanımı, kernel PCA ile doğrusal olmayan boyut indirgeme, incremental PCA ile büyük veri setleri üzerinde bellek-verimli işleme ve sparse PCA ile seyrek özellik seçimini kapsar. Özdeğer ayrıştırması yerine SVD (Singular Value Decomposition) kullanılması numerik stabilite sağlar. Explained variance ratio ile kaç bileşenin tutulacağına karar verilir (genellikle %95-99 varyans hedeflenir). Whitening transformasyonu ile bileşenler normalize edilir. PCA'nın varsayımları (doğrusallık, verinin Gaussian dağılımlı olması) ihlal edildiğinde alternatif yöntemler (t-SNE, UMAP, Autoencoders) tercih edilir.",
+    "level4_expert": "Expert seviyede PCA, Randomized PCA ile büyük ölçekli matrisler için yaklaşık hesaplama, probabilistic PCA ile olasılıksal modelleme ve factor analysis ile gizli değişken modellemesini içerir. TruncatedSVD kullanarak seyrek matrisler üzerinde doğrudan çalışma, PCA'nın gradyan tabanlı optimizasyonlarla derin öğrenme modelleri ile entegrasyonu ve multi-view PCA ile farklı veri kaynaklarının birleştirilmesi ileri tekniklerdir. PCA'nın sınırlamaları (doğrusallık, global yapı, outlier hassasiyeti) bilinmeli ve domain-specific boyut indirgeme yöntemleri (text için LSA, görüntü için CNN öznitelikleri) tercih edilmelidir."
   },
-  "whatIsIt": "PCA & Dimensionality Reduction: Technical definition and core concepts.",
-  "whyNeeded": "Why PCA & Dimensionality Reduction matters: Applications and use cases.",
-  "realWorldAnalogy": "PCA & Dimensionality Reduction explained through real-world analogy.",
+  "whatIsIt": "PCA (Principal Component Analysis - Temel Bileşen Analizi), yüksek boyutlu veriyi daha düşük boyutlu bir uzaya projeksiyon ile dönüştüren gözetimsiz bir boyut indirgeme ve özellik çıkarma tekniğidir. Verinin varyansını maksimize eden ortogonal eksenler (temel bileşenler) bularak, en önemli bilgiyi korurken boyut sayısını azaltır. Matematiksel olarak, kovaryans matrisinin özdeğer ayrıştırması veya SVD ile hesaplanır.",
+  "whyNeeded": "PCA birçok kritik amaç için gereklidir: (1) **Boyut Laneti (Curse of Dimensionality)**: Yüksek boyutlu veride makine öğrenmesi algoritmaları yavaşlar ve overfitting riski artar; PCA boyutu düşürerek bu sorunu azaltır. (2) **Görselleştirme**: 100+ boyutlu veriyi 2D/3D'ye indirgeyerek scatter plot ile görselleştirilebilir hale getirir. (3) **Gürültü Azaltma**: Düşük varyanslı (gürültülü) bileşenleri atarak sinyal/gürültü oranını artırır. (4) **Hesaplama Verimliliği**: Daha az özellik, daha hızlı eğitim ve tahmin demektir. (5) **Multicollinearity**: Yüksek korelasyonlu özellikleri bağımsız bileşenlere dönüştürür. (6) **Veri Sıkıştırma**: Görüntü/video sıkıştırmada kullanılır (örn: yüz tanımada eigenfaces).",
+  "realWorldAnalogy": "PCA'yı bir fotoğraf çekme durumuna benzetebiliriz. Üç boyutlu bir heykeli fotoğraflarken, heykelin en çok bilgi içeren açısını seçersiniz (profil değil, ön cephe). Bu, birinci temel bileşendir - maksimum varyans (detay) yakalayan yön. İkinci fotoğrafı yan açıdan çekersiniz (birinciye dik), böylece yeni bilgi eklersiniz. Üçüncü açı (üstten) ise çok az yeni bilgi katar, bu yüzden atlayabilirsiniz. Sonuç: 3D heykeli 2 fotoğrafla (%95 doğrulukla) temsil edersiniz. PCA da veriyi en bilgilendirici 'açılardan' (bileşenlerden) projelendirerek boyutu azaltır, tıpkı 3D nesneyi 2D fotoğraflara indirgemek gibi.",
   "mathematics": {
     "formulas": [
-      "\\text{PCA & Dimensionality Reduction formula}",
-      "\\text{Key equation}"
+      "\\mathbf{X}_{\\text{centered}} = \\mathbf{X} - \\bar{\\mathbf{X}} \\quad \\text{(Veriyi merkeze taşı)}",
+      "\\mathbf{C} = \\frac{1}{n-1} \\mathbf{X}_{\\text{centered}}^T \\mathbf{X}_{\\text{centered}} \\quad \\text{(Kovaryans matrisi)}",
+      "\\mathbf{C} \\mathbf{v}_i = \\lambda_i \\mathbf{v}_i \\quad \\text{(Özdeğer denklemi)}",
+      "\\lambda_1 \\geq \\lambda_2 \\geq \\cdots \\geq \\lambda_d \\quad \\text{(Özdeğerler azalan sırada)}",
+      "\\mathbf{X}_{\\text{PCA}} = \\mathbf{X}_{\\text{centered}} \\mathbf{W}_k \\quad \\text{(k boyuta projeksiyon)}",
+      "\\text{Variance Explained} = \\frac{\\sum_{i=1}^k \\lambda_i}{\\sum_{i=1}^d \\lambda_i} \\quad \\text{(Açıklanan varyans oranı)}",
+      "\\mathbf{X}_{\\text{reconstructed}} = \\mathbf{X}_{\\text{PCA}} \\mathbf{W}_k^T + \\bar{\\mathbf{X}} \\quad \\text{(Veriyi geri getirme)}",
+      "\\mathbf{X} = \\mathbf{U} \\mathbf{\\Sigma} \\mathbf{V}^T \\quad \\text{(SVD alternatifi, } \\mathbf{V} \\text{ temel bileşenler)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Veriyi Merkeze Taşı**: Her özellikten o özelliğin ortalamasını çıkar: X_centered = X - mean(X). Bu, kovaryans matrisini hesaplamak için gereklidir.",
+      "2. **Kovaryans Matrisini Hesapla**: C = (1/(n-1)) * X_centered^T * X_centered. Bu d×d boyutlu simetrik matris, özelliklerin birbirleriyle kovaryanslarını içerir.",
+      "3. **Özdeğer ve Özvektörleri Bul**: Kovaryans matrisinin özdeğer ayrıştırması: C*v_i = λ_i*v_i. Özdeğerler varyansı, özvektörler yönü temsil eder.",
+      "4. **Özdeğerleri Sırala**: λ_1 ≥ λ_2 ≥ ... ≥ λ_d şeklinde azalan sırada sırala. En büyük özdeğer en önemli bileşendir.",
+      "5. **k Bileşen Seç**: Toplam varyansın %95-99'unu açıklayacak kadar bileşen seç. Scree plot veya cumulative explained variance grafiği kullan.",
+      "6. **Projeksiyon Matrisi Oluştur**: W_k = [v_1, v_2, ..., v_k] şeklinde ilk k özvektörü yan yana diz (d×k matrisi).",
+      "7. **Veriyi Dönüştür**: X_PCA = X_centered * W_k. Bu (n×d) matrisini (n×k) matrisine dönüştürür, her satır artık k boyutlu.",
+      "8. **Açıklanan Varyansı Hesapla**: Seçilen bileşenlerin toplam varyansın yüzde kaçını açıkladığını kontrol et.",
+      "9. **(Opsiyonel) Whitening**: Bileşenleri normalize et: X_white = X_PCA * diag(λ_i^(-1/2)) ile birim varyansa getir.",
+      "10. **(Opsiyonel) Rekonstrüksiyon**: Orijinal boyuta dön: X_reconstructed = X_PCA * W_k^T + mean(X). Bilgi kaybını gözlemle."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: Kovaryans matrisi hesaplama O(n*d²), özdeğer ayrıştırması O(d³). Toplam O(n*d² + d³). Eğer d >> n ise SVD tercih edilir (O(n²*d)). **Uzay Karmaşıklığı**: Kovaryans matrisi O(d²), projeksiyon matrisi O(d*k). **Optimizasyon**: Büyük veri için Randomized PCA O(n*k²) ile yaklaşık sonuç, Incremental PCA ile mini-batch işleme."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "matrices-tensors",
+    "eigenvalues-eigenvectors"
+  ],
+  "nextTopics": [
+    "tsne-umap-manifold",
+    "svd"
+  ],
+  "relatedTopics": [
+    "kmeans-clustering",
+    "dbscan-hierarchical-clustering",
+    "data-preprocessing-features"
+  ],
   "tags": [
-    "pca"
+    "pca",
+    "boyut-indirgeme",
+    "dimensionality-reduction",
+    "unsupervised-learning",
+    "eigendecomposition",
+    "covariance",
+    "variance",
+    "feature-extraction"
   ],
   "codeExamples": [
     {
-      "title": "Basic PCA & Dimensionality Reduction",
+      "title": "Temel PCA Uygulaması - Scikit-learn",
       "language": "python",
-      "code": "# PCA & Dimensionality Reduction example\nimport numpy as np\n\n# Implementation here",
+      "code": "import numpy as np\nfrom sklearn.decomposition import PCA\nfrom sklearn.preprocessing import StandardScaler\nimport matplotlib.pyplot as plt\n\n# Örnek veri: 1000 örnek, 50 özellik\nnp.random.seed(42)\nX = np.random.randn(1000, 50)\n\n# Adım 1: Veriyi standardize et (opsiyonel ama tavsiye edilir)\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\n# Adım 2: PCA uygula - 2 boyuta indir\npca = PCA(n_components=2)\nX_pca = pca.fit_transform(X_scaled)\n\nprint(f\"Orijinal boyut: {X.shape}\")  # (1000, 50)\nprint(f\"PCA sonrası: {X_pca.shape}\")  # (1000, 2)\nprint(f\"Açıklanan varyans: {pca.explained_variance_ratio_}\")\nprint(f\"Toplam varyans: {pca.explained_variance_ratio_.sum():.2%}\")\n\n# Görselleştirme\nplt.scatter(X_pca[:, 0], X_pca[:, 1], alpha=0.5)\nplt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%})')\nplt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%})')\nplt.title('PCA - İlk 2 Temel Bileşen')\nplt.show()",
       "level": 1,
-      "explanation": "Basic PCA & Dimensionality Reduction code"
+      "explanation": "Basit PCA uygulaması. StandardScaler ile özellikleri normalize ediyoruz (farklı ölçeklerdeki özelliklerin adaletli temsili için). PCA 50 boyutu 2'ye indirgeyerek görselleştirilebilir hale getiriyor."
     },
     {
-      "title": "PCA & Dimensionality Reduction Application",
+      "title": "Scree Plot - Kaç Bileşen Seçilmeli?",
       "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "from sklearn.decomposition import PCA\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Tüm bileşenler için PCA uygula\npca_full = PCA()\nX_pca_full = pca_full.fit_transform(X_scaled)\n\n# Scree plot - Her bileşenin açıkladığı varyans\nplt.figure(figsize=(12, 5))\n\n# Sol: Individual variance\nplt.subplot(1, 2, 1)\nplt.plot(range(1, len(pca_full.explained_variance_ratio_) + 1),\n         pca_full.explained_variance_ratio_, 'bo-')\nplt.xlabel('Temel Bileşen Numarası')\nplt.ylabel('Açıklanan Varyans Oranı')\nplt.title('Scree Plot')\nplt.grid(True)\n\n# Sağ: Cumulative variance\nplt.subplot(1, 2, 2)\ncumulative_variance = np.cumsum(pca_full.explained_variance_ratio_)\nplt.plot(range(1, len(cumulative_variance) + 1),\n         cumulative_variance, 'ro-')\nplt.axhline(y=0.95, color='g', linestyle='--', label='%95 eşiği')\nplt.xlabel('Bileşen Sayısı')\nplt.ylabel('Kümülatif Varyans')\nplt.title('Kümülatif Açıklanan Varyans')\nplt.legend()\nplt.grid(True)\n\nplt.tight_layout()\nplt.show()\n\n# %95 varyansı yakalamak için gereken bileşen sayısı\nn_components_95 = np.argmax(cumulative_variance >= 0.95) + 1\nprint(f\"%95 varyans için gereken bileşen: {n_components_95}\")",
       "level": 2,
-      "explanation": "PCA & Dimensionality Reduction Application code"
+      "explanation": "Scree plot, her bileşenin ne kadar bilgi taşıdığını gösterir. Dirsek noktası (elbow point) optimal bileşen sayısını işaret eder. Genellikle %95-99 kümülatif varyans hedeflenir."
     },
     {
-      "title": "Advanced PCA & Dimensionality Reduction",
+      "title": "Gerçek Veri: MNIST Rakamları PCA ile Sıkıştırma",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
-      "level": 3,
-      "explanation": "Advanced PCA & Dimensionality Reduction code"
-    },
-    {
-      "title": "PCA & Dimensionality Reduction Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "PCA & Dimensionality Reduction Optimization code"
-    },
-    {
-      "title": "PCA & Dimensionality Reduction Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "from sklearn.datasets import load_digits\nfrom sklearn.decomposition import PCA\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import accuracy_score\nimport time\n\n# MNIST rakam veri seti (8x8 = 64 piksel)\ndigits = load_digits()\nX, y = digits.data, digits.target\nprint(f\"Orijinal veri: {X.shape}\")  # (1797, 64)\n\n# Train-test split\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)\n\n# Model 1: Orijinal veri ile (64 özellik)\nstart = time.time()\nrf_full = RandomForestClassifier(n_estimators=100, random_state=42)\nrf_full.fit(X_train, y_train)\ny_pred_full = rf_full.predict(X_test)\ntime_full = time.time() - start\nacc_full = accuracy_score(y_test, y_pred_full)\n\n# Model 2: PCA ile (20 bileşen - %90+ varyans)\npca = PCA(n_components=20)\nX_train_pca = pca.fit_transform(X_train)\nX_test_pca = pca.transform(X_test)\nprint(f\"PCA varyans: {pca.explained_variance_ratio_.sum():.2%}\")\n\nstart = time.time()\nrf_pca = RandomForestClassifier(n_estimators=100, random_state=42)\nrf_pca.fit(X_train_pca, y_train)\ny_pred_pca = rf_pca.predict(X_test_pca)\ntime_pca = time.time() - start\nacc_pca = accuracy_score(y_test, y_pred_pca)\n\nprint(f\"\\n=== Karşılaştırma ===\")\nprint(f\"Orijinal (64 özellik): Doğruluk {acc_full:.4f}, Süre {time_full:.3f}s\")\nprint(f\"PCA (20 bileşen):      Doğruluk {acc_pca:.4f}, Süre {time_pca:.3f}s\")\nprint(f\"Boyut azaltma: %{(1 - 20/64)*100:.1f}\")\nprint(f\"Hız artışı: {time_full/time_pca:.2f}x\")",
       "level": 2,
-      "explanation": "PCA & Dimensionality Reduction Visualization code"
+      "explanation": "Gerçek dünya örneği: 64 boyutlu rakam görüntüleri 20 boyuta indiriliyor (%70 boyut azaltma). Model doğruluğu çok az düşerken, eğitim süresi belirgin şekilde azalıyor. Bu, büyük veri setlerinde kritik bir avantajdır."
     },
     {
-      "title": "Production PCA & Dimensionality Reduction",
+      "title": "PCA ile Rekonstrüksiyon ve Bilgi Kaybı",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
-      "level": 4,
-      "explanation": "Production PCA & Dimensionality Reduction code"
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.decomposition import PCA\nfrom sklearn.datasets import load_digits\n\n# Bir rakam görüntüsü seç\ndigits = load_digits()\noriginal_image = digits.data[0].reshape(8, 8)\n\n# Farklı bileşen sayıları ile PCA\ncomponents_list = [2, 5, 10, 20, 40, 64]\n\nfig, axes = plt.subplots(2, 4, figsize=(12, 6))\naxes = axes.ravel()\n\n# Orijinal\naxes[0].imshow(original_image, cmap='gray')\naxes[0].set_title('Orijinal (64 boyut)')\naxes[0].axis('off')\n\n# Farklı bileşen sayıları ile rekonstrüksiyon\nfor idx, n_comp in enumerate(components_list):\n    pca = PCA(n_components=n_comp)\n    X_transformed = pca.fit_transform(digits.data[:100])\n    X_reconstructed = pca.inverse_transform(X_transformed)\n    \n    reconstructed_image = X_reconstructed[0].reshape(8, 8)\n    \n    # MSE hesapla\n    mse = np.mean((original_image - reconstructed_image) ** 2)\n    variance = pca.explained_variance_ratio_.sum()\n    \n    axes[idx + 1].imshow(reconstructed_image, cmap='gray')\n    axes[idx + 1].set_title(f'{n_comp} bileşen\\n'\n                             f'Varyans: {variance:.1%}\\n'\n                             f'MSE: {mse:.2f}')\n    axes[idx + 1].axis('off')\n\nplt.tight_layout()\nplt.show()\n\nprint(\"Not: 20 bileşen ile %95+ varyans korunuyor ve görüntü hala tanınabilir.\")",
+      "level": 2,
+      "explanation": "PCA'nın bilgi kaybını görselleştirme. Az bileşenle (2-5) görüntü bulanık, çok bileşenle (20+) orijinaline çok yakın. Bu, sıkıştırma-kalite dengesini gösterir. Rekonstrüksiyon için inverse_transform kullanılır."
+    },
+    {
+      "title": "Kernel PCA - Doğrusal Olmayan Boyut İndirgeme",
+      "language": "python",
+      "code": "from sklearn.decomposition import PCA, KernelPCA\nfrom sklearn.datasets import make_moons\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Doğrusal olmayan veri (ay şeklinde iki küme)\nX, y = make_moons(n_samples=500, noise=0.1, random_state=42)\n\n# Standart PCA (doğrusal)\npca = PCA(n_components=1)\nX_pca = pca.fit_transform(X)\n\n# Kernel PCA (RBF kernel ile doğrusal olmayan)\nkpca_rbf = KernelPCA(n_components=1, kernel='rbf', gamma=10)\nX_kpca_rbf = kpca_rbf.fit_transform(X)\n\n# Kernel PCA (Polynomial kernel)\nkpca_poly = KernelPCA(n_components=1, kernel='poly', degree=3)\nX_kpca_poly = kpca_poly.fit_transform(X)\n\n# Görselleştirme\nfig, axes = plt.subplots(2, 2, figsize=(12, 10))\n\n# Orijinal veri\naxes[0, 0].scatter(X[:, 0], X[:, 1], c=y, cmap='viridis', alpha=0.6)\naxes[0, 0].set_title('Orijinal Veri (2D)')\naxes[0, 0].set_xlabel('X1')\naxes[0, 0].set_ylabel('X2')\n\n# Standart PCA\naxes[0, 1].scatter(X_pca, np.zeros_like(X_pca), c=y, cmap='viridis', alpha=0.6)\naxes[0, 1].set_title('Standart PCA (Doğrusal)\\nİki küme ayrışmıyor!')\naxes[0, 1].set_xlabel('PC1')\naxes[0, 1].set_yticks([])\n\n# Kernel PCA - RBF\naxes[1, 0].scatter(X_kpca_rbf, np.zeros_like(X_kpca_rbf), c=y, cmap='viridis', alpha=0.6)\naxes[1, 0].set_title('Kernel PCA (RBF)\\nİki küme ayrışıyor!')\naxes[1, 0].set_xlabel('KPC1')\naxes[1, 0].set_yticks([])\n\n# Kernel PCA - Polynomial\naxes[1, 1].scatter(X_kpca_poly, np.zeros_like(X_kpca_poly), c=y, cmap='viridis', alpha=0.6)\naxes[1, 1].set_title('Kernel PCA (Polynomial)\\nKısmi ayrışma')\naxes[1, 1].set_xlabel('KPC1')\naxes[1, 1].set_yticks([])\n\nplt.tight_layout()\nplt.show()\n\nprint(\"Kernel PCA, doğrusal olmayan yapıları yakalamak için kernel trick kullanır.\")\nprint(\"RBF kernel, ay şeklindeki iki kümeyi tek boyutta başarıyla ayırıyor.\")",
+      "level": 3,
+      "explanation": "Standart PCA sadece doğrusal ilişkileri yakalar. Kernel PCA, kernel trick ile veriyi daha yüksek boyutlu uzaya taşıyarak doğrusal olmayan yapıları (ay şeklinde kümeler gibi) ayırabilir. RBF ve polynomial kerneller en yaygın kullanılanlardır."
+    },
+    {
+      "title": "Incremental PCA - Büyük Veri için Bellek Verimli",
+      "language": "python",
+      "code": "from sklearn.decomposition import IncrementalPCA\nimport numpy as np\n\n# Çok büyük veri simülasyonu (bellekte sığmayan)\n# Gerçekte dosyadan chunk'lar halinde okunur\nn_samples = 10000\nn_features = 1000\nn_components = 50\nbatch_size = 500\n\nprint(f\"Veri boyutu: {n_samples} × {n_features}\")\nprint(f\"Toplam bellek: ~{(n_samples * n_features * 8) / 1e9:.2f} GB (float64)\\n\")\n\n# Incremental PCA\nipca = IncrementalPCA(n_components=n_components, batch_size=batch_size)\n\n# Mini-batch'ler halinde işle\nfor i in range(0, n_samples, batch_size):\n    # Gerçekte: chunk = pd.read_csv('huge_file.csv', skiprows=i, nrows=batch_size)\n    chunk = np.random.randn(batch_size, n_features)\n    \n    ipca.partial_fit(chunk)\n    \n    if (i // batch_size + 1) % 5 == 0:\n        print(f\"İşlenen batch: {i // batch_size + 1} / {n_samples // batch_size}\")\n\nprint(f\"\\nAçıklanan varyans: {ipca.explained_variance_ratio_.sum():.2%}\")\nprint(f\"Temel bileşenler shape: {ipca.components_.shape}\")\n\n# Yeni veriyi dönüştür\ntest_data = np.random.randn(100, n_features)\ntest_transformed = ipca.transform(test_data)\nprint(f\"Dönüştürülmüş test verisi: {test_transformed.shape}\")\n\nprint(\"\\n💡 İpucu: Incremental PCA, GB/TB boyutundaki veriler için ideal.\")\nprint(\"   partial_fit() ile chunk'lar halinde işlenir, RAM'e sığması gerekmez.\")",
+      "level": 3,
+      "explanation": "IncrementalPCA, tüm veriyi belleğe almadan mini-batch'ler halinde PCA hesaplar. Milyonlarca satırlı veya GB/TB boyutundaki veri setleri için kritik. partial_fit() ile chunk'lar halinde beslenir."
     }
   ],
   "quiz": [
     {
-      "question": "What is PCA & Dimensionality Reduction?",
+      "question": "PCA'nın temel amacı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Veri setini daha büyük boyutlara genişletmek",
+        "Verinin varyansını maksimize eden yeni eksenler bularak boyutu azaltmak",
+        "Veriyi sınıflandırmak ve etiketlemek",
+        "Outlier'ları tespit etmek ve temizlemek"
       ],
       "correctAnswer": 1,
-      "explanation": "PCA & Dimensionality Reduction explanation.",
+      "explanation": "PCA (Principal Component Analysis), yüksek boyutlu veriyi daha düşük boyutlara indirgerken maksimum varyansı (bilgiyi) korumayı hedefler. En çok değişkenlik gösteren yönleri (temel bileşenleri) bulur.",
       "id": "pca-dimensionality-reduction-q1"
     },
     {
-      "question": "When to use PCA & Dimensionality Reduction?",
+      "question": "PCA'da kovaryans matrisinin özdeğerleri neyi temsil eder?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Veri noktalarının ortalama değerlerini",
+        "Her bir temel bileşenin yakaladığı varyans miktarını",
+        "Outlier noktalarının sayısını",
+        "Veri noktaları arası Euclidean mesafeyi"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "Kovaryans matrisinin özdeğerleri (eigenvalues), karşılık gelen özvektör (temel bileşen) yönündeki varyans miktarını gösterir. En büyük özdeğer, en çok bilgi taşıyan bileşene aittir.",
       "id": "pca-dimensionality-reduction-q2"
     },
     {
-      "question": "PCA & Dimensionality Reduction advantage?",
+      "question": "PCA uygulamadan önce veriyi standartlaştırmanın (StandardScaler) önemi nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece görselleştirme için gereklidir, sonucu etkilemez",
+        "Farklı ölçeklerdeki özelliklerin (örn: yaş vs gelir) adaletli temsil edilmesini sağlar",
+        "PCA algoritmasının daha hızlı çalışmasını sağlar",
+        "Outlier'ları otomatik olarak kaldırır"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
+      "explanation": "PCA, varyansa dayalı bir yöntemdir. Eğer bir özellik (örn: gelir) büyük sayılarsa ve diğeri (örn: yaş) küçükse, büyük ölçekli özellik PCA'yı domine eder. StandardScaler ile tüm özellikleri aynı ölçeğe (mean=0, std=1) getirirsek, her özellik eşit şans tanır.",
       "id": "pca-dimensionality-reduction-q3"
     },
     {
-      "question": "PCA & Dimensionality Reduction limitation?",
+      "question": "50 boyutlu bir veri setine PCA uygulandığında ilk 3 bileşen toplam varyansın %85'ini açıklıyor. Bu ne anlama gelir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Kalan 47 bileşen gereksizdir ve silinmelidir",
+        "İlk 3 bileşen, orijinal verinin %85'ini temsil ediyor, %15 bilgi kaybıyla 50→3 boyut indirgemesi yapılabilir",
+        "PCA başarısız olmuştur, tüm bileşenler kullanılmalıdır",
+        "Veri setinde %15 hata vardır"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
+      "explanation": "Açıklanan varyans oranı (explained variance ratio), seçilen bileşenlerin ne kadar bilgi taşıdığını gösterir. %85 ile 3 bileşen yeterli kabul edilebilir, kalan %15'lik bilgi genellikle gürültü veya önemsiz varyasyon olabilir. Genellikle %95-99 hedeflenir.",
       "id": "pca-dimensionality-reduction-q4"
     },
     {
-      "question": "Best practice for PCA & Dimensionality Reduction?",
+      "question": "PCA'nın en büyük sınırlaması nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Çok yavaş çalışır ve büyük veri setlerine uygulanamaz",
+        "Sadece doğrusal ilişkileri yakalar, doğrusal olmayan yapıları (manifold) bulamaz",
+        "Sadece 2 veya 3 boyuta indirgeme yapabilir",
+        "Sadece görüntü verisi için çalışır"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
+      "explanation": "PCA, doğrusal bir projeksiyon yöntemidir. Sadece doğrusal korelasyonları yakalar. Eğer veri doğrusal olmayan bir manifold üzerindeyse (örn: İsviçre rulosu), PCA başarısız olur. Bu durumlarda Kernel PCA, t-SNE, UMAP veya Autoencoders tercih edilir.",
       "id": "pca-dimensionality-reduction-q5"
     },
     {
-      "question": "PCA & Dimensionality Reduction vs alternatives?",
+      "question": "Scree plot'ta 'dirsek noktası' (elbow point) neyi ifade eder?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "PCA'nın hata yaptığı noktayı",
+        "Ek bileşen eklemenin marjinal faydasının düştüğü, optimal bileşen sayısını",
+        "En yüksek varyansa sahip bileşeni",
+        "Outlier'ların başladığı eşik değerini"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
+      "explanation": "Scree plot, her bileşenin açıkladığı varyansı gösterir. Grafik genellikle hızla düşer sonra yavaşlar. 'Dirsek noktası', eğrinin düzleşmeye başladığı yerdir. Bundan sonraki bileşenler çok az bilgi katar, bu yüzden o noktadan sonrasını atabiliriz.",
       "id": "pca-dimensionality-reduction-q6"
+    },
+    {
+      "question": "PCA ile t-SNE/UMAP arasındaki temel fark nedir?",
+      "options": [
+        "t-SNE/UMAP daha hızlıdır",
+        "PCA global yapıyı korur (doğrusal), t-SNE/UMAP lokal yapıyı korur (doğrusal olmayan manifold)",
+        "t-SNE/UMAP sadece 2D'ye indirgeme yapar",
+        "PCA gözetimsiz, t-SNE/UMAP gözetimlidir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "PCA, global doğrusal yapıyı korur ve deterministiktir. t-SNE ve UMAP, lokal komşulukları koruyarak doğrusal olmayan manifold'ları ortaya çıkarır, bu yüzden kümeleri daha iyi ayırır. Ancak t-SNE/UMAP rastgele başlatıldığı için her çalıştırmada farklı sonuç verir ve uzaklıklar anlamlı değildir (sadece görselleştirme için).",
+      "id": "pca-dimensionality-reduction-q7"
+    },
+    {
+      "question": "PCA'da 'whitening' (beyazlatma) transformasyonu ne işe yarar?",
+      "options": [
+        "Veriyi siyah-beyaz görüntüye dönüştürür",
+        "Temel bileşenleri birim varyansa normalize eder, böylece tüm bileşenler eşit önem kazanır",
+        "Outlier'ları beyaz renk ile işaretler",
+        "Sadece beyaz gürültü içeren verilere uygulanır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Whitening, PCA bileşenlerini özdeğerleriyle bölerek (λ_i^(-1/2)) birim varyansa getirir. Bu, downstream algoritmalarda (örn: ICA, neural networks) tüm boyutların eşit ağırlıkta işlenmesini sağlar. Kovaryans matrisi birim matrise (identity) dönüşür.",
+      "id": "pca-dimensionality-reduction-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "PCA & Dimensionality Reduction",
-      "back": "Core concept summary"
+      "front": "PCA nedir?",
+      "back": "Principal Component Analysis - Yüksek boyutlu veriyi, varyansı maksimize eden ortogonal eksenler (temel bileşenler) bularak daha düşük boyuta indirgeyen gözetimsiz bir yöntem."
     },
     {
-      "front": "PCA & Dimensionality Reduction Key Idea",
-      "back": "Main concept"
+      "front": "PCA'nın 3 ana kullanım alanı",
+      "back": "1) Boyut laneti problemini azaltma, 2) Veriyi 2D/3D'ye indirgeyerek görselleştirme, 3) Gürültü azaltma ve özellik çıkarımı."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "Kovaryans matrisi nedir?",
+      "back": "d×d simetrik matris, özelliklerin birbirleriyle nasıl birlikte değiştiğini (kovaryans) gösterir. PCA'da özdeğer ayrıştırması bu matrise uygulanır."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Özdeğer ve Özvektör - PCA'daki rolü",
+      "back": "Özvektörler: Temel bileşenlerin yönü (d boyutlu birim vektörler). Özdeğerler: Her bileşenin yakaladığı varyans miktarı. Büyük özdeğer = önemli bileşen."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Explained Variance Ratio",
+      "back": "Seçilen k bileşenin açıkladığı toplam varyansın yüzdesi. Formül: (Σλ_i for i=1..k) / (Σλ_i for i=1..d). Genellikle %95-99 hedeflenir."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "PCA'nın zaman karmaşıklığı",
+      "back": "O(n·d² + d³) - Kovaryans hesaplama O(n·d²), özdeğer ayrıştırması O(d³). Büyük d için SVD alternatifi O(n²·d) daha verimli."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Kernel PCA nedir?",
+      "back": "Kernel trick ile doğrusal olmayan boyut indirgeme. Veriyi örtük olarak yüksek boyutlu uzaya taşıyıp (RBF, polynomial kernel) orada PCA uygular. Ay şeklinde kümeler gibi doğrusal olmayan yapıları ayırabilir."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Incremental PCA ne zaman kullanılır?",
+      "back": "GB/TB boyutundaki veriler için. Mini-batch'ler halinde partial_fit() ile PCA hesaplar. Tüm veriyi RAM'e almadan çalışır, büyük veri için kritik."
+    },
+    {
+      "front": "PCA vs t-SNE/UMAP",
+      "back": "PCA: Doğrusal, global yapı, deterministik, hızlı, her boyuta indirgeme. t-SNE/UMAP: Doğrusal olmayan, lokal yapı (manifold), stokastik, yavaş, genellikle 2D/3D görselleştirme."
+    },
+    {
+      "front": "PCA'da standardizasyon (scaling) neden önemli?",
+      "back": "Farklı ölçeklerdeki özelliklerin (örn: yaş 0-100, gelir 0-1M) adaletli temsil edilmesi için. Büyük ölçekli özellik varyansı domine eder, StandardScaler ile mean=0, std=1'e getiriyoruz."
+    },
+    {
+      "front": "Scree plot nedir?",
+      "back": "Her bileşenin açıkladığı varyansı gösteren grafik. Dirsek noktası (elbow point), optimal bileşen sayısını işaret eder - bundan sonra marjinal fayda düşüktür."
+    },
+    {
+      "front": "PCA rekonstrüksiyonu nasıl yapılır?",
+      "back": "X_reconstructed = X_PCA · W_k^T + mean(X). Düşük boyuttan orijinal boyuta geri dönüş. MSE ile bilgi kaybı ölçülür."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "PCA öncesi veriyi standardize etmemek (StandardScaler kullanmamak)",
+      "why": "Farklı ölçeklerdeki özellikler (örn: yaş 0-100, gelir 0-100000) PCA'da eşit temsil edilmez. Büyük sayılı özellikler varyans hesaplamalarını domine eder ve diğer özelliklerin etkisi kaybolur.",
+      "fix": "from sklearn.preprocessing import StandardScaler kullanarak tüm özellikleri mean=0, std=1'e normalize edin: scaler.fit_transform(X). Bu, her özelliğin adaletli temsil edilmesini sağlar."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "PCA'yı sınıflandırma/regresyon için özellik seçimi olarak kullanmak",
+      "why": "PCA gözetimsizdir, hedef değişkeni (y) bilmez. Sadece varyansı maksimize eder, ama bu varyans tahmin için önemli olmayabilir. Örneğin en önemli bileşen gürültü olabilir, hedefle ilgisiz bilgi taşıyabilir.",
+      "fix": "Supervised boyut indirgeme yöntemlerini kullanın: LDA (Linear Discriminant Analysis) sınıflandırma için, PLS (Partial Least Squares) regresyon için. Bunlar hedef değişkeni (y) dikkate alarak boyut indirgeme yapar."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Test verisine fit() yerine transform() uygulamayı unutmak",
+      "why": "PCA, train verisinden öğrenilen transformasyon (özvektörler, ortalama) test verisine uygulanmalıdır. Test verisine yeni fit() yapmak veri sızıntısı (data leakage) yaratır - test verisi eğitimde kullanılmış olur.",
+      "fix": "Train: pca.fit_transform(X_train), Test: pca.transform(X_test). Test verisi hiçbir zaman fit()'e verilmez. Aynı PCA nesnesi her iki sete de uygulanır."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Çok az bileşen seçmek ve bilgi kaybını kontrol etmemek",
+      "why": "Örneğin 100 boyutlu veriyi körü körüne 2 boyuta indirgemek, kritik bilgi kaybına yol açabilir. Toplam varyansın sadece %30'unu yakalayabilirsiniz.",
+      "fix": "Scree plot ve cumulative explained variance grafiği kullanın. Genellikle %95-99 varyans hedeflenir. explained_variance_ratio_ özelliğini kontrol edin ve informed karar verin."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "PCA'yı doğrusal olmayan veriye körü körüne uygulamak",
+      "why": "PCA sadece doğrusal ilişkileri yakalar. İsviçre rulosu, ay şeklinde kümeler gibi doğrusal olmayan manifold'lar için başarısız olur. Verinin doğrusal olmayan yapısını kaçırırsınız.",
+      "fix": "Veriyi görselleştirin ve doğrusal olmayan yapı varsa Kernel PCA (RBF/polynomial), t-SNE, UMAP veya Autoencoder gibi doğrusal olmayan yöntemleri kullanın."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "PCA sonrası bileşenleri orijinal özellikler gibi yorumlamak",
+      "why": "Temel bileşenler, orijinal özelliklerin doğrusal kombinasyonlarıdır. 'PC1' tek başına anlamlı değildir, onlarca özelliğin weighted sum'ıdır. Direkt interpretasyon yanıltıcıdır.",
+      "fix": "Bileşenleri yorumlamak için pca.components_ matrisine bakın. Her satır bir bileşen, her sütun bir özellik. Yüksek mutlak değerlere sahip özellikler o bileşene en çok katkı yapanlardır. Feature importance analizi yapın."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Büyük veri setlerinde (GB+) standart PCA kullanmak",
+      "why": "Standart PCA tüm veriyi RAM'e yükler ve d×d kovaryans matrisi oluşturur. GB/TB boyutunda bu imkansız veya çok yavaştır. Memory error veya saatlerce bekleme.",
+      "fix": "IncrementalPCA kullanın: partial_fit() ile mini-batch'ler halinde işleme. Veya Randomized PCA (TruncatedSVD) ile yaklaşık ama hızlı hesaplama. Dask/Spark gibi distributed computing framework'leri düşünün."
     }
   ],
   "visualizations": [
     {
+      "type": "interactive",
+      "title": "PCA Interaktif Simülasyonu",
+      "description": "3D veri setini 2D'ye projeksiyon. İlk iki temel bileşen, varyans oranları ve scatter plot ile canlı görselleştirme. Veriyi döndürme ve zoom kontrolü."
+    },
+    {
       "type": "diagram",
-      "title": "PCA & Dimensionality Reduction Overview",
-      "description": "Visual explanation"
+      "title": "PCA Adım Adım Görselleştirme",
+      "description": "1) Orijinal veri, 2) Merkeze taşıma, 3) Kovaryans matrisi, 4) Özvektörler (ok'larla gösterilmiş), 5) Projeksiyon, 6) İndirgene miş veri. Her adım için görsel ve matematiksel gösterim."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
+      "title": "PCA vs t-SNE vs UMAP",
+      "description": "Aynı veri seti üzerinde üç yöntemin yan yana karşılaştırılması. PCA doğrusal global yapıyı korur, t-SNE/UMAP lokal kümeleri daha net ayırır."
     },
     {
       "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
-    },
-    {
-      "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Scree Plot & Cumulative Variance",
+      "description": "Her bileşenin açıkladığı varyans ve kümülatif varyans eğrisi. Dirsek noktası vurgulu. %95 varyans eşik çizgisi ile optimal bileşen sayısı belirleme."
     }
   ],
   "references": [
     {
-      "title": "PCA & Dimensionality Reduction Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Principal Component Analysis",
+      "authors": "Jolliffe, I. T.",
+      "year": 2002,
+      "link": "https://link.springer.com/book/10.1007/b98835",
+      "type": "book"
+    },
+    {
+      "title": "A Tutorial on Principal Component Analysis",
+      "authors": "Shlens, J.",
+      "year": 2014,
+      "link": "https://arxiv.org/abs/1404.1100",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "title": "Scikit-learn PCA Documentation",
+      "authors": "Scikit-learn Developers",
+      "year": 2024,
+      "link": "https://scikit-learn.org/stable/modules/decomposition.html#pca",
       "type": "documentation"
+    },
+    {
+      "title": "Kernel PCA and Spectral Methods",
+      "authors": "Schölkopf, B., Smola, A., Müller, K. R.",
+      "year": 1998,
+      "link": "https://www.mitpressjournals.org/doi/10.1162/089976698300017467",
+      "type": "paper"
     }
   ]
 }
