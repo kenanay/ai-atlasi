@@ -37,7 +37,13 @@ export function TopicCard({ topic, isLocked = false, showProgress = true }: Topi
   };
   
   return (
-    <Link href={isLocked ? '#' : `/topic/${topic.id}`} className="block h-full">
+    <Link 
+      href={isLocked ? '#' : `/topic/${topic.id}`} 
+      className="block h-full"
+      aria-label={`${topic.title} konusunu aç ${isLocked ? '(kilitli)' : ''}`}
+      aria-disabled={isLocked}
+      tabIndex={isLocked ? -1 : 0}
+    >
       <Card 
         hover={!isLocked}
         className={cn(

@@ -46,18 +46,27 @@ export default function SearchPage() {
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-10">
           <div className="relative shadow-sm rounded-2xl">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
+            <label htmlFor="search-input" className="sr-only">
+              Konu ara
+            </label>
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
             <input
-              type="text"
+              id="search-input"
+              type="search"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Örn: vektör, gradient descent, transformer, CNN..."
               className="w-full pl-12 pr-12 py-3.5 text-base border-2 border-slate-300 dark:border-slate-700/80 rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+              aria-label="Konu arama kutusu"
+              autoComplete="off"
+              spellCheck="false"
             />
             {query && (
               <button
                 onClick={clearSearch}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1"
+                aria-label="Aramayı temizle"
+                type="button"
               >
                 <X className="w-4 h-4" />
               </button>
