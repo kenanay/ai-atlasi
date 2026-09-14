@@ -223,12 +223,27 @@ export function searchTopics(query: string): Topic[] {
     // Başlıkta ara
     if (topic.title.toLocaleLowerCase('tr-TR').includes(lowerQuery)) return true;
     
-    // Tag'lerde ara
-    if (topic.tags.some(tag => tag.toLocaleLowerCase('tr-TR').includes(lowerQuery))) return true;
+    // Tag'lerde ara (tags undefined olabilir)
+    if (topic.tags && Array.isArray(topic.tags)) {
+      if (topic.tags.some(tag => tag.toLocaleLowerCase('tr-TR').includes(lowerQuery))) return true;
+    }
     
     if (topic.description?.toLocaleLowerCase('tr-TR').includes(lowerQuery)) return true;
-    if (topic.levels?.some(item => item.content.toLocaleLowerCase('tr-TR').includes(lowerQuery))) return true;
-    // İçerikte ara (level 0 ve 1)
+    
+    // levels Array ise
+    if (Array.isArray(topic.levels)) {
+      if (topic.levels.some(item => item.content.toLocaleLowerCase('tr-TR').includes(lowerQuery))) return true;
+    }
+    // levels Object ise (beginner, intermediate, advanced)
+    else if (topic.levels && typeof topic.levels === 'object') {
+      const levelsObj = topic.levels as any;
+      const searchInLevels = ['beginner', 'intermediate', 'advanced'].some(key => 
+        levelsObj[key]?.content?.toLocaleLowerCase('tr-TR').includes(lowerQuery)
+      );
+      if (searchInLevels) return true;
+    }
+    
+    // İçerikte ara (eski format - level 0 ve 1)
     if (topic.content?.level0_basic?.toLocaleLowerCase('tr-TR').includes(lowerQuery)) return true;
     if (topic.content?.level1_beginner?.toLocaleLowerCase('tr-TR').includes(lowerQuery)) return true;
     

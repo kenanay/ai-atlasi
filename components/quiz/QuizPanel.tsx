@@ -72,7 +72,12 @@ export function QuizPanel({ topic }: QuizPanelProps) {
       // Quiz tamamlandı
       setIsCompleted(true);
       const correctCount = userAnswers.filter(
-        (answer, index) => answer === questions[index].correctAnswer
+        (answer, index) => {
+          const q = questions[index];
+          // correctAnswer veya correct field'ını kontrol et (15 konuda 'correct' kullanılmış)
+          const correctAns = q.correctAnswer !== undefined ? q.correctAnswer : (q as any).correct;
+          return answer === correctAns;
+        }
       ).length;
       
       // Skoru kaydet
@@ -82,7 +87,11 @@ export function QuizPanel({ topic }: QuizPanelProps) {
 
   const currentQ = questions[currentQuestion];
   const correctCount = userAnswers.filter(
-    (answer, index) => answer === questions[index].correctAnswer
+    (answer, index) => {
+      const q = questions[index];
+      const correctAns = q.correctAnswer !== undefined ? q.correctAnswer : (q as any).correct;
+      return answer === correctAns;
+    }
   ).length;
   
   const result = isCompleted ? calculateQuizScore(correctCount, questions.length) : null;
@@ -167,7 +176,8 @@ export function QuizPanel({ topic }: QuizPanelProps) {
             <h4 className="font-semibold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Soru Detayları:</h4>
             {questions.map((q, index) => {
               const userAnswer = index < userAnswers.length ? userAnswers[index] : selectedAnswer;
-              const isCorrect = userAnswer === q.correctAnswer;
+              const correctAns = q.correctAnswer !== undefined ? q.correctAnswer : (q as any).correct;
+              const isCorrect = userAnswer === correctAns;
               
               return (
                 <div
@@ -239,7 +249,8 @@ export function QuizPanel({ topic }: QuizPanelProps) {
         <div className="space-y-2.5">
           {currentQ.options?.map((option, index) => {
             const isSelected = selectedAnswer === index;
-            const isCorrect = index === currentQ.correctAnswer;
+            const correctAns = currentQ.correctAnswer !== undefined ? currentQ.correctAnswer : (currentQ as any).correct;
+            const isCorrect = index === correctAns;
             const showResult = isAnswered;
             
             return (

@@ -11,6 +11,20 @@ export function Sidebar() {
   const pathname = usePathname();
   const topicsByCategory = getTopicsByCategory();
   
+  // Helper: Konsolide grup adından ikon ve renk bilgisi al
+  const getCategoryDisplayInfo = (groupName: string, topics: any[]) => {
+    // Grup içindeki ilk konunun category'sinden ikon ve renk bilgisini al
+    if (topics.length === 0) return null;
+    const firstTopicCategory = topics[0].category;
+    const info = CATEGORY_INFO[firstTopicCategory];
+    
+    return info ? {
+      icon: info.icon,
+      name: groupName, // Konsolide grup adını kullan
+      color: info.color
+    } : null;
+  };
+  
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 h-[calc(100vh-4rem)] overflow-y-auto animate-slide-in-left">
       <div className="p-4">
@@ -20,7 +34,7 @@ export function Sidebar() {
         
         <nav className="space-y-1">
           {Array.from(topicsByCategory.entries()).map(([category, topics]) => {
-            const info = CATEGORY_INFO[category];
+            const info = getCategoryDisplayInfo(category, topics);
             if (!info) return null;
             
             return (

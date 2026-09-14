@@ -22,13 +22,13 @@ interface TopicRightPanelProps {
 export function TopicRightPanel({ topic, level }: TopicRightPanelProps) {
   const [expandedCode, setExpandedCode] = useState<number>(0);
 
-  // Seviyeye göre kod örneklerini filtrele
-  const relevantCodeExamples = topic.codeExamples.filter((example) => {
+  // Seviyeye göre kod örneklerini filtrele (codeExamples undefined olabilir)
+  const relevantCodeExamples = topic.codeExamples ? topic.codeExamples.filter((example) => {
     if (level === 0 || level === 1) return false; // Temel ve başlangıç seviyesinde kod yok
     if (level === 2) return example.language === 'python' || example.language === 'numpy';
     if (level === 3) return example.language === 'numpy' || example.language === 'pytorch';
     return true; // Seviye 4'te hepsini göster
-  });
+  }) : [];
 
   return (
     <aside className="w-96 border-l border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 h-[calc(100vh-4rem)] overflow-y-auto shrink-0 transition-colors">

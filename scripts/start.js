@@ -211,7 +211,7 @@ async function main() {
         }
       });
     });
-  } catch {
+  } catch (error) {
     log('✗ npm bulunamadı!', 'red');
     process.exit(1);
   }
@@ -226,7 +226,7 @@ async function main() {
     if (args.includes('--auto') || args.includes('-y')) {
       try {
         await installDependencies();
-      } catch {
+      } catch (error) {
         log(`✗ Hata: ${error.message}`, 'red');
         process.exit(1);
       }
@@ -236,7 +236,7 @@ async function main() {
       if (answer.toLowerCase() !== 'n') {
         try {
           await installDependencies();
-        } catch {
+        } catch (error) {
           log(`✗ Hata: ${error.message}`, 'red');
           process.exit(1);
         }

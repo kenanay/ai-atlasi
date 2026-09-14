@@ -154,15 +154,18 @@ export default function TopicsPage() {
           {/* Topics by Category */}
           <div className="space-y-10">
             {groupedTopics.map(({ category, topics }) => {
-              const categoryInfo = CATEGORY_INFO[category];
+              // Konsolide grup adından bilgi al - ilk konunun category'sini kullan
+              const firstTopic = topics[0];
+              const categoryInfo = firstTopic ? CATEGORY_INFO[firstTopic.category] : null;
+              const displayName = category; // Konsolide grup adını kullan
               
               return (
                 <div key={category}>
                   <div className="flex items-center gap-3 mb-4 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
-                    <span className="text-2xl">{categoryInfo?.icon}</span>
+                    <span className="text-2xl">{categoryInfo?.icon || '📚'}</span>
                     <div>
                       <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                        {categoryInfo?.name}
+                        {displayName}
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {topics.length} konu

@@ -45,7 +45,29 @@ export function TopicContent({ topic, level }: TopicContentProps) {
     }
   };
   
-  const content = topic.levels?.find(item => item.level === level)?.content ?? getContentForLevel();
+  // levels hem Array hem de Object olabilir - her iki formatı destekle
+  const getContent = () => {
+    // YENİ FORMAT: levels Array ise
+    if (Array.isArray(topic.levels)) {
+      return topic.levels.find(item => item.level === level)?.content;
+    }
+    // OBJECT FORMAT: levels { beginner, intermediate, advanced } ise
+    if (topic.levels && typeof topic.levels === 'object') {
+      const levelMap: Record<TopicLevel, string> = {
+        0: 'beginner',
+        1: 'beginner',
+        2: 'intermediate',
+        3: 'advanced',
+        4: 'advanced'
+      };
+      const key = levelMap[level] as keyof typeof topic.levels;
+      return (topic.levels as any)[key]?.content;
+    }
+    // ESKİ FORMAT: content object ise
+    return getContentForLevel();
+  };
+  
+  const content = getContent();
 
   return (
     <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 transition-colors">
@@ -275,6 +297,7 @@ export function TopicContent({ topic, level }: TopicContentProps) {
             )}
 
             {/* Tags */}
+            {topic.tags && topic.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-4 border-t border-slate-200 dark:border-slate-800">
               {topic.tags.map((tag) => (
                 <span
@@ -285,6 +308,7 @@ export function TopicContent({ topic, level }: TopicContentProps) {
                 </span>
               ))}
             </div>
+            )}
           </>
         ) : activeTab === 'notes' ? (
           <NotesPanel topicId={topic.id} />
