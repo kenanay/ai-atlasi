@@ -122,7 +122,6 @@
       "mistake": "Sending raw data to server instead of gradients",
       "why": "Defeats FL purpose: Privacy violation. Raw data should never leave client device",
       "fix": "Only send model weight updates (Δw = w_new - w_old) or gradients. Differential privacy (DP) noise if needed."
-    },"
     },
     {
       "mistake": "Not handling stragglers (slow clients blocking rounds)",

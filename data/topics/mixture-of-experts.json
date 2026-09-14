@@ -49,7 +49,7 @@
   ],
   "nextTopics": [
     "distributed-training",
-    "model-parallelism"
+    "model-deployment-production"
   ],
   "relatedTopics": [
     "transformers-attention",
