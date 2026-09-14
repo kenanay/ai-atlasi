@@ -4,262 +4,344 @@
   "category": "mlops",
   "level": 2,
   "estimatedTime": 60,
-  "description": "Data Preprocessing & Feature Engineering: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Data preprocessing ve feature engineering: Raw data'yı ML modelleri için hazırlama. Missing values, outliers, scaling, encoding, feature selection, feature extraction. Model performance'ın %80'i iyi preprocessing'ten gelir.",
   "content": {
-    "level0_basic": "Data Preprocessing & Feature Engineering basics: Core concepts explained simply.",
-    "level1_beginner": "Data Preprocessing & Feature Engineering fundamentals with examples and code snippets.",
-    "level2_application": "Practical Data Preprocessing & Feature Engineering implementation with real-world applications.",
-    "level3_advanced": "Advanced Data Preprocessing & Feature Engineering techniques and optimizations.",
-    "level4_expert": "Expert-level Data Preprocessing & Feature Engineering architectures and research directions."
+    "level0_basic": "Data Preprocessing (Veri Ön İşleme), raw (ham) veriyi ML modelleri için temizleme ve dönüştürme işlemidir. Gerçek dünya verisi kirli: missing values (eksik değerler), outliers (aykırı değerler), farklı scale'ler, kategorik değişkenler. **Feature Engineering** ise yeni feature'lar yaratma veya mevcut feature'ları iyileştirme sanatıdır. Örnek: 'doğum tarihi' → 'yaş' feature'ı. Model performance'ın %80'i iyi preprocessing'ten gelir, %20'si model seçiminden.",
+    "level1_beginner": "Data preprocessing adımları: (1) **Missing Values**: Eksik değerleri handle et (drop, mean imputation, model-based imputation). (2) **Outliers**: Aykırı değerleri detect et ve handle et (z-score, IQR method). (3) **Scaling**: Feature'ları aynı scale'e getir (StandardScaler: mean=0, std=1; MinMaxScaler: [0,1]). (4) **Encoding**: Kategorik değişkenleri numeric'e çevir (One-hot, label encoding, target encoding). (5) **Feature Selection**: İlgisiz feature'ları çıkar (correlation, mutual information, model-based). (6) **Feature Extraction**: Yeni feature'lar yarat (PCA, polynomial features, domain knowledge).",
+    "level2_application": "Pratik preprocessing: (1) **Pandas**: df.dropna(), df.fillna(), df.describe() ile EDA. (2) **Scikit-learn Pipelines**: Preprocessing'i automate et, train-test leakage önle. (3) **Missing values**: SimpleImputer (mean, median, mode), KNNImputer (komşu değerlerden tahmin), IterativeImputer (MICE - chained equations). (4) **Scaling**: StandardScaler (Gaussian), MinMaxScaler ([0,1]), RobustScaler (outlier'lara karşı robust). (5) **Encoding**: OneHotEncoder (nominal), OrdinalEncoder (ordinal), TargetEncoder (high-cardinality). (6) **Feature engineering**: Date features (year, month, day_of_week), text features (TF-IDF, word count), interaction features (A × B). (7) **Imbalanced data**: SMOTE, undersampling, class weights.",
+    "level3_advanced": "İleri seviye: (1) **Automated Feature Engineering**: Featuretools, tsfresh (time series), AutoFeat. (2) **Feature selection**: Filter methods (correlation, chi-square), wrapper methods (RFE - Recursive Feature Elimination), embedded (Lasso, tree importance). (3) **Dimensionality reduction**: PCA (linear), t-SNE (visualization), UMAP (manifold learning). (4) **Advanced imputation**: MICE (Multivariate Imputation by Chained Equations), deep learning (autoencoder). (5) **Outlier detection**: Isolation Forest, LOF (Local Outlier Factor), DBSCAN. (6) **Time series**: Lag features, rolling statistics, seasonality decomposition. (7) **Text preprocessing**: Tokenization, stemming/lemmatization, stopword removal, word embeddings. (8) **Image preprocessing**: Resize, normalize, augmentation (rotation, flip, crop).",
+    "level4_expert": "Expert seviyede, production pipelines, data quality monitoring ve AutoML integration önemlidir. (1) **Feature Stores**: Feast, Tecton - centralized feature management, online/offline serving, point-in-time correctness. (2) **Data Versioning**: DVC (Data Version Control), Pachyderm - veri ve model versioning. (3) **Data Quality**: Great Expectations - data validation, schema enforcement, anomaly detection. (4) **Pipeline Orchestration**: Airflow, Prefect, Kubeflow - preprocessing workflows. (5) **Real-time Preprocessing**: Kafka Streams, Flink - streaming data preprocessing. (6) **AutoML**: Auto-sklearn, H2O AutoML - automated preprocessing + model selection. (7) **Drift Detection**: Feature drift, concept drift monitoring (Evidently AI). (8) **Privacy**: Differential privacy, federated learning - sensitive data preprocessing. Research: **Neural Feature Engineering** (deep learning learns features), **Graph features** (GNN embeddings)."
   },
-  "whatIsIt": "Data Preprocessing & Feature Engineering: Technical definition and core concepts.",
-  "whyNeeded": "Why Data Preprocessing & Feature Engineering matters: Applications and use cases.",
-  "realWorldAnalogy": "Data Preprocessing & Feature Engineering explained through real-world analogy.",
+  "whatIsIt": "Data Preprocessing, raw veriyi ML için hazırlama: missing values imputation, outlier handling, scaling (z-score: $x' = \\frac{x - \\mu}{\\sigma}$), encoding. Feature Engineering, domain knowledge ile yeni feature'lar yaratma: polynomial ($x^2, x^3$), interactions ($x_1 \\cdot x_2$), aggregations (mean, max), temporal (lag, rolling). Sklearn Pipeline ile automate: fit_transform (train), transform (test). Goal: Model'e maksimum bilgi ver, noise minimize et.",
+  "whyNeeded": "Preprocessing kritik çünkü: (1) **Garbage In, Garbage Out**: Kötü veri → kötü model. (2) **Model Performance**: İyi preprocessing %10-30 accuracy artırır. (3) **Training Stability**: Farklı scale'ler → gradient descent instability. (4) **Missing Values**: Çoğu model NaN handle edemez (error). (5) **Categorical Variables**: Model numeric input ister. (6) **Outliers**: Linear regression, k-means'e zarar verir. (7) **Feature Selection**: İlgisiz feature'lar overfitting yapar, training yavaşlatır. (8) **Domain Knowledge**: Expert bilgisi feature engineering'e → %50 performans artışı (Kaggle competitions).",
+  "realWorldAnalogy": "Data preprocessing'i yemek pişirmeye benzetebiliriz. Raw data = market'ten aldığınız malzemeler (kirli havuç, çiğ et, farklı boyutlarda sebzeler). **Preprocessing**: (1) **Temizleme** (missing values): Çürük kısımları at, eksik malzeme varsa yerine koy. (2) **Doğrama** (scaling): Tüm sebzeleri aynı boyutta kes (bazısı çok büyük, bazısı küçük - aynı scale'e getir). (3) **Hazırlık** (encoding): Etiketleri say (\"domates\" → 3 adet), kategorileri grupla. (4) **Feature engineering**: Yeni tatlar yarat (havuç + zencefil = yeni lezzet), karışımlar (sosu hazırla). Sonuç: Güzel bir yemek (iyi model). Kötü malzeme işleme → kötü yemek (kötü model). Michelin yıldızlı şefler preprocessing'e çok zaman harcar!",
   "mathematics": {
     "formulas": [
-      "\\text{Data Preprocessing & Feature Engineering formula}",
-      "\\text{Key equation}"
+      "\\text{StandardScaler (z-score)}: \\quad x' = \\frac{x - \\mu}{\\sigma}",
+      "\\text{MinMaxScaler}: \\quad x' = \\frac{x - x_{\\min}}{x_{\\max} - x_{\\min}}",
+      "\\text{RobustScaler}: \\quad x' = \\frac{x - \\text{median}}{\\text{IQR}} \\quad \\text{(Interquartile Range)}",
+      "\\text{One-Hot Encoding}: \\quad \\text{cat} \\in \\{\\text{A, B, C}\\} \\to [1,0,0], [0,1,0], [0,0,1]",
+      "\\text{Polynomial Features}: \\quad [x_1, x_2] \\to [1, x_1, x_2, x_1^2, x_1 x_2, x_2^2]",
+      "\\text{Z-score Outlier}: \\quad |z| = \\left|\\frac{x - \\mu}{\\sigma}\\right| > 3 \\quad \\text{(outlier)}",
+      "\\text{IQR Outlier}: \\quad x < Q_1 - 1.5 \\cdot \\text{IQR} \\text{ or } x > Q_3 + 1.5 \\cdot \\text{IQR}",
+      "\\text{Missing Indicator}: \\quad x_{\\text{missing}} = \\begin{cases} 1 & \\text{if } x \\text{ is NaN} \\\\ 0 & \\text{otherwise} \\end{cases}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Exploratory Data Analysis (EDA)**: df.info(), df.describe(), df.isnull().sum(). Veri tiplerini, missing value'ları, distribution'ı anla. Histogram, box plot, correlation matrix çiz.",
+      "2. **Missing Values**: Stratejiye karar ver: (a) Drop: <5% missing ise satırı/sütunu sil, (b) Imputation: Mean/median (numeric), mode (categorical), KNN/model-based (complex). Missing indicator feature ekle (bilgi kaybı yok).",
+      "3. **Outliers**: Detect: Z-score (|z|>3), IQR method (Q1-1.5·IQR, Q3+1.5·IQR), Isolation Forest. Handle: Remove, cap (winsorization), transform (log), veya robust model kullan (tree-based).",
+      "4. **Data Types**: Kategorik vs numeric'i ayır. Date'leri datetime'a çevir (pd.to_datetime). Text'i clean et (lowercase, remove punctuation).",
+      "5. **Feature Scaling**: Numeric feature'lar için: StandardScaler (Gaussian distribution, SVM/neural networks için), MinMaxScaler (bounded [0,1], image için), RobustScaler (outlier'lar varsa). Tree-based modeller scaling gerektirmez.",
+      "6. **Categorical Encoding**: (a) One-hot: Low-cardinality (<10 unique), (b) Label/Ordinal: Ordinal relationship varsa (small<medium<large), (c) Target encoding: High-cardinality (100+ unique, risk: overfitting), (d) Frequency encoding: Rare category'leri handle et.",
+      "7. **Feature Engineering**: Domain knowledge: Date → year/month/day/hour/day_of_week/is_weekend. Text → length, word_count, TF-IDF. Numeric → polynomial (x², x³), interactions (x₁·x₂), binning (age → age_group). Aggregations: Groupby statistics.",
+      "8. **Feature Selection**: (a) Correlation matrix: >0.9 → remove redundant, (b) Variance threshold: Constant/near-constant feature'ları çıkar, (c) Mutual information, chi-square test, (d) Model-based: Tree feature importance, Lasso (L1) shrinks irrelevant features to 0.",
+      "9. **Train-Test Split**: ÖNCE split yap, SONRA preprocessing (data leakage önle!). Pipeline kullan: fit_transform (train), transform (test).",
+      "10. **Pipeline Oluştur**: sklearn.pipeline.Pipeline ile tüm adımları chain et. ColumnTransformer ile farklı feature'lara farklı preprocessing. Production'da: Serialize pipeline (joblib), versioning (DVC), monitoring (feature drift)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: Missing imputation: O(N) simple, O(N²) KNN. Scaling: O(N·D) (N=rows, D=features). One-hot encoding: O(N·D·C) (C=categories). Feature selection: O(D²) correlation, O(N·D·log D) tree importance. PCA: O(min(N², D³)). **Uzay**: One-hot: D → D·C (high-cardinality explosion!). Polynomial: D → D² (degree-2). **Scalability**: Dask (distributed pandas), Vaex (out-of-core), Spark MLlib (big data preprocessing)."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "probability-statistics",
+    "linear-regression"
+  ],
+  "nextTopics": [
+    "neural-networks",
+    "decision-trees-random-forests"
+  ],
+  "relatedTopics": [
+    "linear-regression",
+    "neural-networks"
+  ],
   "tags": [
-    "data"
+    "preprocessing",
+    "feature-engineering",
+    "data-cleaning",
+    "scaling",
+    "encoding",
+    "imputation",
+    "mlops"
   ],
   "codeExamples": [
     {
-      "title": "Basic Data Preprocessing & Feature Engineering",
+      "title": "Missing Values & Imputation",
       "language": "python",
-      "code": "# Data Preprocessing & Feature Engineering example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Data Preprocessing & Feature Engineering code"
-    },
-    {
-      "title": "Data Preprocessing & Feature Engineering Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import pandas as pd\nimport numpy as np\nfrom sklearn.impute import SimpleImputer, KNNImputer\n\n# Sample data with missing values\ndf = pd.DataFrame({\n    'age': [25, 30, np.nan, 45, 50, np.nan],\n    'income': [50000, 60000, 55000, np.nan, 80000, 70000],\n    'city': ['NYC', 'LA', np.nan, 'Chicago', 'NYC', 'LA']\n})\n\nprint('Original Data:')\nprint(df)\nprint(f'\\nMissing values:\\n{df.isnull().sum()}')\n\n# Strategy 1: Drop rows with any missing\ndf_drop = df.dropna()\nprint(f'\\nAfter dropna: {len(df_drop)} rows (lost {len(df)-len(df_drop)})')\n\n# Strategy 2: Simple Imputation\nimputer_mean = SimpleImputer(strategy='mean')\ndf['age_imputed'] = imputer_mean.fit_transform(df[['age']])\n\nimputer_mode = SimpleImputer(strategy='most_frequent')\ndf['city_imputed'] = imputer_mode.fit_transform(df[['city']]).ravel()\n\nprint('\\nAfter Simple Imputation:')\nprint(df[['age', 'age_imputed', 'city', 'city_imputed']])\n\n# Strategy 3: KNN Imputation (uses neighbors)\nknn_imputer = KNNImputer(n_neighbors=2)\nnumeric_cols = ['age', 'income']\ndf_numeric = df[numeric_cols].copy()\ndf_knn = pd.DataFrame(\n    knn_imputer.fit_transform(df_numeric),\n    columns=numeric_cols\n)\n\nprint('\\nKNN Imputation (age, income):')\nprint(df_knn)",
       "level": 2,
-      "explanation": "Data Preprocessing & Feature Engineering Application code"
+      "explanation": "Missing values: Drop (data loss), SimpleImputer (mean/median/mode), KNNImputer (neighbor-based). Strategy seçimi data'ya bağlı."
     },
     {
-      "title": "Advanced Data Preprocessing & Feature Engineering",
+      "title": "Outlier Detection & Handling",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
-      "level": 3,
-      "explanation": "Advanced Data Preprocessing & Feature Engineering code"
-    },
-    {
-      "title": "Data Preprocessing & Feature Engineering Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Data Preprocessing & Feature Engineering Optimization code"
-    },
-    {
-      "title": "Data Preprocessing & Feature Engineering Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import pandas as pd\nimport numpy as np\nfrom scipy import stats\n\n# Data with outliers\ndata = np.array([10, 12, 12, 13, 12, 11, 14, 13, 15, 10, 10, 10, 100, 12, 14])\ndf = pd.DataFrame({'value': data})\n\nprint('Data:', data)\n\n# Method 1: Z-score\nz_scores = np.abs(stats.zscore(df['value']))\nthreshold = 3\noutliers_z = df[z_scores > threshold]\nprint(f'\\nZ-score outliers (|z|>{threshold}): {outliers_z.values.flatten()}')\n\n# Method 2: IQR (Interquartile Range)\nQ1 = df['value'].quantile(0.25)\nQ3 = df['value'].quantile(0.75)\nIQR = Q3 - Q1\nlower_bound = Q1 - 1.5 * IQR\nupper_bound = Q3 + 1.5 * IQR\n\noutliers_iqr = df[(df['value'] < lower_bound) | (df['value'] > upper_bound)]\nprint(f'IQR outliers (<{lower_bound:.1f} or >{upper_bound:.1f}): {outliers_iqr.values.flatten()}')\n\n# Handling strategies\nprint('\\nHandling Strategies:')\n\n# 1. Remove\ndf_removed = df[z_scores <= threshold]\nprint(f'1. Remove: {len(df)} → {len(df_removed)} rows')\n\n# 2. Cap (Winsorization)\ndf['value_capped'] = df['value'].clip(lower=lower_bound, upper=upper_bound)\nprint(f'2. Cap: max value {df[\"value\"].max()} → {df[\"value_capped\"].max()}')\n\n# 3. Transform (log)\ndf['value_log'] = np.log1p(df['value'])\nprint(f'3. Log transform: reduces outlier impact')",
       "level": 2,
-      "explanation": "Data Preprocessing & Feature Engineering Visualization code"
+      "explanation": "Outlier detection: Z-score (|z|>3), IQR method. Handling: Remove, cap (winsorization), transform (log), veya robust model kullan."
     },
     {
-      "title": "Production Data Preprocessing & Feature Engineering",
+      "title": "Feature Scaling",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
-      "level": 4,
-      "explanation": "Production Data Preprocessing & Feature Engineering code"
+      "code": "import pandas as pd\nimport numpy as np\nfrom sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler\n\n# Sample data with different scales\ndf = pd.DataFrame({\n    'age': [25, 30, 35, 40, 45],\n    'income': [50000, 60000, 55000, 80000, 70000],\n    'score': [85, 90, 75, 95, 88]\n})\n\nprint('Original Data:')\nprint(df)\nprint(f'\\nMeans: {df.mean().values}')\nprint(f'Stds:  {df.std().values}')\n\n# StandardScaler: mean=0, std=1\nscaler_standard = StandardScaler()\ndf_standard = pd.DataFrame(\n    scaler_standard.fit_transform(df),\n    columns=[f'{c}_standard' for c in df.columns]\n)\nprint('\\nStandardScaler (mean=0, std=1):')\nprint(df_standard.round(2))\nprint(f'Means: {df_standard.mean().values.round(2)}')\nprint(f'Stds:  {df_standard.std().values.round(2)}')\n\n# MinMaxScaler: [0, 1]\nscaler_minmax = MinMaxScaler()\ndf_minmax = pd.DataFrame(\n    scaler_minmax.fit_transform(df),\n    columns=[f'{c}_minmax' for c in df.columns]\n)\nprint('\\nMinMaxScaler [0, 1]:')\nprint(df_minmax.round(2))\n\n# RobustScaler: uses median, IQR (outlier robust)\nscaler_robust = RobustScaler()\ndf_robust = pd.DataFrame(\n    scaler_robust.fit_transform(df),\n    columns=[f'{c}_robust' for c in df.columns]\n)\nprint('\\nRobustScaler (median, IQR):')\nprint(df_robust.round(2))\n\nprint('\\nWhen to use:')\nprint('- StandardScaler: Gaussian data, SVM, neural networks')\nprint('- MinMaxScaler: Bounded [0,1], images, sigmoid activation')\nprint('- RobustScaler: Outliers varsa, median-based')",
+      "level": 2,
+      "explanation": "Feature scaling: StandardScaler (z-score, mean=0 std=1), MinMaxScaler ([0,1]), RobustScaler (outlier-robust). Model'e göre seç."
+    },
+    {
+      "title": "Categorical Encoding",
+      "language": "python",
+      "code": "import pandas as pd\nfrom sklearn.preprocessing import OneHotEncoder, LabelEncoder, OrdinalEncoder\n\ndf = pd.DataFrame({\n    'city': ['NYC', 'LA', 'Chicago', 'NYC', 'LA'],\n    'size': ['Small', 'Medium', 'Large', 'Medium', 'Small'],\n    'color': ['Red', 'Blue', 'Red', 'Green', 'Blue']\n})\n\nprint('Original Data:')\nprint(df)\n\n# 1. One-Hot Encoding (nominal, low-cardinality)\nencoder_onehot = OneHotEncoder(sparse_output=False)\ncity_encoded = encoder_onehot.fit_transform(df[['city']])\ncity_df = pd.DataFrame(\n    city_encoded,\n    columns=encoder_onehot.get_feature_names_out(['city'])\n)\nprint('\\n1. One-Hot Encoding (city):')\nprint(city_df)\n\n# 2. Ordinal Encoding (ordered categories)\nencoder_ordinal = OrdinalEncoder(\n    categories=[['Small', 'Medium', 'Large']]\n)\ndf['size_ordinal'] = encoder_ordinal.fit_transform(df[['size']])\nprint('\\n2. Ordinal Encoding (size):')\nprint(df[['size', 'size_ordinal']])\n\n# 3. Label Encoding (simple numeric)\nencoder_label = LabelEncoder()\ndf['color_label'] = encoder_label.fit_transform(df['color'])\nprint('\\n3. Label Encoding (color):')\nprint(df[['color', 'color_label']])\nprint(f'   Mapping: {dict(zip(encoder_label.classes_, range(len(encoder_label.classes_))))}')\n\n# 4. Pandas get_dummies (quick one-hot)\ndf_dummies = pd.get_dummies(df, columns=['city'], prefix='city')\nprint('\\n4. pd.get_dummies (city):')\nprint(df_dummies.head())\n\nprint('\\nWhen to use:')\nprint('- One-Hot: Nominal, low-cardinality (<10)')\nprint('- Ordinal: Ordered (small<medium<large)')\nprint('- Label: Tree models (handles numeric)')\nprint('- Target: High-cardinality (100+), risk: overfitting')",
+      "level": 2,
+      "explanation": "Categorical encoding: One-hot (nominal), Ordinal (ordered), Label (tree models). Cardinality'ye göre seç."
+    },
+    {
+      "title": "Feature Engineering - Date & Text",
+      "language": "python",
+      "code": "import pandas as pd\nimport numpy as np\nfrom sklearn.feature_extraction.text import TfidfVectorizer\n\n# Date feature engineering\ndf = pd.DataFrame({\n    'date': pd.to_datetime(['2024-01-15', '2024-03-20', '2024-12-25', '2024-07-04']),\n    'text': ['AI is amazing', 'Machine learning rocks', 'Data science is fun', 'Deep learning power']\n})\n\nprint('Original Data:')\nprint(df)\n\n# Extract date features\ndf['year'] = df['date'].dt.year\ndf['month'] = df['date'].dt.month\ndf['day'] = df['date'].dt.day\ndf['day_of_week'] = df['date'].dt.dayofweek  # 0=Monday\ndf['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)\ndf['quarter'] = df['date'].dt.quarter\n\nprint('\\nDate Features:')\nprint(df[['date', 'year', 'month', 'day', 'day_of_week', 'is_weekend', 'quarter']])\n\n# Text feature engineering\ndf['text_length'] = df['text'].str.len()\ndf['word_count'] = df['text'].str.split().str.len()\ndf['uppercase_count'] = df['text'].str.count(r'[A-Z]')\n\nprint('\\nText Features:')\nprint(df[['text', 'text_length', 'word_count', 'uppercase_count']])\n\n# TF-IDF\ntfidf = TfidfVectorizer(max_features=5)\ntfidf_matrix = tfidf.fit_transform(df['text'])\ntfidf_df = pd.DataFrame(\n    tfidf_matrix.toarray(),\n    columns=[f'tfidf_{word}' for word in tfidf.get_feature_names_out()]\n)\n\nprint('\\nTF-IDF Features:')\nprint(tfidf_df)\n\nprint('\\nFeature Engineering Tips:')\nprint('- Date: year, month, day_of_week, is_weekend, quarter, is_holiday')\nprint('- Text: length, word_count, sentiment, TF-IDF, embeddings')\nprint('- Numeric: polynomial (x²), interactions (x₁·x₂), binning')\nprint('- Domain: Expert knowledge creates best features!')",
+      "level": 3,
+      "explanation": "Feature engineering: Date → year/month/day/weekend, Text → length/word_count/TF-IDF. Domain knowledge kritik."
+    },
+    {
+      "title": "Complete Pipeline with sklearn",
+      "language": "python",
+      "code": "import pandas as pd\nimport numpy as np\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.preprocessing import StandardScaler, OneHotEncoder\nfrom sklearn.impute import SimpleImputer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import accuracy_score\n\n# Sample data\ndf = pd.DataFrame({\n    'age': [25, 30, np.nan, 45, 50, 28, 35, np.nan, 42, 38],\n    'income': [50000, 60000, 55000, np.nan, 80000, 52000, 70000, 58000, 75000, 68000],\n    'city': ['NYC', 'LA', 'Chicago', 'NYC', 'LA', 'Chicago', 'NYC', 'LA', 'Chicago', 'NYC'],\n    'purchased': [0, 1, 0, 1, 1, 0, 1, 0, 1, 1]\n})\n\nX = df.drop('purchased', axis=1)\ny = df['purchased']\n\nprint('Data shape:', X.shape)\nprint('Missing values:', X.isnull().sum().sum())\n\n# Train-test split (BEFORE preprocessing!)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)\n\n# Define preprocessing for numeric and categorical\nnumeric_features = ['age', 'income']\ncategorical_features = ['city']\n\nnumeric_transformer = Pipeline(steps=[\n    ('imputer', SimpleImputer(strategy='median')),\n    ('scaler', StandardScaler())\n])\n\ncategorical_transformer = Pipeline(steps=[\n    ('imputer', SimpleImputer(strategy='most_frequent')),\n    ('onehot', OneHotEncoder(handle_unknown='ignore'))\n])\n\n# Combine with ColumnTransformer\npreprocessor = ColumnTransformer(\n    transformers=[\n        ('num', numeric_transformer, numeric_features),\n        ('cat', categorical_transformer, categorical_features)\n    ])\n\n# Full pipeline: preprocessing + model\nclf = Pipeline(steps=[\n    ('preprocessor', preprocessor),\n    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))\n])\n\n# Train\nclf.fit(X_train, y_train)\n\n# Predict\ny_pred = clf.predict(X_test)\naccuracy = accuracy_score(y_test, y_pred)\n\nprint(f'\\nTest Accuracy: {accuracy:.3f}')\nprint('\\nPipeline Benefits:')\nprint('- No data leakage (fit on train, transform on test)')\nprint('- Easy to serialize (joblib.dump)')\nprint('- Production-ready')\nprint('- Handles train/test consistently')",
+      "level": 3,
+      "explanation": "Sklearn Pipeline: Preprocessing + model birlikte. ColumnTransformer ile farklı feature'lara farklı işlem. Data leakage önler, production-ready."
     }
   ],
   "quiz": [
     {
-      "question": "What is Data Preprocessing & Feature Engineering?",
+      "question": "Missing values için en iyi strateji nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her zaman drop et",
+        "Data'ya bağlı: <5% drop, numeric için mean/median, categorical için mode, complex için KNN/model-based",
+        "Her zaman 0 ile doldur",
+        "Random değer ata"
       ],
       "correctAnswer": 1,
-      "explanation": "Data Preprocessing & Feature Engineering explanation.",
-      "id": "data-preprocessing-features-q1"
+      "explanation": "Missing value stratejisi data'ya bağlı: Az missing (<5%) → drop, numeric → mean/median, categorical → mode, complex → KNN/MICE. Domain knowledge önemli.",
+      "id": "prep-q1"
     },
     {
-      "question": "When to use Data Preprocessing & Feature Engineering?",
+      "question": "StandardScaler ne yapar?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "[0,1] aralığına scale eder",
+        "Mean=0, std=1 yapar (z-score normalization)",
+        "Outlier'ları remove eder",
+        "Log transform uygular"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "data-preprocessing-features-q2"
+      "explanation": "StandardScaler: z-score normalization. x' = (x - μ) / σ. Mean=0, std=1. Gaussian data, SVM, neural networks için ideal.",
+      "id": "prep-q2"
     },
     {
-      "question": "Data Preprocessing & Feature Engineering advantage?",
+      "question": "One-hot encoding ne zaman kullanılmalı?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her zaman",
+        "Nominal categorical, low-cardinality (<10 unique)",
+        "Sadece numeric data için",
+        "High-cardinality için (100+)"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "data-preprocessing-features-q3"
+      "explanation": "One-hot: Nominal categorical (no order), low-cardinality (<10). High-cardinality → dimension explosion, target/frequency encoding tercih et.",
+      "id": "prep-q3"
     },
     {
-      "question": "Data Preprocessing & Feature Engineering limitation?",
+      "question": "Feature engineering'in amacı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece feature sayısını artırmak",
+        "Domain knowledge ile model'e maksimum bilgi vermek, performance artırmak",
+        "Sadece missing values doldurmak",
+        "Sadece categorical encoding"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "data-preprocessing-features-q4"
+      "explanation": "Feature engineering: Domain knowledge ile yeni feature'lar yarat (date → day_of_week, text → TF-IDF). Model'e maksimum bilgi ver, performance %50+ artabilir.",
+      "id": "prep-q4"
     },
     {
-      "question": "Best practice for Data Preprocessing & Feature Engineering?",
+      "question": "Data leakage nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Missing values",
+        "Test data bilgisi training'e sızması (örn: fit_transform test'te)",
+        "Outlier'lar",
+        "Overfitting"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "data-preprocessing-features-q5"
+      "explanation": "Data leakage: Test data bilgisi training'e sızar. Örnek: Tüm data'ya fit_transform → test'in mean/std'si training'de kullanılır. Doğru: fit_transform (train), transform (test).",
+      "id": "prep-q5"
     },
     {
-      "question": "Data Preprocessing & Feature Engineering vs alternatives?",
+      "question": "Outlier handling için hangi method robust?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her zaman remove et",
+        "IQR method veya RobustScaler (median-based), tree models (doğal robust)",
+        "Her zaman ignore et",
+        "Sadece mean imputation"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "data-preprocessing-features-q6"
+      "explanation": "Outlier: IQR method (Q1-1.5·IQR, Q3+1.5·IQR), RobustScaler (median, IQR), tree models (doğal robust). Remove: bilgi kaybı, cap: winsorization, transform: log.",
+      "id": "prep-q6"
+    },
+    {
+      "question": "Sklearn Pipeline avantajı?",
+      "options": [
+        "Sadece kod daha kısa",
+        "Data leakage önler, train/test consistency, production-ready, serialize edilebilir",
+        "Sadece hız artırır",
+        "Hiç avantajı yok"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Pipeline: (1) Data leakage önler (fit train, transform test), (2) Train/test consistency, (3) Production-ready (serialize with joblib), (4) Clean code, (5) Hyperparameter tuning ile integrate.",
+      "id": "prep-q7"
+    },
+    {
+      "question": "Feature selection neden önemli?",
+      "options": [
+        "Sadece model hızlandırır",
+        "İlgisiz feature'lar overfitting yapar, noise ekler, training yavaşlatır, interpretability azaltır",
+        "Sadece memory azaltır",
+        "Hiç önemli değil"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Feature selection: (1) Overfitting önler (ilgisiz feature'lar noise), (2) Training hızlandırır, (3) Interpretability artırır. Methods: correlation, mutual information, Lasso (L1), tree importance.",
+      "id": "prep-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Data Preprocessing & Feature Engineering",
-      "back": "Core concept summary"
+      "front": "Data Preprocessing nedir?",
+      "back": "Raw veriyi ML için hazırlama: missing values, outliers, scaling, encoding. Model performance'ın %80'i preprocessing'ten gelir."
     },
     {
-      "front": "Data Preprocessing & Feature Engineering Key Idea",
-      "back": "Main concept"
+      "front": "Missing Values Strategies",
+      "back": "Drop (<5%), mean/median (numeric), mode (categorical), KNN/MICE (complex). Missing indicator feature ekle."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "StandardScaler",
+      "back": "Z-score: x' = (x - μ) / σ. Mean=0, std=1. Gaussian data, SVM, neural networks için."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "MinMaxScaler",
+      "back": "x' = (x - min) / (max - min). [0,1] range. Bounded data, images, sigmoid activation için."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "One-Hot Encoding",
+      "back": "Nominal categorical → binary vectors. Low-cardinality (<10). High-cardinality → dimension explosion."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Feature Engineering",
+      "back": "Domain knowledge ile yeni feature'lar: date → day_of_week, text → TF-IDF, numeric → polynomial (x²), interactions (x₁·x₂)."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Data Leakage",
+      "back": "Test data bilgisi training'e sızar. Doğru: fit_transform (train), transform (test). Pipeline kullan."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Outlier Detection",
+      "back": "Z-score (|z|>3), IQR (Q1-1.5·IQR, Q3+1.5·IQR), Isolation Forest. Handle: remove, cap, transform (log)."
+    },
+    {
+      "front": "Feature Selection",
+      "back": "İlgisiz feature'ları çıkar: correlation (>0.9), variance threshold, mutual information, Lasso (L1), tree importance."
+    },
+    {
+      "front": "Sklearn Pipeline",
+      "back": "Preprocessing + model chain. Data leakage önler, train/test consistency, production-ready, serialize edilebilir (joblib)."
+    },
+    {
+      "front": "RobustScaler",
+      "back": "x' = (x - median) / IQR. Outlier'lara robust, median-based. Outlier'lar varsa tercih et."
+    },
+    {
+      "front": "ColumnTransformer",
+      "back": "Farklı feature'lara farklı preprocessing: numeric → StandardScaler, categorical → OneHotEncoder. Pipeline ile integrate."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Tüm data'ya fit_transform yapmak",
+      "why": "Data leakage: Test data'nın mean/std'si training'de kullanılır. Model overoptimistic görünür, production'da kötü performance.",
+      "fix": "fit_transform sadece train'de, transform test'te. Sklearn Pipeline kullan: clf.fit(X_train) → clf.predict(X_test). Pipeline serialize et (joblib)."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Missing values'ları 0 ile doldurmak",
+      "why": "0 anlamlı olabilir (örn: yaş=0 bebek). 0 ile doldurma bias yaratır, distribution bozar. Model yanıltılır.",
+      "fix": "Strategy seç: mean/median (numeric), mode (categorical), KNN/MICE (complex). Missing indicator feature ekle (bilgi kaybı yok). Domain knowledge kullan."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Outlier'ları her zaman remove etmek",
+      "why": "Outlier bilgi taşıyabilir (fraud detection'da outlier=fraud!). Remove → data loss. Distribution değişir.",
+      "fix": "Outlier'ın nature'ını anla: (1) Gerçek veri → keep veya cap (winsorization), (2) Error → remove, (3) Robust method: RobustScaler, tree models (doğal robust)."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "High-cardinality categorical için one-hot",
+      "why": "100+ unique value → 100+ column (dimension explosion). Memory, overfitting, sparse matrix sorunları.",
+      "fix": "Alternatifler: (1) Target encoding (mean target per category), (2) Frequency encoding (category count), (3) Embedding (neural network), (4) Grouping (rare → 'Other')."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Feature scaling yapmamak (tree models hariç)",
+      "why": "SVM, k-NN, neural networks scale'e duyarlı. Büyük range'li feature dominant olur. Gradient descent instability.",
+      "fix": "Scale et: StandardScaler (SVM, NN), MinMaxScaler (image, sigmoid). Tree-based modeller (RF, XGBoost) scaling gerektirmez (split-based)."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Train-test split'ten önce preprocessing",
+      "why": "Data leakage: Test data preprocessing'e etki eder (örn: StandardScaler test'in mean'ini görür). Model gerçek performance'tan iyi görünür.",
+      "fix": "Sıra: (1) Split (train/test), (2) fit_transform (train), (3) transform (test). Pipeline kullan (otomatik doğru sıra)."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Feature selection yapmamak",
+      "why": "İlgisiz feature'lar: (1) Overfitting (noise öğrenme), (2) Training yavaşlatır, (3) Interpretability azaltır, (4) Curse of dimensionality.",
+      "fix": "Feature selection: (1) Correlation matrix (>0.9 → remove redundant), (2) Variance threshold (constant → remove), (3) Mutual information, (4) Lasso (L1), (5) Tree importance."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Data Preprocessing & Feature Engineering Overview",
-      "description": "Visual explanation"
+      "title": "Preprocessing Pipeline",
+      "description": "End-to-end flow: Raw data → EDA → Missing values → Outliers → Scaling → Encoding → Feature engineering → Feature selection → Model."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "Scaling Methods",
+      "description": "StandardScaler vs MinMaxScaler vs RobustScaler. Distribution before/after, use cases, outlier sensitivity."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Preprocessing Playground",
+      "description": "Upload CSV, interactive preprocessing: missing imputation, scaling, encoding. Real-time visualization, downloadable result."
+    },
+    {
+      "type": "metric",
+      "title": "Feature Importance Dashboard",
+      "description": "Correlation heatmap, mutual information scores, tree feature importance, variance analysis. Top-K feature'ları highlight."
     }
   ],
   "references": [
     {
-      "title": "Data Preprocessing & Feature Engineering Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
-      "type": "paper"
+      "title": "Scikit-learn Preprocessing Guide",
+      "authors": "Scikit-learn Team",
+      "year": 2024,
+      "link": "https://scikit-learn.org/stable/modules/preprocessing.html",
+      "type": "documentation"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "Feature Engineering for Machine Learning",
+      "authors": "Zheng, A. & Casari, A.",
+      "year": 2018,
+      "link": "https://www.oreilly.com/library/view/feature-engineering-for/9781491953235/",
+      "type": "book"
+    },
+    {
+      "title": "Feast: Feature Store",
+      "authors": "Tecton",
+      "year": 2024,
+      "link": "https://feast.dev/",
+      "type": "tool"
+    },
+    {
+      "title": "Great Expectations: Data Quality",
+      "authors": "Great Expectations",
+      "year": 2024,
+      "link": "https://greatexpectations.io/",
+      "type": "tool"
     }
   ]
 }
