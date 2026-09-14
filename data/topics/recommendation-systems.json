@@ -4,261 +4,343 @@
   "category": "applications",
   "level": 3,
   "estimatedTime": 70,
-  "description": "Recommendation Systems: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Öneri sistemleri: Kullanıcı tercihleri ve davranışlarına göre kişiselleştirilmiş öneriler. Collaborative filtering, content-based, matrix factorization, deep learning yaklaşımları. Netflix, Amazon, Spotify, YouTube'da kullanılan teknikler.",
   "content": {
-    "level0_basic": "Recommendation Systems basics: Core concepts explained simply.",
-    "level1_beginner": "Recommendation Systems fundamentals with examples and code snippets.",
-    "level2_application": "Practical Recommendation Systems implementation with real-world applications.",
-    "level3_advanced": "Advanced Recommendation Systems techniques and optimizations.",
-    "level4_expert": "Expert-level Recommendation Systems architectures and research directions."
+    "level0_basic": "Recommendation Systems (Öneri Sistemleri), kullanıcıların ilgilenebileceği ürün, film, müzik veya içerikleri tahmin edip önerir. Netflix'te 'size özel filmler', Amazon'da 'bunu alanlar şunları da aldı', Spotify'da 'senin için çalma listesi' gibi. İki temel yaklaşım: (1) **Collaborative Filtering** - benzer kullanıcıların beğendiği şeyleri öner, (2) **Content-Based** - beğendiğin şeylere benzer özellikteki şeyleri öner.",
+    "level1_beginner": "Öneri sistemleri 3 ana kategoriye ayrılır: (1) **Collaborative Filtering**: Kullanıcı-ürün etkileşim matrisi (rating, click, purchase) ile benzerlik bulur. User-based (benzer kullanıcılar) veya item-based (benzer ürünler). (2) **Content-Based**: Ürün özellikleri (film: tür, yönetmen, oyuncular) ile kullanıcı profili eşleşir. (3) **Hybrid**: İkisini birleştirir. Temel metrik: **Precision@K** (ilk K öneriden kaç doğru), **Recall@K**, **NDCG** (sıralama kalitesi). Cold start problem: Yeni kullanıcı/ürün için yeterli veri yok.",
+    "level2_application": "Gerçek dünyada recommendation system'ler milyarlarca kullanıcıya hizmet verir. **Matrix Factorization** (SVD, ALS), user-item matrisini düşük boyutlu latent factor'lara ayırır: $R ≈ U · V^T$ (users × items = users × factors × factors × items). **Netflix Prize** (2009) bu alanda devrim yaptı. Modern yaklaşımlar: (1) **Two-Tower Neural Network**: User tower + Item tower, embedding'leri dot product ile eşleştir. (2) **Session-based**: RNN/GRU ile tıklama sekansından next-item tahmin. (3) **Context-aware**: Zaman, konum, cihaz gibi context'i modele ekle. Evaluation: Offline (MAE, RMSE, Precision@K) ve online (A/B test, CTR, conversion rate).",
+    "level3_advanced": "İleri seviye RecSys, deep learning, reinforcement learning ve production optimizasyonları içerir. **Deep Learning**: (1) **NCF** (Neural Collaborative Filtering) - MLP ile non-linear interactions, (2) **Wide & Deep** (Google) - memorization + generalization, (3) **DeepFM** - factorization + DNN, (4) **Transformer4Rec** - self-attention ile sequence modeling. **Graph Neural Networks**: User-item bipartite graph üzerinde GNN (Pinterest'in PinSage). **Multi-objective optimization**: CTR + dwell time + diversity maximize et. **Exploration-Exploitation**: Bandit algorithms (Thompson Sampling, Upper Confidence Bound). **Bias & Fairness**: Popularity bias, filter bubble, fairness constraints. **Scalability**: Approximate Nearest Neighbors (ANN) - FAISS, Annoy ile milisaniye latency.",
+    "level4_expert": "Expert seviyede, large-scale production systems, research frontiers ve business impact önemlidir. **Two-Stage Architecture**: (1) **Candidate Generation** (retrieval): Milyonlarca itemden 100-1000 candidate'i hızlı bul (ANN, clustering), (2) **Ranking**: Candidate'leri detaylı feature'larla (user history, context, item metadata) sırala (GBDT, DNN). **Real-time Personalization**: Streaming data (Kafka), online learning (FTRL, mini-batch SGD), feature store (Feast). **Causal Inference**: Correlation vs causation - seçim bias'ı düzelt (inverse propensity scoring). **Multi-stakeholder RecSys**: User, content creator, platform (revenue) dengesi. **Explainability**: Neden bu önerildi? (attention weights, LIME, SHAP). **Privacy**: Federated learning, differential privacy. Research: **Conversational RecSys** (dialogue-based), **Cross-domain** (filmdeki beğeniden müzik öner), **Lifelong learning** (sürekli evrim)."
   },
-  "whatIsIt": "Recommendation Systems: Technical definition and core concepts.",
-  "whyNeeded": "Why Recommendation Systems matters: Applications and use cases.",
-  "realWorldAnalogy": "Recommendation Systems explained through real-world analogy.",
+  "whatIsIt": "Recommendation Systems, kullanıcıların tercihlerini (implicit: tıklama, izleme; explicit: rating, beğeni) analiz ederek ilgilenebileceği item'ları tahmin eden ML sistemleridir. Matematiksel olarak: Kullanıcı $u$ ve item $i$ için rating tahmini $\\hat{r}_{ui} = f(u, i, \\text{context})$. Collaborative filtering ile benzerlik ($\\text{sim}(u_1, u_2)$ veya $\\text{sim}(i_1, i_2)$), matrix factorization ile latent factors ($R ≈ U · V^T$), deep learning ile non-linear embeddings kullanılır. Objective: Precision@K, Recall@K, NDCG (Normalized Discounted Cumulative Gain), conversion rate maximize etme.",
+  "whyNeeded": "Recommendation Systems kritik çünkü: (1) **User Experience**: Kullanıcı katalogda kaybolmaz, kişiselleştirilmiş deneyim. (2) **Revenue**: Amazon gelirinin %35'i, Netflix izleme süresinin %80'i önerilerden gelir. (3) **Content Discovery**: Long-tail ürünler keşfedilir (popüler olmayanlar). (4) **Engagement**: Kullanıcı platformda daha uzun süre kalır. (5) **Inventory Management**: Hangi ürünleri stokla? (6) **Marketing**: Kime hangi kampanya gönderilmeli? (7) **Rekabet Avantajı**: Spotify vs Apple Music ayrımı personalization kalitesinde. (8) **Data-driven Business**: ML ile sürekli iyileşen sistem.",
+  "realWorldAnalogy": "Recommendation Systems'i mahalle kitapçısı sahibine benzetebiliriz. Sizi tanıyan bir kitapçı: (1) **Collaborative Filtering** - 'Sizin gibi thriller seven Ayşe bu kitabı beğendi' der. (2) **Content-Based** - 'Dan Brown'ı seviyorsunuz, işte benzer tarzda başka bir gizem romanı' der. (3) **Hybrid** - Hem sizin geçmiş alışverişlerinize, hem benzer müşterilere, hem de kitap özelliklerine bakar. (4) **Cold Start** - İlk kez gelen bir müşteriye 'En çok satanlar' listesini gösterir (popularity-based). (5) **Context-Aware** - 'Yaz tatili için hafif bir roman mı istiyorsunuz?' diye sorar. İyi bir recommendation system, bu kitapçı gibi hem sizi tanır, hem zevkinizi öğrenir, hem de sürpriz yapar.",
   "mathematics": {
     "formulas": [
-      "\\text{Recommendation Systems formula}",
-      "\\text{Key equation}"
+      "\\text{Cosine Similarity}: \\quad \\text{sim}(u, v) = \\frac{u \\cdot v}{\\|u\\| \\|v\\|} = \\frac{\\sum_i u_i v_i}{\\sqrt{\\sum_i u_i^2} \\sqrt{\\sum_i v_i^2}}",
+      "\\text{Pearson Correlation}: \\quad \\rho(u, v) = \\frac{\\sum_i (r_{ui} - \\bar{r}_u)(r_{vi} - \\bar{r}_v)}{\\sqrt{\\sum_i (r_{ui} - \\bar{r}_u)^2} \\sqrt{\\sum_i (r_{vi} - \\bar{r}_v)^2}}",
+      "\\text{User-based CF}: \\quad \\hat{r}_{ui} = \\bar{r}_u + \\frac{\\sum_{v \\in N(u)} \\text{sim}(u, v) \\cdot (r_{vi} - \\bar{r}_v)}{\\sum_{v \\in N(u)} |\\text{sim}(u, v)|}",
+      "\\text{Matrix Factorization}: \\quad \\min_{U, V} \\sum_{(u,i) \\in \\text{observed}} (r_{ui} - u_u^T v_i)^2 + \\lambda (\\|u_u\\|^2 + \\|v_i\\|^2)",
+      "\\text{ALS Update}: \\quad u_u = (V^T V + \\lambda I)^{-1} V^T r_u \\quad \\text{(Alternating Least Squares)}",
+      "\\text{Precision@K}: \\quad P@K = \\frac{|\\text{relevant items in top-K}|}{K}",
+      "\\text{NDCG@K}: \\quad \\text{NDCG}@K = \\frac{\\text{DCG}@K}{\\text{IDCG}@K}, \\quad \\text{DCG} = \\sum_{i=1}^K \\frac{2^{\\text{rel}_i} - 1}{\\log_2(i+1)}",
+      "\\text{BPR Loss}: \\quad L = \\sum_{(u,i,j) \\in D_S} -\\ln \\sigma(\\hat{r}_{ui} - \\hat{r}_{uj}) + \\lambda \\|\\Theta\\|^2 \\quad \\text{(Bayesian Personalized Ranking)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Veri Toplama**: User-item interactions (explicit: ratings 1-5, implicit: clicks, views, purchases). Feature'lar: user demographics, item metadata, context (time, device).",
+      "2. **Exploratory Data Analysis**: Sparsity analizi (matrisin %kaçı dolu?), rating distribution, popularity bias (20% item'a 80% interaction), user activity distribution.",
+      "3. **Train-Test Split**: Temporal split (son %20'yi test) veya random split (her user için %20 interaction). Cold start senaryoları için ayrı test set.",
+      "4. **Baseline Model**: Popularity-based (en çok tıklananları öner) - baseline metric. Global average rating, per-user average, per-item average.",
+      "5. **Collaborative Filtering**: (a) User-based KNN: Benzer kullanıcıları bul (cosine similarity, Pearson), onların beğendiği item'ları öner. (b) Item-based KNN: Benzer item'ları bul, kullanıcının beğendiğine benzer olanları öner.",
+      "6. **Matrix Factorization**: SVD veya ALS ile $R ≈ U · V^T$. Latent factors (k=50-200). Regularization ($\\lambda$) ile overfitting önle. SGD veya ALS ile optimize et.",
+      "7. **Deep Learning (opsiyonel)**: User + item embedding → concatenate → MLP → rating prediction. Wide & Deep: Linear (memorization) + DNN (generalization).",
+      "8. **Ranking**: Candidate generation (1000 item) → Ranking (top-K seç). Feature engineering: user history, item popularity, context, interaction type.",
+      "9. **Evaluation**: Offline metrics (Precision@K, Recall@K, NDCG@K, MAP). Online A/B test (CTR, conversion rate, dwell time, diversity).",
+      "10. **Production Deployment**: Model serving (TensorFlow Serving, Triton), candidate retrieval (FAISS ANN), feature store, A/B testing infrastructure, monitoring (serving latency, model staleness)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: User-based KNN O(U²·I) (U=users, I=items), Item-based KNN O(I²·U), Matrix Factorization (SGD) O(E·K) per iteration (E=observed entries, K=latent factors), ALS O(K²(U+I) + EK), Deep Learning O(batch_size · model_params). **Inference**: KNN O(U·I) naive, O(K_neighbors) optimized; MF O(K) dot product; DNN O(layer_params). **Uzay**: Matris O(U·I) sparse (~%1 dolu), MF O((U+I)·K), ANN index (FAISS) O(I·K). **Scalability**: Milyon user, milyar item için distributed training (Spark MLlib, TensorFlow distributed), approximate methods (LSH, HNSW)."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "linear-regression",
+    "probability-statistics",
+    "neural-networks"
+  ],
+  "nextTopics": [
+    "nlp-fundamentals",
+    "lstm-gru-networks"
+  ],
+  "relatedTopics": [
+    "neural-networks",
+    "kmeans-clustering"
+  ],
   "tags": [
-    "recommendation"
+    "recommendation",
+    "collaborative-filtering",
+    "matrix-factorization",
+    "personalization",
+    "ranking",
+    "applications"
   ],
   "codeExamples": [
     {
-      "title": "Basic Recommendation Systems",
+      "title": "Basit User-Based Collaborative Filtering",
       "language": "python",
-      "code": "# Recommendation Systems example\nimport numpy as np\n\n# Implementation here",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.metrics.pairwise import cosine_similarity\n\n# Örnek user-item rating matrisi (5 user, 6 item, 1-5 yıldız)\n# 0 = rating yok (kullanıcı o item'ı değerlendirmemiş)\nratings = np.array([\n    [5, 3, 0, 1, 0, 0],  # User 0\n    [4, 0, 0, 1, 2, 0],  # User 1\n    [1, 1, 0, 5, 0, 0],  # User 2\n    [1, 0, 0, 4, 4, 0],  # User 3\n    [0, 1, 5, 4, 0, 5],  # User 4\n])\n\ndf = pd.DataFrame(ratings, columns=['Item_A', 'Item_B', 'Item_C', 'Item_D', 'Item_E', 'Item_F'])\nprint(\"User-Item Rating Matrisi:\\n\", df)\n\n# User similarity: Cosine similarity\n# 0 rating'leri NaN yaparak sadece ortak item'ları değerlendiriyoruz\nratings_normalized = ratings.copy().astype(float)\nratings_normalized[ratings_normalized == 0] = np.nan\n\n# Basit cosine similarity (0'ları dikkate almadan)\ndef user_similarity_matrix(ratings):\n    # 0'ları mean ile doldur (basit approach)\n    filled = np.where(ratings == 0, np.nan, ratings)\n    user_mean = np.nanmean(filled, axis=1, keepdims=True)\n    filled = np.where(np.isnan(filled), user_mean, filled)\n    return cosine_similarity(filled)\n\nuser_sim = user_similarity_matrix(ratings)\nprint(\"\\nUser Similarity Matrix:\")\nprint(pd.DataFrame(user_sim, index=[f'U{i}' for i in range(5)], \n                   columns=[f'U{i}' for i in range(5)]).round(3))\n\n# User 0 için Item_C (index 2) tahmini\n# User 0'ın Item_C'yi değerlendirmediğini görüyoruz (rating=0)\ntarget_user = 0\ntarget_item = 2\n\n# Item_C'yi değerlendiren kullanıcıları bul\nusers_rated = np.where(ratings[:, target_item] > 0)[0]\nprint(f\"\\nItem_C'yi değerlendiren kullanıcılar: {users_rated}\")\n\n# Weighted average: Benzerlik × rating\nif len(users_rated) > 0:\n    similarities = user_sim[target_user, users_rated]\n    ratings_for_item = ratings[users_rated, target_item]\n    \n    predicted_rating = np.sum(similarities * ratings_for_item) / np.sum(np.abs(similarities))\n    print(f\"\\n👤 User 0 için Item_C tahmini: {predicted_rating:.2f} yıldız\")\n    print(f\"   Hesaplama: ({similarities} · {ratings_for_item}) / sum({np.abs(similarities)})\")\nelse:\n    print(\"Kimse bu item'ı değerlendirmemiş (Cold start!)\")\n\nprint(\"\\n💡 User-based CF: Benzer kullanıcıların beğendiği şeyleri öner!\")",
       "level": 1,
-      "explanation": "Basic Recommendation Systems code"
+      "explanation": "User-based Collaborative Filtering, benzer kullanıcıları bulup onların rating'lerinden tahmin yapar. Cosine similarity ile user vektörlerini karşılaştırır. Weighted average ile komşu rating'leri birleştirir."
     },
     {
-      "title": "Recommendation Systems Application",
+      "title": "Item-Based Collaborative Filtering (Surprise Library)",
       "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "from surprise import Dataset, Reader, KNNBasic\nfrom surprise.model_selection import train_test_split\nfrom surprise import accuracy\nimport pandas as pd\n\n# MovieLens formatında veri (user_id, item_id, rating)\ndata_dict = {\n    'user_id': [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5],\n    'item_id': [1, 2, 4, 1, 4, 5, 1, 2, 4, 2, 4, 5, 3, 4, 6],\n    'rating':  [5, 3, 1, 4, 1, 2, 1, 1, 5, 1, 4, 4, 5, 4, 5]\n}\ndf = pd.DataFrame(data_dict)\n\n# Surprise dataset\nreader = Reader(rating_scale=(1, 5))\ndata = Dataset.load_from_df(df[['user_id', 'item_id', 'rating']], reader)\n\n# Train-test split\ntrainset, testset = train_test_split(data, test_size=0.25, random_state=42)\n\n# Item-based KNN (cosine similarity)\nitem_based = KNNBasic(k=3, sim_options={\n    'name': 'cosine',\n    'user_based': False  # Item-based!\n})\n\nitem_based.fit(trainset)\n\n# Test set üzerinde tahmin\npredictions = item_based.test(testset)\n\n# Evaluation\nrmse = accuracy.rmse(predictions, verbose=False)\nmae = accuracy.mae(predictions, verbose=False)\nprint(f\"Item-based CF Performance:\")\nprint(f\"  RMSE: {rmse:.3f}\")\nprint(f\"  MAE:  {mae:.3f}\")\n\n# Belirli bir kullanıcı için tahmin\nuser_id = 3\nitem_id = 5\nprediction = item_based.predict(user_id, item_id)\nprint(f\"\\n🎬 User {user_id} için Item {item_id} tahmini: {prediction.est:.2f} yıldız\")\nprint(f\"   (Gerçek rating bilinmiyor, tahmin yapıldı)\")\n\n# Top-N öneri: User 3 için henüz değerlendirmediği item'lar\nall_items = df['item_id'].unique()\nrated_items = df[df['user_id'] == user_id]['item_id'].values\nunrated_items = [item for item in all_items if item not in rated_items]\n\npredictions_unrated = [item_based.predict(user_id, item) for item in unrated_items]\npredictions_unrated.sort(key=lambda x: x.est, reverse=True)\n\nprint(f\"\\n📋 User {user_id} için Top-3 Öneri:\")\nfor i, pred in enumerate(predictions_unrated[:3], 1):\n    print(f\"  {i}. Item {pred.iid} → Tahmin: {pred.est:.2f} yıldız\")\n\nprint(\"\\n💡 Item-based CF: User'ın beğendiği item'lara benzer item'ları öner!\")",
       "level": 2,
-      "explanation": "Recommendation Systems Application code"
+      "explanation": "Item-based CF, item'lar arası benzerlik kullanır. User'ın beğendiği item'lara benzer olanları önerir. Surprise library ile kolay implementasyon. User-based'den daha scalable (item sayısı < user sayısı genelde)."
     },
     {
-      "title": "Advanced Recommendation Systems",
+      "title": "Matrix Factorization (SVD) - Surprise",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "from surprise import SVD, Dataset, Reader\nfrom surprise.model_selection import cross_validate, GridSearchCV\nimport pandas as pd\nimport numpy as np\n\n# Daha büyük sentetik veri oluştur\nnp.random.seed(42)\nn_users = 100\nn_items = 50\nn_ratings = 2000\n\nuser_ids = np.random.randint(1, n_users+1, n_ratings)\nitem_ids = np.random.randint(1, n_items+1, n_ratings)\n# Bazı user-item çiftleri daha yüksek rating (pattern simülasyonu)\nratings = np.where((user_ids % 3 == item_ids % 3), \n                   np.random.randint(4, 6, n_ratings),  # Benzer pattern → yüksek\n                   np.random.randint(1, 4, n_ratings))  # Farklı → düşük\n\ndf = pd.DataFrame({\n    'user_id': user_ids,\n    'item_id': item_ids,\n    'rating': ratings\n})\n\nreader = Reader(rating_scale=(1, 5))\ndata = Dataset.load_from_df(df, reader)\n\n# SVD (Singular Value Decomposition)\n# Matrix R ≈ U · Σ · V^T → Latent factors\nsvd = SVD(\n    n_factors=20,      # Latent factor sayısı (k)\n    n_epochs=20,       # SGD iteration\n    lr_all=0.005,      # Learning rate\n    reg_all=0.02       # Regularization (lambda)\n)\n\n# Cross-validation ile değerlendirme\nprint(\"5-Fold Cross Validation:\")\ncv_results = cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=5, verbose=True)\n\nprint(f\"\\n📊 Ortalama Performans:\")\nprint(f\"  RMSE: {cv_results['test_rmse'].mean():.3f} (±{cv_results['test_rmse'].std():.3f})\")\nprint(f\"  MAE:  {cv_results['test_mae'].mean():.3f} (±{cv_results['test_mae'].std():.3f})\")\n\n# Hiperparametre tuning (GridSearch)\nprint(\"\\n🔧 Hyperparameter Tuning...\")\nparam_grid = {\n    'n_factors': [10, 20, 50],\n    'n_epochs': [10, 20],\n    'lr_all': [0.002, 0.005],\n    'reg_all': [0.02, 0.1]\n}\ngs = GridSearchCV(SVD, param_grid, measures=['rmse'], cv=3, n_jobs=-1)\ngs.fit(data)\n\nprint(f\"\\n✅ En iyi RMSE: {gs.best_score['rmse']:.3f}\")\nprint(f\"   En iyi parametreler: {gs.best_params['rmse']}\")\n\n# En iyi model ile tahmin\nbest_svd = gs.best_estimator['rmse']\ntrainset = data.build_full_trainset()\nbest_svd.fit(trainset)\n\n# Örnek tahmin\nuser_id = 10\nitem_id = 5\npred = best_svd.predict(user_id, item_id)\nprint(f\"\\n🎯 User {user_id} için Item {item_id} tahmini: {pred.est:.2f}\")\n\nprint(\"\\n💡 SVD: User-item matrisini düşük boyutlu latent space'e project eder.\")\nprint(\"   R ≈ U (users × factors) · V^T (factors × items)\")\nprint(\"   Sparse matrix'i dense representation'a çevirir!\")",
       "level": 3,
-      "explanation": "Advanced Recommendation Systems code"
+      "explanation": "Matrix Factorization (SVD), user-item matrisini latent factors'a ayırır. Her user ve item bir K-boyutlu vektör ile temsil edilir. Dot product ile rating tahmini. Sparse data için ideal. Netflix Prize'ın temel tekniği."
     },
     {
-      "title": "Recommendation Systems Optimization",
+      "title": "Content-Based Filtering (TF-IDF + Cosine)",
       "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Recommendation Systems Optimization code"
-    },
-    {
-      "title": "Recommendation Systems Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import pandas as pd\nfrom sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.metrics.pairwise import cosine_similarity\nimport numpy as np\n\n# Film veri seti (item özellikleri)\nmovies = pd.DataFrame({\n    'movie_id': [1, 2, 3, 4, 5],\n    'title': ['The Matrix', 'Inception', 'Titanic', 'The Notebook', 'Interstellar'],\n    'genres': [\n        'Action Sci-Fi Thriller',\n        'Action Sci-Fi Thriller',\n        'Drama Romance',\n        'Drama Romance',\n        'Sci-Fi Drama Adventure'\n    ],\n    'director': ['Wachowski', 'Nolan', 'Cameron', 'Cassavetes', 'Nolan'],\n    'year': [1999, 2010, 1997, 2004, 2014]\n})\n\n# Content feature: genres + director (text birleştir)\nmovies['content'] = movies['genres'] + ' ' + movies['director']\n\nprint(\"🎬 Film Veri Seti:\")\nprint(movies[['title', 'content']])\n\n# TF-IDF: Text → Vector\ntfidf = TfidfVectorizer(stop_words='english')\ntfidf_matrix = tfidf.fit_transform(movies['content'])\n\nprint(f\"\\n📐 TF-IDF Matrix shape: {tfidf_matrix.shape}\")\nprint(f\"   Features: {tfidf.get_feature_names_out()}\")\n\n# Cosine similarity: Film-film benzerliği\ncosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)\n\nprint(\"\\n🔗 Film Similarity Matrix:\")\nsim_df = pd.DataFrame(cosine_sim, index=movies['title'], columns=movies['title'])\nprint(sim_df.round(3))\n\n# Öneri fonksiyonu\ndef content_based_recommend(movie_title, movies_df, cosine_sim_matrix, top_n=3):\n    \"\"\"\n    Bir filme benzer filmleri öner\n    \"\"\"\n    idx = movies_df[movies_df['title'] == movie_title].index[0]\n    \n    # Bu filme benzerlik skorları\n    sim_scores = list(enumerate(cosine_sim_matrix[idx]))\n    \n    # Kendi hariç, en benzer top_n\n    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]\n    \n    movie_indices = [i[0] for i in sim_scores]\n    similarities = [i[1] for i in sim_scores]\n    \n    recommendations = movies_df.iloc[movie_indices][['title', 'genres', 'director']].copy()\n    recommendations['similarity'] = similarities\n    \n    return recommendations\n\n# Örnek: Inception'a benzer filmleri öner\nprint(\"\\n🎯 'Inception' filmini beğendiyseniz, bunları da beğenebilirsiniz:\")\nrecs = content_based_recommend('Inception', movies, cosine_sim, top_n=3)\nfor idx, row in recs.iterrows():\n    print(f\"  • {row['title']} (Benzerlik: {row['similarity']:.3f})\")\n    print(f\"    {row['genres']} | Yönetmen: {row['director']}\")\n\nprint(\"\\n💡 Content-Based Filtering:\")\nprint(\"  - Ürün özelliklerine (genre, director, tags) bakarak öneri\")\nprint(\"  - Cold start için iyi (yeni film hemen önerilebilir)\")\nprint(\"  - Filter bubble riski (hep aynı tür)\")\nprint(\"  - User-item interaction gerekmez!\")",
       "level": 2,
-      "explanation": "Recommendation Systems Visualization code"
+      "explanation": "Content-Based Filtering, item özelliklerine (genre, director, tags) bakarak benzerlik bulur. TF-IDF ile text → vector, cosine similarity ile benzerlik. Kullanıcının beğendiği item'lara benzer olanları önerir. Cold start için iyi."
     },
     {
-      "title": "Production Recommendation Systems",
+      "title": "Neural Collaborative Filtering (NCF) - PyTorch",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.utils.data import Dataset, DataLoader\nimport numpy as np\nimport pandas as pd\n\n# Sentetik veri\nnp.random.seed(42)\nn_users, n_items = 100, 50\nn_samples = 2000\n\nuser_ids = np.random.randint(0, n_users, n_samples)\nitem_ids = np.random.randint(0, n_items, n_samples)\n# Implicit feedback: 1 = interaction (click, view), 0 = no interaction\nlabels = np.random.randint(0, 2, n_samples)\n\n# PyTorch Dataset\nclass RecDataset(Dataset):\n    def __init__(self, users, items, labels):\n        self.users = torch.LongTensor(users)\n        self.items = torch.LongTensor(items)\n        self.labels = torch.FloatTensor(labels)\n    \n    def __len__(self):\n        return len(self.users)\n    \n    def __getitem__(self, idx):\n        return self.users[idx], self.items[idx], self.labels[idx]\n\ndataset = RecDataset(user_ids, item_ids, labels)\ntrain_loader = DataLoader(dataset, batch_size=64, shuffle=True)\n\n# NCF Model: GMF (Generalized Matrix Factorization) + MLP\nclass NCF(nn.Module):\n    def __init__(self, n_users, n_items, embedding_dim=32, hidden_layers=[64, 32, 16]):\n        super(NCF, self).__init__()\n        \n        # GMF branch (element-wise product)\n        self.user_embedding_gmf = nn.Embedding(n_users, embedding_dim)\n        self.item_embedding_gmf = nn.Embedding(n_items, embedding_dim)\n        \n        # MLP branch (concatenate + feed-forward)\n        self.user_embedding_mlp = nn.Embedding(n_users, embedding_dim)\n        self.item_embedding_mlp = nn.Embedding(n_items, embedding_dim)\n        \n        mlp_layers = []\n        input_size = embedding_dim * 2\n        for hidden_size in hidden_layers:\n            mlp_layers.append(nn.Linear(input_size, hidden_size))\n            mlp_layers.append(nn.ReLU())\n            mlp_layers.append(nn.Dropout(0.2))\n            input_size = hidden_size\n        self.mlp = nn.Sequential(*mlp_layers)\n        \n        # Final prediction layer\n        self.fc = nn.Linear(embedding_dim + hidden_layers[-1], 1)\n        self.sigmoid = nn.Sigmoid()\n    \n    def forward(self, user, item):\n        # GMF branch\n        user_gmf = self.user_embedding_gmf(user)\n        item_gmf = self.item_embedding_gmf(item)\n        gmf_output = user_gmf * item_gmf  # Element-wise product\n        \n        # MLP branch\n        user_mlp = self.user_embedding_mlp(user)\n        item_mlp = self.item_embedding_mlp(item)\n        mlp_input = torch.cat([user_mlp, item_mlp], dim=-1)\n        mlp_output = self.mlp(mlp_input)\n        \n        # Concatenate both branches\n        concat = torch.cat([gmf_output, mlp_output], dim=-1)\n        output = self.sigmoid(self.fc(concat))\n        \n        return output.squeeze()\n\n# Model, loss, optimizer\nmodel = NCF(n_users, n_items, embedding_dim=16, hidden_layers=[32, 16])\ncriterion = nn.BCELoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Training\nprint(\"🚀 Training NCF Model...\")\nn_epochs = 10\nfor epoch in range(n_epochs):\n    model.train()\n    total_loss = 0\n    for users, items, labels in train_loader:\n        optimizer.zero_grad()\n        outputs = model(users, items)\n        loss = criterion(outputs, labels)\n        loss.backward()\n        optimizer.step()\n        total_loss += loss.item()\n    \n    if (epoch + 1) % 2 == 0:\n        print(f\"Epoch [{epoch+1}/{n_epochs}], Loss: {total_loss/len(train_loader):.4f}\")\n\n# Inference: User 5 için top-K item önerisi\nmodel.eval()\nuser_id = 5\nall_items = torch.LongTensor(list(range(n_items)))\nusers_tensor = torch.LongTensor([user_id] * n_items)\n\nwith torch.no_grad():\n    predictions = model(users_tensor, all_items).numpy()\n\n# Top-5 öneri\ntop_k = 5\ntop_indices = predictions.argsort()[-top_k:][::-1]\nprint(f\"\\n🎯 User {user_id} için Top-{top_k} Öneriler:\")\nfor i, item_idx in enumerate(top_indices, 1):\n    print(f\"  {i}. Item {item_idx} → Score: {predictions[item_idx]:.4f}\")\n\nprint(\"\\n💡 NCF (Neural Collaborative Filtering):\")\nprint(\"  - GMF: Matrix Factorization'ı neural network ile (element-wise product)\")\nprint(\"  - MLP: User+item embedding → deep network → non-linear interactions\")\nprint(\"  - Hybrid: GMF + MLP → en iyi performans!\")",
       "level": 4,
-      "explanation": "Production Recommendation Systems code"
+      "explanation": "Neural Collaborative Filtering (NCF), matrix factorization'ı deep learning ile genelleştirir. GMF (Generalized Matrix Factorization) + MLP birleşimi. Non-linear user-item interactions öğrenir. Implicit feedback (click, view) için ideal."
+    },
+    {
+      "title": "Production: Two-Stage RecSys (Retrieval + Ranking)",
+      "language": "python",
+      "code": "import numpy as np\nimport faiss  # Facebook AI Similarity Search\nfrom sklearn.preprocessing import normalize\nimport time\n\n# Simülasyon: 1M item, 100K user\nn_items = 1_000_000\nn_users = 100_000\nembedding_dim = 128\n\n# Item embeddings (pre-trained model'den geldiğini varsay)\nnp.random.seed(42)\nitem_embeddings = np.random.randn(n_items, embedding_dim).astype('float32')\nitem_embeddings = normalize(item_embeddings, axis=1)  # L2 normalize\n\nuser_embeddings = np.random.randn(n_users, embedding_dim).astype('float32')\nuser_embeddings = normalize(user_embeddings, axis=1)\n\nprint(f\"📦 Item embeddings: {item_embeddings.shape}\")\nprint(f\"👤 User embeddings: {user_embeddings.shape}\")\n\n# ============================================\n# STAGE 1: CANDIDATE GENERATION (Retrieval)\n# ============================================\nprint(\"\\n🔍 Stage 1: Candidate Generation (FAISS ANN)\")\n\n# FAISS index: Inner product (cosine similarity)\nindex = faiss.IndexFlatIP(embedding_dim)  # Flat = brute-force (baseline)\nindex.add(item_embeddings)\n\nprint(f\"   FAISS index: {index.ntotal} items indexed\")\n\n# Kullanıcı için top-K candidate retrieval\nuser_id = 42\nuser_vec = user_embeddings[user_id:user_id+1]\n\nk_candidates = 1000  # 1M'den 1000'e indir\nstart = time.time()\ndistances, indices = index.search(user_vec, k_candidates)\nretrieval_time = (time.time() - start) * 1000\n\nprint(f\"   Retrieved {k_candidates} candidates in {retrieval_time:.2f}ms\")\nprint(f\"   Top-5 item IDs: {indices[0][:5]}\")\nprint(f\"   Top-5 scores: {distances[0][:5].round(3)}\")\n\n# ============================================\n# STAGE 2: RANKING (Detailed scoring)\n# ============================================\nprint(\"\\n🏆 Stage 2: Ranking (Feature-rich model)\")\n\n# Candidate'ler için zengin feature'lar (gerçekte feature store'dan gelir)\ndef extract_features(user_id, item_ids):\n    \"\"\"\n    User + item feature'ları çıkar\n    Gerçekte: user history, item metadata, context (time, device), interaction features\n    \"\"\"\n    n = len(item_ids)\n    features = {\n        'user_item_dot': np.dot(user_embeddings[user_id], item_embeddings[item_ids].T),\n        'item_popularity': np.random.rand(n),  # Simüle: item tıklanma oranı\n        'user_item_cooccurence': np.random.rand(n),  # Simüle: geçmişte birlikte görülme\n        'recency': np.random.rand(n),  # Simüle: item'ın güncelliği\n        'diversity_penalty': np.random.rand(n)  # Simüle: çeşitlilik için penalty\n    }\n    return features\n\nfeatures = extract_features(user_id, indices[0])\n\n# Ranking score: Weighted combination (gerçekte GBDT veya DNN)\nranking_scores = (\n    0.4 * features['user_item_dot'] +\n    0.2 * features['item_popularity'] +\n    0.2 * features['user_item_cooccurence'] +\n    0.1 * features['recency'] +\n    0.1 * features['diversity_penalty']\n)\n\n# Top-K final ranking\ntop_k = 10\ntop_indices = ranking_scores.argsort()[-top_k:][::-1]\nfinal_items = indices[0][top_indices]\nfinal_scores = ranking_scores[top_indices]\n\nprint(f\"   Top-{top_k} Final Recommendations:\")\nfor i, (item_id, score) in enumerate(zip(final_items, final_scores), 1):\n    print(f\"     {i:2d}. Item {item_id:7d} → Score: {score:.4f}\")\n\nprint(\"\\n💡 Two-Stage Production RecSys:\")\nprint(\"  Stage 1 (Retrieval): 1M items → 1K candidates (FAISS ANN, <5ms)\")\nprint(\"  Stage 2 (Ranking): 1K candidates → Top-10 (Feature-rich model, 10-50ms)\")\nprint(\"  Total latency: <100ms (real-time!)\")\nprint(\"\\n📊 Monitoring:\")\nprint(\"  - Retrieval recall: Candidate'ler içinde gerçek pozitif oranı\")\nprint(\"  - Ranking NDCG: Final sıralama kalitesi\")\nprint(\"  - Online A/B: CTR, conversion, dwell time\")\nprint(\"  - Diversity: Top-10'da kaç farklı kategori var?\")",
+      "level": 4,
+      "explanation": "Production RecSys, 2-stage architecture kullanır: (1) Candidate Generation (milyonlardan binlere, FAISS ANN ile hızlı), (2) Ranking (binlerden onlara, zengin features ile). Latency <100ms. Facebook, YouTube, Netflix bu yapıyı kullanır."
     }
   ],
   "quiz": [
     {
-      "question": "What is Recommendation Systems?",
+      "question": "Collaborative Filtering'in temel prensibi nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Ürün özelliklerine bakarak benzerlik bulur",
+        "Benzer kullanıcıların veya benzer ürünlerin davranışlarını kullanır",
+        "Sadece popüler ürünleri önerir",
+        "Rastgele öneri yapar"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendation Systems explanation.",
+      "explanation": "Collaborative Filtering (işbirlikçi filtreleme), kullanıcı-ürün etkileşim matrisinden benzerlik bulur. İki tip: (1) User-based: Benzer kullanıcıların beğendiği şeyleri öner, (2) Item-based: Kullanıcının beğendiği şeylere benzer ürünleri öner. 'Senin gibi insanlar şunu beğendi' mantığı.",
       "id": "recommendation-systems-q1"
     },
     {
-      "question": "When to use Recommendation Systems?",
+      "question": "Cold start problem nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model eğitiminin çok uzun sürmesi",
+        "Yeni kullanıcı veya yeni ürün için yeterli veri olmadığında öneri yapamamak",
+        "Sistemin yavaş çalışması",
+        "Recommendation kalitesinin düşmesi"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "Cold start problem: Yeni kullanıcı (hiç rating yok) veya yeni ürün (kimse değerlendirmemiş) için öneri yapmak zor. Çözümler: (1) Yeni kullanıcıya popüler ürünleri öner, (2) Demographic features kullan (yaş, cinsiyet, lokasyon), (3) Content-based filtering (ürün özellikleriyle başla), (4) Onboarding (ilk kayıtta tercih sor).",
       "id": "recommendation-systems-q2"
     },
     {
-      "question": "Recommendation Systems advantage?",
+      "question": "Matrix Factorization ne yapar?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Matrisin determinantını hesaplar",
+        "User-item matrisini düşük boyutlu latent factors'a ayırır: R ≈ U·V^T",
+        "Sadece sparse matrix'i dense yapar",
+        "Matrisin tersini alır"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
+      "explanation": "Matrix Factorization (SVD, ALS), user-item rating matrisini iki düşük boyutlu matrise ayırır: R (users × items) ≈ U (users × k) · V^T (k × items). Her user ve item k-boyutlu latent vector ile temsil edilir. Rating tahmini = dot product. Sparse data için ideal, Netflix Prize'ın temel tekniği.",
       "id": "recommendation-systems-q3"
     },
     {
-      "question": "Recommendation Systems limitation?",
+      "question": "Content-Based Filtering'in avantajı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "En yüksek doğruluğu garanti eder",
+        "User-item interaction gerekmez, item özellikleriyle çalışır, cold start'ta iyi",
+        "Sadece popüler ürünleri önerir",
+        "Her zaman collaborative filtering'den iyidir"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
+      "explanation": "Content-Based Filtering, item özellikleriyle (film: genre, director; ürün: category, brand) çalışır. Avantajları: (1) User-item interaction gerekmez, (2) Cold start'ta iyi (yeni ürün hemen önerilebilir), (3) Explainable ('Bu filmi sevdiniz çünkü: Nolan filmiydi'). Dezavantaj: Filter bubble (hep aynı tür), serendipity eksikliği.",
       "id": "recommendation-systems-q4"
     },
     {
-      "question": "Best practice for Recommendation Systems?",
+      "question": "Precision@K metriği neyi ölçer?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Tüm relevant item'ların kaçı bulundu",
+        "İlk K öneriden kaç tanesi relevant (kullanıcının ilgilendiği)",
+        "Model eğitim süresini",
+        "Latency'yi (ms)"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
+      "explanation": "Precision@K = (İlk K önerideki relevant item sayısı) / K. Örnek: Top-10 öneride 6 tanesi tıklandı → P@10 = 0.6. Ranking kalitesini ölçer. Recall@K = (İlk K'daki relevant) / (Tüm relevant item'lar). Trade-off: Daha fazla öneri (K büyük) → Recall artar, Precision düşer.",
       "id": "recommendation-systems-q5"
     },
     {
-      "question": "Recommendation Systems vs alternatives?",
+      "question": "Two-Stage RecSys neden kullanılır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece doğruluğu artırmak için",
+        "Milyonlarca item'dan hızlı öneri için: Stage 1 (retrieval) hızlı, Stage 2 (ranking) detaylı",
+        "Model sayısını azaltmak için",
+        "Sadece deep learning için gereklidir"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
+      "explanation": "Two-Stage: (1) Candidate Generation (Retrieval): Milyonlardan 100-1000 candidate'i hızlı bul (ANN, collaborative filtering, popularity), (2) Ranking: Candidate'leri zengin feature'larla detaylı sırala (GBDT, DNN, multi-objective). Neden: 1M item'a detaylı model çalıştırmak çok yavaş (>1s). Two-stage ile <100ms. Facebook, YouTube, Netflix bu yapıyı kullanır.",
       "id": "recommendation-systems-q6"
+    },
+    {
+      "question": "Implicit feedback nedir?",
+      "options": [
+        "Kullanıcının açıkça 1-5 yıldız vermesi",
+        "Kullanıcının dolaylı sinyalleri: tıklama, izleme süresi, satın alma",
+        "Sadece beğeni butonu",
+        "Kullanıcının yorumu"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Implicit feedback: Kullanıcının dolaylı davranış sinyalleri (tıklama, video izleme süresi, satın alma, arama, favorilere ekleme). Explicit'ten (1-5 rating) çok daha fazla veri var ama gürültülü (tıkladı ≠ beğendi). Binary (0/1) veya weighted (izleme süresi) olabilir. Modern RecSys çoğunlukla implicit kullanır.",
+      "id": "recommendation-systems-q7"
+    },
+    {
+      "question": "NDCG (Normalized Discounted Cumulative Gain) neyi ölçer?",
+      "options": [
+        "Sadece doğru tahmin sayısı",
+        "Ranking kalitesi: Relevant item'lar üstte mi? Sıraya göre ağırlıklı skor",
+        "Model training loss",
+        "Latency (ms)"
+      ],
+      "correctAnswer": 1,
+      "explanation": "NDCG, ranking kalitesini ölçer. Relevant item'lar listede ne kadar yukarıda? DCG = Σ (2^rel - 1) / log2(position+1) → Üstteki relevant'lara daha fazla ağırlık. NDCG = DCG / IDCG (ideal DCG'ye normalize). Örnek: [5★, 1★, 4★] sıralaması [5★, 4★, 1★]'dan kötü (NDCG düşük). Precision@K'dan daha bilgilendirici.",
+      "id": "recommendation-systems-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Recommendation Systems",
-      "back": "Core concept summary"
+      "front": "Recommendation Systems nedir?",
+      "back": "Kullanıcı tercihlerine (rating, click, purchase) göre ilgilenebileceği item'ları tahmin eden ML sistemleri. Netflix, Amazon, Spotify'da kritik."
     },
     {
-      "front": "Recommendation Systems Key Idea",
-      "back": "Main concept"
+      "front": "Collaborative Filtering",
+      "back": "Benzer kullanıcıların (user-based) veya benzer item'ların (item-based) davranışlarını kullanarak öneri. 'Senin gibi insanlar şunu beğendi'."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "Content-Based Filtering",
+      "back": "Item özelliklerine (genre, brand, tags) bakarak benzerlik bulur. Kullanıcının beğendiğine benzer olanları öner. Cold start'ta iyi."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Matrix Factorization (SVD)",
+      "back": "R ≈ U·V^T. User-item matrisini düşük boyutlu latent factors'a ayır. Her user ve item k-boyutlu vektör. Rating = dot product."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Cold Start Problem",
+      "back": "Yeni user/item için yeterli veri yok. Çözüm: Popularity-based, demographics, content-based, onboarding (tercih sor)."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Implicit vs Explicit Feedback",
+      "back": "Explicit: 1-5★ rating (az veri, temiz). Implicit: click, view, purchase (çok veri, gürültülü). Modern RecSys implicit kullanır."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Precision@K vs Recall@K",
+      "back": "Precision@K: İlk K'daki relevant oranı. Recall@K: Tüm relevant'lardan kaçı ilk K'da. Trade-off: K artar → Recall↑, Precision↓."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "NDCG (Ranking Quality)",
+      "back": "Normalized Discounted Cumulative Gain. Relevant item'lar üstte mi? Sıraya göre ağırlıklı skor. Üstteki relevant'lara daha fazla ağırlık."
+    },
+    {
+      "front": "Two-Stage RecSys",
+      "back": "Stage 1: Retrieval (1M → 1K, fast ANN). Stage 2: Ranking (1K → Top-10, detailed features). Latency <100ms. Facebook, YouTube kullanır."
+    },
+    {
+      "front": "NCF (Neural Collaborative Filtering)",
+      "back": "GMF (generalized matrix factorization) + MLP. User+item embedding → neural net → non-linear interactions. Matrix factorization'ın deep learning versiyonu."
+    },
+    {
+      "front": "Filter Bubble & Diversity",
+      "back": "Recommendation hep aynı türü önerir (filter bubble). Diversity için: re-ranking, category constraints, exploration (random serendipity)."
+    },
+    {
+      "front": "Production Monitoring",
+      "back": "Offline: Precision@K, NDCG, coverage. Online: CTR, conversion rate, dwell time, diversity. A/B testing, model staleness tracking, cold start rate."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "User-item matrisini tam (dense) olarak tutmak",
+      "why": "1M user × 100K item = 100B hücre → RAM'e sığmaz. Ayrıca çoğu hücre boş (sparse: ~%1 dolu). Dense matrix çok verimsiz.",
+      "fix": "Sparse matrix kullanın (scipy.sparse.csr_matrix). Sadece non-zero entry'leri saklar. Matrix Factorization ile dense embedding'e dönüştürün (users × k, items × k). Disk'te parquet, production'da embedding database (Pinecone, Weaviate)."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Popularity bias'ı göz ardı etmek",
+      "why": "En popüler item'lar sürekli öneriliyor (zengin daha zengin oluyor). Long-tail item'lar hiç gösterilmiyor. Kullanıcı çeşitlilik görmüyor, filter bubble oluşuyor.",
+      "fix": "Popularity penalty ekleyin: score = model_score - α · log(popularity). Diversity constraint: Top-10'da en az 3 farklı kategori olsun. Exploration: %10 random/new item. Re-ranking: Determinantal Point Process (DPP) ile çeşitlilik."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Cold start için strateji yok",
+      "why": "Yeni kullanıcı veya yeni ürün için öneri yapamıyorsunuz. Kötü ilk deneyim → kullanıcı ayrılır (churn). Yeni ürünler hiç gösterilmiyor.",
+      "fix": "Yeni user: (1) Onboarding (tercih sor: 'Hangi kategorileri seversiniz?'), (2) Demographics (yaş, lokasyon), (3) Popularity-based başla. Yeni item: (1) Content-based (özellikleriyle benzerlik), (2) Exploration (random göster), (3) Hybrid (var olan user'lara önce göster, feedback topla)."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Sadece offline metric'lere güvenmek",
+      "why": "Offline RMSE düşük ≠ kullanıcılar mutlu. Model lab'da iyi ama production'da CTR düşük olabilir. Business metric (revenue, engagement) offline metric'le her zaman korelate değil.",
+      "fix": "Online A/B testing şart! Model A vs Model B'yi gerçek trafikte karşılaştırın. Metrikler: CTR (click-through rate), conversion rate, dwell time (izleme süresi), diversity, serendipity (sürpriz öneriler). Business impact: Revenue per user, retention rate."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Feature engineering yapmadan model eğitmek",
+      "why": "Sadece user_id ve item_id yeterli değil. Context (zaman, cihaz, konum), user history (son 10 tıklama), item metadata (category, price, brand) eklemek performansı 2-3x artırabilir.",
+      "fix": "Zengin feature'lar: (1) User features: demographics, historical interactions (avg rating, category preference), recency (ne zaman son aktivite), (2) Item features: popularity, category, price, release date, (3) Context: time_of_day, day_of_week, device, location, (4) Interaction features: user × item co-occurrence, category match."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Scalability düşünmeden tasarlamak",
+      "why": "User-based KNN 1M user ile O(U²) → saatler sürer. Naive brute-force 1M item için latency >1s. Production'da <100ms gerekli.",
+      "fix": "Two-stage architecture: (1) Fast retrieval (ANN - FAISS, Annoy, HNSW) ile 1M → 1K in <10ms, (2) Detailed ranking (GBDT, DNN) 1K → Top-10 in 50ms. Pre-computation: Popular item'lar, user segments için batch offline. Distributed training: Spark MLlib, TensorFlow distributed."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Recommendation diversity'yi optimize etmemek",
+      "why": "Model hep aynı tür item'ı öneriyor (filter bubble). Kullanıcı sıkılıyor, platform stale görünüyor. Long-tail item'lar hiç önerilmiyor (business loss).",
+      "fix": "Multi-objective optimization: CTR + diversity + serendipity. Re-ranking: MMR (Maximal Marginal Relevance), DPP (Determinantal Point Process). Constraint: Top-10'da en az N farklı kategori. Exploration: %10-15 random/new/long-tail item ekle."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Recommendation Systems Overview",
-      "description": "Visual explanation"
+      "title": "RecSys Taxonomy",
+      "description": "Recommendation system türleri: Collaborative (user-based, item-based), Content-based, Hybrid. Matrix Factorization, Deep Learning, Knowledge Graph, Context-Aware, Session-based yaklaşımları."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "User-based vs Item-based CF",
+      "description": "Aynı veri seti üzerinde user-based ve item-based collaborative filtering performans karşılaştırması. Scalability, accuracy, cold start handling. User-based: Sparsity'de kötü. Item-based: Daha scalable."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Matrix Factorization Sandbox",
+      "description": "Kullanıcı rating matrisi girer, k (latent factors) seçer, SVD/ALS çalıştırır. Latent space visualize edilir (t-SNE ile 2D), rating prediction quality gösterilir (RMSE, MAE)."
+    },
+    {
+      "type": "metric",
+      "title": "Two-Stage RecSys Dashboard",
+      "description": "Production monitoring: Stage 1 retrieval latency/recall, Stage 2 ranking NDCG, overall CTR/conversion, diversity score, cold start rate, model staleness alert."
     }
   ],
   "references": [
     {
-      "title": "Recommendation Systems Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Matrix Factorization Techniques for Recommender Systems",
+      "authors": "Koren, Y., Bell, R., & Volinsky, C.",
+      "year": 2009,
+      "link": "https://ieeexplore.ieee.org/document/5197422",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "title": "Neural Collaborative Filtering",
+      "authors": "He, X. et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1708.05031",
+      "type": "paper"
+    },
+    {
+      "title": "Wide & Deep Learning for Recommender Systems",
+      "authors": "Cheng, H. et al. (Google)",
+      "year": 2016,
+      "link": "https://arxiv.org/abs/1606.07792",
+      "type": "paper"
+    },
+    {
+      "title": "Surprise: A Python Library for Recommender Systems",
+      "authors": "Hug, N.",
+      "year": 2020,
+      "link": "https://surpriselib.com/",
       "type": "documentation"
     }
   ]
