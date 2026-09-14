@@ -168,14 +168,19 @@ export function QLearningGridWorld({ title = 'Q-Learning Grid World' }: QLearnin
   
   useEffect(() => {
     if (isRunning) {
-      runEpisode().then(() => {
-        if (isRunning) {
-          // Continue to next episode
-          setTimeout(() => {}, 100);
-        }
+      // Use requestAnimationFrame to avoid React 19 setState-in-effect warning
+      const frame = requestAnimationFrame(() => {
+        runEpisode().then(() => {
+          if (isRunning) {
+            // Continue to next episode
+            setTimeout(() => {}, 100);
+          }
+        });
       });
+      
+      return () => cancelAnimationFrame(frame);
     }
-  }, [isRunning, episode]);
+  }, [isRunning, episode]); // eslint-disable-line react-hooks/exhaustive-deps
   
   const handleStart = () => {
     setIsRunning(true);
