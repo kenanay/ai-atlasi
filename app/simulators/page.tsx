@@ -1,8 +1,15 @@
 'use client';
 
 import React from 'react';
-import { AttentionVisualizer, NeuralNetworkSimulator, CNNConvolutionVisualizer } from '@/components/visualization';
-import { Brain, Eye, Network } from 'lucide-react';
+import { 
+  AttentionVisualizer, 
+  NeuralNetworkSimulator, 
+  CNNConvolutionVisualizer,
+  GradientDescentPlot,
+  KMeansAnimator,
+  PCAVisualizer
+} from '@/components/visualization';
+import { Brain, Eye, Network, TrendingDown, Layers, Maximize2 } from 'lucide-react';
 
 export default function SimulatorsPage() {
   return (
@@ -27,7 +34,7 @@ export default function SimulatorsPage() {
                 <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">3</div>
+                <div className="text-2xl font-bold">6</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Simülasyon</div>
               </div>
             </div>
@@ -101,6 +108,54 @@ export default function SimulatorsPage() {
               </p>
             </div>
             <CNNConvolutionVisualizer />
+          </section>
+
+          {/* Gradient Descent */}
+          <section id="gradient-descent">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <TrendingDown className="w-6 h-6 text-green-600" />
+                Gradient Descent Optimizasyonu
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Öğrenme oranının (learning rate) etkisini görün. Konveks ve non-konveks fonksiyonlarda
+                gradyan inişinin nasıl çalıştığını interaktif olarak keşfedin. Adım adım parametrelerin
+                minimum noktaya yakınsamasını izleyin.
+              </p>
+            </div>
+            <GradientDescentPlot />
+          </section>
+
+          {/* K-Means Clustering */}
+          <section id="kmeans">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <Layers className="w-6 h-6 text-orange-600" />
+                K-Means Kümeleme Algoritması
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Gözetimsiz öğrenmenin en popüler algoritması. Rastgele dağılmış veri noktalarının
+                centroid'ler etrafında nasıl kümelendiğini, algoritmanın her iterasyonda nasıl yakınsadığını
+                canlı animasyonla görün.
+              </p>
+            </div>
+            <KMeansAnimator />
+          </section>
+
+          {/* PCA Visualization */}
+          <section id="pca">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <Maximize2 className="w-6 h-6 text-indigo-600" />
+                PCA - Boyut İndirgeme
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Principal Component Analysis (Temel Bileşen Analizi) ile yüksek boyutlu verinin nasıl
+                daha düşük boyutlara izdüşürüldüğünü görün. Variance (varyans) korunumu ve bilgi kaybını
+                3D'den 2D'ye indirgeme ile gözlemleyin.
+              </p>
+            </div>
+            <PCAVisualizer />
           </section>
         </div>
 
