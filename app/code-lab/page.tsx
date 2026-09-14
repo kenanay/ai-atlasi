@@ -72,6 +72,24 @@ export default function CodeLabPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Mobile Warning Banner */}
+        <div className="md:hidden mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center">
+              <span className="text-lg">💻</span>
+            </div>
+            <div>
+              <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                Masaüstü Görünümü Önerilir
+              </h3>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Kod editörü ve interaktif çalıştırma özellikleri mobil cihazlarda sınırlıdır. 
+                Daha iyi bir deneyim için lütfen masaüstü veya tablet kullanın.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -95,7 +113,7 @@ export default function CodeLabPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
