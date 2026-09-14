@@ -81,48 +81,58 @@
     {
       "question": "What is Federated Learning?",
       "options": [
-        "A",
-        "B (correct)",
-        "C",
-        "D"
+        "Centralized training on server with all data",
+        "Decentralized ML: Train on client devices, share only model updates (not raw data). Privacy-preserving",
+        "Training on single GPU",
+        "Data collection from users"
       ],
       "correctAnswer": 1,
-      "explanation": "Explanation.",
+      "explanation": "Federated Learning: Train ML models across distributed devices (phones, hospitals) without centralizing data. Each client trains locally, sends gradient updates to server. Server aggregates (FedAvg) → global model. Privacy: Raw data never leaves device.",
       "id": "federated-learning-q1"
     },
     {
-      "question": "Key challenge in Federated Learning?",
+      "question": "What is the main challenge in Federated Learning?",
       "options": [
-        "A",
-        "B (correct)",
-        "C",
-        "D"
+        "Too much data",
+        "Non-IID data (clients have different distributions), communication cost, stragglers",
+        "Simple implementation",
+        "Fast convergence always"
       ],
       "correctAnswer": 1,
-      "explanation": "Explanation.",
+      "explanation": "FL Challenges: (1) Non-IID: Client A has cat images, Client B dogs → distribution skew. (2) Communication: Bandwidth limited (mobile), expensive. (3) Stragglers: Slow clients delay rounds. (4) Privacy attacks: Gradient inversion. Solutions: FedProx, compression, async aggregation.",
       "id": "federated-learning-q2"
     }
   ],
   "flashcards": [
     {
       "front": "Federated Learning",
-      "back": "Core concept summary."
+      "back": "Decentralized ML training on client devices. Share model updates (gradients), not raw data. Privacy-preserving. FedAvg aggregation on server. Use case: Mobile keyboards, healthcare."
     },
     {
-      "front": "Key benefit",
-      "back": "Main advantage explained."
+      "front": "Non-IID Problem",
+      "back": "Clients have non-identical distributions (hospital A: mostly diabetes, B: cancer). Causes model divergence. Solution: FedProx (proximal term), personalization (local fine-tune)."
+    },
+    {
+      "front": "FedAvg (Federated Averaging)",
+      "back": "Server aggregates client model updates: w_global = Σ(n_k/n)·w_k (weighted by data size). Clients train local epochs (E=5), then upload Δw. Communication-efficient."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why it happens",
-      "fix": "How to fix it."
+      "mistake": "Sending raw data to server instead of gradients",
+      "why": "Defeats FL purpose: Privacy violation. Raw data should never leave client device",
+      "fix": "Only send model weight updates (Δw = w_new - w_old) or gradients. Differential privacy (DP) noise if needed."
+    },"
     },
     {
-      "mistake": "Common error 2",
-      "why": "Why it happens",
-      "fix": "How to fix it."
+      "mistake": "Not handling stragglers (slow clients blocking rounds)",
+      "why": "Synchronous FedAvg waits for all clients → 1 slow client delays entire round (network latency, low battery)",
+      "fix": "Use asynchronous aggregation (FedAsync) or timeout (drop stragglers after T seconds). Monitor client latency distribution."
+    },
+    {
+      "mistake": "Ignoring non-IID data (assuming clients have same distribution)",
+      "why": "Non-IID → model divergence (each client pulls global model to its local distribution). Poor generalization",
+      "fix": "Use FedProx (μ·||w - w_global||² regularization) or personalization (local fine-tune after global training). Data augmentation."
     }
   ],
   "visualizations": [

@@ -81,48 +81,57 @@
     {
       "question": "What is Continual Learning?",
       "options": [
-        "A",
-        "B (correct)",
-        "C",
-        "D"
+        "Training a model once on all data",
+        "Learning new tasks sequentially without forgetting old tasks (lifelong learning)",
+        "Only using new data, discarding old",
+        "Freezing all model weights after first task"
       ],
       "correctAnswer": 1,
-      "explanation": "Explanation.",
+      "explanation": "Continual Learning: Model learns Task 1, then Task 2, Task 3... sequentially without catastrophic forgetting. Goal: Maintain performance on old tasks while learning new. Lifelong learning paradigm.",
       "id": "continual-learning-q1"
     },
     {
-      "question": "Key challenge in Continual Learning?",
+      "question": "What is catastrophic forgetting?",
       "options": [
-        "A",
-        "B (correct)",
-        "C",
-        "D"
+        "Model forgets training data",
+        "Neural network forgets Task A when learning Task B (weights overwritten)",
+        "Slow training speed",
+        "High validation loss"
       ],
       "correctAnswer": 1,
-      "explanation": "Explanation.",
+      "explanation": "Catastrophic forgetting: Neural network weights plasticity. Task B training → gradient updates overwrite Task A weights → Task A performance drops drastically (e.g., 90% → 20%). Solution: EWC, replay, or freeze important weights.",
       "id": "continual-learning-q2"
     }
   ],
   "flashcards": [
     {
       "front": "Continual Learning",
-      "back": "Core concept summary."
+      "back": "Learning new tasks sequentially without forgetting old. Lifelong learning. Prevents catastrophic forgetting via EWC, replay, or architecture expansion."
     },
     {
-      "front": "Key benefit",
-      "back": "Main advantage explained."
+      "front": "Catastrophic Forgetting",
+      "back": "Neural network forgets Task A when learning Task B (weights overwritten). Solution: Protect important weights (EWC), rehearse old data (replay), or expand network (Progressive NN)."
+    },
+    {
+      "front": "EWC (Elastic Weight Consolidation)",
+      "back": "Regularization method: L_total = L_task + (λ/2)Σ F_i(θ_i - θ*_old)². Fisher matrix F_i protects important weights from Task A. Prevents forgetting."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why it happens",
-      "fix": "How to fix it."
+      "mistake": "Training Task B without any continual learning strategy",
+      "why": "Gradient updates overwrite Task A weights → catastrophic forgetting (Task A accuracy drops 90% → 20%)",
+      "fix": "Use EWC (regularization), experience replay (rehearse old data), or progressive networks (expand architecture)."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Why it happens",
-      "fix": "How to fix it."
+      "mistake": "Load balancing loss too high (α >> 0.01 in EWC)",
+      "why": "Over-regularization: Model can't learn Task B effectively (stuck on Task A weights)",
+      "fix": "Tune λ: Start with 5000 (EWC paper), reduce if Task B performance poor. Grid search [1000, 5000, 10000]."
+    },
+    {
+      "mistake": "Replay buffer too small (<100 exemplars per task)",
+      "why": "Insufficient old task rehearsal → still forgets (not enough diversity in replay)",
+      "fix": "Use 200-500 exemplars per task. Class-balanced sampling (herding). Monitor old task accuracy."
     }
   ],
   "visualizations": [

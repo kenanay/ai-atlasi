@@ -81,48 +81,57 @@
     {
       "question": "What is Neural Architecture Search (NAS)?",
       "options": [
-        "A",
-        "B (correct)",
-        "C",
-        "D"
+        "Manual network design",
+        "Automated ML: Search for optimal neural network architecture (layers, connections, ops). RL/evolution/gradient-based",
+        "Hyperparameter tuning only",
+        "Data augmentation method"
       ],
       "correctAnswer": 1,
-      "explanation": "Explanation.",
+      "explanation": "NAS (Neural Architecture Search): Automate neural network design. Search space: Layer types (conv, pool), connections (skip, dense), operations (3x3, 5x5 conv). Search methods: RL (controller), evolution, gradient-based (DARTS). Goal: Find architecture > human-designed (EfficientNet, NASNet).",
       "id": "neural-architecture-search-q1"
     },
     {
-      "question": "Key challenge in Neural Architecture Search (NAS)?",
+      "question": "What is the main challenge in Neural Architecture Search?",
       "options": [
-        "A",
-        "B (correct)",
-        "C",
-        "D"
+        "Easy to implement",
+        "Computational cost: Train 1000s of candidate architectures (1000s GPU-days). Search space combinatorially large",
+        "Always finds best architecture",
+        "No need for validation"
       ],
       "correctAnswer": 1,
-      "explanation": "Explanation.",
+      "explanation": "NAS Challenge: Computational cost astronomical. Original NASNet: 1800 GPU-days (train 20K architectures). Search space: 10^20+ possible architectures. Solutions: (1) Weight sharing (ENAS, DARTS), (2) Early stopping (predict final accuracy from partial training), (3) One-shot NAS (train supernet once).",
       "id": "neural-architecture-search-q2"
     }
   ],
   "flashcards": [
     {
       "front": "Neural Architecture Search (NAS)",
-      "back": "Core concept summary."
+      "back": "Automated ML: Search for optimal neural network architecture. Search space: layers, connections, ops (conv 3x3, 5x5, pool). Methods: RL, evolution, DARTS. Output: EfficientNet, NASNet (SOTA architectures)."
     },
     {
-      "front": "Key benefit",
-      "back": "Main advantage explained."
+      "front": "DARTS (Differentiable Architecture Search)",
+      "back": "Gradient-based NAS: Relax discrete search (which layer?) to continuous (weighted mixture of all layers). Optimize architecture weights α via gradient descent. Fast: 1 GPU-day vs 1000s. One-shot training."
+    },
+    {
+      "front": "Search Space",
+      "back": "Set of possible architectures NAS explores. Examples: (1) Layer types (conv, pool, identity), (2) Kernel sizes (3x3, 5x5, 7x7), (3) Connections (skip, dense). Size: 10^20+ combos. Efficient search critical."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why it happens",
-      "fix": "How to fix it."
+      "mistake": "Training every candidate architecture from scratch (naive NAS)",
+      "why": "Computational explosion: 10K architectures × 100 epochs → 1 million training runs. Infeasible (months on 100 GPUs)",
+      "fix": "Use weight sharing (ENAS: share weights across architectures), one-shot NAS (train supernet once), or early stopping predictors."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Why it happens",
-      "fix": "How to fix it."
+      "mistake": "Search space too large (no constraints)",
+      "why": "Search space 10^30+ → never converge. Random search performs poorly. Optimization intractable",
+      "fix": "Constrain search space: Limit depth (20 layers max), ops (5 choices: conv 3x3/5x5, pool, skip, zero), use cells (repeat blocks). DARTS cell-based."
+    },
+    {
+      "mistake": "Overfitting to validation set during architecture search",
+      "why": "NAS evaluates 1000s architectures on val set → indirect training on val. Final test performance drops",
+      "fix": "Use separate search/validation/test splits. Or: Proxy task (CIFAR-10 search → ImageNet transfer). Early stopping based on search val, final eval on held-out test."
     }
   ],
   "visualizations": [
