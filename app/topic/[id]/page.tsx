@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useProgress } from '@/lib/use-progress';
 import { useRouter } from 'next/navigation';
 import { getTopicById } from '@/lib/topics';
@@ -17,7 +17,7 @@ import { TopicContent } from '@/components/topic/TopicContent';
 import { TopicRightPanel } from '@/components/topic/TopicRightPanel';
 import { TopicLevel } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 
 interface TopicPageProps {
   params: Promise<{
@@ -37,6 +37,82 @@ function TopicSession({ id }: { id: string }) {
   const allProgress = useProgress();
   const progress = allProgress.find(p => p.topicId === id) ?? null;
   const currentLevel = progress?.currentLevel ?? 0;
+
+  // Panel collapse state with localStorage persistence
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+
+  // Load panel states from localStorage on mount
+  useEffect(() => {
+    const leftOpen = localStorage.getItem('topic-left-panel-open');
+    const rightOpen = localStorage.getItem('topic-right-panel-open');
+    
+    if (leftOpen !== null) setIsLeftPanelOpen(leftOpen === 'true');
+    if (rightOpen !== null) setIsRightPanelOpen(rightOpen === 'true');
+  }, []);
+
+  // Keyboard shortcuts for panel toggle
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      // Ctrl+B or Cmd+B: Toggle left panel
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        toggleLeftPanel();
+      }
+      // Ctrl+J or Cmd+J: Toggle right panel
+      if ((e.ctrlKey || e.metaKey) && e.key === 'j') {
+        e.preventDefault();
+        toggleRightPanel();
+      }
+      // Number keys 0-4: Quick level switch
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        const num = parseInt(e.key);
+        if (num >= 0 && num <= 4) {
+          e.preventDefault();
+          handleLevelChange(num as TopicLevel);
+        }
+      }
+      // ArrowLeft: Previous level
+      if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey) {
+        if (currentLevel > 0) {
+          e.preventDefault();
+          handlePreviousLevel();
+        }
+      }
+      // ArrowRight: Next level
+      if (e.key === 'ArrowRight' && !e.ctrlKey && !e.metaKey) {
+        if (currentLevel < 4) {
+          e.preventDefault();
+          handleNextLevel();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentLevel]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleLeftPanel = () => {
+    setIsLeftPanelOpen(prev => {
+      const newState = !prev;
+      localStorage.setItem('topic-left-panel-open', String(newState));
+      return newState;
+    });
+  };
+
+  const toggleRightPanel = () => {
+    setIsRightPanelOpen(prev => {
+      const newState = !prev;
+      localStorage.setItem('topic-right-panel-open', String(newState));
+      return newState;
+    });
+  };
 
   useEffect(() => {
     if (!topic) return;
@@ -109,14 +185,30 @@ function TopicSession({ id }: { id: string }) {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 overflow-hidden">
-      {/* Left Sidebar */}
-      <TopicSidebar
-        topic={topic}
-        currentLevel={currentLevel}
-        progress={progress}
-        onLevelChange={handleLevelChange}
-        onBookmarkToggle={handleBookmarkToggle}
-      />
+      {/* Left Sidebar with Collapse */}
+      <div className={`relative transition-all duration-300 ease-in-out ${isLeftPanelOpen ? 'w-80' : 'w-0'} overflow-hidden`}>
+        <TopicSidebar
+          topic={topic}
+          currentLevel={currentLevel}
+          progress={progress}
+          onLevelChange={handleLevelChange}
+          onBookmarkToggle={handleBookmarkToggle}
+        />
+      </div>
+
+      {/* Left Panel Toggle Button */}
+      <button
+        onClick={toggleLeftPanel}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-r-lg shadow-lg hover:shadow-xl transition-all duration-200 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 group"
+        style={{ left: isLeftPanelOpen ? '320px' : '0px' }}
+        title={isLeftPanelOpen ? 'Sol Paneli Gizle (Ctrl+B)' : 'Sol Paneli Aç (Ctrl+B)'}
+      >
+        {isLeftPanelOpen ? (
+          <PanelLeftClose className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+        ) : (
+          <PanelLeftOpen className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+        )}
+      </button>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
@@ -165,8 +257,24 @@ function TopicSession({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Right Panel */}
-      <TopicRightPanel topic={topic} level={currentLevel} />
+      {/* Right Panel Toggle Button */}
+      <button
+        onClick={toggleRightPanel}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-l-lg shadow-lg hover:shadow-xl transition-all duration-200 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 group"
+        style={{ right: isRightPanelOpen ? '384px' : '0px' }}
+        title={isRightPanelOpen ? 'Sağ Paneli Gizle (Ctrl+J)' : 'Sağ Paneli Aç (Ctrl+J)'}
+      >
+        {isRightPanelOpen ? (
+          <PanelRightClose className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400" />
+        ) : (
+          <PanelRightOpen className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400" />
+        )}
+      </button>
+
+      {/* Right Panel with Collapse */}
+      <div className={`relative transition-all duration-300 ease-in-out ${isRightPanelOpen ? 'w-96' : 'w-0'} overflow-hidden`}>
+        <TopicRightPanel topic={topic} level={currentLevel} />
+      </div>
     </div>
   );
 }

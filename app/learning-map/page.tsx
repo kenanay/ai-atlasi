@@ -1,17 +1,34 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllTopics } from '@/lib/topics';
 import { useProgress } from '@/lib/use-progress';
 import LearningMapGraph from '@/components/learning-map/LearningMapGraph';
 import { CATEGORY_INFO } from '@/lib/utils';
+import { Maximize2, Minimize2, X } from 'lucide-react';
 
 export default function LearningMapPage() {
   const router = useRouter();
   const topics = getAllTopics();
   const progressData = useProgress();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // ESC to exit fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isFullscreen]);
   
   // Tamamlanmış konuları al
   const completedTopics = useMemo(() => {
@@ -62,6 +79,121 @@ export default function LearningMapPage() {
   const handleTopicClick = (topicId: string) => {
     router.push(`/topic/${topicId}`);
   };
+
+  // Fullscreen mode render
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col">
+        {/* Fullscreen Header */}
+        <div className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold text-slate-100">
+              🗺️ Öğrenme Haritası - Tam Ekran Tuval
+            </h1>
+            <div className="text-xs text-slate-400">
+              {selectedCategory ? `${filteredTopics.length} konu` : `${topics.length} konu`}
+            </div>
+          </div>
+          
+          {/* Fullscreen Controls */}
+          <div className="flex items-center gap-2">
+            {/* Category Filter Buttons */}
+            <div className="flex gap-1 mr-4">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`
+                  px-3 py-1 rounded text-xs font-medium transition-all
+                  ${!selectedCategory 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }
+                `}
+              >
+                Tümü
+              </button>
+              
+              {categories.slice(0, 5).map(category => {
+                const sampleTopic = topics.find(t => (CATEGORY_INFO[t.category]?.name || t.category) === category);
+                const icon = sampleTopic ? (CATEGORY_INFO[sampleTopic.category]?.icon || '📚') : '📚';
+                
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`
+                      px-3 py-1 rounded text-xs font-medium transition-all
+                      ${selectedCategory === category
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      }
+                    `}
+                    title={category}
+                  >
+                    {icon}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-3 mr-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-green-500"></div>
+                <span className="text-slate-300">{stats.completed}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-blue-500"></div>
+                <span className="text-slate-300">{stats.unlocked}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-gray-500"></div>
+                <span className="text-slate-300">{stats.locked}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="px-3 py-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5"
+              title="Tam Ekrandan Çık (ESC)"
+            >
+              <Minimize2 className="w-4 h-4" />
+              Çık (ESC)
+            </button>
+          </div>
+        </div>
+
+        {/* Fullscreen Canvas */}
+        <div className="flex-1 bg-slate-900">
+          <LearningMapGraph
+            topics={filteredTopics}
+            completedTopics={completedTopics}
+            onTopicClick={handleTopicClick}
+            fullscreen={true}
+          />
+        </div>
+
+        {/* Fullscreen Floating Legend */}
+        <div className="absolute bottom-4 left-4 bg-slate-900/95 backdrop-blur-sm rounded-lg p-3 shadow-2xl border border-slate-700">
+          <div className="flex flex-col gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-green-500"></div>
+              <span className="text-slate-300">Tamamlandı</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-blue-500"></div>
+              <span className="text-slate-300">Açık</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-gray-500"></div>
+              <span className="text-slate-300">Kilitli</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Normal mode render
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -225,8 +357,18 @@ export default function LearningMapPage() {
                 ? `${filteredTopics.length} konu gösteriliyor` 
                 : `Toplam ${topics.length} konu`}
             </p>
-            <div className="text-xs text-gray-500 dark:text-gray-500">
-              💡 İpucu: Fare tekerleği ile zoom, sürükleyerek hareket ettirin
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500 dark:text-gray-500">
+                💡 İpucu: Fare tekerleği ile zoom, sürükleyerek hareket ettirin
+              </div>
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all flex items-center gap-1.5 text-xs font-medium shadow-sm"
+                title="Tam Ekran Tuval (Figma/Miro benzeri)"
+              >
+                <Maximize2 className="w-4 h-4" />
+                Tam Ekran
+              </button>
             </div>
           </div>
           

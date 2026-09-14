@@ -21,6 +21,7 @@ interface LearningMapGraphProps {
   topics: Topic[];
   completedTopics: string[];
   onTopicClick: (topicId: string) => void;
+  fullscreen?: boolean;
 }
 
 const nodeTypes: NodeTypes = {
@@ -31,6 +32,7 @@ export default function LearningMapGraph({
   topics,
   completedTopics,
   onTopicClick,
+  fullscreen = false,
 }: LearningMapGraphProps) {
   // Graf düzenini hesapla (kategorilere göre gruplandırılmış)
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
@@ -157,7 +159,7 @@ export default function LearningMapGraph({
   }, [topics, completedTopics, initialNodes, initialEdges, setNodes, setEdges]);
   
   return (
-    <div style={{ width: '100%', height: '800px' }} className="border rounded-lg overflow-hidden">
+    <div style={{ width: '100%', height: fullscreen ? '100%' : '800px' }} className={fullscreen ? '' : 'border rounded-lg overflow-hidden'}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -166,8 +168,8 @@ export default function LearningMapGraph({
         nodeTypes={nodeTypes}
         fitView
         minZoom={0.1}
-        maxZoom={1.5}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+        maxZoom={fullscreen ? 2.0 : 1.5}
+        defaultViewport={{ x: 0, y: 0, zoom: fullscreen ? 0.6 : 0.5 }}
       >
         <Background />
         <Controls />

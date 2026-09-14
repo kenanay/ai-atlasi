@@ -90,6 +90,18 @@ export function useGlobalShortcuts() {
       category: 'navigation'
     },
     {
+      key: 's',
+      description: 'Simülatörler',
+      action: () => router.push('/simulators'),
+      category: 'navigation'
+    },
+    {
+      key: 'm',
+      description: 'Öğrenme Haritası',
+      action: () => router.push('/learning-map'),
+      category: 'navigation'
+    },
+    {
       key: 'k',
       ctrl: true,
       description: 'Arama',

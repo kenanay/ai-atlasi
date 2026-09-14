@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { Play, Copy, Check, RotateCcw, Loader2 } from 'lucide-react';
+import { Play, Copy, Check, RotateCcw, Loader2, Maximize2, Minimize2, X } from 'lucide-react';
 
 interface CodeEditorProps {
   initialCode: string;
@@ -27,7 +27,38 @@ export function CodeEditor({
   const [output, setOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { resolvedTheme } = useTheme();
+
+  // Fullscreen ESC key handler
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isFullscreen]);
+
+  // Ctrl+Enter to run code in fullscreen
+  useEffect(() => {
+    if (!isFullscreen || !showRunButton) return;
+
+    const handleCtrlEnter = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRun();
+      }
+    };
+
+    window.addEventListener('keydown', handleCtrlEnter);
+    return () => window.removeEventListener('keydown', handleCtrlEnter);
+  }, [isFullscreen, showRunButton]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
@@ -173,6 +204,137 @@ export function CodeEditor({
 
   const monacoTheme = resolvedTheme === 'dark' ? 'vs-dark' : 'vs';
 
+  // Fullscreen mode render
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col">
+        {/* Fullscreen Header */}
+        <div className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-slate-100">
+              {getLanguageLabel(language)} - Tam Ekran IDE
+            </span>
+            {statusMessage && (
+              <span className="text-xs text-amber-300 animate-pulse">
+                {statusMessage}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!readOnly && (
+              <button
+                onClick={handleReset}
+                className="px-3 py-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5"
+                title="Sıfırla"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Sıfırla
+              </button>
+            )}
+            <button
+              onClick={handleCopy}
+              className="px-3 py-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5"
+              title="Kopyala"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  Kopyalandı
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Kopyala
+                </>
+              )}
+            </button>
+            {showRunButton && !readOnly && (
+              <button
+                onClick={handleRun}
+                disabled={isRunning}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium shadow-lg"
+                title="Kodu Çalıştır (Ctrl+Enter)"
+              >
+                {isRunning ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Çalışıyor...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" />
+                    Çalıştır (Ctrl+Enter)
+                  </>
+                )}
+              </button>
+            )}
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="px-3 py-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 ml-2"
+              title="Tam Ekrandan Çık (ESC)"
+            >
+              <Minimize2 className="w-4 h-4" />
+              Çık (ESC)
+            </button>
+          </div>
+        </div>
+
+        {/* Fullscreen Split View: Code (left) + Output (right) */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Code Editor (Left 50%) */}
+          <div className="flex-1 border-r border-slate-800">
+            <Editor
+              height="100%"
+              language={['numpy', 'pytorch'].includes(language) ? 'python' : language}
+              value={code}
+              onChange={(value) => setCode(value || '')}
+              theme="vs-dark"
+              options={{
+                readOnly,
+                minimap: { enabled: true },
+                fontSize: 14,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 4,
+                wordWrap: 'on',
+                padding: { top: 16, bottom: 16 },
+              }}
+            />
+          </div>
+
+          {/* Output Console (Right 50%) */}
+          <div className="flex-1 bg-slate-900 flex flex-col">
+            <div className="px-4 py-2 bg-slate-800 border-b border-slate-700">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Konsol Çıktısı
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {output ? (
+                <pre className="text-sm font-mono text-slate-100 whitespace-pre-wrap">
+                  {output}
+                </pre>
+              ) : (
+                <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+                  <div className="text-center">
+                    <Play className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p>Kodu çalıştırın, çıktılar burada görünecek</p>
+                    <p className="text-xs mt-2 text-slate-600">
+                      {showRunButton && 'Ctrl+Enter ile hızlı çalıştırma'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal (inline) mode render
+
   return (
     <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
@@ -186,6 +348,13 @@ export function CodeEditor({
               {statusMessage}
             </span>
           )}
+          <button
+            onClick={() => setIsFullscreen(true)}
+            className="p-1.5 hover:bg-slate-700 dark:hover:bg-slate-800 rounded-md transition-colors text-slate-300 hover:text-white cursor-pointer"
+            title="Tam Ekran IDE (Kod + Konsol)"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
           {!readOnly && (
             <button
               onClick={handleReset}
