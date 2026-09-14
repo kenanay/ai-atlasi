@@ -34,8 +34,8 @@
   },
   "prerequisites": [],
   "nextTopics": [
-    "hierarchical-clustering",
-    "dbscan",
+    "dbscan-hierarchical-clustering",
+    "dbscan-hierarchical-clustering",
     "gaussian-mixture-models"
   ],
   "relatedTopics": [

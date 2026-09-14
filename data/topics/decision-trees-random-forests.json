@@ -284,13 +284,13 @@
     "linear-regression"
   ],
   "nextTopics": [
-    "gradient-boosting",
+    "xgboost-gradient-boosting",
     "xgboost",
     "feature-engineering"
   ],
   "relatedTopics": [
     "random-forests",
-    "gradient-boosting",
+    "xgboost-gradient-boosting",
     "ensemble-methods"
   ],
   "tags": [

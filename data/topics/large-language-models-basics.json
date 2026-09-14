@@ -51,7 +51,7 @@
   "nextTopics": [
     "prompt-engineering",
     "llm-fine-tuning",
-    "rlhf"
+    "rlhf-dpo-alignment"
   ],
   "relatedTopics": [
     "transformers-attention",

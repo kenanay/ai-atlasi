@@ -150,6 +150,12 @@ export default function LearningMapGraph({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   
+  // topics veya completedTopics değiştiğinde nodes ve edges'i güncelle
+  React.useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [topics, completedTopics, initialNodes, initialEdges, setNodes, setEdges]);
+  
   return (
     <div style={{ width: '100%', height: '800px' }} className="border rounded-lg overflow-hidden">
       <ReactFlow
