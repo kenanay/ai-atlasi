@@ -86,7 +86,7 @@ import tsneUmapManifoldData from '@/data/topics/tsne-umap-manifold.json';
 
 // SPRINT 5 - Final Topics (LLM Inference, Speech AI, Clustering, Statistics)
 import kvCacheLlmInferenceData from '@/data/topics/kv-cache-llm-inference.json';
-// import whisperSpeechAiData from '@/data/topics/whisper-speech-ai.json'; // Temporarily disabled due to JSON parsing issues
+import whisperSpeechAiData from '@/data/topics/whisper-speech-ai.json';
 import dbscanHierarchicalClusteringData from '@/data/topics/dbscan-hierarchical-clustering.json';
 import mleMapEstimationData from '@/data/topics/mle-map-estimation.json';
 
@@ -176,9 +176,9 @@ const topics: Topic[] = [
   rlhfDpoAlignmentData as unknown as Topic,
   tsneUmapManifoldData as unknown as Topic,
   
-  // SPRINT 5 - Final Topics (75→78, Whisper temporarily disabled)
+  // SPRINT 5 - Final Topics (78→79, Whisper activated)
   kvCacheLlmInferenceData as unknown as Topic,
-  // whisperSpeechAiData as unknown as Topic, // Temporarily disabled
+  whisperSpeechAiData as unknown as Topic,
   dbscanHierarchicalClusteringData as unknown as Topic,
   mleMapEstimationData as unknown as Topic,
 ];

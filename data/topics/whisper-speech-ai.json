@@ -1,0 +1,190 @@
+{
+  "id": "whisper-speech-ai",
+  "title": "Whisper & Speech AI",
+  "category": "nlp",
+  "level": 4,
+  "estimatedTime": 70,
+  "description": "Whisper (OpenAI): Robust speech recognition. Mel-spectrogram, encoder-decoder Transformer, multilingual (99 languages). ASR, speech translation, language identification. Production-grade accuracy.",
+  "content": {
+    "level0_basic": "Speech AI: Ses → metin dönüşümü (Automatic Speech Recognition, ASR). Whisper (OpenAI, 2022): State-of-the-art ASR model. 680K saat audio data, 99 dil, robust (gürültü, aksanlar). Architecture: Encoder-decoder Transformer. Input: Audio waveform → Mel-spectrogram (80 channels, log-scale). Encoder: Audio features → context representation. Decoder: Autoregressive text generation. Multitask: (1) Transcription (aynı dilde), (2) Translation (İngilizce'ye), (3) Language ID. Zero-shot: Eğitilmediği aksan/domain'lerde bile çalışır. OpenAI API, local (transformers library).",
+    "level1_beginner": "Whisper modelleri: (1) **tiny** (39M params, 32x realtime, mobile-friendly). (2) **base** (74M, 16x realtime). (3) **small** (244M, 6x realtime, balanced). (4) **medium** (769M, 2x realtime, high accuracy). (5) **large-v3** (1.55B, 1x realtime, SOTA). Trade-off: Speed vs accuracy. Audio preprocessing: (1) Resample 16kHz (model requirement). (2) 30-second chunks (context window). (3) Mel-spectrogram (80 bins, log-scale frequency). (4) Normalization. Decoder: (1) Prompt tokens (task, language). (2) Timestamp tokens (word-level timing). (3) Special tokens (<|startoftranscript|>, <|en|>, <|notimestamps|>). (4) Beam search / sampling. Multilingual: 99 languages (English, Spanish, Chinese, Arabic, Turkish...). Language auto-detection. Translation: Any language → English (single model).",
+    "level2_application": "Pratik kullanım: (1) **Python API**: `pip install openai-whisper`, `whisper audio.mp3 --model medium --language tr`. (2) **Transformers**: Hugging Face pipeline, `pipeline('automatic-speech-recognition', model='openai/whisper-large-v3')`. (3) **OpenAI API**: Cloud-based, pay-per-minute. (4) **Fine-tuning**: Custom domain (medical, legal), low-resource languages. Use cases: (1) **Transcription**: Podcast, meetings, lectures. (2) **Subtitles**: Video captions, accessibility. (3) **Voice assistants**: Siri, Alexa alternatives. (4) **Translation**: Multilingual customer support. (5) **Medical**: Doctor-patient conversation transcription. (6) **Legal**: Court proceedings. Performance: (1) WER (Word Error Rate): 5-10% (clean audio), 15-25% (noisy). (2) Real-time factor: large-v3 ~1x (30-sec audio in 30 sec). (3) Robustness: Accents, background noise, music. Limitations: (1) Hallucination (silence → random text). (2) 30-sec context (long-form needs chunking). (3) Proper names (hallucination risk). (4) Code-switching (mixed languages).",
+    "level3_advanced": "Architecture details: (1) **Mel-Spectrogram**: Audio → STFT (Short-Time Fourier Transform) → Mel-scale (human perception). 80 Mel bins, 25ms window, 10ms hop. Log-scale (dB). (2) **Encoder**: Transformer (6-32 layers). Conv1D stem (2 layers, stride 2 → 2x downsample). Sinusoidal positional encoding. Self-attention (audio features). Output: Audio context (1500 frames → 750 tokens). (3) **Decoder**: Transformer (6-32 layers). Cross-attention (encoder output). Causal self-attention (autoregressive). Vocabulary: 51865 tokens (multilingual BPE). (4) **Training**: Weakly-supervised (internet audio + auto-generated transcripts). Multitask (transcription + translation + language ID). Loss: Cross-entropy. 680K hours (English 438K, multilingual 242K). Data augmentation: Speed perturbation, noise injection. (5) **Inference**: Prompt: `<|startoftranscript|><|tr|><|transcribe|><|notimestamps|>`. Beam search (width=5). Temperature sampling (fallback). VAD (Voice Activity Detection) for chunking. Timestamp tokens: <|0.00|>, <|0.02|> (20ms resolution).",
+    "level4_expert": "Expert topics: (1) **Fine-tuning**: LoRA (Low-Rank Adaptation) for memory efficiency. Dataset: Custom domain (legal, medical). WER improvement: 30% → 10% (domain-specific). (2) **Distillation**: large → small (student-teacher). OpenAI Distil-Whisper (6x faster, ~1% WER loss). (3) **Long-form**: >30sec audio. Chunking strategies: (a) Fixed 30s (overlap 5s). (b) VAD-based (silence detection). (c) Prompt conditioning (previous transcript as context). (4) **Hallucination**: Silence → repetitive/random text. Mitigation: (a) VAD preprocessing. (b) Logprob threshold. (c) Repetition penalty. (d) Prompt: 'No speech'. (5) **Timestamps**: Word-level alignment. CTC (Connectionist Temporal Classification) alternative. Forced alignment (Whisper + CTC). (6) **Multilingual**: Language ID head (99 classes). Low-resource languages (Turkish, Arabic). Code-switching (English + Spanish). (7) **Real-time**: Streaming (not native in Whisper). Workarounds: (a) Sliding window. (b) Faster-Whisper (CTranslate2, 4x speedup). (c) Whisper.cpp (C++ port, CPU-optimized). (8) **Comparison**: (a) Wav2Vec 2.0 (Facebook, self-supervised). (b) Conformer (Google, convolution + Transformer). (c) MMS (Meta Massively Multilingual Speech, 1000+ languages). Whisper: Best multilingual, robust, production-ready. Research directions: (1) Streaming Whisper. (2) Better hallucination handling. (3) Emotion recognition (prosody). (4) Speaker diarization (who spoke when)."
+  },
+  "whatIsIt": "Whisper: OpenAI'nin speech recognition modeli (2022). Encoder-decoder Transformer. 680K saat audio (weakly supervised), 99 dil. Input: Mel-spectrogram (80 bins, log-scale). Encoder: Audio → context (self-attention). Decoder: Autoregressive text (cross-attention). Multitask: Transcription, translation (→ English), language ID. Model sizes: tiny (39M) → large-v3 (1.55B). Zero-shot robust (accents, noise, domains). WER 5-10% (clean), 15-25% (noisy). Open-source (MIT license), Hugging Face Transformers, OpenAI API.",
+  "whyNeeded": "Speech AI critical çünkü: (1) **Accessibility**: Deaf/hard-of-hearing (subtitles). Hands-free interaction (voice assistants). (2) **Multilingual**: 99 languages (global reach). Low-resource language support (Turkish, Arabic). (3) **Robustness**: Whisper accents, noise, music'e robust. Traditional ASR'ler clean audio'da fail. (4) **Zero-shot**: Yeni domain/accent'te fine-tuning gereksiz. Out-of-the-box accuracy. (5) **Translation**: Any language → English (single model). Multilingual customer support. (6) **Production**: OpenAI API (cloud), local (transformers). Scalable, reliable. (7) **Cost**: Open-source (free local inference). API ($0.006/minute). Traditional ASR pahalı (Google, AWS). (8) **Use cases**: Healthcare (doctor notes), legal (court transcripts), education (lecture captions), media (podcast subtitles). (9) **Real-time**: large-v3 ~1x realtime (30s in 30s). Faster models (tiny/base) 16-32x realtime. (10) **Research**: Foundation model (transfer learning). Fine-tune custom domains.",
+  "realWorldAnalogy": "Whisper'ı bir **profesyonel tercüman/stenograf**'a benzetebiliriz. **Senaryo**: Çok uluslu konferans (99 farklı dil, gürültü, aksanlar). **Geleneksel ASR (eski stenograf)**: (1) Sadece temiz, standart aksan (BBC İngilizce). (2) Gürültülü ortamda fail (background music → hata). (3) Tek dil (İngilizce), diğer diller için ayrı uzman. (4) Yeni domain (tıp terminolojisi) → yeniden eğitim gerekir. **Whisper (süper stenograf)**: (1) **Multilingual**: 99 dil konuşur. Konuşmacı İspanyolca'dan İngilizce'ye geçse bile takip eder. (2) **Robust**: Cafe'de, müzikli ortamda, telefon görüşmesinde (düşük kalite) bile hatasız yazar. (3) **Zero-shot**: Tıp konferansında olmamış olsa bile medical terms'i doğru yazar (weak supervision sayesinde internet'ten öğrenmiş). (4) **Translation**: Fransızca konuşma → otomatik İngilizce yazıya çevirir (tek model, ek çaba yok). **Mel-Spectrogram (kulak)**: Ses dalgalarını frekans bileşenlerine ayırır (human auditory system gibi). Alçak sesler (bass) ve yüksek sesler (treble) ayrı ayrı algılanır. **Encoder (dinleme)**: Audio context'i anlar ('bu cümle soru mu, durum bildirimi mi?'). **Decoder (yazma)**: Kelime kelime yazar (autoregressive), önceki kelimelere bakarak sonrakini tahmin eder. **Beam search**: 5 farklı alternatif yazar, en olası olanı seçer.",
+  "mathematics": {
+    "formulas": [
+      "\\text{Mel-Spectrogram}: \\quad S_{mel}(t, m) = \\log\\left( \\sum_{f} |\\text{STFT}(t, f)|^2 \\cdot H_m(f) \\right) \\quad \\text{(H_m: Mel filterbank)}",
+      "\\text{Mel Scale}: \\quad m = 2595 \\cdot \\log_{10}\\left(1 + \\frac{f}{700}\\right) \\quad \\text{(Hz → Mel)}",
+      "\\text{Encoder Output}: \\quad h = \\text{Transformer}_{enc}(S_{mel}) \\quad \\text{(audio context, shape: [T/2, d])}",
+      "\\text{Decoder (autoregressive)}: \\quad P(y_t | y_{<t}, h) = \\text{softmax}(\\text{Transformer}_{dec}(y_{<t}, h)) \\quad \\text{(cross-attention)}",
+      "\\text{Loss (cross-entropy)}: \\quad \\mathcal{L} = -\\sum_{t=1}^T \\log P(y_t^* | y_{<t}^*, h) \\quad \\text{(y*: ground truth)}",
+      "\\text{WER (Word Error Rate)}: \\quad \\text{WER} = \\frac{S + D + I}{N} \\times 100\\% \\quad \\text{(S: substitutions, D: deletions, I: insertions, N: total words)}",
+      "\\text{Beam Search}: \\quad \\text{score}(y_{1:t}) = \\sum_{i=1}^t \\log P(y_i | y_{<i}, h) \\quad \\text{(keep top-k candidates)}",
+      "\\text{STFT (Short-Time Fourier Transform)}: \\quad X(t, f) = \\sum_{n=-\\infty}^{\\infty} x(n) \\cdot w(n - t) \\cdot e^{-j2\\pi fn}"
+    ]
+  },
+  "algorithm": {
+    "stepByStep": [
+      "1. **Audio Input**: Waveform (any sample rate, mono/stereo). Resample → 16kHz (model requirement). Chunking: 30-second segments (Whisper context window). Overlap 5s (for continuity).",
+      "2. **Preprocessing**: (a) Convert stereo → mono (average channels). (b) Normalize amplitude ([-1, 1] range). (c) Pad/trim to 30 seconds (480,000 samples at 16kHz).",
+      "3. **Mel-Spectrogram**: STFT (Short-Time Fourier Transform). Window: 25ms (400 samples), hop: 10ms (160 samples). FFT size: 512. Result: Time-frequency matrix (3000 frames × 257 freq bins). Mel filterbank: 80 triangular filters (Hz → Mel scale). Log-scale (dB): log(magnitude). Output: 3000×80 (80 Mel bins over time).",
+      "4. **Encoder Input**: Mel-spectrogram (3000×80). Conv1D stem: 2 layers (kernel=3, stride=2). Downsample 2x → 1500 frames. Positional encoding (sinusoidal). Shape: [1500, d_model] (d_model=512-1280, model size'a göre).",
+      "5. **Encoder**: Transformer blocks (6-32 layers). Self-attention (audio features). Feedforward (MLP). LayerNorm, residual connections. Output: Audio context h (shape: [1500, d_model]). Represents acoustic features (phonetics, prosody, background).",
+      "6. **Decoder Prompt**: Special tokens (task, language, timestamps). Example: <|startoftranscript|><|tr|><|transcribe|><|notimestamps|>. Prompt length: 3-6 tokens. Conditioning decoder (what task to perform).",
+      "7. **Decoder (autoregressive)**: Generate tokens one by one. Cross-attention (encoder output h). Causal self-attention (previous tokens). Vocabulary: 51865 tokens (multilingual BPE). Logits → softmax → probability distribution. Sample/beam search (top token).",
+      "8. **Beam Search**: Keep top-k candidates (k=5 typical). Score = sum of log-probabilities. At each step: Expand each candidate, prune to top-k. Terminate: <|endoftext|> or max_length (448 tokens).",
+      "9. **Post-processing**: (a) Remove special tokens. (b) Decode BPE → text. (c) Timestamp alignment (if enabled). (d) Language detection (if auto). (e) Confidence scores (logprobs). (f) Hallucination filtering (repetition penalty).",
+      "10. **Output**: Transcription text (string). Optional: Word-level timestamps [(word, start, end), ...]. Language detected (if auto). Confidence score (average logprob)."
+    ],
+    "complexity": "**Zaman**: Encoder: O(T²·D) (T=1500 frames, self-attention). Decoder: O(N·T·D) (N=output length, cross-attention). Total: ~1x realtime (large-v3), 4-16x (tiny/base). **Uzay**: Model: 39M-1.55B params. Mel-spectrogram: 3000×80 (0.96 MB). KV cache (inference): O(N·D·L) (L=layers). **Parallelization**: Encoder fully parallel (all frames). Decoder sequential (autoregressive). **Optimization**: (1) Flash Attention (memory efficient). (2) KV cache (avoid recomputation). (3) CTranslate2 (4x speedup, quantization). (4) Whisper.cpp (C++, CPU-optimized). (5) Batch inference (multiple audios parallel)."
+  },
+  "prerequisites": [
+    "transformers-attention",
+    "attention-mechanisms-detail",
+    "neural-networks"
+  ],
+  "nextTopics": [
+    "bert-language-models",
+    "generative-adversarial-networks"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "attention-mechanisms-detail",
+    "recurrent-neural-networks"
+  ],
+  "tags": [
+    "speech-recognition",
+    "whisper",
+    "asr",
+    "mel-spectrogram",
+    "multilingual",
+    "openai"
+  ],
+  "codeExamples": [
+    {
+      "title": "Whisper Basic Usage (openai-whisper)",
+      "language": "python",
+      "code": "# pip install openai-whisper\nimport whisper\nimport numpy as np\n\n# Load model (tiny, base, small, medium, large-v3)\nmodel = whisper.load_model('base')  # 74M params, 16x realtime\n\nprint(f'Model: {model.__class__.__name__}')\nprint(f'Dimensions: {model.dims}')\nprint(f'Languages: {len(model.is_multilingual)} supported\\n')\n\n# Load audio (mono, 16kHz recommended)\naudio = whisper.load_audio('audio.mp3')\naudio = whisper.pad_or_trim(audio)  # 30-second chunk\n\nprint(f'Audio shape: {audio.shape} ({len(audio)/16000:.1f} seconds at 16kHz)')\n\n# Mel-spectrogram\nmel = whisper.log_mel_spectrogram(audio).to(model.device)\nprint(f'Mel-spectrogram shape: {mel.shape}')  # (80, 3000)\n\n# Detect language\n_, probs = model.detect_language(mel)\nlang = max(probs, key=probs.get)\nprint(f'\\nDetected language: {lang} (prob: {probs[lang]:.2f})')\n\n# Transcribe\noptions = whisper.DecodingOptions(language='tr', task='transcribe', fp16=False)\nresult = whisper.decode(model, mel, options)\n\nprint(f'\\n=== Transcription ===')\nprint(result.text)\nprint(f'\\nConfidence: {result.avg_logprob:.2f}')\nprint(f'No speech prob: {result.no_speech_prob:.3f}')\n\nprint('\\nNote: For long audio, use whisper.transcribe() (auto-chunking)')",
+      "level": 2,
+      "explanation": "Whisper temel kullanım: load_model, audio preprocessing, Mel-spectrogram, language detection, decode. openai-whisper kütüphanesi."
+    },
+    {
+      "title": "Whisper Transformers (Hugging Face)",
+      "language": "python",
+      "code": "# pip install transformers datasets[audio]\nfrom transformers import WhisperProcessor, WhisperForConditionalGeneration\nimport torch\nimport librosa\n\n# Load model and processor\nmodel_name = 'openai/whisper-small'  # 244M params\nprocessor = WhisperProcessor.from_pretrained(model_name)\nmodel = WhisperForConditionalGeneration.from_pretrained(model_name)\n\nprint(f'Model: {model_name}')\nprint(f'Parameters: {model.num_parameters():,}')\nprint(f'Encoder layers: {model.config.encoder_layers}')\nprint(f'Decoder layers: {model.config.decoder_layers}\\n')\n\n# Load audio\naudio, sr = librosa.load('audio.wav', sr=16000, mono=True)\nprint(f'Audio: {len(audio)/sr:.1f}s, sample rate: {sr} Hz')\n\n# Process audio\ninput_features = processor(audio, sampling_rate=sr, return_tensors='pt').input_features\nprint(f'Input features shape: {input_features.shape}')  # (1, 80, 3000)\n\n# Generate transcription (Turkish)\nforced_decoder_ids = processor.get_decoder_prompt_ids(language='turkish', task='transcribe')\ngenerated_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids)\n\n# Decode\ntranscription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]\n\nprint(f'\\n=== Transcription ===')\nprint(transcription)\n\n# Translation (Turkish → English)\nprint('\\n=== Translation (Turkish → English) ===')\nforced_decoder_ids_translate = processor.get_decoder_prompt_ids(language='turkish', task='translate')\ngenerated_ids_translate = model.generate(input_features, forced_decoder_ids=forced_decoder_ids_translate)\ntranslation = processor.batch_decode(generated_ids_translate, skip_special_tokens=True)[0]\nprint(translation)\n\nprint('\\nTransformers: Easy integration, Hugging Face ecosystem')",
+      "level": 2,
+      "explanation": "Whisper Transformers: Hugging Face ecosystem. WhisperProcessor (audio preprocessing), WhisperForConditionalGeneration (model). Transcription + translation."
+    },
+    {
+      "title": "Mel-Spectrogram Visualization",
+      "language": "python",
+      "code": "import numpy as np\nimport librosa\nimport librosa.display\nimport matplotlib.pyplot as plt\n\n# Load audio\naudio, sr = librosa.load('audio.wav', sr=16000, duration=5.0, mono=True)\nprint(f'Audio: {len(audio)} samples, {len(audio)/sr:.2f}s, {sr} Hz')\n\n# Compute Mel-spectrogram\nn_fft = 512  # FFT window size\nhop_length = 160  # 10ms hop at 16kHz\nn_mels = 80  # Whisper uses 80 Mel bins\n\nmel_spec = librosa.feature.melspectrogram(\n    y=audio, \n    sr=sr, \n    n_fft=n_fft, \n    hop_length=hop_length, \n    n_mels=n_mels\n)\n\n# Log scale (dB)\nmel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)\n\nprint(f'\\nMel-spectrogram shape: {mel_spec_db.shape}')  # (80, time_frames)\nprint(f'Time resolution: {hop_length/sr*1000:.1f} ms')\nprint(f'Frequency bins: {n_mels} (Mel scale)')\n\n# Visualize\nfig, axes = plt.subplots(2, 1, figsize=(12, 8))\n\n# Waveform\naxes[0].plot(np.linspace(0, len(audio)/sr, len(audio)), audio)\naxes[0].set_title('Audio Waveform')\naxes[0].set_xlabel('Time (s)')\naxes[0].set_ylabel('Amplitude')\naxes[0].grid(alpha=0.3)\n\n# Mel-spectrogram\nimg = librosa.display.specshow(\n    mel_spec_db, \n    x_axis='time', \n    y_axis='mel', \n    sr=sr, \n    hop_length=hop_length,\n    ax=axes[1],\n    cmap='viridis'\n)\naxes[1].set_title('Mel-Spectrogram (Log Scale)')\naxes[1].set_xlabel('Time (s)')\naxes[1].set_ylabel('Mel Frequency')\nfig.colorbar(img, ax=axes[1], format='%+2.0f dB')\n\nplt.tight_layout()\nplt.show()\n\nprint('\\nMel-spectrogram: Time-frequency representation')\nprint('Mel scale: Human auditory perception (logarithmic)')\nprint('Whisper encoder input: 80 Mel bins × 3000 frames (30s audio)')",
+      "level": 2,
+      "explanation": "Mel-Spectrogram: Audio → STFT → Mel filterbank → log scale. 80 bins (Whisper), time-frequency representation. Human auditory perception."
+    },
+    {
+      "title": "Long-form Transcription (Chunking)",
+      "language": "python",
+      "code": "import whisper\nimport numpy as np\n\n# Load model\nmodel = whisper.load_model('base')\n\n# Long audio (> 30 seconds)\naudio = whisper.load_audio('long_audio.mp3')  # e.g., 5 minutes\nprint(f'Audio length: {len(audio)/16000:.1f} seconds\\n')\n\n# Method 1: Built-in transcribe (auto-chunking)\nprint('=== Method 1: Built-in transcribe() ===')\nresult = model.transcribe(\n    'long_audio.mp3',\n    language='tr',\n    task='transcribe',\n    verbose=False\n)\n\nprint(f'Text: {result[\"text\"][:200]}...')  # First 200 chars\nprint(f'\\nSegments: {len(result[\"segments\"])}')\nfor seg in result['segments'][:3]:\n    print(f'  [{seg[\"start\"]:.1f}s - {seg[\"end\"]:.1f}s]: {seg[\"text\"]}')\n\n# Method 2: Manual chunking (more control)\nprint('\\n=== Method 2: Manual Chunking ===')\nchunk_size = 30 * 16000  # 30 seconds\noverlap = 5 * 16000  # 5 seconds overlap\n\ntranscripts = []\nfor i in range(0, len(audio), chunk_size - overlap):\n    chunk = audio[i:i+chunk_size]\n    chunk = whisper.pad_or_trim(chunk)\n    \n    mel = whisper.log_mel_spectrogram(chunk).to(model.device)\n    options = whisper.DecodingOptions(language='tr', task='transcribe')\n    result_chunk = whisper.decode(model, mel, options)\n    \n    transcripts.append(result_chunk.text)\n    print(f'Chunk {i//chunk_size + 1}: {result_chunk.text[:50]}...')\n\nfull_transcript = ' '.join(transcripts)\nprint(f'\\nFull transcript length: {len(full_transcript)} characters')\n\nprint('\\nChunking strategies:')\nprint('1. Fixed 30s (overlap for continuity)')\nprint('2. VAD-based (silence detection)')\nprint('3. Prompt conditioning (previous chunk as context)')",
+      "level": 3,
+      "explanation": "Long-form transcription: >30s audio. Built-in transcribe() (auto-chunking) vs manual chunking (overlap, VAD). Whisper context window 30s."
+    },
+    {
+      "title": "Timestamp & Word-Level Alignment",
+      "language": "python",
+      "code": "import whisper\nimport json\n\n# Load model with word-level timestamps\nmodel = whisper.load_model('base')\n\naudio_file = 'audio.mp3'\nprint(f'Transcribing with timestamps: {audio_file}\\n')\n\n# Transcribe with word-level timestamps\nresult = model.transcribe(\n    audio_file,\n    language='tr',\n    word_timestamps=True,  # Enable word-level timestamps\n    verbose=False\n)\n\nprint('=== Segment-Level Timestamps ===')\nfor seg in result['segments'][:3]:\n    print(f'[{seg[\"start\"]:.2f}s - {seg[\"end\"]:.2f}s]: {seg[\"text\"]}')\n    \n    # Word-level (if available)\n    if 'words' in seg:\n        print('  Words:')\n        for word_info in seg['words'][:5]:  # First 5 words\n            print(f'    {word_info[\"word\"]}: {word_info[\"start\"]:.2f}s - {word_info[\"end\"]:.2f}s')\n\nprint('\\n=== Full Transcript with Timecodes ===')\nfor seg in result['segments']:\n    timestamp = f'[{seg[\"start\"]//60:02.0f}:{seg[\"start\"]%60:05.2f}]'\n    print(f'{timestamp} {seg[\"text\"]}')\n\n# Export SRT subtitles\nprint('\\n=== SRT Subtitles (Sample) ===')\nfor i, seg in enumerate(result['segments'][:3], 1):\n    start = f'{int(seg[\"start\"]//3600):02d}:{int((seg[\"start\"]%3600)//60):02d}:{seg[\"start\"]%60:06.3f}'.replace('.', ',')\n    end = f'{int(seg[\"end\"]//3600):02d}:{int((seg[\"end\"]%3600)//60):02d}:{seg[\"end\"]%60:06.3f}'.replace('.', ',')\n    print(f'{i}\\n{start} --> {end}\\n{seg[\"text\"]}\\n')\n\nprint('Applications:')\nprint('- Subtitles (SRT, VTT format)')\nprint('- Video editing (align text with video)')\nprint('- Search (find exact timestamp of keyword)')",
+      "level": 3,
+      "explanation": "Timestamps: Segment-level (automatic) + word-level (word_timestamps=True). SRT subtitle export. 20ms resolution. Video captioning, search."
+    },
+    {
+      "title": "Hallucination Detection & Mitigation",
+      "language": "python",
+      "code": "import whisper\nimport numpy as np\n\nmodel = whisper.load_model('base')\n\ndef detect_hallucination(result, threshold=-1.0):\n    \"\"\"\n    Detect potential hallucination based on:\n    1. Low average log probability\n    2. High no_speech probability\n    3. Repetitive text\n    \"\"\"\n    issues = []\n    \n    # Check confidence\n    if hasattr(result, 'avg_logprob') and result.avg_logprob < threshold:\n        issues.append(f'Low confidence (logprob: {result.avg_logprob:.2f})')\n    \n    # Check silence\n    if hasattr(result, 'no_speech_prob') and result.no_speech_prob > 0.7:\n        issues.append(f'Likely silence (no_speech: {result.no_speech_prob:.2f})')\n    \n    # Check repetition\n    text = result.text if hasattr(result, 'text') else str(result)\n    words = text.split()\n    if len(words) > 10:\n        unique_ratio = len(set(words)) / len(words)\n        if unique_ratio < 0.3:\n            issues.append(f'Repetitive text (unique ratio: {unique_ratio:.2f})')\n    \n    return issues\n\n# Test with silence (hallucination risk)\nprint('=== Test 1: Clean Speech ===')\naudio_clean = whisper.load_audio('clean_speech.mp3')\nmel_clean = whisper.log_mel_spectrogram(whisper.pad_or_trim(audio_clean)).to(model.device)\noptions = whisper.DecodingOptions(language='en')\nresult_clean = whisper.decode(model, mel_clean, options)\n\nprint(f'Text: {result_clean.text}')\nprint(f'Confidence: {result_clean.avg_logprob:.2f}')\nprint(f'No speech prob: {result_clean.no_speech_prob:.3f}')\nissues = detect_hallucination(result_clean)\nprint(f'Issues: {issues if issues else \"None\"}\\n')\n\n# Test with silence\nprint('=== Test 2: Silence (Hallucination Risk) ===')\naudio_silence = np.zeros(16000 * 30)  # 30 seconds silence\nmel_silence = whisper.log_mel_spectrogram(whisper.pad_or_trim(audio_silence)).to(model.device)\nresult_silence = whisper.decode(model, mel_silence, options)\n\nprint(f'Text: {result_silence.text}')\nprint(f'Confidence: {result_silence.avg_logprob:.2f}')\nprint(f'No speech prob: {result_silence.no_speech_prob:.3f}')\nissues = detect_hallucination(result_silence, threshold=-1.0)\nprint(f'Issues: {issues if issues else \"None\"}')\n\nprint('\\n=== Mitigation Strategies ===')\nprint('1. VAD (Voice Activity Detection) preprocessing')\nprint('2. Logprob threshold (filter low-confidence)')\nprint('3. No speech probability check (> 0.7 → skip)')\nprint('4. Repetition detection (unique_words / total_words)')\nprint('5. Prompt: \"No speech\" or \"Silence\" for decoder')\nprint('6. Temperature sampling (fallback, increase diversity)')",
+      "level": 4,
+      "explanation": "Hallucination: Silence → random/repetitive text. Detection: Low logprob, high no_speech_prob, repetition. Mitigation: VAD, thresholds, prompt."
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Whisper'ın temel architecture'ü nedir?",
+      "options": [
+        "CNN-only (ResNet)",
+        "RNN-LSTM",
+        "Encoder-decoder Transformer (audio → text)",
+        "GAN-based"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Whisper: Encoder-decoder Transformer. Encoder: Audio (Mel-spectrogram) → context. Decoder: Autoregressive text generation. Cross-attention.",
+      "id": "whisper-q1"
+    },
+    {
+      "question": "Mel-spectrogram nedir ve neden kullanılır?",
+      "options": [
+        "Raw audio waveform",
+        "Time-frequency representation, Mel scale (human perception), log-scale. 80 bins",
+        "Sadece amplitude",
+        "Compressed audio (MP3)"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Mel-spectrogram: STFT → Mel filterbank (80 bins, human auditory) → log scale (dB). Time-frequency representation. Encoder input.",
+      "id": "whisper-q2"
+    },
+    {
+      "question": "Whisper multitask nedir (3 task)?",
+      "options": [
+        "Sadece transcription",
+        "Transcription (same language) + Translation (→ English) + Language ID (99 languages)",
+        "Sadece English",
+        "Speech synthesis"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Whisper multitask: (1) Transcription (aynı dilde), (2) Translation (herhangi → İngilizce), (3) Language ID. Tek model, 99 dil.",
+      "id": "whisper-q3"
+    },
+    {
+      "question": "Hallucination (Whisper) nedir ve nasıl önlenir?",
+      "options": [
+        "Model her zaman perfect",
+        "Silence/noise → random/repetitive text. Önleme: VAD, logprob threshold, no_speech_prob check",
+        "Sadece low-resource languages",
+        "Hallucination yoktur"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Hallucination: Silence → model random/repetitive text üretir. Mitigation: VAD (silence detection), logprob threshold, no_speech_prob > 0.7 → skip.",
+      "id": "whisper-q4"
+    },
+    {
+      "question": "Whisper model sizes ve trade-off?",
+      "options": [
+        "Hepsi aynı hızda",
+        "tiny (39M, 32x realtime) → large-v3 (1.55B, 1x realtime). Trade-off: Speed vs accuracy",
+        "Sadece large kullanılmalı",
+        "Size fark etmez"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Whisper models: tiny/base (fast, mobile) vs medium/large (accurate, slow). Trade-off: Speed (realtime factor) vs WER (accuracy).",
+      "id": "whisper-q5"
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "audio-waveform",
+      "title": "Audio Waveform vs Mel-Spectrogram",
+      "description": "Compare raw audio waveform (time-domain) with Mel-spectrogram (time-frequency, log-scale). Mel-spectrogram: 80 bins, human auditory perception."
+    },
+    {
+      "type": "attention-heatmap",
+      "title": "Cross-Attention: Decoder → Encoder",
+      "description": "Whisper decoder attends to encoder output (audio context). Each output token attends to relevant audio frames. Translation/transcription alignment."
+    },
+    {
+      "type": "model-comparison",
+      "title": "Whisper Model Sizes (Speed vs Accuracy)",
+      "description": "Compare tiny, base, small, medium, large-v3. X-axis: Realtime factor (speed), Y-axis: WER (accuracy). Trade-off curve."
+    }
+  ]
+}
