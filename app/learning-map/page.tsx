@@ -2,12 +2,26 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { getAllTopics } from '@/lib/topics';
 import { useProgress } from '@/lib/use-progress';
-import LearningMapGraph from '@/components/learning-map/LearningMapGraph';
 import { CATEGORY_INFO } from '@/lib/utils';
-import { Maximize2, Minimize2, X } from 'lucide-react';
+import { Maximize2, Minimize2, X, Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+
+// Lazy load LearningMapGraph (React Flow is 2.9MB!)
+const LearningMapGraph = dynamic(() => import('@/components/learning-map/LearningMapGraph'), {
+  loading: () => (
+    <div className="flex items-center justify-center h-[600px] bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+      <div className="text-center">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+        <p className="text-base text-slate-600 dark:text-slate-400 font-medium">Öğrenme haritası yükleniyor...</p>
+        <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">React Flow • 2.9MB • 80 konu grafiği</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
 
 export default function LearningMapPage() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CodeEditor } from '@/components/ui/CodeEditor';
+import CodeEditor from '@/components/ui/CodeEditorWrapper';
 import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, Play, Code, BookOpen } from 'lucide-react';
 import { usePyodidePreload } from '@/hooks/usePyodidePreload';

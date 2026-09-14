@@ -1,17 +1,54 @@
 'use client';
 
 import React from 'react';
-import { 
-  AttentionVisualizer, 
-  NeuralNetworkSimulator, 
-  CNNConvolutionVisualizer,
-  GradientDescentPlot,
-  KMeansAnimator,
-  PCAVisualizer,
-  QLearningGridWorld
-} from '@/components/visualization';
-import { Brain, Eye, Network, TrendingDown, Layers, Maximize2, Gamepad2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Brain, Eye, Network, TrendingDown, Layers, Maximize2, Gamepad2, Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+
+// Lazy load all simulators (each is heavy with animations/canvas)
+const SimulatorLoading = () => (
+  <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-12">
+    <div className="text-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+      <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Simülatör yükleniyor...</p>
+    </div>
+  </div>
+);
+
+const AttentionVisualizer = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.AttentionVisualizer })),
+  { loading: SimulatorLoading, ssr: false }
+);
+
+const NeuralNetworkSimulator = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.NeuralNetworkSimulator })),
+  { loading: SimulatorLoading, ssr: false }
+);
+
+const CNNConvolutionVisualizer = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.CNNConvolutionVisualizer })),
+  { loading: SimulatorLoading, ssr: false }
+);
+
+const GradientDescentPlot = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.GradientDescentPlot })),
+  { loading: SimulatorLoading, ssr: false }
+);
+
+const KMeansAnimator = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.KMeansAnimator })),
+  { loading: SimulatorLoading, ssr: false }
+);
+
+const PCAVisualizer = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.PCAVisualizer })),
+  { loading: SimulatorLoading, ssr: false }
+);
+
+const QLearningGridWorld = dynamic(
+  () => import('@/components/visualization').then(mod => ({ default: mod.QLearningGridWorld })),
+  { loading: SimulatorLoading, ssr: false }
+);
 
 export default function SimulatorsPage() {
   return (

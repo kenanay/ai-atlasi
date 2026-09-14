@@ -1,15 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Topic, TopicLevel } from '@/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { CodeEditor } from '@/components/ui/CodeEditor';
-import { VectorPlot, GradientDescentPlot, FunctionPlot, MatrixVisualizer, PCAVisualizer, KMeansAnimator } from '@/components/visualization';
-import { AttentionVisualizer } from '@/components/visualization/AttentionVisualizer';
-import { CNNConvolutionVisualizer } from '@/components/visualization/CNNConvolutionVisualizer';
-import { NeuralNetworkSimulator } from '@/components/visualization/NeuralNetworkSimulator';
-import { QLearningGridWorld } from '@/components/visualization/QLearningGridWorld';
+import { Loader2 } from 'lucide-react';
 import { 
   Code2, 
   ChevronDown, 
@@ -17,6 +13,28 @@ import {
   Image as ImageIcon,
   Sparkles
 } from 'lucide-react';
+
+// Lazy load CodeEditor
+const CodeEditor = dynamic(() => import('@/components/ui/CodeEditorWrapper'), {
+  loading: () => (
+    <div className="flex items-center justify-center h-64 bg-slate-100 dark:bg-slate-900 rounded">
+      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+    </div>
+  ),
+  ssr: false,
+});
+
+// Lazy load visualizations
+const VectorPlot = dynamic(() => import('@/components/visualization').then(m => ({ default: m.VectorPlot })), { ssr: false });
+const GradientDescentPlot = dynamic(() => import('@/components/visualization').then(m => ({ default: m.GradientDescentPlot })), { ssr: false });
+const FunctionPlot = dynamic(() => import('@/components/visualization').then(m => ({ default: m.FunctionPlot })), { ssr: false });
+const MatrixVisualizer = dynamic(() => import('@/components/visualization').then(m => ({ default: m.MatrixVisualizer })), { ssr: false });
+const PCAVisualizer = dynamic(() => import('@/components/visualization').then(m => ({ default: m.PCAVisualizer })), { ssr: false });
+const KMeansAnimator = dynamic(() => import('@/components/visualization').then(m => ({ default: m.KMeansAnimator })), { ssr: false });
+const AttentionVisualizer = dynamic(() => import('@/components/visualization/AttentionVisualizer').then(m => ({ default: m.AttentionVisualizer })), { ssr: false });
+const CNNConvolutionVisualizer = dynamic(() => import('@/components/visualization/CNNConvolutionVisualizer').then(m => ({ default: m.CNNConvolutionVisualizer })), { ssr: false });
+const NeuralNetworkSimulator = dynamic(() => import('@/components/visualization/NeuralNetworkSimulator').then(m => ({ default: m.NeuralNetworkSimulator })), { ssr: false });
+const QLearningGridWorld = dynamic(() => import('@/components/visualization/QLearningGridWorld').then(m => ({ default: m.QLearningGridWorld })), { ssr: false });
 
 interface TopicRightPanelProps {
   topic: Topic;
