@@ -295,7 +295,13 @@ Geliştiren & Düzenleyen: **Kenan AY**
 
 ## 🚀 Deployment
 
-### Deploy to Vercel (Recommended)
+### 🌐 Live Demo
+
+**Production URL:** **[https://aiatlasi.vercel.app](https://aiatlasi.vercel.app)** ✨
+
+Uygulamayı hemen deneyebilirsiniz! Kurulum gerektirmez.
+
+### Deploy to Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kenanay/ai-atlasi)
 
@@ -313,7 +319,9 @@ npm i -g vercel
 vercel --prod
 ```
 
-**Live URL:** [https://ai-atlasi.vercel.app](https://ai-atlasi.vercel.app) (will be available after deployment)
+**Live URL:** **[https://aiatlasi.vercel.app](https://aiatlasi.vercel.app)** 🚀
+
+**GitHub:** [https://github.com/kenanay/ai-atlasi](https://github.com/kenanay/ai-atlasi)
 
 ### Production Checklist
 - [x] Build passing (npm run build)
