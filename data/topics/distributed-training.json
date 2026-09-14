@@ -4,262 +4,345 @@
   "category": "mlops",
   "level": 4,
   "estimatedTime": 80,
-  "description": "Distributed Training: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Distributed training: Birden fazla GPU/node ile paralel training. Data parallelism (batch split), model parallelism (model split), pipeline parallelism. Multi-GPU, multi-node. Large models (GPT, LLaMA), faster training.",
   "content": {
-    "level0_basic": "Distributed Training basics: Core concepts explained simply.",
-    "level1_beginner": "Distributed Training fundamentals with examples and code snippets.",
-    "level2_application": "Practical Distributed Training implementation with real-world applications.",
-    "level3_advanced": "Advanced Distributed Training techniques and optimizations.",
-    "level4_expert": "Expert-level Distributed Training architectures and research directions."
+    "level0_basic": "Distributed Training, birden fazla GPU/node kullanarak model training'i hızlandırır. Single GPU problem: Large models (GPT-3: 175B params, 700GB memory) GPU memory'ye sığmaz. Training slow (days-weeks). Çözüm: (1) **Data Parallelism**: Batch'i split et (her GPU aynı model, farklı data). Gradients sync (AllReduce). Linear speedup (ideal: 8 GPU → 8x faster). (2) **Model Parallelism**: Model'i split et (her GPU model'in parçası). Large models GPU'ya sığar. (3) **Pipeline Parallelism**: Layers'ı stages'e böl (pipeline), micro-batches. Bubble minimize. Communication: Collective ops (AllReduce, AllGather, Broadcast). Bandwidth critical (NVLink, InfiniBand).",
+    "level1_beginner": "Parallelism türleri: (1) **Data Parallelism (DP)**: Her GPU full model replica (sync weights). Batch split (örn: batch=256, 8 GPU → 32/GPU). Forward/backward local, gradients AllReduce (average), optimizer step. Sync: Synchronous (wait all GPUs), Asynchronous (no wait, stale gradients). PyTorch DistributedDataParallel (DDP). (2) **Model Parallelism (MP)**: Model split across GPUs (layers veya tensor). Tensor parallelism (matrix multiply split), pipeline parallelism (layers to stages). Memory ↓, communication ↑. (3) **Pipeline Parallelism**: Layers → stages (GPU1: L1-L5, GPU2: L6-L10). Micro-batches (pipeline fill), F-then-B schedule (forward all, then backward). Bubble time (idle). (4) **Hybrid**: DP + MP + Pipeline. GPT-3 (DP=64, MP=8, Pipeline=4). (5) **Gradient Accumulation**: Simulate large batch (small batches accumulate, single optimizer step). Memory efficient. Frameworks: PyTorch DDP, DeepSpeed, Megatron-LM, Horovod, JAX pmap.",
+    "level2_application": "Pratik uygulamalar: (1) **Large Language Models**: GPT-3 (175B), LLaMA (70B), BLOOM (176B). 3D parallelism (DP×MP×Pipeline). DeepSpeed ZeRO (optimizer state split). Training: Weeks (thousands of GPUs). (2) **Computer Vision**: ResNet, ViT training (ImageNet). Data parallelism (8-64 GPUs). Batch size scaling (linear scaling rule: LR ∝ batch size). (3) **Recommendation Systems**: Large embedding tables (billions of params). Model parallelism (embedding split). Meta, Google ads. (4) **Research**: Multi-GPU workstations (4-8 GPUs, NVLink). Academic labs. PyTorch DDP (simple setup). (5) **Cloud Training**: AWS (p4d.24xlarge: 8×A100), GCP (a2-megagpu-16g), Azure (ND96asr_v4). Auto-scaling, spot instances. (6) **Fine-tuning**: Pre-trained models (BERT, GPT) → fine-tune (smaller data, fewer GPUs). LoRA (parameter-efficient). Tools: PyTorch Lightning (DDP abstraction), Accelerate (Hugging Face), Ray Train, TensorFlow MultiWorkerMirroredStrategy.",
+    "level3_advanced": "İleri seviye: (1) **ZeRO (Zero Redundancy Optimizer)**: DeepSpeed. ZeRO-1 (optimizer states split), ZeRO-2 (+ gradients split), ZeRO-3 (+ parameters split). Memory: O(Ψ/N) (N=GPUs). Trillion-param models. (2) **Tensor Parallelism**: Matrix multiply split (Megatron-LM). A·B = [A1, A2]·[B1; B2]. AllReduce after. Column/row parallel. Intra-layer. (3) **Pipeline Schedules**: GPipe (synchronous, bubble ~50%), PipeDream (asynchronous, stale weights), 1F1B (one-forward-one-backward, bubble ~10%). Micro-batch size tuning. (4) **Mixed Precision**: FP16/BF16 (training), FP32 (master weights). Memory ↓ (2x), speed ↑ (2-3x, Tensor Cores). Loss scaling (prevent underflow). (5) **Gradient Compression**: Top-k sparsification, quantization (1-bit). Communication ↓, accuracy trade-off. Error feedback (compensate compression error). (6) **Asynchronous SGD**: No sync wait, stale gradients. Faster (no blocking), convergence slower. Hogwild!, Downpour SGD. (7) **Elastic Training**: Dynamic GPUs (add/remove). Fault tolerance (GPU failure). PyTorch Elastic, Horovod Elastic.",
+    "level4_expert": "Expert seviyede, system optimization, large-scale clusters ve research frontiers önemlidir. (1) **Communication Optimization**: (a) Overlapping (computation + communication). (b) Gradient bucketing (reduce small AllReduce calls). (c) Hierarchical AllReduce (NVLink intra-node, InfiniBand inter-node). (d) Ring AllReduce vs Tree AllReduce. (2) **Large-Scale Clusters**: 1000+ GPUs. Network topology (leaf-spine, fat-tree). Bandwidth (100-400 Gbps InfiniBand). Collective tuning (NCCL parameters). Job scheduling (SLURM, Kubernetes). (3) **Checkpointing**: Activation checkpointing (recompute forward, save memory). Gradient checkpointing (selective). Distributed checkpointing (parallel save/load). (4) **Profiling**: PyTorch Profiler, NVIDIA Nsight. Communication bottlenecks, GPU utilization, memory usage. Optimization: Batch size, micro-batch, gradient accumulation. (5) **Heterogeneous Training**: CPU + GPU + TPU. Different hardware (A100 + V100). Load balancing. (6) **Federated Learning**: Distributed data (privacy). Aggregation (FedAvg). Communication-efficient (compression, local steps). (7) **MoE (Mixture of Experts)**: Conditional computation. Expert parallelism (experts to GPUs). Routing (top-k experts). GShard, Switch Transformer. Research: **FlashAttention distributed**, **Automatic parallelization** (Alpa, GSPMD), **Communication-avoiding algorithms**, **Disaggregated training** (compute + memory separation), **Carbon-aware training** (schedule for low-carbon periods)."
   },
-  "whatIsIt": "Distributed Training: Technical definition and core concepts.",
-  "whyNeeded": "Why Distributed Training matters: Applications and use cases.",
-  "realWorldAnalogy": "Distributed Training explained through real-world analogy.",
+  "whatIsIt": "Distributed Training: Multiple GPUs/nodes paralel training. Data parallelism: Replica models, split batch, sync gradients (AllReduce). Model parallelism: Split model (tensor/pipeline). Matematiksel: Speedup = T_single / T_distributed (ideal: linear, N GPUs → N× speedup). Communication: AllReduce O(N·M) (N=GPUs, M=model size), Ring AllReduce O(M). Efficiency = (T_compute / (T_compute + T_communicate)). Scalability: Strong scaling (fixed problem, more GPUs → faster), weak scaling (problem size ∝ GPUs).",
+  "whyNeeded": "Distributed training kritik çünkü: (1) **Large Models**: GPT-3 (175B, 700GB), LLaMA (70B, 280GB). Single GPU (A100: 80GB) sığmaz. Model parallelism gerekli. (2) **Training Speed**: Single GPU: ImageNet (ResNet-50) ~7 days. 8 GPU: ~1 day (7x speedup). 64 GPU: ~3 hours. Time-to-market critical. (3) **Cost**: Cloud GPU expensive ($2-10/hour). Faster training → cheaper (7 days → 1 day = 7x cost ↓). Spot instances (3-10x cheaper). (4) **Experimentation**: Hyperparameter search, architecture search. Multiple runs parallel (10 configs × 8 GPUs = 80 GPUs, finish in hours). (5) **Scale Laws**: Larger models → better performance (GPT-3 > GPT-2). Scaling requires distributed (impossible otherwise). (6) **Research Competition**: SOTA models require thousands of GPUs (Meta LLaMA: 2048 A100, 21 days). Academic/industry gap. (7) **Batch Size**: Large batch (better GPU utilization, Tensor Cores). Single GPU limited (memory). Distributed: scale batch (linear scaling rule).",
+  "realWorldAnalogy": "Distributed training'i fabrika üretimine benzetebiliriz. **Single GPU (tek işçi)**: Araba üret (start-to-finish, 1 araba/gün). Slow, limited capacity. **Data Parallelism (çok işçi, aynı task)**: 8 işçi, her biri ayrı araba üret (aynı blueprint). 8x faster (8 araba/gün). Communication: Günlük meeting (blueprint update sync). Sync: Herkes finish etmeli → next day (synchronous). Async: Herkes kendi hızında, blueprint sometimes outdated (asynchronous, stale). **Model Parallelism (assembly line)**: Araba'yı parçalara böl (GPU1: motor, GPU2: gövde, GPU3: tekerlekler). Her işçi specialized. Memory: Büyük araba → single işçi handle edemez, split gerekir. Communication: Parts transfer (inter-GPU). **Pipeline Parallelism (conveyor belt)**: 3 stage (motor → gövde → tekerlekler). Micro-batches (3 araba aynı anda, farklı stages). Stage 1 finish motor → Stage 2 başlar gövde (parallel work). Bubble: Stage 3 bekler (initial fill time). **Hybrid (factory optimize)**: 24 işçi = 3 assembly lines (pipeline) × 8 işçiler/line (data parallel). Optimize throughput. **Communication**: Blueprint sync (gradients AllReduce), parts transfer (activations). Bandwidth: Highway (NVLink: fast, InfiniBand: inter-factory). Bottleneck: Slow highway → idle time.",
   "mathematics": {
     "formulas": [
-      "\\text{Distributed Training formula}",
-      "\\text{Key equation}"
+      "\\text{Speedup}: \\quad S = \\frac{T_{\\text{single}}}{T_{\\text{distributed}}} \\quad \\text{(ideal: S = N for N GPUs)}",
+      "\\text{Efficiency}: \\quad E = \\frac{S}{N} = \\frac{T_{\\text{single}}}{N \\cdot T_{\\text{distributed}}} \\quad \\text{(1 = 100%, <1 = overhead)}",
+      "\\text{AllReduce Time}: \\quad T_{\\text{AllReduce}} = 2 \\cdot (N-1) \\cdot \\frac{M}{B} \\quad \\text{(naive, N=GPUs, M=model size, B=bandwidth)}",
+      "\\text{Ring AllReduce}: \\quad T_{\\text{ring}} = 2 \\cdot \\frac{(N-1) \\cdot M}{N \\cdot B} \\approx 2 \\cdot \\frac{M}{B} \\quad \\text{(N large)}",
+      "\\text{Linear Scaling Rule}: \\quad \\text{LR}_{\\text{new}} = \\text{LR}_{\\text{base}} \\times \\frac{\\text{Batch}_{\\text{new}}}{\\text{Batch}_{\\text{base}}} \\quad \\text{(batch size scaling)}",
+      "\\text{Communication-Computation Ratio}: \\quad \\rho = \\frac{T_{\\text{communication}}}{T_{\\text{computation}}} \\quad \\text{(low ρ = efficient)}",
+      "\\text{Pipeline Bubble}: \\quad \\text{Bubble} = \\frac{(p-1) \\cdot t_{\\text{stage}}}{m \\cdot t_{\\text{stage}}} = \\frac{p-1}{m} \\quad \\text{(p=stages, m=micro-batches)}",
+      "\\text{ZeRO Memory}: \\quad \\text{Memory}_{\\text{ZeRO-3}} = \\frac{\\Psi + K \\cdot \\Psi}{N} \\quad \\text{(Ψ=params, K=optimizer states factor, N=GPUs)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Problem Assessment**: Model size (params, memory), dataset size (samples), GPU resources (count, memory, interconnect). Single GPU feasible? (model+batch fit in 80GB A100?). If no → model parallelism. If slow → data parallelism.",
+      "2. **Parallelism Strategy Selection**: (a) Model fits single GPU, want faster: Data parallelism (DDP). (b) Model too large (>80GB): Model parallelism (tensor, pipeline) or ZeRO-3. (c) Very large (GPT-3): 3D parallelism (DP × MP × Pipeline). (d) Limited bandwidth: Gradient compression, mixed precision.",
+      "3. **Data Parallelism Setup (PyTorch DDP)**: (a) Init process group (torch.distributed.init_process_group, backend='nccl' for GPU). (b) Wrap model (DDP(model, device_ids=[local_rank])). (c) Split dataset (DistributedSampler, each GPU different subset). (d) Training loop: Forward/backward local, gradients auto-sync (AllReduce), optimizer step. (e) Batch size: Global batch = per_GPU_batch × N_GPUs.",
+      "4. **Model Parallelism Setup**: (a) Tensor parallelism: Split layers (linear: weight columns, Megatron-LM). AllReduce after. (b) Pipeline parallelism: Split model to stages (layers → GPUs). Micro-batches (batch split). Forward stage-by-stage, backward reverse. Schedule: GPipe (sync), 1F1B (overlap). (c) Activation checkpointing (memory save).",
+      "5. **Mixed Precision**: torch.cuda.amp (Automatic Mixed Precision). FP16 forward/backward (Tensor Cores), FP32 master weights. GradScaler (loss scaling, prevent underflow). 2x memory ↓, 2-3x speed ↑.",
+      "6. **Communication Optimization**: (a) Gradient bucketing (DDP default, 25MB buckets). (b) Overlapping: Backward compute + AllReduce (async). (c) find_unused_parameters=False (DDP, faster if no unused). (d) NCCL tuning (environment variables, NCCL_DEBUG=INFO for profiling).",
+      "7. **Hyperparameter Scaling**: (a) Batch size: Linear scaling rule (LR ∝ batch). Warmup (gradual LR increase, first few epochs). (b) Gradient accumulation: Effective batch = micro_batch × accumulation_steps × N_GPUs. Simulate large batch (memory efficient). (c) Validation: Same global batch (reproducibility).",
+      "8. **Monitoring**: (a) GPU utilization (nvidia-smi, 80-95% target). (b) Communication time (PyTorch Profiler, <20% total time ideal). (c) Memory usage (per GPU). (d) Throughput (samples/sec, images/sec). (e) Loss convergence (same as single GPU?).",
+      "9. **Checkpointing**: (a) Distributed: Only rank 0 save (full model). Or: Each rank save shard (model parallelism). (b) Frequency: Every N steps, on_eval. (c) Resume: Load checkpoint, restore optimizer state, LR scheduler. Fault tolerance.",
+      "10. **Scaling Testing**: (a) Strong scaling: Fixed problem (dataset), increase GPUs (2, 4, 8, 16). Measure speedup (ideal: linear). (b) Weak scaling: Problem size ∝ GPUs (batch size ×2). Time constant (ideal). (c) Bottleneck: Communication? (bandwidth upgrade, gradient compression). Computation? (GPU upgrade, mixed precision)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: Single GPU: O(B·F + B·B_backward) per step (B=batch, F=forward, B_backward=backward). Data parallelism: O(B/N·F + B/N·B_backward + AllReduce) (N=GPUs). AllReduce: Ring O(M/B_bandwidth) (M=model size). Ideal speedup: N× (communication << computation). **Communication**: AllReduce dominant (O(model size)). Bandwidth: NVLink (300-600 GB/s intra-node), InfiniBand (100-400 Gbps inter-node). Model parallelism: Activation transfer O(batch·hidden_dim). **Uzay**: Data parallelism: O(model + optimizer) per GPU (replica). Model parallelism: O(model/N + activations). ZeRO-3: O(model/N + optimizer/N). **Scalability**: Near-linear (2-16 GPUs, good interconnect). Sub-linear (>64 GPUs, communication overhead ↑). Weak scaling better (batch size ↑)."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "neural-networks",
+    "gradient-descent",
+    "backpropagation"
+  ],
+  "nextTopics": [
+    "model-compression-pruning",
+    "edge-ai-mobile"
+  ],
+  "relatedTopics": [
+    "neural-networks",
+    "gradient-descent",
+    "model-compression-pruning"
+  ],
   "tags": [
-    "distributed"
+    "distributed-training",
+    "multi-gpu",
+    "data-parallelism",
+    "model-parallelism",
+    "ddp",
+    "deepspeed"
   ],
   "codeExamples": [
     {
-      "title": "Basic Distributed Training",
+      "title": "PyTorch DistributedDataParallel (DDP)",
       "language": "python",
-      "code": "# Distributed Training example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Distributed Training code"
-    },
-    {
-      "title": "Distributed Training Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
-      "level": 2,
-      "explanation": "Distributed Training Application code"
-    },
-    {
-      "title": "Advanced Distributed Training",
-      "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.distributed as dist\nfrom torch.nn.parallel import DistributedDataParallel as DDP\nfrom torch.utils.data import DataLoader, DistributedSampler\nimport os\n\ndef setup(rank, world_size):\n    \"\"\"Initialize process group\"\"\"\n    os.environ['MASTER_ADDR'] = 'localhost'\n    os.environ['MASTER_PORT'] = '12355'\n    dist.init_process_group('nccl', rank=rank, world_size=world_size)\n\ndef cleanup():\n    dist.destroy_process_group()\n\ndef train(rank, world_size):\n    print(f'Running DDP on rank {rank} (world_size={world_size})')\n    setup(rank, world_size)\n    \n    # Model\n    model = nn.Linear(100, 10).to(rank)\n    ddp_model = DDP(model, device_ids=[rank])\n    \n    # Dummy data\n    dataset = torch.randn(1000, 100)\n    labels = torch.randint(0, 10, (1000,))\n    \n    # DistributedSampler (each GPU gets different subset)\n    sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank)\n    dataloader = DataLoader(dataset, batch_size=32, sampler=sampler)\n    \n    # Training\n    optimizer = torch.optim.SGD(ddp_model.parameters(), lr=0.01)\n    criterion = nn.CrossEntropyLoss()\n    \n    ddp_model.train()\n    for epoch in range(3):\n        sampler.set_epoch(epoch)  # Shuffle differently each epoch\n        for batch_idx, data in enumerate(dataloader):\n            data = data.to(rank)\n            # Note: labels would come from dataloader in real scenario\n            \n            optimizer.zero_grad()\n            outputs = ddp_model(data)\n            loss = criterion(outputs, torch.randint(0, 10, (len(data),)).to(rank))\n            loss.backward()  # Gradients auto-sync via AllReduce\n            optimizer.step()\n            \n            if rank == 0 and batch_idx % 10 == 0:\n                print(f'Epoch {epoch}, Batch {batch_idx}, Loss: {loss.item():.4f}')\n    \n    cleanup()\n\n# Run (normally via torch.multiprocessing.spawn or torchrun)\nif __name__ == '__main__':\n    world_size = 2  # 2 GPUs\n    # torch.multiprocessing.spawn(train, args=(world_size,), nprocs=world_size)\n    print('Example: torchrun --nproc_per_node=2 script.py')\n    print('DDP: Data parallelism, gradients auto-sync (AllReduce)')",
       "level": 3,
-      "explanation": "Advanced Distributed Training code"
+      "explanation": "PyTorch DDP: Data parallelism. DistributedSampler (each GPU different data). Gradients auto-sync (AllReduce). Launch: torchrun or mp.spawn."
     },
     {
-      "title": "Distributed Training Optimization",
+      "title": "Gradient Accumulation (Simulate Large Batch)",
       "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Distributed Training Optimization code"
-    },
-    {
-      "title": "Distributed Training Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import torch\nimport torch.nn as nn\n\n# Model\nmodel = nn.Linear(100, 10).cuda()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.01)\ncriterion = nn.CrossEntropyLoss()\n\n# Params\nmicro_batch_size = 32\naccumulation_steps = 4\neffective_batch_size = micro_batch_size * accumulation_steps\n\nprint(f'Micro-batch: {micro_batch_size}')\nprint(f'Accumulation steps: {accumulation_steps}')\nprint(f'Effective batch size: {effective_batch_size}')\n\n# Dummy data\ndata = torch.randn(effective_batch_size, 100).cuda()\nlabels = torch.randint(0, 10, (effective_batch_size,)).cuda()\n\n# Training with gradient accumulation\nmodel.train()\noptimizer.zero_grad()\n\nfor i in range(accumulation_steps):\n    # Micro-batch\n    start = i * micro_batch_size\n    end = start + micro_batch_size\n    micro_data = data[start:end]\n    micro_labels = labels[start:end]\n    \n    # Forward\n    outputs = model(micro_data)\n    loss = criterion(outputs, micro_labels)\n    \n    # Backward (accumulate gradients)\n    loss = loss / accumulation_steps  # Average loss\n    loss.backward()\n    \n    print(f'Step {i+1}/{accumulation_steps}, Loss: {loss.item()*accumulation_steps:.4f}')\n\n# Optimizer step (single update after accumulation)\noptimizer.step()\noptimizer.zero_grad()\n\nprint('\\nGradient accumulation: Simulate large batch, memory efficient')\nprint('Effective batch = micro_batch × accumulation_steps')\nprint('Use case: Large batch on limited memory GPU')",
       "level": 2,
-      "explanation": "Distributed Training Visualization code"
+      "explanation": "Gradient Accumulation: Simulate large batch (memory efficient). Multiple micro-batches, accumulate gradients, single optimizer step. Effective batch size ↑."
     },
     {
-      "title": "Production Distributed Training",
+      "title": "Mixed Precision Training (AMP)",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
-      "level": 4,
-      "explanation": "Production Distributed Training code"
+      "code": "import torch\nimport torch.nn as nn\nfrom torch.cuda.amp import autocast, GradScaler\nimport time\n\n# Model\nmodel = nn.Sequential(\n    nn.Linear(1024, 2048),\n    nn.ReLU(),\n    nn.Linear(2048, 512),\n    nn.ReLU(),\n    nn.Linear(512, 10)\n).cuda()\n\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.CrossEntropyLoss()\nscaler = GradScaler()  # For loss scaling\n\n# Dummy data\ndata = torch.randn(256, 1024).cuda()\nlabels = torch.randint(0, 10, (256,)).cuda()\n\nprint('=== Mixed Precision Training ===')\n\n# FP32 training\nmodel.train()\nstart = time.time()\nfor step in range(100):\n    optimizer.zero_grad()\n    outputs = model(data)\n    loss = criterion(outputs, labels)\n    loss.backward()\n    optimizer.step()\nfp32_time = time.time() - start\n\nprint(f'FP32 training (100 steps): {fp32_time:.2f}s')\n\n# FP16 training (AMP)\nstart = time.time()\nfor step in range(100):\n    optimizer.zero_grad()\n    \n    # Forward in FP16\n    with autocast():\n        outputs = model(data)\n        loss = criterion(outputs, labels)\n    \n    # Backward with scaled loss\n    scaler.scale(loss).backward()\n    scaler.step(optimizer)\n    scaler.update()\n\nfp16_time = time.time() - start\n\nprint(f'FP16 training (AMP, 100 steps): {fp16_time:.2f}s')\nprint(f'Speedup: {fp32_time/fp16_time:.2f}x')\nprint('\\nAMP: FP16 forward/backward (Tensor Cores), FP32 master weights')\nprint('Loss scaling: Prevent underflow. 2-3x faster, 2x memory saving')",
+      "level": 2,
+      "explanation": "Mixed Precision (AMP): FP16 compute (Tensor Cores), FP32 master weights. GradScaler (loss scaling). 2-3x speedup, 2x memory ↓. torch.cuda.amp."
+    },
+    {
+      "title": "Model Parallelism (Simple Pipeline)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\n\n# Model split across 2 GPUs (pipeline)\nclass PipelineModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        # Stage 1: GPU 0\n        self.stage1 = nn.Sequential(\n            nn.Linear(1024, 2048),\n            nn.ReLU(),\n            nn.Linear(2048, 1024)\n        ).to('cuda:0')\n        \n        # Stage 2: GPU 1\n        self.stage2 = nn.Sequential(\n            nn.Linear(1024, 512),\n            nn.ReLU(),\n            nn.Linear(512, 10)\n        ).to('cuda:1')\n    \n    def forward(self, x):\n        # Stage 1 on GPU 0\n        x = x.to('cuda:0')\n        x = self.stage1(x)\n        \n        # Transfer to GPU 1\n        x = x.to('cuda:1')\n        x = self.stage2(x)\n        \n        return x\n\n# Check GPUs\nif torch.cuda.device_count() < 2:\n    print('Need 2 GPUs for this example (simulating with 1)')\n    # Fallback: Use same GPU\n    model = nn.Sequential(\n        nn.Linear(1024, 2048),\n        nn.ReLU(),\n        nn.Linear(2048, 1024),\n        nn.Linear(1024, 512),\n        nn.ReLU(),\n        nn.Linear(512, 10)\n    ).cuda()\nelse:\n    model = PipelineModel()\n    print('Pipeline model: Stage 1 (GPU 0), Stage 2 (GPU 1)')\n\n# Dummy data\ndata = torch.randn(32, 1024)\nlabels = torch.randint(0, 10, (32,))\n\nif torch.cuda.device_count() >= 2:\n    labels = labels.to('cuda:1')  # Final GPU\nelse:\n    labels = labels.cuda()\n\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.CrossEntropyLoss()\n\n# Training\nmodel.train()\nfor epoch in range(3):\n    optimizer.zero_grad()\n    outputs = model(data)\n    loss = criterion(outputs, labels)\n    loss.backward()\n    optimizer.step()\n    \n    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')\n\nprint('\\nModel Parallelism: Model split across GPUs')\nprint('Use case: Large model (doesn\\'t fit single GPU)')\nprint('Communication: Activations transfer between stages')",
+      "level": 3,
+      "explanation": "Model Parallelism: Model split across GPUs (pipeline stages). Stage 1 (GPU 0), Stage 2 (GPU 1). Activation transfer. Large models fit."
+    },
+    {
+      "title": "Communication Profiling",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.distributed as dist\nfrom torch.profiler import profile, ProfilerActivity\nimport time\n\n# Simulate AllReduce (collective communication)\ndef benchmark_allreduce(size_mb, world_size=4):\n    \"\"\"\n    Benchmark AllReduce communication\n    size_mb: Tensor size in MB\n    \"\"\"\n    # Tensor\n    tensor_size = int(size_mb * 1024 * 1024 / 4)  # 4 bytes per float32\n    tensor = torch.randn(tensor_size).cuda()\n    \n    # Warmup\n    for _ in range(10):\n        # Simulate AllReduce (in real: dist.all_reduce(tensor))\n        _ = tensor.mean()\n    \n    torch.cuda.synchronize()\n    \n    # Benchmark\n    start = time.time()\n    for _ in range(100):\n        # Simulate: In DDP, this is automatic gradient sync\n        _ = tensor.mean()  # Placeholder for AllReduce\n    \n    torch.cuda.synchronize()\n    elapsed = time.time() - start\n    \n    return elapsed / 100\n\nprint('=== Communication Profiling ===')\nprint('(Simulated AllReduce timing)\\n')\n\nsizes_mb = [1, 10, 100, 500]  # Model sizes\nfor size in sizes_mb:\n    time_ms = benchmark_allreduce(size) * 1000\n    bandwidth = size / (time_ms / 1000)  # MB/s\n    print(f'Model size: {size} MB')\n    print(f'  AllReduce time: {time_ms:.2f} ms')\n    print(f'  Effective bandwidth: {bandwidth:.1f} MB/s')\n    print()\n\nprint('Real DDP: Use PyTorch Profiler')\nprint('Example:')\nprint('with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:')\nprint('    # Training loop')\nprint('print(prof.key_averages().table())')\nprint('\\nCheck: NCCL communication time vs compute time (<20% ideal)')",
+      "level": 3,
+      "explanation": "Communication Profiling: Benchmark AllReduce (gradient sync). Measure time, bandwidth. PyTorch Profiler: CPU/CUDA activity. Optimize: <20% communication."
+    },
+    {
+      "title": "Scaling Efficiency Analysis",
+      "language": "python",
+      "code": "import matplotlib.pyplot as plt\nimport numpy as np\n\n# Simulate scaling experiment\nnum_gpus = [1, 2, 4, 8, 16, 32]\n\n# Ideal: Linear speedup\nideal_speedup = num_gpus\n\n# Real: Sub-linear (communication overhead)\nreal_speedup = [1, 1.9, 3.7, 7.2, 13.5, 24.0]\n\n# Efficiency\nefficiency = [r / n for r, n in zip(real_speedup, num_gpus)]\n\n# Plot\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Speedup\nax = axes[0]\nax.plot(num_gpus, ideal_speedup, 'k--', label='Ideal (Linear)', linewidth=2)\nax.plot(num_gpus, real_speedup, 'ro-', label='Real', linewidth=2, markersize=8)\nax.set_xlabel('Number of GPUs')\nax.set_ylabel('Speedup')\nax.set_title('Strong Scaling: Speedup vs GPUs')\nax.legend()\nax.grid(alpha=0.3)\nax.set_xscale('log', base=2)\nax.set_yscale('log', base=2)\n\n# Efficiency\nax = axes[1]\nax.plot(num_gpus, efficiency, 'bs-', linewidth=2, markersize=8)\nax.axhline(1.0, color='k', linestyle='--', label='100% Efficient')\nax.set_xlabel('Number of GPUs')\nax.set_ylabel('Efficiency (Speedup / N)')\nax.set_title('Scaling Efficiency')\nax.legend()\nax.grid(alpha=0.3)\nax.set_xscale('log', base=2)\n\nplt.tight_layout()\nplt.show()\n\nprint('=== Scaling Analysis ===')\nfor i, n in enumerate(num_gpus):\n    print(f'{n} GPUs: Speedup={real_speedup[i]:.1f}x (ideal={ideal_speedup[i]}x), Efficiency={efficiency[i]*100:.1f}%')\n\nprint('\\nInsights:')\nprint('1. Near-linear scaling (2-8 GPUs): Good interconnect (NVLink)')\nprint('2. Sub-linear (16+ GPUs): Communication overhead ↑')\nprint('3. Efficiency drop: 95% (8 GPUs) → 75% (32 GPUs)')\nprint('4. Bottleneck: Inter-node bandwidth (InfiniBand), AllReduce cost')\nprint('\\nOptimization: Gradient compression, pipeline parallelism, mixed precision')",
+      "level": 2,
+      "explanation": "Scaling Efficiency: Strong scaling analysis. Speedup vs GPUs (ideal: linear). Efficiency = speedup/N. Near-linear (2-8 GPUs), sub-linear (16+). Communication overhead."
     }
   ],
   "quiz": [
     {
-      "question": "What is Distributed Training?",
+      "question": "Data parallelism nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model'i split et",
+        "Her GPU full model replica (sync weights), batch split. Gradients AllReduce (average), optimizer step",
+        "Sadece single GPU",
+        "Layers split"
       ],
       "correctAnswer": 1,
-      "explanation": "Distributed Training explanation.",
-      "id": "distributed-training-q1"
+      "explanation": "Data parallelism: Her GPU aynı model (replica), farklı data (batch split). Forward/backward local, gradients AllReduce (sync), optimizer step. DDP.",
+      "id": "dist-q1"
     },
     {
-      "question": "When to use Distributed Training?",
+      "question": "Model parallelism ne zaman kullanılır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her zaman",
+        "Model too large (single GPU memory'e sığmaz, >80GB A100). Model split (tensor/pipeline)",
+        "Sadece speed için",
+        "Asla"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "distributed-training-q2"
+      "explanation": "Model parallelism: Model çok büyük (GPT-3: 175B, 700GB). Single GPU sığmaz. Model split: Tensor parallelism (layers), pipeline (stages). Memory ↓.",
+      "id": "dist-q2"
     },
     {
-      "question": "Distributed Training advantage?",
+      "question": "AllReduce ne yapar?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model split",
+        "Gradients'ları tüm GPUs'ta aggregate (sum/average), sonuç her GPU'ya broadcast. Sync weights",
+        "Sadece forward",
+        "Data load"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "distributed-training-q3"
+      "explanation": "AllReduce: Collective op. Her GPU'dan gradients → aggregate (sum/average) → broadcast (her GPU'ya). Sync weights. DDP core. Ring AllReduce: O(M/B).",
+      "id": "dist-q3"
     },
     {
-      "question": "Distributed Training limitation?",
+      "question": "Linear scaling rule nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model size ∝ LR",
+        "Batch size ↑ → LR ∝ batch size. Distributed: Global batch büyür, LR scale et. Warmup",
+        "LR her zaman sabit",
+        "Batch size irrelevant"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "distributed-training-q4"
+      "explanation": "Linear scaling: LR_new = LR_base × (Batch_new / Batch_base). Distributed: Batch 256→2048 (8 GPU) → LR 0.1→0.8. Warmup (first few epochs). Convergence preserve.",
+      "id": "dist-q4"
     },
     {
-      "question": "Best practice for Distributed Training?",
+      "question": "Pipeline parallelism bubble nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Data augmentation",
+        "Idle time: Initial stages fill pipeline (forward), final stages wait. Bubble = (p-1)/m, p=stages, m=micro-batches",
+        "Her zaman 0",
+        "Sadece backward"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "distributed-training-q5"
+      "explanation": "Pipeline bubble: Idle time (stages wait). Initial: Fill pipeline (forward all). GPipe: ~50% bubble. 1F1B schedule: ~10% (overlap forward/backward). Micro-batches ↑ → bubble ↓.",
+      "id": "dist-q5"
     },
     {
-      "question": "Distributed Training vs alternatives?",
+      "question": "ZeRO (DeepSpeed) ne yapar?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece gradient compression",
+        "Optimizer states, gradients, parameters split across GPUs. Memory O(Ψ/N). Trillion-param models",
+        "Sadece data parallelism",
+        "Model slow olur"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "distributed-training-q6"
+      "explanation": "ZeRO: Zero Redundancy Optimizer. ZeRO-1 (optimizer split), ZeRO-2 (+ gradients), ZeRO-3 (+ parameters). Memory O(Ψ/N) vs O(Ψ). GPT-3, LLaMA training.",
+      "id": "dist-q6"
+    },
+    {
+      "question": "Mixed precision training avantajları?",
+      "options": [
+        "Sadece memory",
+        "2x memory ↓ (FP16), 2-3x speed ↑ (Tensor Cores), <1% accuracy loss. Loss scaling (underflow prevent)",
+        "Accuracy çok düşer",
+        "Sadece speed"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Mixed precision: FP16 compute (forward/backward), FP32 master weights. Tensor Cores (2-3x faster). Memory 2x ↓. GradScaler (loss scaling). torch.cuda.amp. Accuracy ~.",
+      "id": "dist-q7"
+    },
+    {
+      "question": "Strong vs weak scaling?",
+      "options": [
+        "İkisi de aynı",
+        "Strong: Fixed problem, more GPUs → faster (T↓). Weak: Problem size ∝ GPUs (batch↑), time constant (T~)",
+        "Strong her zaman better",
+        "Weak impossible"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Strong scaling: Fixed dataset/model, increase GPUs (speedup). Weak scaling: Problem size ∝ GPUs (batch size ×N), time ~ constant. Weak easier (less communication per GPU).",
+      "id": "dist-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Distributed Training",
-      "back": "Core concept summary"
+      "front": "Data Parallelism",
+      "back": "Her GPU full model replica, batch split. Forward/backward local, gradients AllReduce (sync), optimizer step. DDP. Linear speedup (ideal)."
     },
     {
-      "front": "Distributed Training Key Idea",
-      "back": "Main concept"
+      "front": "Model Parallelism",
+      "back": "Model split across GPUs. Tensor parallelism (layers, matrix split), pipeline (stages). Large models (>80GB). Communication: activations transfer."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "AllReduce",
+      "back": "Collective op. Aggregate gradients (all GPUs), broadcast result. Sync weights. Ring AllReduce: O(M/B), bandwidth-bound. DDP core."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Pipeline Parallelism",
+      "back": "Layers → stages (GPUs). Micro-batches (fill pipeline). F-then-B (GPipe), 1F1B (overlap). Bubble time (idle): (p-1)/m."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Linear Scaling Rule",
+      "back": "LR ∝ batch size. Distributed: Batch ↑ (8 GPU) → LR scale (×8). Warmup (gradual LR increase). Convergence preserve."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "ZeRO (DeepSpeed)",
+      "back": "Zero Redundancy Optimizer. ZeRO-1 (optimizer split), ZeRO-2 (+ gradients), ZeRO-3 (+ parameters). Memory O(Ψ/N). Trillion-param models."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Mixed Precision (AMP)",
+      "back": "FP16 compute (Tensor Cores), FP32 master weights. 2-3x speedup, 2x memory ↓. GradScaler (loss scaling). torch.cuda.amp."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Gradient Accumulation",
+      "back": "Simulate large batch (memory efficient). Multiple micro-batches, accumulate gradients, single optimizer step. Effective batch = micro × steps."
+    },
+    {
+      "front": "Strong Scaling",
+      "back": "Fixed problem, increase GPUs → faster (speedup). Ideal: Linear (N GPUs → N× speedup). Real: Sub-linear (communication overhead)."
+    },
+    {
+      "front": "Weak Scaling",
+      "back": "Problem size ∝ GPUs (batch ×N). Time ~ constant (ideal). Less communication per GPU. Easier than strong scaling."
+    },
+    {
+      "front": "Ring AllReduce",
+      "back": "Bandwidth-optimal collective. Send chunks in ring (N-1 steps). Time: 2×(N-1)×M/(N×B) ≈ 2M/B. No bottleneck node."
+    },
+    {
+      "front": "1F1B Schedule",
+      "back": "One-forward-one-backward (pipeline). Overlap forward/backward across stages. Bubble ~10% (vs GPipe ~50%). Micro-batches interleaved."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Batch size scaling without LR adjustment",
+      "why": "Distributed: Batch 256→2048 (8 GPU). Same LR → convergence poor (large batch, small LR → slow, underfitting). Accuracy drop.",
+      "fix": "Linear scaling rule: LR_new = LR_base × (Batch_new / Batch_base). 8 GPU → LR ×8. Warmup (first 5 epochs, gradual LR increase). Validation: Monitor loss."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Using DataParallel (DP) instead of DDP",
+      "why": "DP (torch.nn.DataParallel): Single-process, GIL bottleneck, unbalanced GPU (GPU 0 bottleneck). Slow, inefficient. Legacy API.",
+      "fix": "DDP (DistributedDataParallel): Multi-process, no GIL, balanced GPUs. 2-3x faster than DP. Launch: torchrun, mp.spawn. Standard practice."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "No gradient accumulation on limited memory",
+      "why": "Batch size 256 → GPU OOM (out of memory, 80GB A100). Reduce batch → convergence worse (small batch noise).",
+      "fix": "Gradient accumulation: Micro-batch 32 × 8 steps = effective 256. Memory efficient. Same convergence. Distributed: Effective = micro × accumulation × N_GPUs."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Ignoring communication bottleneck",
+      "why": "16+ GPUs: Communication time >> compute time (AllReduce dominant). Speedup plateau (sub-linear scaling). Efficiency <50%.",
+      "fix": "(1) Mixed precision (2x less gradient data). (2) Gradient compression (top-k, quantization). (3) Overlapping (computation + communication). (4) Pipeline parallelism (reduce AllReduce frequency). (5) Bandwidth upgrade (InfiniBand)."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Model parallelism for small models",
+      "why": "Model <10GB (fits single GPU). Model parallelism: Communication overhead (activations transfer), complexity ↑. Slower than data parallelism.",
+      "fix": "Model parallelism only for large models (>80GB, GPT-3). Small models: Data parallelism (DDP). Simpler, faster, linear speedup."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "No checkpointing (long training)",
+      "why": "Training days-weeks (1000 GPUs). GPU failure, power outage → restart from scratch. Days lost.",
+      "fix": "Checkpointing: Every N steps (1000-5000), save model+optimizer state. Distributed: Rank 0 save (or sharded save). Resume: Load checkpoint, restore epoch. Fault tolerance."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Static micro-batch size (pipeline)",
+      "why": "Pipeline: Micro-batch too small → many stages, high communication. Too large → bubble ↑ (few micro-batches), memory issue.",
+      "fix": "Tune micro-batch: (1) Start with batch / num_micro_batches = 8-16. (2) Profile bubble time (target <10%). (3) Adjust: More micro-batches → bubble ↓, communication ↑. Balance."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Distributed Training Overview",
-      "description": "Visual explanation"
+      "title": "Data vs Model Parallelism",
+      "description": "Side-by-side: Data parallelism (replicas, batch split, gradient sync). Model parallelism (model split, activation transfer). Hybrid (3D parallelism)."
     },
     {
-      "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "type": "animation",
+      "title": "Pipeline Parallelism",
+      "description": "Animation: Micro-batches flow through stages (GPUs). Forward fill, backward flush. 1F1B schedule (overlap). Bubble visualization (idle time)."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Scaling Calculator",
+      "description": "User inputs: Model size, batch, GPUs, bandwidth. Calculate: Speedup (ideal vs real), efficiency, communication time. Plot scaling curves."
+    },
+    {
+      "type": "comparison",
+      "title": "Distributed Frameworks",
+      "description": "Table: PyTorch DDP vs DeepSpeed vs Megatron vs Horovod. Features (DP, MP, pipeline, ZeRO), ease of use, performance, use cases."
     }
   ],
   "references": [
     {
-      "title": "Distributed Training Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "PyTorch Distributed Overview",
+      "authors": "PyTorch Team",
+      "year": 2024,
+      "link": "https://pytorch.org/tutorials/beginner/dist_overview.html",
+      "type": "documentation"
+    },
+    {
+      "title": "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models",
+      "authors": "Rajbhandari, S. et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/1910.02054",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "Megatron-LM: Training Multi-Billion Parameter Language Models",
+      "authors": "Shoeybi, M. et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/1909.08053",
+      "type": "paper"
+    },
+    {
+      "title": "DeepSpeed",
+      "authors": "Microsoft",
+      "year": 2024,
+      "link": "https://www.deepspeed.ai/",
+      "type": "tool"
     }
   ]
 }
