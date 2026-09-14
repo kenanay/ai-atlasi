@@ -6,6 +6,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { VectorPlot, GradientDescentPlot, FunctionPlot, MatrixVisualizer, PCAVisualizer, KMeansAnimator } from '@/components/visualization';
+import AttentionVisualizer from '@/components/visualization/AttentionVisualizer';
+import CNNConvolutionVisualizer from '@/components/visualization/CNNConvolutionVisualizer';
+import NeuralNetworkSimulator from '@/components/visualization/NeuralNetworkSimulator';
+import QLearningGridWorld from '@/components/visualization/QLearningGridWorld';
 import { 
   Code2, 
   ChevronDown, 
@@ -151,6 +155,14 @@ export function TopicRightPanel({ topic, level }: TopicRightPanelProps) {
                 return <PCAVisualizer key={viz.id} title={viz.title} />;
               } else if (viz.component === 'KMeansAnimator' || topic.id === 'kmeans-clustering') {
                 return <KMeansAnimator key={viz.id} title={viz.title} />;
+              } else if (viz.component === 'AttentionVisualizer' || topic.id === 'transformers-attention') {
+                return <AttentionVisualizer key={viz.id} title={viz.title} />;
+              } else if (viz.component === 'CNNConvolutionVisualizer' || topic.id === 'convolutional-neural-networks') {
+                return <CNNConvolutionVisualizer key={viz.id} title={viz.title} />;
+              } else if (viz.component === 'NeuralNetworkSimulator' || topic.id === 'neural-networks') {
+                return <NeuralNetworkSimulator key={viz.id} title={viz.title} />;
+              } else if (viz.component === 'QLearningGridWorld' || topic.id === 'q-learning-dqn' || topic.id === 'reinforcement-learning-basics') {
+                return <QLearningGridWorld key={viz.id} title={viz.title} />;
               }
               
               // Varsayılan placeholder

@@ -8,7 +8,7 @@
   "prerequisites": [
     "neural-networks",
     "convolutional-neural-networks",
-    "optimization"
+    "optimizers"
   ],
   "nextTopics": [
     "meta-learning-few-shot",
@@ -16,7 +16,7 @@
   ],
   "relatedTopics": [
     "convolutional-neural-networks",
-    "optimization",
+    "optimizers",
     "meta-learning-few-shot"
   ],
   "tags": [

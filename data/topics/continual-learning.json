@@ -8,11 +8,11 @@
   "prerequisites": [
     "neural-networks",
     "transfer-learning",
-    "optimization"
+    "optimizers"
   ],
   "nextTopics": [
     "meta-learning-few-shot",
-    "reinforcement-learning"
+    "reinforcement-learning-basics"
   ],
   "relatedTopics": [
     "transfer-learning",
