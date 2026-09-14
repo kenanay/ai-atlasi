@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Data Preprocessing & Feature Engineering explanation."
+      "explanation": "Data Preprocessing & Feature Engineering explanation.",
+      "id": "data-preprocessing-features-q1"
     },
     {
       "question": "When to use Data Preprocessing & Feature Engineering?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "data-preprocessing-features-q2"
     },
     {
       "question": "Data Preprocessing & Feature Engineering advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "data-preprocessing-features-q3"
     },
     {
       "question": "Data Preprocessing & Feature Engineering limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "data-preprocessing-features-q4"
     },
     {
       "question": "Best practice for Data Preprocessing & Feature Engineering?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "data-preprocessing-features-q5"
     },
     {
       "question": "Data Preprocessing & Feature Engineering vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "data-preprocessing-features-q6"
     }
   ],
   "flashcards": [

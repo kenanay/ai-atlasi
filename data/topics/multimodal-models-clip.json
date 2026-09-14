@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Multimodal Models (CLIP) explanation."
+      "explanation": "Multimodal Models (CLIP) explanation.",
+      "id": "multimodal-models-clip-q1"
     },
     {
       "question": "When to use Multimodal Models (CLIP)?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "multimodal-models-clip-q2"
     },
     {
       "question": "Multimodal Models (CLIP) advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "multimodal-models-clip-q3"
     },
     {
       "question": "Multimodal Models (CLIP) limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "multimodal-models-clip-q4"
     },
     {
       "question": "Best practice for Multimodal Models (CLIP)?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "multimodal-models-clip-q5"
     },
     {
       "question": "Multimodal Models (CLIP) vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "multimodal-models-clip-q6"
     }
   ],
   "flashcards": [

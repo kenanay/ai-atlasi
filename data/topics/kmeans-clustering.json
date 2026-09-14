@@ -34,13 +34,10 @@
   },
   "prerequisites": [],
   "nextTopics": [
-    "dbscan-hierarchical-clustering",
-    "dbscan-hierarchical-clustering",
-    "gaussian-mixture-models"
+    "dbscan-hierarchical-clustering"
   ],
   "relatedTopics": [
-    "pca",
-    "dimensionality-reduction"
+    "pca-dimensionality-reduction"
   ],
   "tags": [
     "kmeans",
@@ -102,7 +99,8 @@
         "Dimension reduction"
       ],
       "correctAnswer": 1,
-      "explanation": "K-Means objective: Minimize WCSS (within-cluster sum of squared distances). Each point should be close to its cluster centroid. Iteratively improves: Assignment (move points) + Update (move centroids). Converges to local minimum. Unsupervised: No labels needed!"
+      "explanation": "K-Means objective: Minimize WCSS (within-cluster sum of squared distances). Each point should be close to its cluster centroid. Iteratively improves: Assignment (move points) + Update (move centroids). Converges to local minimum. Unsupervised: No labels needed!",
+      "id": "kmeans-clustering-q1"
     },
     {
       "question": "k-means++ neden kullanılır?",
@@ -113,7 +111,8 @@
         "Handles outliers"
       ],
       "correctAnswer": 1,
-      "explanation": "k-means++: Smart initialization! Instead of random centroids, spreads them out. Picks first random, then picks next far from existing ones. Result: Better starting point → better final clusters, faster convergence. Sklearn default! Without: Can get stuck in bad local minimum."
+      "explanation": "k-means++: Smart initialization! Instead of random centroids, spreads them out. Picks first random, then picks next far from existing ones. Result: Better starting point → better final clusters, faster convergence. Sklearn default! Without: Can get stuck in bad local minimum.",
+      "id": "kmeans-clustering-q2"
     },
     {
       "question": "Elbow method ne işe yarar?",
@@ -124,7 +123,8 @@
         "Feature selection"
       ],
       "correctAnswer": 1,
-      "explanation": "Elbow method: Choose K! Plot inertia (WCSS) vs K. Inertia always decreases with more K. Look for 'elbow': Point where decrease slows. Before elbow: Adding clusters helps a lot. After: Diminishing returns. Not always clear elbow! Alternatives: Silhouette score, domain knowledge."
+      "explanation": "Elbow method: Choose K! Plot inertia (WCSS) vs K. Inertia always decreases with more K. Look for 'elbow': Point where decrease slows. Before elbow: Adding clusters helps a lot. After: Diminishing returns. Not always clear elbow! Alternatives: Silhouette score, domain knowledge.",
+      "id": "kmeans-clustering-q3"
     },
     {
       "question": "K-Means hangi cluster şekillerinde başarısız?",
@@ -135,7 +135,8 @@
         "Large"
       ],
       "correctAnswer": 1,
-      "explanation": "K-Means assumes: Spherical clusters, similar sizes. Fails on: (1) Non-convex shapes (moons, crescents). (2) Different densities. (3) Elongated clusters. (4) Nested structures (ring inside ring). Why: Uses Euclidean distance, finds circular regions. Alternatives: DBSCAN (density), hierarchical (any shape), GMM (elliptical)."
+      "explanation": "K-Means assumes: Spherical clusters, similar sizes. Fails on: (1) Non-convex shapes (moons, crescents). (2) Different densities. (3) Elongated clusters. (4) Nested structures (ring inside ring). Why: Uses Euclidean distance, finds circular regions. Alternatives: DBSCAN (density), hierarchical (any shape), GMM (elliptical).",
+      "id": "kmeans-clustering-q4"
     },
     {
       "question": "Inertia (WCSS) nedir?",
@@ -146,7 +147,8 @@
         "Outlier count"
       ],
       "correctAnswer": 1,
-      "explanation": "Inertia = WCSS = Σ||x - μ_cluster||². Lower = better clustering (points closer to centroids). Always decreases with more K! K=n → inertia=0 (each point its own cluster). Not comparable across datasets. Use: Track convergence, elbow method. Alternative: Silhouette (compares to other clusters)."
+      "explanation": "Inertia = WCSS = Σ||x - μ_cluster||². Lower = better clustering (points closer to centroids). Always decreases with more K! K=n → inertia=0 (each point its own cluster). Not comparable across datasets. Use: Track convergence, elbow method. Alternative: Silhouette (compares to other clusters).",
+      "id": "kmeans-clustering-q5"
     },
     {
       "question": "Mini-Batch K-Means'in avantajı?",
@@ -157,7 +159,8 @@
         "Handles non-spherical"
       ],
       "correctAnswer": 1,
-      "explanation": "Mini-Batch K-Means: Sample random batch, update centroids, repeat. Much faster! 10-100× speedup on large data. Slight accuracy loss (~1-2%). Essential for: Large datasets (>100k samples), streaming data, online learning. Regular K-Means: Recomputes all distances each iteration → slow. Mini-batch: Stochastic, faster convergence."
+      "explanation": "Mini-Batch K-Means: Sample random batch, update centroids, repeat. Much faster! 10-100× speedup on large data. Slight accuracy loss (~1-2%). Essential for: Large datasets (>100k samples), streaming data, online learning. Regular K-Means: Recomputes all distances each iteration → slow. Mini-batch: Stochastic, faster convergence.",
+      "id": "kmeans-clustering-q6"
     }
   ],
   "flashcards": [

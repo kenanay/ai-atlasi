@@ -46,13 +46,12 @@
     "model-compression-pruning"
   ],
   "nextTopics": [
-    "kubernetes-ml",
-    "edge-deployment",
-    "model-monitoring"
+    "edge-ai-mobile",
+    "mlops-monitoring"
   ],
   "relatedTopics": [
     "transfer-learning",
-    "model-compression",
+    "model-compression-pruning",
     "distributed-training"
   ],
   "tags": [
@@ -121,7 +120,8 @@
         "Accuracy artırır"
       ],
       "correctAnswer": 1,
-      "explanation": "ONNX = Open Neural Network Exchange. Universal model format! Train in PyTorch → Export ONNX → Deploy in TensorFlow/TensorRT/CoreML. Benefits: Framework independence, optimized runtimes, hardware acceleration. Without ONNX: Stuck with training framework for deployment. With ONNX: Choose best framework for training, best runtime for deployment!"
+      "explanation": "ONNX = Open Neural Network Exchange. Universal model format! Train in PyTorch → Export ONNX → Deploy in TensorFlow/TensorRT/CoreML. Benefits: Framework independence, optimized runtimes, hardware acceleration. Without ONNX: Stuck with training framework for deployment. With ONNX: Choose best framework for training, best runtime for deployment!",
+      "id": "model-deployment-production-q1"
     },
     {
       "question": "Quantization (FP32→INT8) neden yapılır?",
@@ -132,7 +132,8 @@
         "Sadece mobile için"
       ],
       "correctAnswer": 1,
-      "explanation": "Quantization: FP32 (32-bit float) → INT8 (8-bit integer). Benefits: (1) 4× smaller model (memory, storage), (2) 2-4× faster inference (integer ops faster), (3) Lower power (mobile, edge). Trade-off: <1% accuracy loss typically. Use cases: Mobile deployment, edge devices, cost reduction. Dynamic vs static quantization: Dynamic (easier), static (better accuracy)."
+      "explanation": "Quantization: FP32 (32-bit float) → INT8 (8-bit integer). Benefits: (1) 4× smaller model (memory, storage), (2) 2-4× faster inference (integer ops faster), (3) Lower power (mobile, edge). Trade-off: <1% accuracy loss typically. Use cases: Mobile deployment, edge devices, cost reduction. Dynamic vs static quantization: Dynamic (easier), static (better accuracy).",
+      "id": "model-deployment-production-q2"
     },
     {
       "question": "Production'da latency neden critical?",
@@ -143,7 +144,8 @@
         "Memory için"
       ],
       "correctAnswer": 1,
-      "explanation": "Latency = Response time. Research: Minutes/hours OK. Production: Milliseconds critical! Why: (1) User experience: >100ms → noticeable lag. (2) Real-time: Autonomous driving <10ms. (3) Throughput: Lower latency → higher requests/sec. (4) Cost: Faster → fewer instances needed. Optimization: Batch inference, quantization, caching, GPU."
+      "explanation": "Latency = Response time. Research: Minutes/hours OK. Production: Milliseconds critical! Why: (1) User experience: >100ms → noticeable lag. (2) Real-time: Autonomous driving <10ms. (3) Throughput: Lower latency → higher requests/sec. (4) Cost: Faster → fewer instances needed. Optimization: Batch inference, quantization, caching, GPU.",
+      "id": "model-deployment-production-q3"
     },
     {
       "question": "Docker container neden kullanılır ML deployment'ta?",
@@ -154,7 +156,8 @@
         "Accuracy için"
       ],
       "correctAnswer": 1,
-      "explanation": "Docker: Containerization! Benefits: (1) Reproducibility: Works on dev laptop = works in production. (2) Dependency isolation: No version conflicts. (3) Portability: Deploy anywhere (cloud, on-premise, edge). (4) Scalability: Easy horizontal scaling. Without Docker: 'Works on my machine' problem! Dependency hell, deployment headaches. With Docker: Consistent environment."
+      "explanation": "Docker: Containerization! Benefits: (1) Reproducibility: Works on dev laptop = works in production. (2) Dependency isolation: No version conflicts. (3) Portability: Deploy anywhere (cloud, on-premise, edge). (4) Scalability: Easy horizontal scaling. Without Docker: 'Works on my machine' problem! Dependency hell, deployment headaches. With Docker: Consistent environment.",
+      "id": "model-deployment-production-q4"
     },
     {
       "question": "Model monitoring'de drift detection nedir?",
@@ -165,7 +168,8 @@
         "Sadece bugs için"
       ],
       "correctAnswer": 1,
-      "explanation": "Drift: Data distribution changes! Training data ≠ Production data anymore. Types: (1) Data drift: Input features change. (2) Concept drift: Input-output relationship changes. Example: COVID → shopping patterns changed dramatically. Solution: Monitor: Input statistics, prediction confidence, ground truth (when available). Alert: Significant distribution change. Action: Retrain model on recent data. Critical for long-running deployments!"
+      "explanation": "Drift: Data distribution changes! Training data ≠ Production data anymore. Types: (1) Data drift: Input features change. (2) Concept drift: Input-output relationship changes. Example: COVID → shopping patterns changed dramatically. Solution: Monitor: Input statistics, prediction confidence, ground truth (when available). Alert: Significant distribution change. Action: Retrain model on recent data. Critical for long-running deployments!",
+      "id": "model-deployment-production-q5"
     },
     {
       "question": "A/B testing ML models'ta neden yapılır?",
@@ -176,7 +180,8 @@
         "Sadece akademik"
       ],
       "correctAnswer": 1,
-      "explanation": "A/B Testing: Deploy 2 model versions simultaneously. Split traffic: 50% model A, 50% model B. Measure: Accuracy, latency, business metrics (clicks, conversions). Decide: Keep better model. Why not just replace? Risk! New model might be worse in production (different data, edge cases). Gradual rollout: Start 5% traffic → if good → 100%. Safe deployment strategy!"
+      "explanation": "A/B Testing: Deploy 2 model versions simultaneously. Split traffic: 50% model A, 50% model B. Measure: Accuracy, latency, business metrics (clicks, conversions). Decide: Keep better model. Why not just replace? Risk! New model might be worse in production (different data, edge cases). Gradual rollout: Start 5% traffic → if good → 100%. Safe deployment strategy!",
+      "id": "model-deployment-production-q6"
     }
   ],
   "flashcards": [

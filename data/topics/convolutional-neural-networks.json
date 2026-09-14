@@ -44,7 +44,7 @@
     "activation-functions"
   ],
   "nextTopics": [
-    "advanced-cnn-architectures",
+    "resnet-skip-connections",
     "object-detection",
     "image-segmentation",
     "transfer-learning"
@@ -52,7 +52,7 @@
   "relatedTopics": [
     "recurrent-neural-networks",
     "batch-normalization",
-    "data-augmentation"
+    "data-preprocessing-features"
   ],
   "tags": [
     "cnn",

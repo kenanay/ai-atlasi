@@ -48,10 +48,7 @@
     "autoencoders-vae",
     "attention-mechanisms-detail"
   ],
-  "nextTopics": [
-    "video-generation",
-    "3d-generation"
-  ],
+  "nextTopics": [],
   "relatedTopics": [
     "generative-adversarial-networks",
     "autoencoders-vae"
@@ -119,7 +116,8 @@
         "Style transfer"
       ],
       "correctAnswer": 1,
-      "explanation": "Diffusion: Iterative denoising process! Forward: Image → add noise gradually → pure noise. Reverse (generation): Noise → trained model removes noise step by step → image. Unlike GANs (1 step generation) or VAE (encode-decode). Key: Learn to reverse noise addition process. Training: Predict added noise at random timesteps. Sampling: Start from random noise, denoise T times."
+      "explanation": "Diffusion: Iterative denoising process! Forward: Image → add noise gradually → pure noise. Reverse (generation): Noise → trained model removes noise step by step → image. Unlike GANs (1 step generation) or VAE (encode-decode). Key: Learn to reverse noise addition process. Training: Predict added noise at random timesteps. Sampling: Start from random noise, denoise T times.",
+      "id": "diffusion-models-q1"
     },
     {
       "question": "Classifier-Free Guidance (CFG) ne işe yarar?",
@@ -130,7 +128,8 @@
         "Sadece debugging için"
       ],
       "correctAnswer": 1,
-      "explanation": "CFG: Guidance without classifier! Formula: ε̃ = ε_uncond + scale·(ε_cond - ε_uncond). Amplifies difference between conditional ('cat') and unconditional (empty) predictions. Effect: Stronger text alignment, more accurate to prompt. Scale 7-15 typical. Low (1-3): More creative, less accurate. High (15-20): Accurate but less diverse. Training: Randomly drop conditioning (50%) to learn both. Critical for text-to-image quality!"
+      "explanation": "CFG: Guidance without classifier! Formula: ε̃ = ε_uncond + scale·(ε_cond - ε_uncond). Amplifies difference between conditional ('cat') and unconditional (empty) predictions. Effect: Stronger text alignment, more accurate to prompt. Scale 7-15 typical. Low (1-3): More creative, less accurate. High (15-20): Accurate but less diverse. Training: Randomly drop conditioning (50%) to learn both. Critical for text-to-image quality!",
+      "id": "diffusion-models-q2"
     },
     {
       "question": "Latent Diffusion (Stable Diffusion) neden daha hızlı?",
@@ -141,7 +140,8 @@
         "GPU optimization"
       ],
       "correctAnswer": 1,
-      "explanation": "Latent Diffusion: Diffusion in VAE latent space! Instead of 512×512 pixels → 64×64 latent (8× compression). Benefits: (1) 64× fewer pixels to process → much faster! (2) Similar quality. (3) Lower memory. Process: Image → VAE encode → latent → diffusion → VAE decode → image. Stable Diffusion = Latent Diffusion + CLIP text conditioning. Breakthrough for practical text-to-image!"
+      "explanation": "Latent Diffusion: Diffusion in VAE latent space! Instead of 512×512 pixels → 64×64 latent (8× compression). Benefits: (1) 64× fewer pixels to process → much faster! (2) Similar quality. (3) Lower memory. Process: Image → VAE encode → latent → diffusion → VAE decode → image. Stable Diffusion = Latent Diffusion + CLIP text conditioning. Breakthrough for practical text-to-image!",
+      "id": "diffusion-models-q3"
     },
     {
       "question": "Diffusion vs GAN: En önemli avantaj?",
@@ -152,7 +152,8 @@
         "Real-time inference"
       ],
       "correctAnswer": 1,
-      "explanation": "Diffusion > GAN: (1) Training Stability: GANs notoriously unstable (mode collapse, balance issues). Diffusion: Simple denoising objective, stable! (2) Mode Coverage: GANs miss some image types. Diffusion: Better diversity. (3) Quality: State-of-the-art (Stable Diffusion, DALL-E 2). Disadvantage: Speed (50-1000 steps vs GAN's 1). Trade-off: Quality & stability vs speed. Use case: When quality matters more than speed!"
+      "explanation": "Diffusion > GAN: (1) Training Stability: GANs notoriously unstable (mode collapse, balance issues). Diffusion: Simple denoising objective, stable! (2) Mode Coverage: GANs miss some image types. Diffusion: Better diversity. (3) Quality: State-of-the-art (Stable Diffusion, DALL-E 2). Disadvantage: Speed (50-1000 steps vs GAN's 1). Trade-off: Quality & stability vs speed. Use case: When quality matters more than speed!",
+      "id": "diffusion-models-q4"
     },
     {
       "question": "DDIM vs DDPM sampling farkı nedir?",
@@ -163,7 +164,8 @@
         "Sadece training için"
       ],
       "correctAnswer": 1,
-      "explanation": "DDPM: Original sampling. Stochastic (random noise each step), needs ~1000 steps. DDIM: Deterministic sampling! Same noise → same image. Fewer steps (50) with similar quality. How: Directly predict x₀, then jump to next timestep (skip intermediate). Benefits: 20× faster, consistent outputs, can invert images. Use: Default in Stable Diffusion. DDPM: When you need stochasticity/exploration."
+      "explanation": "DDPM: Original sampling. Stochastic (random noise each step), needs ~1000 steps. DDIM: Deterministic sampling! Same noise → same image. Fewer steps (50) with similar quality. How: Directly predict x₀, then jump to next timestep (skip intermediate). Benefits: 20× faster, consistent outputs, can invert images. Use: Default in Stable Diffusion. DDPM: When you need stochasticity/exploration.",
+      "id": "diffusion-models-q5"
     },
     {
       "question": "Text-to-image diffusion'da text nasıl kullanılır?",
@@ -174,7 +176,8 @@
         "Post-processing"
       ],
       "correctAnswer": 1,
-      "explanation": "Text Conditioning: (1) Encode text via CLIP → embedding vector. (2) U-Net has cross-attention layers: Image features attend to text embedding. (3) Each denoising step conditioned on text. (4) CFG amplifies text influence. Process: Text guides what to denoise into! 'Cat' → model removes noise to reveal cat features. Without text: Random generation. With text: Controlled generation. CLIP: Trained to align text-image → perfect for conditioning!"
+      "explanation": "Text Conditioning: (1) Encode text via CLIP → embedding vector. (2) U-Net has cross-attention layers: Image features attend to text embedding. (3) Each denoising step conditioned on text. (4) CFG amplifies text influence. Process: Text guides what to denoise into! 'Cat' → model removes noise to reveal cat features. Without text: Random generation. With text: Controlled generation. CLIP: Trained to align text-image → perfect for conditioning!",
+      "id": "diffusion-models-q6"
     }
   ],
   "flashcards": [

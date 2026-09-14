@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Graph Neural Networks explanation."
+      "explanation": "Graph Neural Networks explanation.",
+      "id": "graph-neural-networks-q1"
     },
     {
       "question": "When to use Graph Neural Networks?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "graph-neural-networks-q2"
     },
     {
       "question": "Graph Neural Networks advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "graph-neural-networks-q3"
     },
     {
       "question": "Graph Neural Networks limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "graph-neural-networks-q4"
     },
     {
       "question": "Best practice for Graph Neural Networks?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "graph-neural-networks-q5"
     },
     {
       "question": "Graph Neural Networks vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "graph-neural-networks-q6"
     }
   ],
   "flashcards": [

@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Prompt Engineering explanation."
+      "explanation": "Prompt Engineering explanation.",
+      "id": "prompt-engineering-q1"
     },
     {
       "question": "When to use Prompt Engineering?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "prompt-engineering-q2"
     },
     {
       "question": "Prompt Engineering advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "prompt-engineering-q3"
     },
     {
       "question": "Prompt Engineering limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "prompt-engineering-q4"
     },
     {
       "question": "Best practice for Prompt Engineering?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "prompt-engineering-q5"
     },
     {
       "question": "Prompt Engineering vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "prompt-engineering-q6"
     }
   ],
   "flashcards": [

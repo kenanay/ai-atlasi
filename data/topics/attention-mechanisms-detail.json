@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Attention Mechanisms explanation."
+      "explanation": "Attention Mechanisms explanation.",
+      "id": "attention-mechanisms-detail-q1"
     },
     {
       "question": "When to use Attention Mechanisms?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "attention-mechanisms-detail-q2"
     },
     {
       "question": "Attention Mechanisms advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "attention-mechanisms-detail-q3"
     },
     {
       "question": "Attention Mechanisms limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "attention-mechanisms-detail-q4"
     },
     {
       "question": "Best practice for Attention Mechanisms?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "attention-mechanisms-detail-q5"
     },
     {
       "question": "Attention Mechanisms vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "attention-mechanisms-detail-q6"
     }
   ],
   "flashcards": [

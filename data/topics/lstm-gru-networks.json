@@ -45,7 +45,7 @@
   ],
   "nextTopics": [
     "transformers-attention",
-    "seq2seq-models"
+    "sequence-to-sequence"
   ],
   "relatedTopics": [
     "recurrent-neural-networks",
@@ -113,7 +113,8 @@
         "Daha basit"
       ],
       "correctAnswer": 1,
-      "explanation": "LSTM: Solves vanishing gradient problem! Vanilla RNN: Gradients vanish exponentially with sequence length. Can't learn dependencies >10 steps. LSTM: Gates + cell state allow gradients to flow unchanged. Result: Learn dependencies 100+ steps! Example: Translation - remember beginning of long sentence. Gates control information flow: Forget irrelevant, keep important. Revolutionary for sequential tasks!"
+      "explanation": "LSTM: Solves vanishing gradient problem! Vanilla RNN: Gradients vanish exponentially with sequence length. Can't learn dependencies >10 steps. LSTM: Gates + cell state allow gradients to flow unchanged. Result: Learn dependencies 100+ steps! Example: Translation - remember beginning of long sentence. Gates control information flow: Forget irrelevant, keep important. Revolutionary for sequential tasks!",
+      "id": "lstm-gru-networks-q1"
     },
     {
       "question": "LSTM'de cell state'in rolü nedir?",
@@ -124,7 +125,8 @@
         "Output computation"
       ],
       "correctAnswer": 1,
-      "explanation": "Cell state: Long-term memory highway! Flows through time with only linear interactions (element-wise operations). Gates control: What to forget (×fₜ), what to add (+iₜ⊙C̃ₜ). Result: Information can flow unchanged through 100+ steps! Contrast: Hidden state (short-term, heavily modified each step). Cell state: Protected by gates, stable. Why important: Enables long-term dependencies. Without it: LSTM = fancy RNN (no benefit)."
+      "explanation": "Cell state: Long-term memory highway! Flows through time with only linear interactions (element-wise operations). Gates control: What to forget (×fₜ), what to add (+iₜ⊙C̃ₜ). Result: Information can flow unchanged through 100+ steps! Contrast: Hidden state (short-term, heavily modified each step). Cell state: Protected by gates, stable. Why important: Enables long-term dependencies. Without it: LSTM = fancy RNN (no benefit).",
+      "id": "lstm-gru-networks-q2"
     },
     {
       "question": "GRU'nun LSTM'e göre farkı?",
@@ -135,7 +137,8 @@
         "Sadece toy datasets için"
       ],
       "correctAnswer": 1,
-      "explanation": "GRU: Simplified LSTM! Changes: (1) 2 gates (reset, update) vs LSTM's 3 (forget, input, output). (2) No separate cell state (merges with hidden). (3) Fewer parameters (25% less). Benefits: 30% faster computation, less memory, easier to train. Performance: Often similar to LSTM! When worse: Very long sequences (1000+ steps). Rule: Try GRU first (faster), use LSTM if needed (more powerful)."
+      "explanation": "GRU: Simplified LSTM! Changes: (1) 2 gates (reset, update) vs LSTM's 3 (forget, input, output). (2) No separate cell state (merges with hidden). (3) Fewer parameters (25% less). Benefits: 30% faster computation, less memory, easier to train. Performance: Often similar to LSTM! When worse: Very long sequences (1000+ steps). Rule: Try GRU first (faster), use LSTM if needed (more powerful).",
+      "id": "lstm-gru-networks-q3"
     },
     {
       "question": "Bidirectional LSTM ne zaman kullanılır?",
@@ -146,7 +149,8 @@
         "Daha hızlı olduğu için"
       ],
       "correctAnswer": 1,
-      "explanation": "Bidirectional: Process sequence forward AND backward, concatenate outputs. When to use: Tasks where future context available! (1) Classification: See full text before deciding. (2) NER: Tag words using left+right context. (3) Sentiment: Full sentence context. When NOT: Generation! Can't see future (that's what we're generating). Also NOT: Real-time streaming (no future context). Cost: 2× computation (two LSTMs)."
+      "explanation": "Bidirectional: Process sequence forward AND backward, concatenate outputs. When to use: Tasks where future context available! (1) Classification: See full text before deciding. (2) NER: Tag words using left+right context. (3) Sentiment: Full sentence context. When NOT: Generation! Can't see future (that's what we're generating). Also NOT: Real-time streaming (no future context). Cost: 2× computation (two LSTMs).",
+      "id": "lstm-gru-networks-q4"
     },
     {
       "question": "LSTM gates neden sigmoid kullanır?",
@@ -157,7 +161,8 @@
         "Random choice"
       ],
       "correctAnswer": 1,
-      "explanation": "Sigmoid output [0,1]: Perfect for gate! 0 = 'block completely', 1 = 'let through fully', 0.5 = 'partial'. Forget gate: fₜ=0.1 → forget 90% of cell state. Input gate: iₜ=0.9 → add 90% of candidate. Intuitive: Gates control information flow like valve (0-100% open). Alternative (tanh): Outputs [-1,1], not interpretable as 'amount'. Sigmoid: Natural choice for gating!"
+      "explanation": "Sigmoid output [0,1]: Perfect for gate! 0 = 'block completely', 1 = 'let through fully', 0.5 = 'partial'. Forget gate: fₜ=0.1 → forget 90% of cell state. Input gate: iₜ=0.9 → add 90% of candidate. Intuitive: Gates control information flow like valve (0-100% open). Alternative (tanh): Outputs [-1,1], not interpretable as 'amount'. Sigmoid: Natural choice for gating!",
+      "id": "lstm-gru-networks-q5"
     },
     {
       "question": "Modern deep learning'de LSTM'in yeri?",
@@ -168,7 +173,8 @@
         "Sadece teaching için"
       ],
       "correctAnswer": 1,
-      "explanation": "LSTM role today: Niche but important! Replaced by Transformers: NLP, most sequence tasks (better performance). Still used: (1) Edge devices (less memory than attention). (2) Streaming data (sequential processing, no batching needed). (3) Very long sequences (10k+ steps, attention O(n²) too expensive). (4) Time series forecasting (domain expertise). Not obsolete! Just specialized. New projects: Try Transformer first, LSTM if constraints."
+      "explanation": "LSTM role today: Niche but important! Replaced by Transformers: NLP, most sequence tasks (better performance). Still used: (1) Edge devices (less memory than attention). (2) Streaming data (sequential processing, no batching needed). (3) Very long sequences (10k+ steps, attention O(n²) too expensive). (4) Time series forecasting (domain expertise). Not obsolete! Just specialized. New projects: Try Transformer first, LSTM if constraints.",
+      "id": "lstm-gru-networks-q6"
     }
   ],
   "flashcards": [

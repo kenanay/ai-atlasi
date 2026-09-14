@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Distributed Training explanation."
+      "explanation": "Distributed Training explanation.",
+      "id": "distributed-training-q1"
     },
     {
       "question": "When to use Distributed Training?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "distributed-training-q2"
     },
     {
       "question": "Distributed Training advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "distributed-training-q3"
     },
     {
       "question": "Distributed Training limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "distributed-training-q4"
     },
     {
       "question": "Best practice for Distributed Training?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "distributed-training-q5"
     },
     {
       "question": "Distributed Training vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "distributed-training-q6"
     }
   ],
   "flashcards": [

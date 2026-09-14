@@ -5,8 +5,18 @@
   "level": 2,
   "estimatedTime": 50,
   "description": "Kelimeleri dense vector'lere çeviren representation learning teknikleri. Word2Vec (Skip-gram, CBOW), GloVe, FastText ve semantic relationships.",
-  "prerequisites": ["neural-networks", "vectors"],
-  "tags": ["nlp", "word2vec", "glove", "fasttext", "embeddings", "representation-learning"],
+  "prerequisites": [
+    "neural-networks",
+    "vectors"
+  ],
+  "tags": [
+    "nlp",
+    "word2vec",
+    "glove",
+    "fasttext",
+    "embeddings",
+    "representation-learning"
+  ],
   "content": {
     "level0_basic": "Kelimeleri bilgisayara nasıl anlatırsın? 'Kedi' ve 'köpek' benzer mi? One-hot encoding ile 'kedi' = [1,0,0,...], 'köpek' = [0,1,0,...] dersin ama bu hiçbir semantic relationship göstermez! Word embeddings kelimeleri 100-300 boyutlu dense vector'lere çevirir: benzer kelimelerin vector'leri birbirine yakın olur. 'Kedi' ve 'köpek' hayvan olduğu için vector space'te yakın, 'elma' uzak. 'Kral' - 'erkek' + 'kadın' = 'kraliçe' gibi işlemler yapabilirsin!",
     "level1_beginner": "Traditional NLP'de kelimeler one-hot encoding ile gösterilir: vocabulary size kadar boyutlu sparse vector. Bu representation'da semantic similarity yok!\n\n**Word Embeddings:**\nKelimeleri dense, low-dimensional vector'lere map eder (genelde 100-300 boyut).\n\n**Temel Fikir: Distributional Hypothesis**\n> \"You shall know a word by the company it keeps\" - Firth 1957\n\nBir kelimenin anlamı context'inden (yanındaki kelimelerden) çıkarsanır.\n\n**Word2Vec (Mikolov et al., 2013):**\n\n2 mimari var:\n\n**1. Skip-gram:**\nMerkezideki kelimeden context'i tahmin et.\n- Input: center word\n- Output: context words\n- Rare words için daha iyi\n\n**2. CBOW (Continuous Bag of Words):**\nContext'ten merkez kelimeyi tahmin et.\n- Input: context words\n- Output: center word\n- Frequent words için daha hızlı\n\n**Matematiksel Formülasyon (Skip-gram):**\n\nAmaç: Her kelime için likelihood'ı maksimize et:\n\n$$J(\\theta) = \\frac{1}{T}\\sum_{t=1}^{T}\\sum_{-c \\leq j \\leq c, j \\neq 0} \\log p(w_{t+j} | w_t)$$\n\n- $w_t$: center word\n- $w_{t+j}$: context words\n- $c$: window size\n\n**Softmax:**\n$$p(w_O | w_I) = \\frac{\\exp(v_{w_O}^T v_{w_I})}{\\sum_{w=1}^{V} \\exp(v_w^T v_{w_I})}$$\n\n**Problem:** Softmax vocabulary size kadar (milyonlarca) hesap gerektirir!\n\n**Çözümler:**\n1. **Negative Sampling:** Sadece birkaç negative örnek al\n2. **Hierarchical Softmax:** Binary tree ile hesapla",
@@ -94,8 +104,9 @@
         "İkisi aynıdır, sadece isimleri farklı",
         "Skip-gram supervised, CBOW unsupervised'dır"
       ],
-      "correct": 1,
-      "explanation": "Skip-gram: center word verilen, context words'ü tahmin et. CBOW: context words verilen, center word'ü tahmin et. Skip-gram rare words için, CBOW frequent words için daha iyi."
+      "explanation": "Skip-gram: center word verilen, context words'ü tahmin et. CBOW: context words verilen, center word'ü tahmin et. Skip-gram rare words için, CBOW frequent words için daha iyi.",
+      "id": "word-embeddings-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Word embeddings'te 'king - man + woman ≈ queen' analogy neden çalışır?",
@@ -105,8 +116,9 @@
         "Sadece bu örnekte çalışır",
         "Manual olarak programlanmıştır"
       ],
-      "correct": 1,
-      "explanation": "Word embeddings semantic relationships'i vector space'te geometric relationships olarak encode eder. 'man→king' ve 'woman→queen' paralel transformations, vector arithmetic ile capture edilebilir!"
+      "explanation": "Word embeddings semantic relationships'i vector space'te geometric relationships olarak encode eder. 'man→king' ve 'woman→queen' paralel transformations, vector arithmetic ile capture edilebilir!",
+      "id": "word-embeddings-q2",
+      "correctAnswer": 1
     },
     {
       "question": "FastText'in Word2Vec'e göre avantajı nedir?",
@@ -116,8 +128,9 @@
         "Daha küçük model size",
         "Sadece İngilizce için çalışır"
       ],
-      "correct": 1,
-      "explanation": "FastText character n-grams kullanır. Her kelime = subword vectors toplamı. OOV words için bile vector generate edebilir çünkü subword'ler training'de görülmüş olabilir!"
+      "explanation": "FastText character n-grams kullanır. Her kelime = subword vectors toplamı. OOV words için bile vector generate edebilir çünkü subword'ler training'de görülmüş olabilir!",
+      "id": "word-embeddings-q3",
+      "correctAnswer": 1
     },
     {
       "question": "GloVe'un Word2Vec'ten farkı nedir?",
@@ -127,8 +140,9 @@
         "GloVe daha hızlıdır",
         "Aynıdır, sadece isim farklı"
       ],
-      "correct": 1,
-      "explanation": "Word2Vec local context window ile online learning yapar. GloVe önce global co-occurrence matrix oluşturur, sonra matrix factorization yapar. İkisi de unsupervised, performance benzer."
+      "explanation": "Word2Vec local context window ile online learning yapar. GloVe önce global co-occurrence matrix oluşturur, sonra matrix factorization yapar. İkisi de unsupervised, performance benzer.",
+      "id": "word-embeddings-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Negative sampling neden kullanılır?",
@@ -138,8 +152,9 @@
         "Embeddings'i normalize etmek için",
         "Overfitting'i önlemek için"
       ],
-      "correct": 1,
-      "explanation": "Vanilla softmax tüm vocabulary üzerinden hesap yapar (milyonlarca kelime!). Negative sampling her positive sample için sadece k tane (5-20) negative sample alır → çok daha hızlı!"
+      "explanation": "Vanilla softmax tüm vocabulary üzerinden hesap yapar (milyonlarca kelime!). Negative sampling her positive sample için sadece k tane (5-20) negative sample alır → çok daha hızlı!",
+      "id": "word-embeddings-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Pre-trained embeddings'i ne zaman freeze etmelisin?",
@@ -149,8 +164,9 @@
         "Küçük dataset'te freeze et, büyük dataset'te fine-tune et",
         "Sadece test ederken freeze et"
       ],
-      "correct": 2,
-      "explanation": "Küçük dataset: Freeze et (pre-trained knowledge'ı koru, overfit olma). Büyük dataset: Fine-tune et (domain-specific patterns öğren). Trade-off: generalization vs specialization."
+      "explanation": "Küçük dataset: Freeze et (pre-trained knowledge'ı koru, overfit olma). Büyük dataset: Fine-tune et (domain-specific patterns öğren). Trade-off: generalization vs specialization.",
+      "id": "word-embeddings-q6",
+      "correctAnswer": 2
     }
   ],
   "commonMistakes": [
@@ -256,5 +272,9 @@
       "description": "FastText'in subword n-grams'ı nasıl kullandığını animate eder. OOV word handling'i gösterir.",
       "component": "FastTextSubwords"
     }
+  ],
+  "nextTopics": [
+    "recurrent-neural-networks",
+    "transformers-attention"
   ]
 }

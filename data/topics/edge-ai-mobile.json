@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Edge AI & Mobile Deployment explanation."
+      "explanation": "Edge AI & Mobile Deployment explanation.",
+      "id": "edge-ai-mobile-q1"
     },
     {
       "question": "When to use Edge AI & Mobile Deployment?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "edge-ai-mobile-q2"
     },
     {
       "question": "Edge AI & Mobile Deployment advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "edge-ai-mobile-q3"
     },
     {
       "question": "Edge AI & Mobile Deployment limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "edge-ai-mobile-q4"
     },
     {
       "question": "Best practice for Edge AI & Mobile Deployment?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "edge-ai-mobile-q5"
     },
     {
       "question": "Edge AI & Mobile Deployment vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "edge-ai-mobile-q6"
     }
   ],
   "flashcards": [

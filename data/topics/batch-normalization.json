@@ -49,9 +49,8 @@
     "gradient-descent"
   ],
   "nextTopics": [
-    "residual-networks",
-    "advanced-architectures",
-    "transformer-architectures"
+    "resnet-skip-connections",
+    "transformers-attention"
   ],
   "relatedTopics": [
     "regularization",

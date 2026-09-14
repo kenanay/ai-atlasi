@@ -105,7 +105,7 @@ export function TopicSidebar({
         </Card>
 
         {/* Prerequisites */}
-        {topic.prerequisites.length > 0 && (
+        {topic.prerequisites && topic.prerequisites.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">

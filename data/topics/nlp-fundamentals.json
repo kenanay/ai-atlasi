@@ -120,7 +120,8 @@
         "Sadece English için çalışır"
       ],
       "correctAnswer": 1,
-      "explanation": "One-hot: High-dimensional (vocab_size), no semantic relationship. 'cat'=[1,0,0,0], 'dog'=[0,1,0,0] → distance same as 'cat' vs 'king'! Word embeddings: Low-dim (50-300), semantic similarity! cos_sim('cat','dog')=0.9 (high), cos_sim('cat','king')=0.3 (low). Learned from context!"
+      "explanation": "One-hot: High-dimensional (vocab_size), no semantic relationship. 'cat'=[1,0,0,0], 'dog'=[0,1,0,0] → distance same as 'cat' vs 'king'! Word embeddings: Low-dim (50-300), semantic similarity! cos_sim('cat','dog')=0.9 (high), cos_sim('cat','king')=0.3 (low). Learned from context!",
+      "id": "nlp-fundamentals-q1"
     },
     {
       "question": "Word2Vec'te Skip-gram ve CBOW arasındaki fark nedir?",
@@ -131,7 +132,8 @@
         "CBOW sadece binary classification için kullanılır"
       ],
       "correctAnswer": 1,
-      "explanation": "Skip-gram: Given target word, predict context words. 'sits' → ['the', 'cat', 'on', 'mat']. Better for rare words! CBOW (Continuous Bag of Words): Given context, predict target. ['the', 'cat', 'on', 'mat'] → 'sits'. Faster training! Both learn embeddings but different objectives."
+      "explanation": "Skip-gram: Given target word, predict context words. 'sits' → ['the', 'cat', 'on', 'mat']. Better for rare words! CBOW (Continuous Bag of Words): Given context, predict target. ['the', 'cat', 'on', 'mat'] → 'sits'. Faster training! Both learn embeddings but different objectives.",
+      "id": "nlp-fundamentals-q2"
     },
     {
       "question": "TF-IDF'de IDF (Inverse Document Frequency) ne işe yarar?",
@@ -142,7 +144,8 @@
         "Semantic similarity measure eder"
       ],
       "correctAnswer": 1,
-      "explanation": "TF (Term Frequency): Word count in document. IDF: log(N/df) where N=total docs, df=docs containing word. Effect: Common words ('the', 'a') → high df → low IDF → low weight. Rare, informative words ('coronavirus') → low df → high IDF → high weight! TF-IDF = TF × IDF. Focus on important words!"
+      "explanation": "TF (Term Frequency): Word count in document. IDF: log(N/df) where N=total docs, df=docs containing word. Effect: Common words ('the', 'a') → high df → low IDF → low weight. Rare, informative words ('coronavirus') → low df → high IDF → high weight! TF-IDF = TF × IDF. Focus on important words!",
+      "id": "nlp-fundamentals-q3"
     },
     {
       "question": "Word analogy 'king - man + woman = queen' nasıl çalışır?",
@@ -153,7 +156,8 @@
         "Pre-programmed relationships kullanır"
       ],
       "correctAnswer": 1,
-      "explanation": "Word embeddings semantic space'te meaningful directions learn eder! 'king'-'man' = 'royalty + male' - 'male' = 'royalty'. 'royalty' + 'woman' ≈ 'queen'! Other analogies: Paris - France + Italy ≈ Rome (capitals), walking - walk + swim ≈ swimming (verb forms). Emergent from context-based training!"
+      "explanation": "Word embeddings semantic space'te meaningful directions learn eder! 'king'-'man' = 'royalty + male' - 'male' = 'royalty'. 'royalty' + 'woman' ≈ 'queen'! Other analogies: Paris - France + Italy ≈ Rome (capitals), walking - walk + swim ≈ swimming (verb forms). Emergent from context-based training!",
+      "id": "nlp-fundamentals-q4"
     },
     {
       "question": "Subword tokenization (BPE, WordPiece) neden önemli?",
@@ -164,7 +168,8 @@
         "Word-level'dan daha kötü performance verir"
       ],
       "correctAnswer": 1,
-      "explanation": "Word-level problem: OOV words → <UNK> token (information loss!). Rare words, typos, new words problem. Subword: 'deeplearning' → ['deep', '##learning']. Benefits: (1) Handle OOV, (2) Smaller vocab (30K vs 100K+), (3) Morphology capture ('walk', 'walking' → 'walk', '##ing'). Modern transformers (BERT, GPT) use subword!"
+      "explanation": "Word-level problem: OOV words → <UNK> token (information loss!). Rare words, typos, new words problem. Subword: 'deeplearning' → ['deep', '##learning']. Benefits: (1) Handle OOV, (2) Smaller vocab (30K vs 100K+), (3) Morphology capture ('walk', 'walking' → 'walk', '##ing'). Modern transformers (BERT, GPT) use subword!",
+      "id": "nlp-fundamentals-q5"
     },
     {
       "question": "NLP'de pre-processing steps neden critical?",
@@ -175,7 +180,8 @@
         "Sadece English text için gerekli"
       ],
       "correctAnswer": 1,
-      "explanation": "Pre-processing: (1) Lowercase: 'The' vs 'the' → same word! (2) Punctuation removal: 'hello!' → 'hello'. (3) Stopword removal: Remove 'the', 'a', 'is' (common, low information). (4) Stemming/Lemmatization: 'running', 'ran', 'runs' → 'run' (same root). Benefits: Smaller vocab, less noise, better generalization. But: Context-dependent! Sometimes punctuation matters ('U.S.A.')."
+      "explanation": "Pre-processing: (1) Lowercase: 'The' vs 'the' → same word! (2) Punctuation removal: 'hello!' → 'hello'. (3) Stopword removal: Remove 'the', 'a', 'is' (common, low information). (4) Stemming/Lemmatization: 'running', 'ran', 'runs' → 'run' (same root). Benefits: Smaller vocab, less noise, better generalization. But: Context-dependent! Sometimes punctuation matters ('U.S.A.').",
+      "id": "nlp-fundamentals-q6"
     }
   ],
   "flashcards": [

@@ -5,8 +5,18 @@
   "level": 2,
   "estimatedTime": 60,
   "description": "Birden fazla zayıf modeli birleştirerek güçlü tahmin yapan yöntemler. XGBoost, LightGBM, ve CatBoost modern ML'in vazgeçilmezleri.",
-  "prerequisites": ["decision-trees-random-forests", "gradient-descent"],
-  "tags": ["ensemble", "boosting", "bagging", "xgboost", "lightgbm", "kaggle"],
+  "prerequisites": [
+    "decision-trees-random-forests",
+    "gradient-descent"
+  ],
+  "tags": [
+    "ensemble",
+    "boosting",
+    "bagging",
+    "xgboost",
+    "lightgbm",
+    "kaggle"
+  ],
   "content": {
     "level0_basic": "5 arkadaşınız bir filmin IMDB puanını tahmin etmeye çalışıyor. Tek başına herkes %60 doğru tahmin ediyor (zayıf tahminler). Ama 5 kişinin tahminlerinin ortalamasını alırsanız, grup %85 doğru tahmin eder! İşte ensemble learning budur: Birçok zayıf modeli birleştirerek güçlü bir model oluşturmak. XGBoost'un Kaggle'da her yarışmayı kazanmasının sırrı da bu!",
     "level1_beginner": "Ensemble Methods, birden fazla modeli birleştirerek tahmin gücünü artıran tekniklerdir. İki ana yaklaşım var:\n\n**1. Bagging (Bootstrap Aggregating):**\n- **Paralel** modeller: Her model bağımsız eğitilir\n- **Veri sampling:** Her model farklı rastgele veri örneği görür\n- **Voting/Averaging:** Sonuçlar birleştirilir\n- **Örnek:** Random Forest (birçok decision tree)\n- **Amaç:** Variance azaltma, overfitting önleme\n\n**2. Boosting (Sequential Learning):**\n- **Sıralı** modeller: Her model bir öncekinin hatasını düzeltir\n- **Hata odaklı:** Yanlış tahmin edilen örneklere odaklan\n- **Weighted voting:** Her modelin ağırlığı farklı\n- **Örnekler:** AdaBoost, Gradient Boosting, XGBoost, LightGBM\n- **Amaç:** Bias azaltma, accuracy artırma\n\n**Gradient Boosting Temel Fikir:**\n$$F_m(x) = F_{m-1}(x) + \\eta \\cdot h_m(x)$$\n- $F_m$: m. iterasyondaki toplam model\n- $h_m$: m. weak learner (genellikle shallow tree)\n- $\\eta$: learning rate (step size)\n- Her yeni tree, **residual'ı** (hatayı) tahmin eder\n\n**Modern Gradient Boosting:**\n- **XGBoost:** Extreme Gradient Boosting, regularization, parallel processing\n- **LightGBM:** Light Gradient Boosting Machine, histogram-based, çok hızlı\n- **CatBoost:** Categorical Boosting, categorical features için optimize\n\nKaggle yarışmalarının %80'inde bu 3 algoritma kazanır!",
@@ -92,8 +102,9 @@
         "Bagging sadece classification, Boosting sadece regression için",
         "Bagging supervised, Boosting unsupervised learning"
       ],
-      "correct": 1,
-      "explanation": "Bagging (Random Forest gibi) paralel bağımsız modeller eğitir ve ortalar. Boosting (XGBoost gibi) sıralı modeller eğitir, her model bir öncekinin hatasını düzeltir."
+      "explanation": "Bagging (Random Forest gibi) paralel bağımsız modeller eğitir ve ortalar. Boosting (XGBoost gibi) sıralı modeller eğitir, her model bir öncekinin hatasını düzeltir.",
+      "id": "ensemble-methods-q1",
+      "correctAnswer": 1
     },
     {
       "question": "XGBoost'un standart Gradient Boosting'den farkı nedir?",
@@ -103,8 +114,9 @@
         "Sadece daha fazla tree kullanır",
         "Sadece categorical features destekler"
       ],
-      "correct": 1,
-      "explanation": "XGBoost: 1) Regularization term (tree complexity penalty), 2) 2nd derivative kullanımı (Newton method), 3) Parallel tree construction, 4) Pruning algorithms. Bu yüzden hem hızlı hem accurate!"
+      "explanation": "XGBoost: 1) Regularization term (tree complexity penalty), 2) 2nd derivative kullanımı (Newton method), 3) Parallel tree construction, 4) Pruning algorithms. Bu yüzden hem hızlı hem accurate!",
+      "id": "ensemble-methods-q2",
+      "correctAnswer": 1
     },
     {
       "question": "LightGBM'in en büyük avantajı nedir?",
@@ -114,8 +126,9 @@
         "En az memory kullanır",
         "Hiç hyperparameter tuning gerektirmez"
       ],
-      "correct": 1,
-      "explanation": "LightGBM continuous features'ı discrete bins'e ayırır (histogram). Bu sayede split finding çok hızlıdır. XGBoost'tan 10-20x daha hızlı, large datasets için ideal!"
+      "explanation": "LightGBM continuous features'ı discrete bins'e ayırır (histogram). Bu sayede split finding çok hızlıdır. XGBoost'tan 10-20x daha hızlı, large datasets için ideal!",
+      "id": "ensemble-methods-q3",
+      "correctAnswer": 1
     },
     {
       "question": "learning_rate (eta) ne işe yarar ve nasıl seçilir?",
@@ -125,8 +138,9 @@
         "Feature sampling oranını belirler",
         "Regularization strength'ini ayarlar"
       ],
-      "correct": 1,
-      "explanation": "learning_rate (η) her tree'nin model'e katkısını scale eder: F_m = F_{m-1} + η·h_m. η küçük (0.01) → çok tree gerekir ama iyi generalize. η büyük (0.3) → az tree yeter ama overfitting riski."
+      "explanation": "learning_rate (η) her tree'nin model'e katkısını scale eder: F_m = F_{m-1} + η·h_m. η küçük (0.01) → çok tree gerekir ama iyi generalize. η büyük (0.3) → az tree yeter ama overfitting riski.",
+      "id": "ensemble-methods-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Early stopping ne işe yarar?",
@@ -136,8 +150,9 @@
         "Automatically hyperparameter tuning yapar",
         "Model accuracy'sini artırır"
       ],
-      "correct": 1,
-      "explanation": "Early stopping validation metric'i izler. Metric X iterasyon boyunca iyileşmezse (örn. 50) durur. Overfitting'i önler ve training süresini azaltır. Production'da şart!"
+      "explanation": "Early stopping validation metric'i izler. Metric X iterasyon boyunca iyileşmezse (örn. 50) durur. Overfitting'i önler ve training süresini azaltır. Production'da şart!",
+      "id": "ensemble-methods-q5",
+      "correctAnswer": 1
     },
     {
       "question": "CatBoost'un özel özelliği nedir?",
@@ -147,8 +162,9 @@
         "GPU-only training",
         "En iyi accuracy her zaman"
       ],
-      "correct": 1,
-      "explanation": "CatBoost categorical features'ı native olarak handle eder. Label/One-hot encoding gerektirmez. Ayrıca ordered boosting ile target leakage'ı önler. Cat-heavy datasets için ideal!"
+      "explanation": "CatBoost categorical features'ı native olarak handle eder. Label/One-hot encoding gerektirmez. Ayrıca ordered boosting ile target leakage'ı önler. Cat-heavy datasets için ideal!",
+      "id": "ensemble-methods-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -254,5 +270,9 @@
       "description": "SHAP values ile gerçek feature importance. Her feature'ın prediction'a contribution'ını görselleştir.",
       "component": "SHAPVisualizer"
     }
+  ],
+  "nextTopics": [
+    "decision-trees-random-forests",
+    "xgboost-gradient-boosting"
   ]
 }

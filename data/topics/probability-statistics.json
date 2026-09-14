@@ -88,8 +88,9 @@
         "P(A|B) = P(A) + P(B)",
         "P(A|B) = P(A) / P(B)"
       ],
-      "correct": 1,
-      "explanation": "Bayes: P(A|B) = P(B|A)×P(A)/P(B). Prior P(A) × Likelihood P(B|A) / Evidence P(B) = Posterior P(A|B). Update beliefs with evidence!"
+      "explanation": "Bayes: P(A|B) = P(B|A)×P(A)/P(B). Prior P(A) × Likelihood P(B|A) / Evidence P(B) = Posterior P(A|B). Update beliefs with evidence!",
+      "id": "probability-statistics-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Normal distribution'da 68-95-99.7 rule nedir?",
@@ -99,8 +100,9 @@
         "Sadece sample size büyükse",
         "Uniform distribution için"
       ],
-      "correct": 0,
-      "explanation": "Normal distribution için: 68% data μ±1σ, 95% μ±2σ, 99.7% μ±3σ içinde. Empirical rule, bell curve symmetric!"
+      "explanation": "Normal distribution için: 68% data μ±1σ, 95% μ±2σ, 99.7% μ±3σ içinde. Empirical rule, bell curve symmetric!",
+      "id": "probability-statistics-q2",
+      "correctAnswer": 0
     },
     {
       "question": "p-value neyi ölçer?",
@@ -110,8 +112,9 @@
         "Effect size",
         "Sample size"
       ],
-      "correct": 1,
-      "explanation": "p-value: H₀ doğruyken bu data (veya daha extreme) görme probability. p<0.05 → H₀ reject (unlikely under null). p≥0.05 → fail to reject."
+      "explanation": "p-value: H₀ doğruyken bu data (veya daha extreme) görme probability. p<0.05 → H₀ reject (unlikely under null). p≥0.05 → fail to reject.",
+      "id": "probability-statistics-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Type I ve Type II error nedir?",
@@ -121,8 +124,9 @@
         "Type I büyük, Type II küçük",
         "Sadece küçük sample'da"
       ],
-      "correct": 1,
-      "explanation": "Type I (α): False positive - H₀ true ama reject (yanlış alarm). Type II (β): False negative - H₀ false ama fail reject (miss). Power = 1-β."
+      "explanation": "Type I (α): False positive - H₀ true ama reject (yanlış alarm). Type II (β): False negative - H₀ false ama fail reject (miss). Power = 1-β.",
+      "id": "probability-statistics-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Confidence Interval vs Credible Interval farkı?",
@@ -132,8 +136,9 @@
         "CI her zaman daha büyük",
         "Sadece normal distribution'da farklı"
       ],
-      "correct": 1,
-      "explanation": "CI (Frequentist): '95% of such intervals contain parameter' (procedure). Credible (Bayesian): '95% probability parameter in interval' (parameter distribution). Philosophy farklı!"
+      "explanation": "CI (Frequentist): '95% of such intervals contain parameter' (procedure). Credible (Bayesian): '95% probability parameter in interval' (parameter distribution). Philosophy farklı!",
+      "id": "probability-statistics-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Central Limit Theorem ne söyler?",
@@ -143,8 +148,9 @@
         "Sadece normal data için",
         "Mean her zaman 0"
       ],
-      "correct": 1,
-      "explanation": "CLT: n büyükse (tipik n≥30), sample means ≈ Normal(μ, σ²/n), original distribution ne olursa olsun! Fundamental theorem, inference'ın temeli."
+      "explanation": "CLT: n büyükse (tipik n≥30), sample means ≈ Normal(μ, σ²/n), original distribution ne olursa olsun! Fundamental theorem, inference'ın temeli.",
+      "id": "probability-statistics-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -250,5 +256,9 @@
       "description": "Uniform/exponential distribution'dan samples al, sample means distribution'ının Normal'e converge etmesini animate et.",
       "component": "CentralLimitTheoremAnimation"
     }
+  ],
+  "nextTopics": [
+    "mle-map-estimation",
+    "linear-regression"
   ]
 }

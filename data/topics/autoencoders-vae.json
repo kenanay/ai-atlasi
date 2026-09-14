@@ -49,14 +49,12 @@
     "convolutional-neural-networks"
   ],
   "nextTopics": [
-    "vq-vae",
-    "diffusion-models",
-    "flow-based-models"
+    "diffusion-models"
   ],
   "relatedTopics": [
     "generative-adversarial-networks",
     "convolutional-neural-networks",
-    "dimensionality-reduction"
+    "pca-dimensionality-reduction"
   ],
   "tags": [
     "autoencoder",
@@ -124,7 +122,8 @@
         "Sadece görsel amaçlı"
       ],
       "correctAnswer": 1,
-      "explanation": "No bottleneck: Network can just copy input (784→784). Learns nothing! With bottleneck (784→32→784): MUST compress. Forced to learn important patterns, features. Like ZIP: Can't store everything, picks what matters! Too small: Information loss. Too large: No compression, learns identity. Sweet spot: Preserves important info, discards noise."
+      "explanation": "No bottleneck: Network can just copy input (784→784). Learns nothing! With bottleneck (784→32→784): MUST compress. Forced to learn important patterns, features. Like ZIP: Can't store everything, picks what matters! Too small: Information loss. Too large: No compression, learns identity. Sweet spot: Preserves important info, discards noise.",
+      "id": "autoencoders-vae-q1"
     },
     {
       "question": "VAE'nin regular autoencoder'dan farkı nedir?",
@@ -135,7 +134,8 @@
         "Sadece image için çalışır"
       ],
       "correctAnswer": 1,
-      "explanation": "Regular AE: Deterministic encoding (single point). Can only reconstruct. VAE: Probabilistic! Encoder → (μ, σ) → sample z ~ N(μ,σ²). Benefits: (1) Smooth latent space (interpolation), (2) Generate new data (sample z ~ N(0,1)), (3) Uncertainty modeling. KL divergence regularizes latent space. Use case: AE for compression, VAE for generation!"
+      "explanation": "Regular AE: Deterministic encoding (single point). Can only reconstruct. VAE: Probabilistic! Encoder → (μ, σ) → sample z ~ N(μ,σ²). Benefits: (1) Smooth latent space (interpolation), (2) Generate new data (sample z ~ N(0,1)), (3) Uncertainty modeling. KL divergence regularizes latent space. Use case: AE for compression, VAE for generation!",
+      "id": "autoencoders-vae-q2"
     },
     {
       "question": "VAE loss function'da KL divergence ne işe yarar?",
@@ -146,7 +146,8 @@
         "Overfitting'i tamamen önler"
       ],
       "correctAnswer": 1,
-      "explanation": "KL(q(z|x) || p(z)): Regularizer! Without KL: Encoder could use any crazy distribution → disconnected latent space → can't sample/interpolate. With KL: Forces q(z|x) ≈ N(0,1) → smooth, continuous latent space. Trade-off: Too much KL → posterior collapse (ignores input). β-VAE: Adjustable KL weight. Enables: Sampling, interpolation, disentanglement."
+      "explanation": "KL(q(z|x) || p(z)): Regularizer! Without KL: Encoder could use any crazy distribution → disconnected latent space → can't sample/interpolate. With KL: Forces q(z|x) ≈ N(0,1) → smooth, continuous latent space. Trade-off: Too much KL → posterior collapse (ignores input). β-VAE: Adjustable KL weight. Enables: Sampling, interpolation, disentanglement.",
+      "id": "autoencoders-vae-q3"
     },
     {
       "question": "Reparameterization trick neden gerekli?",
@@ -157,7 +158,8 @@
         "Sadece VAE için değil, tüm models için"
       ],
       "correctAnswer": 1,
-      "explanation": "Problem: Sampling z ~ N(μ,σ²) non-differentiable! Can't backprop through random sampling. Solution: z = μ + σ * ε where ε ~ N(0,1). Now: Gradient flows through μ and σ! Stochasticity in ε (no gradient needed). Enables: Training VAE with backprop. Without trick: Can't train VAE! Critical innovation for VAE."
+      "explanation": "Problem: Sampling z ~ N(μ,σ²) non-differentiable! Can't backprop through random sampling. Solution: z = μ + σ * ε where ε ~ N(0,1). Now: Gradient flows through μ and σ! Stochasticity in ε (no gradient needed). Enables: Training VAE with backprop. Without trick: Can't train VAE! Critical innovation for VAE.",
+      "id": "autoencoders-vae-q4"
     },
     {
       "question": "Denoising autoencoder nasıl çalışır?",
@@ -168,7 +170,8 @@
         "Sadece audio için kullanılır"
       ],
       "correctAnswer": 1,
-      "explanation": "Training: x_clean → add_noise() → x_noisy. Model: x_noisy → Encoder → Decoder → x̂_clean. Loss: ||x_clean - x̂_clean||². Network learns: What's noise (remove), what's signal (keep). Benefits: (1) Robust features, (2) Better generalization, (3) Denoising capability. Applications: Image restoration, audio enhancement, sensor data cleaning. Regular AE: input=target. Denoising AE: noisy input, clean target."
+      "explanation": "Training: x_clean → add_noise() → x_noisy. Model: x_noisy → Encoder → Decoder → x̂_clean. Loss: ||x_clean - x̂_clean||². Network learns: What's noise (remove), what's signal (keep). Benefits: (1) Robust features, (2) Better generalization, (3) Denoising capability. Applications: Image restoration, audio enhancement, sensor data cleaning. Regular AE: input=target. Denoising AE: noisy input, clean target.",
+      "id": "autoencoders-vae-q5"
     },
     {
       "question": "Autoencoder'ın anomaly detection için kullanımı?",
@@ -179,7 +182,8 @@
         "Labels gereklidir"
       ],
       "correctAnswer": 1,
-      "explanation": "Idea: Train autoencoder on NORMAL data only. Model learns: What normal looks like. Normal data: Low reconstruction error (model knows pattern). Anomaly: High reconstruction error (unfamiliar pattern!). Threshold: error > τ → anomaly. Applications: Manufacturing defects, fraud detection, network intrusion. Unsupervised! No anomaly labels needed. One-class learning: Model normal, detect deviations."
+      "explanation": "Idea: Train autoencoder on NORMAL data only. Model learns: What normal looks like. Normal data: Low reconstruction error (model knows pattern). Anomaly: High reconstruction error (unfamiliar pattern!). Threshold: error > τ → anomaly. Applications: Manufacturing defects, fraud detection, network intrusion. Unsupervised! No anomaly labels needed. One-class learning: Model normal, detect deviations.",
+      "id": "autoencoders-vae-q6"
     }
   ],
   "flashcards": [

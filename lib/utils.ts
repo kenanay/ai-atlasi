@@ -22,6 +22,7 @@ export const CATEGORY_INFO: Record<string, { name: string; icon: string; color: 
   'linear-algebra': { name: 'Matematik & Teori', icon: '🔢', color: 'bg-blue-100' },
   'calculus': { name: 'Matematik & Teori', icon: '🔢', color: 'bg-blue-100' },
   'probability': { name: 'Matematik & Teori', icon: '🔢', color: 'bg-blue-100' },
+  'statistics': { name: 'Matematik & Teori', icon: '🔢', color: 'bg-blue-100' },
   'fundamentals': { name: 'Matematik & Teori', icon: '🔢', color: 'bg-blue-100' },
   
   // 2. KLASİK MAKİNE ÖĞRENMESİ (supervised + unsupervised + classical birleşti)

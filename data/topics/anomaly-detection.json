@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Anomaly Detection explanation."
+      "explanation": "Anomaly Detection explanation.",
+      "id": "anomaly-detection-q1"
     },
     {
       "question": "When to use Anomaly Detection?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "anomaly-detection-q2"
     },
     {
       "question": "Anomaly Detection advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "anomaly-detection-q3"
     },
     {
       "question": "Anomaly Detection limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "anomaly-detection-q4"
     },
     {
       "question": "Best practice for Anomaly Detection?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "anomaly-detection-q5"
     },
     {
       "question": "Anomaly Detection vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "anomaly-detection-q6"
     }
   ],
   "flashcards": [

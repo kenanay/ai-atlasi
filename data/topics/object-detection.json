@@ -45,14 +45,12 @@
     "transfer-learning"
   ],
   "nextTopics": [
-    "image-segmentation",
-    "instance-segmentation",
-    "tracking"
+    "image-segmentation"
   ],
   "relatedTopics": [
-    "cnn",
+    "convolutional-neural-networks",
     "transfer-learning",
-    "data-augmentation"
+    "data-preprocessing-features"
   ],
   "tags": [
     "object-detection",

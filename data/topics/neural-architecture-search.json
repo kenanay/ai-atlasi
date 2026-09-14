@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Neural Architecture Search explanation."
+      "explanation": "Neural Architecture Search explanation.",
+      "id": "neural-architecture-search-q1"
     },
     {
       "question": "When to use Neural Architecture Search?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "neural-architecture-search-q2"
     },
     {
       "question": "Neural Architecture Search advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "neural-architecture-search-q3"
     },
     {
       "question": "Neural Architecture Search limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "neural-architecture-search-q4"
     },
     {
       "question": "Best practice for Neural Architecture Search?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "neural-architecture-search-q5"
     },
     {
       "question": "Neural Architecture Search vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "neural-architecture-search-q6"
     }
   ],
   "flashcards": [

@@ -92,8 +92,9 @@
         "Sadece slow training için",
         "Sadece büyük models için"
       ],
-      "correct": 1,
-      "explanation": "Fixed LR suboptimal! Initially high LR → fast progress, later low LR → stable convergence. Modern training'de critical, especially transformers!"
+      "explanation": "Fixed LR suboptimal! Initially high LR → fast progress, later low LR → stable convergence. Modern training'de critical, especially transformers!",
+      "id": "learning-rate-scheduling-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Cosine annealing'in avantajı nedir?",
@@ -103,8 +104,9 @@
         "Her zaman step decay'den kötü",
         "Sadece small datasets için"
       ],
-      "correct": 1,
-      "explanation": "Cosine annealing: Smooth cosine decrease, no manual step_size tuning! Just set total epochs. Modern default choice, robust performance!"
+      "explanation": "Cosine annealing: Smooth cosine decrease, no manual step_size tuning! Just set total epochs. Modern default choice, robust performance!",
+      "id": "learning-rate-scheduling-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Warmup ne zaman critical?",
@@ -114,8 +116,9 @@
         "Sadece small datasets",
         "Sadece test time"
       ],
-      "correct": 1,
-      "explanation": "Warmup critical for: Large batch training, transformers (BERT, GPT), high initial LR. Prevents early instability, gradual LR increase!"
+      "explanation": "Warmup critical for: Large batch training, transformers (BERT, GPT), high initial LR. Prevents early instability, gradual LR increase!",
+      "id": "learning-rate-scheduling-q3",
+      "correctAnswer": 1
     },
     {
       "question": "ReduceLROnPlateau'nun özelliği?",
@@ -125,8 +128,9 @@
         "En hızlı method",
         "Transformer'lar için ideal"
       ],
-      "correct": 1,
-      "explanation": "ReduceLROnPlateau adaptive, reactive! Val loss plateau detects → LR reduce. Best as backup, unexpected plateaus için. Primary schedule ile combine et!"
+      "explanation": "ReduceLROnPlateau adaptive, reactive! Val loss plateau detects → LR reduce. Best as backup, unexpected plateaus için. Primary schedule ile combine et!",
+      "id": "learning-rate-scheduling-q4",
+      "correctAnswer": 1
     },
     {
       "question": "One-Cycle policy'nin faydası?",
@@ -136,8 +140,9 @@
         "Sadece small models için",
         "Gereksiz"
       ],
-      "correct": 1,
-      "explanation": "One-Cycle: Warmup + annealing single cycle! Fast convergence, better generalization, fewer epochs. High LR phase → escape local minima. fast.ai popularized!"
+      "explanation": "One-Cycle: Warmup + annealing single cycle! Fast convergence, better generalization, fewer epochs. High LR phase → escape local minima. fast.ai popularized!",
+      "id": "learning-rate-scheduling-q5",
+      "correctAnswer": 1
     },
     {
       "question": "LR range test nasıl yapılır?",
@@ -147,8 +152,9 @@
         "En büyük LR seç",
         "Gereksiz"
       ],
-      "correct": 1,
-      "explanation": "LR range test: Start tiny (1e-7), exponentially increase each batch, record loss. Plot loss vs LR. Optimal LR = where loss minimum (before divergence)!"
+      "explanation": "LR range test: Start tiny (1e-7), exponentially increase each batch, record loss. Plot loss vs LR. Optimal LR = where loss minimum (before divergence)!",
+      "id": "learning-rate-scheduling-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -254,5 +260,10 @@
       "description": "One-cycle phases visualization. Warmup, annealing, momentum coupling, training dynamics.",
       "component": "OneCycleViz"
     }
+  ],
+  "nextTopics": [
+    "optimizers",
+    "regularization",
+    "distributed-training"
   ]
 }

@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Continual Learning explanation."
+      "explanation": "Continual Learning explanation.",
+      "id": "continual-learning-q1"
     },
     {
       "question": "When to use Continual Learning?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "continual-learning-q2"
     },
     {
       "question": "Continual Learning advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "continual-learning-q3"
     },
     {
       "question": "Continual Learning limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "continual-learning-q4"
     },
     {
       "question": "Best practice for Continual Learning?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "continual-learning-q5"
     },
     {
       "question": "Continual Learning vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "continual-learning-q6"
     }
   ],
   "flashcards": [

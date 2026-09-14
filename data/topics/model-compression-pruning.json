@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Model Compression & Pruning explanation."
+      "explanation": "Model Compression & Pruning explanation.",
+      "id": "model-compression-pruning-q1"
     },
     {
       "question": "When to use Model Compression & Pruning?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "model-compression-pruning-q2"
     },
     {
       "question": "Model Compression & Pruning advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "model-compression-pruning-q3"
     },
     {
       "question": "Model Compression & Pruning limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "model-compression-pruning-q4"
     },
     {
       "question": "Best practice for Model Compression & Pruning?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "model-compression-pruning-q5"
     },
     {
       "question": "Model Compression & Pruning vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "model-compression-pruning-q6"
     }
   ],
   "flashcards": [

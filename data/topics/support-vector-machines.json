@@ -45,12 +45,11 @@
     "gradient-descent"
   ],
   "nextTopics": [
-    "kernel-methods",
     "neural-networks"
   ],
   "relatedTopics": [
     "logistic-regression",
-    "decision-trees"
+    "decision-trees-random-forests"
   ],
   "tags": [
     "svm",
@@ -113,7 +112,8 @@
         "Training time"
       ],
       "correctAnswer": 1,
-      "explanation": "Margin: Distance from decision boundary to closest points! SVM maximizes this distance. Larger margin → better generalization (points can move slightly without misclassification). Support vectors: Points on margin boundary. Only these matter for decision boundary. Other points irrelevant! Intuition: Safer boundary (far from both classes) → more robust."
+      "explanation": "Margin: Distance from decision boundary to closest points! SVM maximizes this distance. Larger margin → better generalization (points can move slightly without misclassification). Support vectors: Points on margin boundary. Only these matter for decision boundary. Other points irrelevant! Intuition: Safer boundary (far from both classes) → more robust.",
+      "id": "support-vector-machines-q1"
     },
     {
       "question": "Kernel trick'in amacı nedir?",
@@ -124,7 +124,8 @@
         "Visualization"
       ],
       "correctAnswer": 1,
-      "explanation": "Kernel trick: Map data to high-dimensional space WITHOUT computing transformation explicitly! Example: XOR not linearly separable in 2D. Map to 3D (add z=x₁·x₂) → separable! RBF kernel: Infinite dimensional space! Mathematically equivalent but computed via kernel function K(x,x'). Benefit: Handle non-linear data efficiently. No explicit high-dim computation!"
+      "explanation": "Kernel trick: Map data to high-dimensional space WITHOUT computing transformation explicitly! Example: XOR not linearly separable in 2D. Map to 3D (add z=x₁·x₂) → separable! RBF kernel: Infinite dimensional space! Mathematically equivalent but computed via kernel function K(x,x'). Benefit: Handle non-linear data efficiently. No explicit high-dim computation!",
+      "id": "support-vector-machines-q2"
     },
     {
       "question": "C parametresinin rolü?",
@@ -135,7 +136,8 @@
         "Feature scaling"
       ],
       "correctAnswer": 1,
-      "explanation": "C: Penalty for misclassification! Large C (100): Hard margin, no errors allowed → may overfit, narrow margin. Small C (0.01): Soft margin, allow errors → wider margin, better generalization. Trade-off: Margin width vs training accuracy. Similar to: Inverse of λ in regularization. Tune via cross-validation! Typical range: 0.1 to 100."
+      "explanation": "C: Penalty for misclassification! Large C (100): Hard margin, no errors allowed → may overfit, narrow margin. Small C (0.01): Soft margin, allow errors → wider margin, better generalization. Trade-off: Margin width vs training accuracy. Similar to: Inverse of λ in regularization. Tune via cross-validation! Typical range: 0.1 to 100.",
+      "id": "support-vector-machines-q3"
     },
     {
       "question": "Neden SVM'de feature scaling kritik?",
@@ -146,7 +148,8 @@
         "Required by algorithm"
       ],
       "correctAnswer": 1,
-      "explanation": "SVM based on distances/dot products! Features different scales → large-scale features dominate. Example: Feature1 [0-1], Feature2 [0-1000]. Feature2 will dominate distance calculation → wrong decision boundary. Solution: Always StandardScaler or MinMaxScaler before SVM! Unlike trees (scale-invariant). Critical for good performance!"
+      "explanation": "SVM based on distances/dot products! Features different scales → large-scale features dominate. Example: Feature1 [0-1], Feature2 [0-1000]. Feature2 will dominate distance calculation → wrong decision boundary. Solution: Always StandardScaler or MinMaxScaler before SVM! Unlike trees (scale-invariant). Critical for good performance!",
+      "id": "support-vector-machines-q4"
     },
     {
       "question": "Support vectors nedir?",
@@ -157,7 +160,8 @@
         "Test points"
       ],
       "correctAnswer": 1,
-      "explanation": "Support vectors: Points with α>0 (non-zero Lagrange multipliers). Lie on or inside margin! These points define decision boundary. Remove other points → same boundary! Why 'support': They support the hyperplane. Benefit: Memory efficient (store only SVs, not all data). Typically 20-80% of training data. More support vectors → complex boundary."
+      "explanation": "Support vectors: Points with α>0 (non-zero Lagrange multipliers). Lie on or inside margin! These points define decision boundary. Remove other points → same boundary! Why 'support': They support the hyperplane. Benefit: Memory efficient (store only SVs, not all data). Typically 20-80% of training data. More support vectors → complex boundary.",
+      "id": "support-vector-machines-q5"
     },
     {
       "question": "Large datasets (>100k) için best practice?",
@@ -168,7 +172,8 @@
         "Use polynomial kernel"
       ],
       "correctAnswer": 1,
-      "explanation": "Standard SVM: O(n²-n³) → prohibitive for large n! LinearSVC: Linear kernel only, optimized for speed. Uses liblinear (faster solver). Complexity: O(n·d). Can handle millions of samples! Trade-off: Only linear decision boundary. Alternative: SGDClassifier(loss='hinge') for even larger scale. Kernel SVM: Only for small-medium datasets (<50k)."
+      "explanation": "Standard SVM: O(n²-n³) → prohibitive for large n! LinearSVC: Linear kernel only, optimized for speed. Uses liblinear (faster solver). Complexity: O(n·d). Can handle millions of samples! Trade-off: Only linear decision boundary. Alternative: SGDClassifier(loss='hinge') for even larger scale. Kernel SVM: Only for small-medium datasets (<50k).",
+      "id": "support-vector-machines-q6"
     }
   ],
   "flashcards": [

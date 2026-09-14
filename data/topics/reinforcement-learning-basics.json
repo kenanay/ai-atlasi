@@ -50,14 +50,12 @@
     "optimizers"
   ],
   "nextTopics": [
-    "deep-rl-advanced",
-    "multi-agent-rl",
-    "model-based-rl"
+    "q-learning-dqn"
   ],
   "relatedTopics": [
     "neural-networks",
     "optimizers",
-    "gans"
+    "generative-adversarial-networks"
   ],
   "tags": [
     "reinforcement-learning",
@@ -125,7 +123,8 @@
         "RL daha az data gerektirir"
       ],
       "correctAnswer": 1,
-      "explanation": "Supervised Learning: Labeled data (input→correct output). Teacher signal! RL: No labels! Agent explores environment, takes actions, receives rewards. Learns optimal behavior through experience. Trial and error! Dog training analogy: No one tells exact action, dog learns from treats (rewards). Key difference: RL discovers behavior, supervised mimics provided examples."
+      "explanation": "Supervised Learning: Labeled data (input→correct output). Teacher signal! RL: No labels! Agent explores environment, takes actions, receives rewards. Learns optimal behavior through experience. Trial and error! Dog training analogy: No one tells exact action, dog learns from treats (rewards). Key difference: RL discovers behavior, supervised mimics provided examples.",
+      "id": "reinforcement-learning-basics-q1"
     },
     {
       "question": "Q-Learning'de Q(state, action) ne represent eder?",
@@ -136,7 +135,8 @@
         "Number of times action taken"
       ],
       "correctAnswer": 1,
-      "explanation": "Q(s,a) = Expected future reward starting from state s, taking action a, then following optimal policy. Example: Q(chess_position, 'move_knight') = Expected reward (win/loss) if move knight now, play optimally after. High Q → good action! Agent learns Q-values through Bellman update. Policy: Choose action with highest Q(s,a)."
+      "explanation": "Q(s,a) = Expected future reward starting from state s, taking action a, then following optimal policy. Example: Q(chess_position, 'move_knight') = Expected reward (win/loss) if move knight now, play optimally after. High Q → good action! Agent learns Q-values through Bellman update. Policy: Choose action with highest Q(s,a).",
+      "id": "reinforcement-learning-basics-q2"
     },
     {
       "question": "Exploration vs Exploitation trade-off nedir?",
@@ -147,7 +147,8 @@
         "Online vs offline learning"
       ],
       "correctAnswer": 1,
-      "explanation": "Exploration: Try new actions → might discover better strategy! Risk: Temporary lower reward. Exploitation: Use best known action → safe, immediate reward. Risk: Might miss better options! ε-greedy: Random action (ε probability) = explore, best action (1-ε) = exploit. Early training: High ε (explore more), Late training: Low ε (exploit learned policy). Balance critical! Pure exploitation: Stuck at local optimum. Pure exploration: Never uses learned knowledge."
+      "explanation": "Exploration: Try new actions → might discover better strategy! Risk: Temporary lower reward. Exploitation: Use best known action → safe, immediate reward. Risk: Might miss better options! ε-greedy: Random action (ε probability) = explore, best action (1-ε) = exploit. Early training: High ε (explore more), Late training: Low ε (exploit learned policy). Balance critical! Pure exploitation: Stuck at local optimum. Pure exploration: Never uses learned knowledge.",
+      "id": "reinforcement-learning-basics-q3"
     },
     {
       "question": "DQN (Deep Q-Network)'de experience replay neden kullanılır?",
@@ -158,7 +159,8 @@
         "Sadece Atari games için gerekli"
       ],
       "correctAnswer": 1,
-      "explanation": "Problem: Consecutive experiences highly correlated → neural network instability! Example: Agent in corner → many similar states in sequence → network overfits to current situation. Solution: Experience Replay! Store (s,a,r,s') transitions in buffer. Sample random minibatch for training → breaks correlation! Benefits: (1) Data efficiency (reuse experiences), (2) Stability (decorrelated samples), (3) Better convergence. Critical for DQN success on Atari games!"
+      "explanation": "Problem: Consecutive experiences highly correlated → neural network instability! Example: Agent in corner → many similar states in sequence → network overfits to current situation. Solution: Experience Replay! Store (s,a,r,s') transitions in buffer. Sample random minibatch for training → breaks correlation! Benefits: (1) Data efficiency (reuse experiences), (2) Stability (decorrelated samples), (3) Better convergence. Critical for DQN success on Atari games!",
+      "id": "reinforcement-learning-basics-q4"
     },
     {
       "question": "Discount factor γ (gamma) ne işe yarar?",
@@ -169,7 +171,8 @@
         "Network convergence speed'i artırır"
       ],
       "correctAnswer": 1,
-      "explanation": "γ (gamma): Discount factor [0,1]. Return = r₀ + γr₁ + γ²r₂ + ... γ=0: Only immediate reward matters (myopic agent). γ=0.5: Future rewards exponentially decay. γ=0.9: Typical, balance immediate + long-term. γ=1: All future rewards equal weight (far-sighted, can diverge!). Chess example: γ=0 → grab pieces immediately. γ=0.99 → sacrifice piece for checkmate 20 moves later. Typical: 0.9-0.99."
+      "explanation": "γ (gamma): Discount factor [0,1]. Return = r₀ + γr₁ + γ²r₂ + ... γ=0: Only immediate reward matters (myopic agent). γ=0.5: Future rewards exponentially decay. γ=0.9: Typical, balance immediate + long-term. γ=1: All future rewards equal weight (far-sighted, can diverge!). Chess example: γ=0 → grab pieces immediately. γ=0.99 → sacrifice piece for checkmate 20 moves later. Typical: 0.9-0.99.",
+      "id": "reinforcement-learning-basics-q5"
     },
     {
       "question": "Policy Gradient methods'un Q-Learning'e göre advantage'ı nedir?",
@@ -180,7 +183,8 @@
         "Guaranteed convergence"
       ],
       "correctAnswer": 1,
-      "explanation": "Q-Learning: Discrete actions only! (Up, Down, Left, Right). Continuous (robot arm angles)? Discretize → loses precision. Policy Gradient: Directly learn policy π(a|s) = probability of action. Benefits: (1) Continuous actions (output probability distribution), (2) Stochastic policies (useful for exploration), (3) High-dimensional actions. Trade-off: Higher variance, slower convergence. Applications: Robotics (continuous control), complex action spaces. Q-Learning: Discrete, deterministic. Policy Gradient: Continuous, stochastic."
+      "explanation": "Q-Learning: Discrete actions only! (Up, Down, Left, Right). Continuous (robot arm angles)? Discretize → loses precision. Policy Gradient: Directly learn policy π(a|s) = probability of action. Benefits: (1) Continuous actions (output probability distribution), (2) Stochastic policies (useful for exploration), (3) High-dimensional actions. Trade-off: Higher variance, slower convergence. Applications: Robotics (continuous control), complex action spaces. Q-Learning: Discrete, deterministic. Policy Gradient: Continuous, stochastic.",
+      "id": "reinforcement-learning-basics-q6"
     }
   ],
   "flashcards": [

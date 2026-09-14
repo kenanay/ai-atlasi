@@ -50,8 +50,8 @@
     "transfer-learning"
   ],
   "nextTopics": [
-    "gpt-generative-models",
-    "t5-text-to-text",
+    "large-language-models-basics",
+    "sequence-to-sequence",
     "prompt-engineering"
   ],
   "relatedTopics": [
@@ -125,7 +125,8 @@
         "Memory kullanımını azaltır"
       ],
       "correctAnswer": 1,
-      "explanation": "Traditional (GPT-1): Left-to-right only. 'The bank' → only left context. BERT: Bidirectional! 'The bank of the river' → sees 'river' (right) → geography meaning. 'Withdrew from bank' → sees 'withdrew' (left) → financial meaning. Context from BOTH sides → better word sense disambiguation!"
+      "explanation": "Traditional (GPT-1): Left-to-right only. 'The bank' → only left context. BERT: Bidirectional! 'The bank of the river' → sees 'river' (right) → geography meaning. 'Withdrew from bank' → sees 'withdrew' (left) → financial meaning. Context from BOTH sides → better word sense disambiguation!",
+      "id": "bert-language-models-q1"
     },
     {
       "question": "Masked Language Modeling (MLM) nasıl çalışır?",
@@ -136,7 +137,8 @@
         "Sentence order'ı predict eder"
       ],
       "correctAnswer": 1,
-      "explanation": "MLM: Random 15% of tokens masked. 'The [MASK] is cute' → predict 'cat'. Masking strategy: 80% → [MASK], 10% → random word, 10% → unchanged (prevents overfitting to [MASK]). Forces model to learn from context! Bidirectional because model sees left AND right of [MASK]. Different from autoregressive (GPT) which only predicts next word."
+      "explanation": "MLM: Random 15% of tokens masked. 'The [MASK] is cute' → predict 'cat'. Masking strategy: 80% → [MASK], 10% → random word, 10% → unchanged (prevents overfitting to [MASK]). Forces model to learn from context! Bidirectional because model sees left AND right of [MASK]. Different from autoregressive (GPT) which only predicts next word.",
+      "id": "bert-language-models-q2"
     },
     {
       "question": "Pre-training vs Fine-tuning arasındaki fark nedir?",
@@ -147,7 +149,8 @@
         "Fine-tuning sadece classification için kullanılır"
       ],
       "correctAnswer": 1,
-      "explanation": "Pre-training: Learn general language on Wikipedia+Books (billions of words). MLM + NSP objectives. Expensive (4 days, 64 TPUs, ~$10K). ONCE! Fine-tuning: Task-specific (sentiment, QA, NER). Small dataset (100s-1000s examples). Cheap (hours, 1 GPU, <$10). MANY times! Transfer learning: Pre-trained knowledge → specific task. Like: University education → job specialization."
+      "explanation": "Pre-training: Learn general language on Wikipedia+Books (billions of words). MLM + NSP objectives. Expensive (4 days, 64 TPUs, ~$10K). ONCE! Fine-tuning: Task-specific (sentiment, QA, NER). Small dataset (100s-1000s examples). Cheap (hours, 1 GPU, <$10). MANY times! Transfer learning: Pre-trained knowledge → specific task. Like: University education → job specialization.",
+      "id": "bert-language-models-q3"
     },
     {
       "question": "[CLS] token'ın role'ü nedir?",
@@ -158,7 +161,8 @@
         "Masking için reserved token"
       ],
       "correctAnswer": 1,
-      "explanation": "[CLS] = Classification token. Always first token. During pre-training: Learns to aggregate whole sentence info. Fine-tuning: [CLS] embedding → classification head. Contains sentence-level representation! For classification tasks: Use [CLS]. For token tasks (NER): Use all token embeddings. [SEP] = Separator (end of sentence). [MASK] = Masking (MLM training)."
+      "explanation": "[CLS] = Classification token. Always first token. During pre-training: Learns to aggregate whole sentence info. Fine-tuning: [CLS] embedding → classification head. Contains sentence-level representation! For classification tasks: Use [CLS]. For token tasks (NER): Use all token embeddings. [SEP] = Separator (end of sentence). [MASK] = Masking (MLM training).",
+      "id": "bert-language-models-q4"
     },
     {
       "question": "BERT'in variants'ları (RoBERTa, ALBERT, DistilBERT) neden exist eder?",
@@ -169,7 +173,8 @@
         "Marketing purposes"
       ],
       "correctAnswer": 1,
-      "explanation": "RoBERTa: Remove NSP, dynamic masking, more data → better performance! ALBERT: Parameter sharing, factorized embeddings → 18× smaller, similar performance. DistilBERT: Knowledge distillation → 40% smaller, 60% faster, 97% performance. ELECTRA: Replaced token detection → more efficient pre-training. Each solves specific problem: Size, speed, performance, efficiency. Choose based on: Accuracy need vs resource constraints."
+      "explanation": "RoBERTa: Remove NSP, dynamic masking, more data → better performance! ALBERT: Parameter sharing, factorized embeddings → 18× smaller, similar performance. DistilBERT: Knowledge distillation → 40% smaller, 60% faster, 97% performance. ELECTRA: Replaced token detection → more efficient pre-training. Each solves specific problem: Size, speed, performance, efficiency. Choose based on: Accuracy need vs resource constraints.",
+      "id": "bert-language-models-q5"
     },
     {
       "question": "BERT transfer learning neden powerful?",
@@ -180,7 +185,8 @@
         "Memory usage azaltır"
       ],
       "correctAnswer": 1,
-      "explanation": "Traditional: Train from scratch → need millions of labeled examples! Expensive, slow. BERT: Pre-trained on 3.3B words (unlabeled) → captures language structure, semantics, context. Fine-tune: 100s-1000s labeled examples enough! Huge performance gain. Example: SQuAD QA: 80% → 93% F1 with BERT. Sentiment: 90% → 96% accuracy. Like: PhD with general knowledge → quick specialization vs high school graduate learning everything!"
+      "explanation": "Traditional: Train from scratch → need millions of labeled examples! Expensive, slow. BERT: Pre-trained on 3.3B words (unlabeled) → captures language structure, semantics, context. Fine-tune: 100s-1000s labeled examples enough! Huge performance gain. Example: SQuAD QA: 80% → 93% F1 with BERT. Sentiment: 90% → 96% accuracy. Like: PhD with general knowledge → quick specialization vs high school graduate learning everything!",
+      "id": "bert-language-models-q6"
     }
   ],
   "flashcards": [

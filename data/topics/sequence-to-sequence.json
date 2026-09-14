@@ -5,8 +5,20 @@
   "level": 3,
   "estimatedTime": 50,
   "description": "Variable-length input'u variable-length output'a map eden architecture. Machine translation, text summarization, chatbots için temel. Encoder-Decoder + Attention mechanism.",
-  "prerequisites": ["recurrent-neural-networks", "lstm-gru-networks", "word-embeddings", "transformers-attention"],
-  "tags": ["seq2seq", "encoder-decoder", "machine-translation", "attention", "rnn", "lstm"],
+  "prerequisites": [
+    "recurrent-neural-networks",
+    "lstm-gru-networks",
+    "word-embeddings",
+    "transformers-attention"
+  ],
+  "tags": [
+    "seq2seq",
+    "encoder-decoder",
+    "machine-translation",
+    "attention",
+    "rnn",
+    "lstm"
+  ],
   "content": {
     "level0_basic": "Bir cümleyi başka bir dile çevirmek istersen ne yaparsın? 'Hello' → 'Merhaba', 'How are you?' → 'Nasılsın?'. Giriş ve çıkış farklı uzunlukta! Traditional models fixed-size input/output bekler. Seq2Seq bunu çözer: Encoder input'u okur, anlam context vector'üne kodlar. Decoder bu context'ten output generate eder, word by word. İngilizce → Türkçe, soru → cevap, text → summary - hepsi seq2seq!",
     "level1_beginner": "Sequence-to-Sequence (Seq2Seq) variable-length sequences arasında mapping yapar.\n\n**Problem:**\nTraditional NN fixed-size input/output bekler.\n- Image classification: 224×224 → 1000 classes ✓\n- Machine translation: variable length → variable length ❌\n\n**Seq2Seq Solution:**\n\n**Architecture: Encoder-Decoder**\n\n```\nInput:  [Hello, how, are, you, ?]\n         ↓\n      ENCODER (RNN/LSTM)\n         ↓\n    Context Vector (fixed-size)\n         ↓\n      DECODER (RNN/LSTM)\n         ↓\nOutput: [Merhaba, nasılsın, ?]\n```\n\n**1. Encoder:**\nInput sequence'i okur, final hidden state = context vector.\n\n$$h_t = f(h_{t-1}, x_t)$$\n$$c = h_T  \\quad \\text{(context vector)}$$\n\n- $x_t$: input at time $t$\n- $h_t$: hidden state\n- $c$: context vector (input'un \"anlamı\")\n\n**2. Decoder:**\nContext vector'den output generate eder, otoregressive.\n\n$$s_t = g(s_{t-1}, y_{t-1}, c)$$\n$$y_t = \\text{softmax}(W_s s_t)$$\n\n- $s_t$: decoder hidden state\n- $y_t$: output at time $t$\n- $c$: context from encoder\n\n**Training:**\n- **Teacher Forcing:** Decoder'a ground truth previous token ver\n- **Loss:** Cross-entropy on output sequence\n\n**Inference:**\n- **Greedy:** Her step'te argmax al\n- **Beam Search:** Top-k candidates track et\n\n**Applications:**\n- Machine translation (EN → TR)\n- Text summarization (long → short)\n- Chatbots (question → answer)\n- Speech recognition (audio → text)\n- Image captioning (image → text)",
@@ -92,8 +104,9 @@
         "Decoder çok karmaşıktır",
         "Memory problemi yaratır"
       ],
-      "correct": 1,
-      "explanation": "Context vector = encoder'ın final hidden state. Tüm input'u (100 kelime) 512-dim vector'e sıkıştırır. Long sequences için information loss! Attention mechanism bunu çözer."
+      "explanation": "Context vector = encoder'ın final hidden state. Tüm input'u (100 kelime) 512-dim vector'e sıkıştırır. Long sequences için information loss! Attention mechanism bunu çözer.",
+      "id": "sequence-to-sequence-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Teacher forcing nedir?",
@@ -103,8 +116,9 @@
         "Model'i zorla öğretmek",
         "Gradients'i clip etmek"
       ],
-      "correct": 0,
-      "explanation": "Teacher forcing: Decoder'ın her step'inde previous predicted token yerine ground truth token ver. Faster training ama exposure bias yaratabilir!"
+      "explanation": "Teacher forcing: Decoder'ın her step'inde previous predicted token yerine ground truth token ver. Faster training ama exposure bias yaratabilir!",
+      "id": "sequence-to-sequence-q2",
+      "correctAnswer": 0
     },
     {
       "question": "Attention mechanism nasıl çalışır?",
@@ -114,8 +128,9 @@
         "Training'i hızlandırır",
         "Model size'ı küçültür"
       ],
-      "correct": 1,
-      "explanation": "Attention: Decoder her step'te tüm encoder hidden states'lerine bakabilir. Alignment scores hesaplar, weighted sum alır → dynamic context vector!"
+      "explanation": "Attention: Decoder her step'te tüm encoder hidden states'lerine bakabilir. Alignment scores hesaplar, weighted sum alır → dynamic context vector!",
+      "id": "sequence-to-sequence-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Beam search greedy decoding'den neden daha iyi?",
@@ -125,8 +140,9 @@
         "Daha az memory kullanır",
         "Her zaman perfect sequence bulur"
       ],
-      "correct": 1,
-      "explanation": "Greedy her step'te argmax alır → local optimum. Beam search k tane best sequences parallel track eder → globally better sequence bulabilir!"
+      "explanation": "Greedy her step'te argmax alır → local optimum. Beam search k tane best sequences parallel track eder → globally better sequence bulabilir!",
+      "id": "sequence-to-sequence-q4",
+      "correctAnswer": 1
     },
     {
       "question": "BLEU score neyi ölçer?",
@@ -136,8 +152,9 @@
         "Model size",
         "Inference latency"
       ],
-      "correct": 1,
-      "explanation": "BLEU n-gram (1-4) precision'larının geometric mean'i + brevity penalty. Generated vs reference overlap. 0-1 arası, yüksek = better. Standard NMT metric!"
+      "explanation": "BLEU n-gram (1-4) precision'larının geometric mean'i + brevity penalty. Generated vs reference overlap. 0-1 arası, yüksek = better. Standard NMT metric!",
+      "id": "sequence-to-sequence-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Exposure bias nedir?",
@@ -147,8 +164,9 @@
         "Encoder-decoder size farkı",
         "Dataset bias"
       ],
-      "correct": 1,
-      "explanation": "Training: Teacher forcing → always ground truth. Inference: Own predictions kullanılır. Mismatch → errors accumulate! Solution: Scheduled sampling (TF ratio decay)."
+      "explanation": "Training: Teacher forcing → always ground truth. Inference: Own predictions kullanılır. Mismatch → errors accumulate! Solution: Scheduled sampling (TF ratio decay).",
+      "id": "sequence-to-sequence-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -254,5 +272,9 @@
       "description": "TF ratio decay schedule. Training progress boyunca TF'nin etkisi, exposure bias reduction.",
       "component": "TeacherForcingSchedule"
     }
+  ],
+  "nextTopics": [
+    "attention-mechanisms-detail",
+    "transformers-attention"
   ]
 }

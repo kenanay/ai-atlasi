@@ -50,7 +50,7 @@
   ],
   "nextTopics": [
     "prompt-engineering",
-    "llm-fine-tuning",
+    "lora-qlora-peft",
     "rlhf-dpo-alignment"
   ],
   "relatedTopics": [
@@ -121,7 +121,8 @@
         "Random token sampling"
       ],
       "correctAnswer": 1,
-      "explanation": "Autoregressive: Generate sequentially! P(x₁:ₙ) = P(x₁)·P(x₂|x₁)·P(x₃|x₁,x₂)·.... Each token prediction conditioned on all previous tokens. Process: 'The' → 'cat' → 'sat' → 'on' → 'mat'. One token at a time! Why: Causal dependency. Future tokens depend on past. Enables coherent text generation. Contrast: BERT (bidirectional, can't generate). GPT: Autoregressive, generates naturally."
+      "explanation": "Autoregressive: Generate sequentially! P(x₁:ₙ) = P(x₁)·P(x₂|x₁)·P(x₃|x₁,x₂)·.... Each token prediction conditioned on all previous tokens. Process: 'The' → 'cat' → 'sat' → 'on' → 'mat'. One token at a time! Why: Causal dependency. Future tokens depend on past. Enables coherent text generation. Contrast: BERT (bidirectional, can't generate). GPT: Autoregressive, generates naturally.",
+      "id": "large-language-models-basics-q1"
     },
     {
       "question": "Temperature parameter'ın etkisi?",
@@ -132,7 +133,8 @@
         "Sadece initialization"
       ],
       "correctAnswer": 1,
-      "explanation": "Temperature: Sampling randomness control! Formula: P(xᵢ) = exp(zᵢ/T) / Σexp(zⱼ/T). Low temp (0.5): Peaked distribution → deterministic, focused, repetitive. High temp (1.5): Flat distribution → creative, diverse, random. T=1: Standard softmax. T→0: Argmax (greedy). T→∞: Uniform random. Use cases: Low T for factual (code, translation). High T for creative (stories). Sweet spot: 0.7-0.9."
+      "explanation": "Temperature: Sampling randomness control! Formula: P(xᵢ) = exp(zᵢ/T) / Σexp(zⱼ/T). Low temp (0.5): Peaked distribution → deterministic, focused, repetitive. High temp (1.5): Flat distribution → creative, diverse, random. T=1: Standard softmax. T→0: Argmax (greedy). T→∞: Uniform random. Use cases: Low T for factual (code, translation). High T for creative (stories). Sweet spot: 0.7-0.9.",
+      "id": "large-language-models-basics-q2"
     },
     {
       "question": "Few-shot learning LLM'lerde nasıl çalışır?",
@@ -143,7 +145,8 @@
         "Automatic"
       ],
       "correctAnswer": 1,
-      "explanation": "Few-shot: In-context learning! Provide examples IN the prompt, no training! Example: '1+1=2, 2+2=4, 3+3=?' → Model infers pattern, outputs '6'. Emergent ability: Only large models (100B+) can do this! Small models can't. 0-shot: No examples. 1-shot: 1 example. 5-shot: 5 examples. More examples → better performance (to a point). Why works: Model recognizes pattern from pre-training, applies to new case. Revolutionary: Task learning without parameter updates!"
+      "explanation": "Few-shot: In-context learning! Provide examples IN the prompt, no training! Example: '1+1=2, 2+2=4, 3+3=?' → Model infers pattern, outputs '6'. Emergent ability: Only large models (100B+) can do this! Small models can't. 0-shot: No examples. 1-shot: 1 example. 5-shot: 5 examples. More examples → better performance (to a point). Why works: Model recognizes pattern from pre-training, applies to new case. Revolutionary: Task learning without parameter updates!",
+      "id": "large-language-models-basics-q3"
     },
     {
       "question": "KV-cache neden kullanılır?",
@@ -154,7 +157,8 @@
         "Memory tasarrufu"
       ],
       "correctAnswer": 1,
-      "explanation": "KV-Cache: Cache attention keys/values! Problem: Each generation step recomputes attention for ALL previous tokens → O(n²). Solution: Cache computed K,V matrices! Only compute new token's K,V. Speedup: 2-10× faster generation! Trade-off: Memory for speed. Without cache: Generate 100 tokens → recompute 5050 times. With cache: 100 times. Critical for long-form generation. Standard in production LLMs!"
+      "explanation": "KV-Cache: Cache attention keys/values! Problem: Each generation step recomputes attention for ALL previous tokens → O(n²). Solution: Cache computed K,V matrices! Only compute new token's K,V. Speedup: 2-10× faster generation! Trade-off: Memory for speed. Without cache: Generate 100 tokens → recompute 5050 times. With cache: 100 times. Critical for long-form generation. Standard in production LLMs!",
+      "id": "large-language-models-basics-q4"
     },
     {
       "question": "Emergent abilities nedir?",
@@ -165,7 +169,8 @@
         "Just better accuracy"
       ],
       "correctAnswer": 1,
-      "explanation": "Emergent Abilities: Capabilities NOT present in small models, SUDDENLY appear in large! Examples: Chain-of-thought reasoning (GPT-3 can, GPT-2 can't), Arithmetic (suddenly works at 100B+ params), Few-shot learning. Not gradual improvement → phase transition! Why: Scale unlocks qualitatively different behavior. Hypothesis: Learned patterns combine into higher-level capabilities. Controversial: Some argue 'just better stats'. Regardless: Larger models DO show qualitatively different behaviors. Key motivation for scaling!"
+      "explanation": "Emergent Abilities: Capabilities NOT present in small models, SUDDENLY appear in large! Examples: Chain-of-thought reasoning (GPT-3 can, GPT-2 can't), Arithmetic (suddenly works at 100B+ params), Few-shot learning. Not gradual improvement → phase transition! Why: Scale unlocks qualitatively different behavior. Hypothesis: Learned patterns combine into higher-level capabilities. Controversial: Some argue 'just better stats'. Regardless: Larger models DO show qualitatively different behaviors. Key motivation for scaling!",
+      "id": "large-language-models-basics-q5"
     },
     {
       "question": "RLHF (Reinforcement Learning from Human Feedback) amacı?",
@@ -176,7 +181,8 @@
         "Sadece research"
       ],
       "correctAnswer": 1,
-      "explanation": "RLHF: Align LLM with human values! Problem: Pre-trained LLM generates any text (toxic, unhelpful). Solution: (1) Collect human preferences (response A vs B). (2) Train reward model to predict preferences. (3) Use RL (PPO) to optimize LLM to maximize reward. Result: ChatGPT-style helpful assistant! Without RLHF: Raw GPT-3 (not aligned). With RLHF: ChatGPT (helpful, safe). Critical for deployment. Also: Instruction fine-tuning (supervised step before RLHF)."
+      "explanation": "RLHF: Align LLM with human values! Problem: Pre-trained LLM generates any text (toxic, unhelpful). Solution: (1) Collect human preferences (response A vs B). (2) Train reward model to predict preferences. (3) Use RL (PPO) to optimize LLM to maximize reward. Result: ChatGPT-style helpful assistant! Without RLHF: Raw GPT-3 (not aligned). With RLHF: ChatGPT (helpful, safe). Critical for deployment. Also: Instruction fine-tuning (supervised step before RLHF).",
+      "id": "large-language-models-basics-q6"
     }
   ],
   "flashcards": [

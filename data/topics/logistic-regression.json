@@ -117,7 +117,8 @@
         "Sadece binary regression"
       ],
       "correctAnswer": 1,
-      "explanation": "Historical naming! 'Regression' because uses linear regression formula (w·x + b). But: Applies sigmoid to get probability → binary classification! Confused students for decades. More accurate name: 'Logistic Classification'. Why stuck: Published papers, tradition. Remember: Despite name, it's classification! Multi-class variant: 'Multinomial logistic regression' (also classification)."
+      "explanation": "Historical naming! 'Regression' because uses linear regression formula (w·x + b). But: Applies sigmoid to get probability → binary classification! Confused students for decades. More accurate name: 'Logistic Classification'. Why stuck: Published papers, tradition. Remember: Despite name, it's classification! Multi-class variant: 'Multinomial logistic regression' (also classification).",
+      "id": "logistic-regression-q1"
     },
     {
       "question": "Sigmoid function'ın görevi nedir?",
@@ -128,7 +129,8 @@
         "Gradient computation"
       ],
       "correctAnswer": 1,
-      "explanation": "Sigmoid: σ(z) = 1/(1+e^(-z)). Maps ANY real number → probability [0,1]! Why needed: Linear model (w·x+b) outputs (-∞,+∞). Need probability! Sigmoid properties: (1) S-shaped curve. (2) σ(0)=0.5. (3) σ(large)≈1, σ(small)≈0. (4) Differentiable (enables gradient descent). Perfect for binary classification! Interpret: Output 0.8 = 80% confidence class 1."
+      "explanation": "Sigmoid: σ(z) = 1/(1+e^(-z)). Maps ANY real number → probability [0,1]! Why needed: Linear model (w·x+b) outputs (-∞,+∞). Need probability! Sigmoid properties: (1) S-shaped curve. (2) σ(0)=0.5. (3) σ(large)≈1, σ(small)≈0. (4) Differentiable (enables gradient descent). Perfect for binary classification! Interpret: Output 0.8 = 80% confidence class 1.",
+      "id": "logistic-regression-q2"
     },
     {
       "question": "Binary cross-entropy loss neden kullanılır?",
@@ -139,7 +141,8 @@
         "Sadece convention"
       ],
       "correctAnswer": 1,
-      "explanation": "Cross-entropy = Maximum Likelihood! Formula: L = -[y·log(p) + (1-y)·log(1-p)]. If y=1: Minimize -log(p) → maximize p (want p→1). If y=0: Minimize -log(1-p) → maximize 1-p (want p→0). Intuition: Penalize wrong predictions heavily! p=0.01 for y=1 → huge loss. Differentiable: Enables gradient descent. MSE doesn't work well (non-convex, slow convergence for classification)."
+      "explanation": "Cross-entropy = Maximum Likelihood! Formula: L = -[y·log(p) + (1-y)·log(1-p)]. If y=1: Minimize -log(p) → maximize p (want p→1). If y=0: Minimize -log(1-p) → maximize 1-p (want p→0). Intuition: Penalize wrong predictions heavily! p=0.01 for y=1 → huge loss. Differentiable: Enables gradient descent. MSE doesn't work well (non-convex, slow convergence for classification).",
+      "id": "logistic-regression-q3"
     },
     {
       "question": "Decision boundary lineer olur. Bu ne demek?",
@@ -150,7 +153,8 @@
         "Linear time complexity"
       ],
       "correctAnswer": 1,
-      "explanation": "Decision boundary: Points where P(y=1|x)=0.5 → w·x+b=0. Linear equation! 2D: Straight line. 3D: Plane. N-D: Hyperplane. Means: Logistic regression can only separate linearly separable classes. Example: XOR problem → can't solve! Solution: (1) Feature engineering (add x₁·x₂). (2) Kernel methods (SVM). (3) Neural networks (multiple layers). But: Many real problems ARE linearly separable (or close)!"
+      "explanation": "Decision boundary: Points where P(y=1|x)=0.5 → w·x+b=0. Linear equation! 2D: Straight line. 3D: Plane. N-D: Hyperplane. Means: Logistic regression can only separate linearly separable classes. Example: XOR problem → can't solve! Solution: (1) Feature engineering (add x₁·x₂). (2) Kernel methods (SVM). (3) Neural networks (multiple layers). But: Many real problems ARE linearly separable (or close)!",
+      "id": "logistic-regression-q4"
     },
     {
       "question": "Regularization (L1/L2) neden eklenir?",
@@ -161,7 +165,8 @@
         "Required for convergence"
       ],
       "correctAnswer": 1,
-      "explanation": "Regularization: Add penalty for large weights! L2 (Ridge): penalty = λ·Σwᵢ². L1 (Lasso): penalty = λ·Σ|wᵢ|. Effect: Prefers smaller weights → simpler model → less overfitting! L2: All features kept, smoothed. L1: Some weights → 0 (feature selection!). When to use: High-dimensional data, small datasets, many irrelevant features. Trade-off: Bias (regularization) vs variance (overfitting). Tune λ via cross-validation!"
+      "explanation": "Regularization: Add penalty for large weights! L2 (Ridge): penalty = λ·Σwᵢ². L1 (Lasso): penalty = λ·Σ|wᵢ|. Effect: Prefers smaller weights → simpler model → less overfitting! L2: All features kept, smoothed. L1: Some weights → 0 (feature selection!). When to use: High-dimensional data, small datasets, many irrelevant features. Trade-off: Bias (regularization) vs variance (overfitting). Tune λ via cross-validation!",
+      "id": "logistic-regression-q5"
     },
     {
       "question": "Multinomial logistic regression softmax'ı nasıl kullanır?",
@@ -172,7 +177,8 @@
         "Sigmoid per class"
       ],
       "correctAnswer": 1,
-      "explanation": "Multinomial: Multi-class logistic regression! Softmax: P(y=k|x) = exp(zₖ)/Σexp(zⱼ) for K classes. Generalizes sigmoid (K=2 → softmax=sigmoid). Properties: (1) Outputs K probabilities. (2) Sum to 1. (3) Differentiable. Training: Cross-entropy loss for K classes. Result: One model for multi-class (vs K binary classifiers). Used in: Neural network final layer! Logistic regression = single neuron with softmax."
+      "explanation": "Multinomial: Multi-class logistic regression! Softmax: P(y=k|x) = exp(zₖ)/Σexp(zⱼ) for K classes. Generalizes sigmoid (K=2 → softmax=sigmoid). Properties: (1) Outputs K probabilities. (2) Sum to 1. (3) Differentiable. Training: Cross-entropy loss for K classes. Result: One model for multi-class (vs K binary classifiers). Used in: Neural network final layer! Logistic regression = single neuron with softmax.",
+      "id": "logistic-regression-q6"
     }
   ],
   "flashcards": [

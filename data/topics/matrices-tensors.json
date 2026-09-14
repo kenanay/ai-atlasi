@@ -125,7 +125,7 @@
   "nextTopics": [
     "activation-functions",
     "perceptron",
-    "convolution"
+    "convolutional-neural-networks"
   ],
   "commonMistakes": [
     {

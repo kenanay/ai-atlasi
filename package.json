@@ -6,9 +6,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/validate-topics.js && next build",
     "start": "next start",
     "lint": "eslint",
+    "validate:topics": "node scripts/validate-topics.js",
+    "normalize:topics": "node scripts/normalize-topics.js",
+    "test": "node scripts/validate-topics.js",
     "launch": "node scripts/start.js",
     "launch:auto": "node scripts/start.js --auto",
     "launch:bash": "bash scripts/start.sh",
@@ -29,7 +32,8 @@
     "react-katex": "^3.1.0",
     "react-plotly.js": "^4.1.0",
     "reactflow": "^11.11.4",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

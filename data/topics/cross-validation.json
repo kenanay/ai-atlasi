@@ -90,8 +90,9 @@
         "Her zaman daha yüksek accuracy",
         "Daha az memory"
       ],
-      "correct": 1,
-      "explanation": "Single split şansa bağlı, unreliable. K-Fold multiple splits → average performance, variance azaltır, robust estimate! Every sample hem train hem test olur."
+      "explanation": "Single split şansa bağlı, unreliable. K-Fold multiple splits → average performance, variance azaltır, robust estimate! Every sample hem train hem test olur.",
+      "id": "cross-validation-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Stratified K-Fold ne zaman kullanılır?",
@@ -101,8 +102,9 @@
         "Sadece regression",
         "Sadece large datasets"
       ],
-      "correct": 1,
-      "explanation": "Stratified K-Fold imbalanced classes için! Her fold'ta class distribution preserve edilir. 90%-10% data → her fold 90%-10%. Always use for classification!"
+      "explanation": "Stratified K-Fold imbalanced classes için! Her fold'ta class distribution preserve edilir. 90%-10% data → her fold 90%-10%. Always use for classification!",
+      "id": "cross-validation-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Time series CV'de neden shuffle yapamazsın?",
@@ -112,8 +114,9 @@
         "Yapabilirsin",
         "Sadece küçük datasets için problem"
       ],
-      "correct": 1,
-      "explanation": "Time series: Temporal order matters! Shuffle → future data train'de → data leakage! TimeSeriesSplit kullan: always train on past, test on future."
+      "explanation": "Time series: Temporal order matters! Shuffle → future data train'de → data leakage! TimeSeriesSplit kullan: always train on past, test on future.",
+      "id": "cross-validation-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Nested CV neden gerekli (hyperparameter tuning)?",
@@ -123,8 +126,9 @@
         "Gereksiz",
         "Sadece deep learning için"
       ],
-      "correct": 1,
-      "explanation": "Single CV ile hyperparameter tune edersen same folds'ta evaluate → optimistic bias! Nested CV: Outer (evaluation) + Inner (tuning) → unbiased estimate!"
+      "explanation": "Single CV ile hyperparameter tune edersen same folds'ta evaluate → optimistic bias! Nested CV: Outer (evaluation) + Inner (tuning) → unbiased estimate!",
+      "id": "cross-validation-q4",
+      "correctAnswer": 1
     },
     {
       "question": "K değeri nasıl seçilir?",
@@ -134,8 +138,9 @@
         "K=n (LOOCV) her zaman best",
         "Random"
       ],
-      "correct": 1,
-      "explanation": "K small (2-3): fast, high variance. K large (20+): slow, low variance but high computational cost. K=5 or 10: Standard choice, good balance!"
+      "explanation": "K small (2-3): fast, high variance. K large (20+): slow, low variance but high computational cost. K=5 or 10: Standard choice, good balance!",
+      "id": "cross-validation-q5",
+      "correctAnswer": 1
     },
     {
       "question": "LOOCV (Leave-One-Out) ne zaman kullanılır?",
@@ -145,8 +150,9 @@
         "Large datasets",
         "Production'da"
       ],
-      "correct": 1,
-      "explanation": "LOOCV: K=n, n iterations! Maximum data use (n-1 train), ama very expensive. Only for small datasets (<100). Large datasets için impractical!"
+      "explanation": "LOOCV: K=n, n iterations! Maximum data use (n-1 train), ama very expensive. Only for small datasets (<100). Large datasets için impractical!",
+      "id": "cross-validation-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -252,5 +258,10 @@
       "description": "Outer-inner loop visualization. Hyperparameter tuning flow, bias demonstration, computational cost.",
       "component": "NestedCVInteractive"
     }
+  ],
+  "nextTopics": [
+    "evaluation-metrics",
+    "learning-rate-scheduling",
+    "regularization"
   ]
 }

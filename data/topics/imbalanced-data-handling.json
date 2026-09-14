@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Imbalanced Data Handling explanation."
+      "explanation": "Imbalanced Data Handling explanation.",
+      "id": "imbalanced-data-handling-q1"
     },
     {
       "question": "When to use Imbalanced Data Handling?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "imbalanced-data-handling-q2"
     },
     {
       "question": "Imbalanced Data Handling advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "imbalanced-data-handling-q3"
     },
     {
       "question": "Imbalanced Data Handling limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "imbalanced-data-handling-q4"
     },
     {
       "question": "Best practice for Imbalanced Data Handling?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "imbalanced-data-handling-q5"
     },
     {
       "question": "Imbalanced Data Handling vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "imbalanced-data-handling-q6"
     }
   ],
   "flashcards": [

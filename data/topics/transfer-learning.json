@@ -53,13 +53,10 @@
     "regularization"
   ],
   "nextTopics": [
-    "domain-adaptation",
-    "few-shot-learning",
-    "meta-learning",
-    "self-supervised-learning"
+    "meta-learning-few-shot"
   ],
   "relatedTopics": [
-    "data-augmentation",
+    "data-preprocessing-features",
     "optimizers",
     "batch-normalization"
   ],

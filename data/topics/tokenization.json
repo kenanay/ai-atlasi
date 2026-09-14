@@ -5,8 +5,18 @@
   "level": 2,
   "estimatedTime": 45,
   "description": "Text'i model'in anlayabileceği token'lara ayırma. BPE, WordPiece, SentencePiece algoritmaları. Subword tokenization, OOV handling, multilingual support.",
-  "prerequisites": ["word-embeddings", "neural-networks"],
-  "tags": ["nlp", "tokenization", "bpe", "wordpiece", "sentencepiece", "subword"],
+  "prerequisites": [
+    "word-embeddings",
+    "neural-networks"
+  ],
+  "tags": [
+    "nlp",
+    "tokenization",
+    "bpe",
+    "wordpiece",
+    "sentencepiece",
+    "subword"
+  ],
   "content": {
     "level0_basic": "Bilgisayar kelimeleri anlamaz, sayıları anlar! 'Hello world' cümlesini modele vermeden önce token'lara ayırmalısın. En basit: kelime bazında → ['Hello', 'world']. Problem: 'supercalifragilistic' gibi nadir kelimeler? Vocabulary'de yok (OOV)! Subword tokenization çözüm: kelimeleri parçalara ayır → ['super', 'cal', 'ifrag', 'ilistic']. BPE, WordPiece bu işi yapar. Nadir kelimeler bile handle edilir, vocabulary küçük kalır. GPT, BERT hepsi subword kullanır!",
     "level1_beginner": "**Tokenization:** Text'i atomik units'lere (tokens) ayırma.\n\n**Seçenekler:**\n\n**1. Character-level:**\n'hello' → ['h', 'e', 'l', 'l', 'o']\n\n✓ Small vocabulary (~100)\n✓ No OOV\n❌ Very long sequences\n❌ Lost word-level meaning\n\n**2. Word-level:**\n'hello world' → ['hello', 'world']\n\n✓ Semantic meaning preserved\n❌ Large vocabulary (100K+)\n❌ OOV problem (unseen words)\n❌ Morphology ignored ('run', 'running' separate)\n\n**3. Subword-level:** 🏆 Best!\n'running' → ['run', '##ning']\n\n✓ Medium vocabulary (30K-50K)\n✓ No OOV (compose from subwords)\n✓ Morphology captured\n✓ Rare words handled\n\n**BPE (Byte-Pair Encoding):**\n\nOriginally data compression, adapted for NLP (Sennrich et al., 2016).\n\n**Algorithm:**\n\n1. Start with character vocabulary\n2. Find most frequent adjacent pair\n3. Merge into new token\n4. Repeat until desired vocab size\n\n**Example:**\n\n```\nData: 'low low low lower lowest'\n\nIteration 1:\nMost frequent pair: ('l', 'o') → 'lo'\nVocab: ['l', 'o', 'w', 'e', 'r', 's', 't', 'lo']\n\nIteration 2:\nMost frequent: ('lo', 'w') → 'low'\nVocab: [..., 'low']\n\nIteration 3:\n('low', 'e') → 'lowe'\n...\n```\n\n**Encoding:**\n'lowest' → Greedy longest match:\n1. Check 'lowest' (not in vocab)\n2. Check 'lowes' (not in vocab)\n3. Check 'lowe' (in vocab!) → 'lowe'\n4. Remaining: 'st'\n5. Result: ['lowe', 's', 't']\n\n**WordPiece (Schuster & Nakajima, 2012):**\n\nUsed by BERT!\n\nSimilar to BPE but:\n- Merges based on likelihood increase (not frequency)\n- Uses '##' prefix for continuation tokens\n\n**Example:**\n'unbelievable' → ['un', '##bel', '##iev', '##able']\n\n'##' means: continuation of previous token.\n\n**SentencePiece (Kudo & Richardson, 2018):**\n\nLanguage-agnostic, no pre-tokenization!\n\n**Key difference:**\nBPE/WordPiece: Pre-tokenize with spaces\nSentencePiece: Treat text as raw byte stream\n\n**Why?**\nChinese, Japanese no spaces!\n'你好世界' → SentencePiece handles directly\n\n**Modes:**\n- BPE mode\n- Unigram language model mode\n\nUsed by: T5, XLNet, ALBERT",
@@ -85,8 +95,9 @@
         "Daha basittir",
         "Her zaman word-level'dan iyidir"
       ],
-      "correct": 1,
-      "explanation": "Subword: OOV yok (herhangi kelime subword'lerden compose edilir), rare words parçalara bölünür, vocabulary 30K-50K (word-level 100K+). Modern NLP standard!"
+      "explanation": "Subword: OOV yok (herhangi kelime subword'lerden compose edilir), rare words parçalara bölünür, vocabulary 30K-50K (word-level 100K+). Modern NLP standard!",
+      "id": "tokenization-q1",
+      "correctAnswer": 1
     },
     {
       "question": "BPE (Byte-Pair Encoding) nasıl çalışır?",
@@ -96,8 +107,9 @@
         "Longest words'ü merge et",
         "Alfabetik sırayla merge"
       ],
-      "correct": 1,
-      "explanation": "BPE: Character-level başla, en sık görülen adjacent pair'i bul, merge et, repeat. Greedy algorithm, frequent subwords önce merge edilir!"
+      "explanation": "BPE: Character-level başla, en sık görülen adjacent pair'i bul, merge et, repeat. Greedy algorithm, frequent subwords önce merge edilir!",
+      "id": "tokenization-q2",
+      "correctAnswer": 1
     },
     {
       "question": "WordPiece ve BPE'nin farkı nedir?",
@@ -107,8 +119,9 @@
         "WordPiece daha hızlı",
         "BPE sadece İngilizce için"
       ],
-      "correct": 1,
-      "explanation": "BPE: freq(x,y) ile merge. WordPiece: freq(xy)/(freq(x)×freq(y)) likelihood ile merge. WordPiece pairs that maximize probability tercih eder!"
+      "explanation": "BPE: freq(x,y) ile merge. WordPiece: freq(xy)/(freq(x)×freq(y)) likelihood ile merge. WordPiece pairs that maximize probability tercih eder!",
+      "id": "tokenization-q3",
+      "correctAnswer": 1
     },
     {
       "question": "SentencePiece'in özel özelliği nedir?",
@@ -118,8 +131,9 @@
         "Sadece İngilizce",
         "Her zaman BPE'den iyi"
       ],
-      "correct": 1,
-      "explanation": "SentencePiece text'i raw byte stream olarak işler, pre-tokenization (space split) yok! Chinese, Japanese gibi space-less languages için ideal. Language-agnostic!"
+      "explanation": "SentencePiece text'i raw byte stream olarak işler, pre-tokenization (space split) yok! Chinese, Japanese gibi space-less languages için ideal. Language-agnostic!",
+      "id": "tokenization-q4",
+      "correctAnswer": 1
     },
     {
       "question": "'##' prefix (WordPiece) ne anlama gelir?",
@@ -129,8 +143,9 @@
         "Unknown token",
         "Separator"
       ],
-      "correct": 1,
-      "explanation": "##: Continuation marker. 'unbelievable' → ['un', '##bel', '##iev', '##able']. ## = bu token öncekinin devamı, ayrı kelime değil!"
+      "explanation": "##: Continuation marker. 'unbelievable' → ['un', '##bel', '##iev', '##able']. ## = bu token öncekinin devamı, ayrı kelime değil!",
+      "id": "tokenization-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Vocabulary size ne kadar olmalı?",
@@ -140,8 +155,9 @@
         "Mümkün olduğunca küçük",
         "Problem-specific değil"
       ],
-      "correct": 1,
-      "explanation": "30K-50K optimal! Küçük (1K) → long sequences, büyük (100K+) → large embeddings. BERT 30K, GPT-2 50K. Balance!"
+      "explanation": "30K-50K optimal! Küçük (1K) → long sequences, büyük (100K+) → large embeddings. BERT 30K, GPT-2 50K. Balance!",
+      "id": "tokenization-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -247,5 +263,9 @@
       "description": "Type a word, see how different tokenizers (BPE, WordPiece, SentencePiece) segment it. Rare words handling.",
       "component": "SubwordSegmentation"
     }
+  ],
+  "nextTopics": [
+    "word-embeddings",
+    "nlp-fundamentals"
   ]
 }

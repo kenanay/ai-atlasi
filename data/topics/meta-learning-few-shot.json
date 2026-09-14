@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Meta-Learning & Few-Shot explanation."
+      "explanation": "Meta-Learning & Few-Shot explanation.",
+      "id": "meta-learning-few-shot-q1"
     },
     {
       "question": "When to use Meta-Learning & Few-Shot?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "meta-learning-few-shot-q2"
     },
     {
       "question": "Meta-Learning & Few-Shot advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "meta-learning-few-shot-q3"
     },
     {
       "question": "Meta-Learning & Few-Shot limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "meta-learning-few-shot-q4"
     },
     {
       "question": "Best practice for Meta-Learning & Few-Shot?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "meta-learning-few-shot-q5"
     },
     {
       "question": "Meta-Learning & Few-Shot vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "meta-learning-few-shot-q6"
     }
   ],
   "flashcards": [

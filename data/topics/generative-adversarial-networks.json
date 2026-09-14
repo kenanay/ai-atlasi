@@ -46,9 +46,8 @@
     "optimizers"
   ],
   "nextTopics": [
-    "variational-autoencoders",
-    "diffusion-models",
-    "neural-style-transfer"
+    "autoencoders-vae",
+    "diffusion-models"
   ],
   "relatedTopics": [
     "convolutional-neural-networks",
@@ -121,7 +120,8 @@
         "İkisi de aynı loss function'ı minimize eder"
       ],
       "correctAnswer": 1,
-      "explanation": "Generator: Random noise'dan realistic fake data üretir (forger). Goal: Fool discriminator! Discriminator: Real vs fake classify eder (detective). Goal: Catch fakes! Adversarial training: G tries to fool D, D tries to catch G. Min-max game!"
+      "explanation": "Generator: Random noise'dan realistic fake data üretir (forger). Goal: Fool discriminator! Discriminator: Real vs fake classify eder (detective). Goal: Catch fakes! Adversarial training: G tries to fool D, D tries to catch G. Min-max game!",
+      "id": "generative-adversarial-networks-q1"
     },
     {
       "question": "GAN training'de 'mode collapse' nedir?",
@@ -132,7 +132,8 @@
         "Both networks aynı anda overfit olur"
       ],
       "correctAnswer": 1,
-      "explanation": "Mode Collapse: Generator discovers one/few samples that fool D, keeps generating those! Example: Face GAN only generates blonde women, ignores diversity. Lost modes: Other face types never generated. Solution: Minibatch discrimination, unrolled GAN, multiple generators, spectral normalization. Wasserstein GAN helps!"
+      "explanation": "Mode Collapse: Generator discovers one/few samples that fool D, keeps generating those! Example: Face GAN only generates blonde women, ignores diversity. Lost modes: Other face types never generated. Solution: Minibatch discrimination, unrolled GAN, multiple generators, spectral normalization. Wasserstein GAN helps!",
+      "id": "generative-adversarial-networks-q2"
     },
     {
       "question": "WGAN (Wasserstein GAN), vanilla GAN'den neden daha stable?",
@@ -143,7 +144,8 @@
         "Sadece binary classification için çalışır"
       ],
       "correctAnswer": 1,
-      "explanation": "Vanilla GAN: JS divergence → gradient vanishing when D perfect (saturation). Loss: Meaningless oscillation! WGAN: Wasserstein (Earth Mover's) distance → smooth gradients everywhere. Benefits: (1) Meaningful loss curve (lower = better!), (2) More stable training, (3) Less mode collapse. WGAN-GP: Gradient penalty for Lipschitz constraint. Training: Update D more (5×) per G update."
+      "explanation": "Vanilla GAN: JS divergence → gradient vanishing when D perfect (saturation). Loss: Meaningless oscillation! WGAN: Wasserstein (Earth Mover's) distance → smooth gradients everywhere. Benefits: (1) Meaningful loss curve (lower = better!), (2) More stable training, (3) Less mode collapse. WGAN-GP: Gradient penalty for Lipschitz constraint. Training: Update D more (5×) per G update.",
+      "id": "generative-adversarial-networks-q3"
     },
     {
       "question": "Conditional GAN (cGAN)'de conditioning nasıl çalışır?",
@@ -154,7 +156,8 @@
         "Conditioning sadece inference'ta aktif olur"
       ],
       "correctAnswer": 1,
-      "explanation": "cGAN: Control generation with labels! Generator: Input = noise + label embedding → generate specific class. Discriminator: Input = image + label → verify image matches label. Example: MNIST cGAN: 'Generate digit 7' → G(noise, label=7) → outputs 7! Applications: Class-conditional generation, text-to-image (label=text description), image-to-image translation (label=edge map)."
+      "explanation": "cGAN: Control generation with labels! Generator: Input = noise + label embedding → generate specific class. Discriminator: Input = image + label → verify image matches label. Example: MNIST cGAN: 'Generate digit 7' → G(noise, label=7) → outputs 7! Applications: Class-conditional generation, text-to-image (label=text description), image-to-image translation (label=edge map).",
+      "id": "generative-adversarial-networks-q4"
     },
     {
       "question": "CycleGAN'de cycle consistency loss neden critical?",
@@ -165,7 +168,8 @@
         "Sadece style transfer için gereklidir"
       ],
       "correctAnswer": 1,
-      "explanation": "CycleGAN: Unpaired translation! No (A, B) pairs needed. Problem: Without constraint, G can map anything to anything. Solution: Cycle Consistency! Forward: A → fake_B → rec_A. Loss: ||rec_A - A||. Backward: B → fake_A → rec_B. Loss: ||rec_B - B||. Ensures: Translation preserves content, only style changes! Example: Horse→Zebra: Shape preserved, texture changed. Without cycle loss: Arbitrary mappings!"
+      "explanation": "CycleGAN: Unpaired translation! No (A, B) pairs needed. Problem: Without constraint, G can map anything to anything. Solution: Cycle Consistency! Forward: A → fake_B → rec_A. Loss: ||rec_A - A||. Backward: B → fake_A → rec_B. Loss: ||rec_B - B||. Ensures: Translation preserves content, only style changes! Example: Horse→Zebra: Shape preserved, texture changed. Without cycle loss: Arbitrary mappings!",
+      "id": "generative-adversarial-networks-q5"
     },
     {
       "question": "GAN'lerin real-world applications'ları nelerdir?",
@@ -176,7 +180,8 @@
         "Text generation için kullanılamaz"
       ],
       "correctAnswer": 1,
-      "explanation": "Applications: (1) Image Generation: Photorealistic faces (StyleGAN), artwork. (2) Data Augmentation: Synthetic training data when scarce. (3) Super-Resolution: Low→high res enhancement. (4) Style Transfer: Photo→painting, day→night. (5) Image Translation: Sketch→photo, satellite→map. (6) Anomaly Detection: Train on normal, detect abnormal. (7) Drug Discovery: Generate molecules. (8) Video Generation: Future frame prediction. Creative tools everywhere!"
+      "explanation": "Applications: (1) Image Generation: Photorealistic faces (StyleGAN), artwork. (2) Data Augmentation: Synthetic training data when scarce. (3) Super-Resolution: Low→high res enhancement. (4) Style Transfer: Photo→painting, day→night. (5) Image Translation: Sketch→photo, satellite→map. (6) Anomaly Detection: Train on normal, detect abnormal. (7) Drug Discovery: Generate molecules. (8) Video Generation: Future frame prediction. Creative tools everywhere!",
+      "id": "generative-adversarial-networks-q6"
     }
   ],
   "flashcards": [

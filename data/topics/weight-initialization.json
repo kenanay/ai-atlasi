@@ -5,8 +5,19 @@
   "level": 2,
   "estimatedTime": 40,
   "description": "Neural network ağırlıklarının doğru başlangıç değerleri. Xavier/Glorot, He/Kaiming initialization ve gradient flow için kritik önemi.",
-  "prerequisites": ["neural-networks", "backpropagation", "activation-functions"],
-  "tags": ["initialization", "xavier", "he", "kaiming", "gradient-flow", "deep-learning"],
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation",
+    "activation-functions"
+  ],
+  "tags": [
+    "initialization",
+    "xavier",
+    "he",
+    "kaiming",
+    "gradient-flow",
+    "deep-learning"
+  ],
   "content": {
     "level0_basic": "Neural network training başlatırken weights'leri nasıl initialize edersen çok önemli! Hepsini 0 yaparsan hiçbir şey öğrenemez (symmetry breaking problemi). Çok büyük random değerler verirsen activations explode eder. Çok küçük verirsen gradient vanishing! Xavier/He initialization bu problemi çözer: layer size'ına göre optimal range'de random değerler verir. Activasyon ReLU mu? He init! Tanh/sigmoid mi? Xavier init! Doğru initialization training'i 10x hızlandırabilir!",
     "level1_beginner": "Weight initialization deep learning'in en kritik ama en az konuşulan konusu!\n\n**Problem: Naive Initialization**\n\n**1. All Zeros:**\n$$W = 0$$\n\n❌ Her neuron aynı gradient alır → symmetry breaking olmaz → hiçbir şey öğrenemez!\n\n**2. Too Large Random:**\n$$W \\sim \\mathcal{N}(0, 1)  \\quad \\text{(std=1)}$$\n\n❌ Activations explode eder → gradients explode → training diverge!\n\n**3. Too Small Random:**\n$$W \\sim \\mathcal{N}(0, 0.001)  \\quad \\text{(std=0.001)}$$\n\n❌ Activations vanish → gradients vanish → learning çok yavaş!\n\n**Goal:**\nVariance'ı preserve et! Input variance ≈ Output variance.\n\n**Xavier/Glorot Initialization (2010):**\n\nTanh ve sigmoid activations için!\n\n**Uniform distribution:**\n$$W \\sim \\mathcal{U}\\left(-\\sqrt{\\frac{6}{n_{\\text{in}} + n_{\\text{out}}}}, \\sqrt{\\frac{6}{n_{\\text{in}} + n_{\\text{out}}}}\\right)$$\n\n**Normal distribution:**\n$$W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{n_{\\text{in}} + n_{\\text{out}}}}\\right)$$\n\n- $n_{\\text{in}}$: input neurons\n- $n_{\\text{out}}$: output neurons\n\n**Idea:**\nForward ve backward pass'te variance'ı preserve et!\n\n**He/Kaiming Initialization (2015):**\n\nReLU activations için!\n\nReLU half of neurons'ları kill eder (negative → 0), variance yarıya düşer. Bunu compensate et:\n\n**Normal distribution:**\n$$W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{n_{\\text{in}}}}\\right)$$\n\n**Uniform distribution:**\n$$W \\sim \\mathcal{U}\\left(-\\sqrt{\\frac{6}{n_{\\text{in}}}}, \\sqrt{\\frac{6}{n_{\\text{in}}}}\\right)$$\n\nXavier'den fark: Sadece $n_{\\text{in}}$ kullan, $\\sqrt{2}$ factor (ReLU compensation).\n\n**Which Init?**\n- **ReLU, LeakyReLU, PReLU:** He initialization\n- **Tanh, Sigmoid:** Xavier initialization\n- **SELU:** LeCun initialization\n- **Modern default:** He (çünkü ReLU dominant)",
@@ -80,8 +91,9 @@
         "Softmax",
         "Hepsi için aynı"
       ],
-      "correct": 1,
-      "explanation": "Xavier init tanh ve sigmoid için! Symmetric activations varsayar. ReLU half of neurons'ları kill eder, He init gerekir."
+      "explanation": "Xavier init tanh ve sigmoid için! Symmetric activations varsayar. ReLU half of neurons'ları kill eder, He init gerekir.",
+      "id": "weight-initialization-q1",
+      "correctAnswer": 1
     },
     {
       "question": "He initialization Xavier'den nasıl farklıdır?",
@@ -91,8 +103,9 @@
         "Daha küçük variance kullanır",
         "Sadece CNN için kullanılır"
       ],
-      "correct": 1,
-      "explanation": "He init: var = 2/fan_in (Xavier: 2/(fan_in+fan_out)). √2 factor ReLU'nun half neurons'ları kill etmesini compensate eder!"
+      "explanation": "He init: var = 2/fan_in (Xavier: 2/(fan_in+fan_out)). √2 factor ReLU'nun half neurons'ları kill etmesini compensate eder!",
+      "id": "weight-initialization-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Neden tüm weights'i 0 ile initialize edemezsin?",
@@ -102,8 +115,9 @@
         "Memory problemi yaratır",
         "Yapabilirsin, problem yok"
       ],
-      "correct": 1,
-      "explanation": "All zeros → symmetry problem! Tüm neurons aynı gradient alır, aynı update'i yapar, asla farklılaşamaz. Hiçbir şey öğrenemez!"
+      "explanation": "All zeros → symmetry problem! Tüm neurons aynı gradient alır, aynı update'i yapar, asla farklılaşamaz. Hiçbir şey öğrenemez!",
+      "id": "weight-initialization-q3",
+      "correctAnswer": 1
     },
     {
       "question": "LSTM forget gate bias'ı neden 1.0 initialize edilir?",
@@ -113,8 +127,9 @@
         "Gradient explosion'ı önler",
         "Daha hızlı convergence"
       ],
-      "correct": 1,
-      "explanation": "Forget gate bias=1 → başlangıçta 'unutma' (remember by default). Long-term dependencies öğrenmeyi kolaylaştırır. 0 olursa everything forgets!"
+      "explanation": "Forget gate bias=1 → başlangıçta 'unutma' (remember by default). Long-term dependencies öğrenmeyi kolaylaştırır. 0 olursa everything forgets!",
+      "id": "weight-initialization-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Batch Normalization kullanıyorsan initialization ne kadar önemli?",
@@ -124,8 +139,9 @@
         "Daha da önemli olur",
         "Sadece ilk epoch için önemli"
       ],
-      "correct": 1,
-      "explanation": "Batch Norm variance normalize eder → init덜 kritik. Ama ilk iterations için hala önemli, ve BN olmayan layers için critical!"
+      "explanation": "Batch Norm variance normalize eder → init덜 kritik. Ama ilk iterations için hala önemli, ve BN olmayan layers için critical!",
+      "id": "weight-initialization-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Transfer learning'de yeni classifier head nasıl initialize edilir?",
@@ -135,8 +151,9 @@
         "He/Xavier init (fresh random)",
         "All zeros"
       ],
-      "correct": 2,
-      "explanation": "Yeni layers fresh init gerekir (He/Xavier)! Pretrained body frozen veya fine-tuned. New head'in öğrenmesi için random init şart."
+      "explanation": "Yeni layers fresh init gerekir (He/Xavier)! Pretrained body frozen veya fine-tuned. New head'in öğrenmesi için random init şart.",
+      "id": "weight-initialization-q6",
+      "correctAnswer": 2
     }
   ],
   "commonMistakes": [
@@ -242,5 +259,9 @@
       "description": "Forward pass'te activation mean/std/range'i layer-by-layer explore et. Healthy vs unhealthy init.",
       "component": "ActivationStats"
     }
+  ],
+  "nextTopics": [
+    "batch-normalization",
+    "optimizers"
   ]
 }

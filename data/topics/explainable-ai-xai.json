@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Explainable AI (XAI) explanation."
+      "explanation": "Explainable AI (XAI) explanation.",
+      "id": "explainable-ai-xai-q1"
     },
     {
       "question": "When to use Explainable AI (XAI)?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "explainable-ai-xai-q2"
     },
     {
       "question": "Explainable AI (XAI) advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "explainable-ai-xai-q3"
     },
     {
       "question": "Explainable AI (XAI) limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "explainable-ai-xai-q4"
     },
     {
       "question": "Best practice for Explainable AI (XAI)?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "explainable-ai-xai-q5"
     },
     {
       "question": "Explainable AI (XAI) vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "explainable-ai-xai-q6"
     }
   ],
   "flashcards": [

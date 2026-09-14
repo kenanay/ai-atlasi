@@ -89,7 +89,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "PCA & Dimensionality Reduction explanation."
+      "explanation": "PCA & Dimensionality Reduction explanation.",
+      "id": "pca-dimensionality-reduction-q1"
     },
     {
       "question": "When to use PCA & Dimensionality Reduction?",
@@ -100,7 +101,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained."
+      "explanation": "Use cases explained.",
+      "id": "pca-dimensionality-reduction-q2"
     },
     {
       "question": "PCA & Dimensionality Reduction advantage?",
@@ -111,7 +113,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits."
+      "explanation": "Key benefits.",
+      "id": "pca-dimensionality-reduction-q3"
     },
     {
       "question": "PCA & Dimensionality Reduction limitation?",
@@ -122,7 +125,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues."
+      "explanation": "Known issues.",
+      "id": "pca-dimensionality-reduction-q4"
     },
     {
       "question": "Best practice for PCA & Dimensionality Reduction?",
@@ -133,7 +137,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations."
+      "explanation": "Recommendations.",
+      "id": "pca-dimensionality-reduction-q5"
     },
     {
       "question": "PCA & Dimensionality Reduction vs alternatives?",
@@ -144,7 +149,8 @@
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison."
+      "explanation": "Comparison.",
+      "id": "pca-dimensionality-reduction-q6"
     }
   ],
   "flashcards": [

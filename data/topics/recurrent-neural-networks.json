@@ -47,15 +47,15 @@
     "gradient-descent"
   ],
   "nextTopics": [
-    "transformers",
-    "attention-mechanism",
-    "seq2seq-models",
-    "nlp-applications"
+    "transformers-attention",
+    "attention-mechanisms-detail",
+    "sequence-to-sequence",
+    "nlp-fundamentals"
   ],
   "relatedTopics": [
     "word-embeddings",
-    "language-models",
-    "time-series-analysis"
+    "nlp-fundamentals",
+    "time-series-forecasting"
   ],
   "tags": [
     "rnn",

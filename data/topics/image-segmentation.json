@@ -44,15 +44,11 @@
     "resnet-skip-connections",
     "object-detection"
   ],
-  "nextTopics": [
-    "panoptic-segmentation",
-    "video-segmentation",
-    "3d-segmentation"
-  ],
+  "nextTopics": [],
   "relatedTopics": [
     "object-detection",
     "transfer-learning",
-    "data-augmentation"
+    "data-preprocessing-features"
   ],
   "tags": [
     "image-segmentation",
@@ -120,7 +116,8 @@
         "Instance sadece binary segmentation yapar"
       ],
       "correctAnswer": 0,
-      "explanation": "Semantic Segmentation: Pixel-level classification, all 'person' pixels same class. Instance Segmentation: Her object instance ayrı! Person 1, Person 2 farklı masklar. Semantic: 'What class?', Instance: 'Which object?'"
+      "explanation": "Semantic Segmentation: Pixel-level classification, all 'person' pixels same class. Instance Segmentation: Her object instance ayrı! Person 1, Person 2 farklı masklar. Semantic: 'What class?', Instance: 'Which object?'",
+      "id": "image-segmentation-q1"
     },
     {
       "question": "U-Net'te Skip Connections neden critical?",
@@ -131,7 +128,8 @@
         "Overfitting'i tamamen önler"
       ],
       "correctAnswer": 1,
-      "explanation": "Skip Connections: Encoder features (high-resolution, fine details) → Decoder (low-resolution, semantic info). Combine both! Precise boundaries için critical. Without skip connections: Blurry boundaries, detail loss. Medical imaging'de tumor boundary precision için essential!"
+      "explanation": "Skip Connections: Encoder features (high-resolution, fine details) → Decoder (low-resolution, semantic info). Combine both! Precise boundaries için critical. Without skip connections: Blurry boundaries, detail loss. Medical imaging'de tumor boundary precision için essential!",
+      "id": "image-segmentation-q2"
     },
     {
       "question": "IoU ve Dice Coefficient arasındaki ilişki nedir?",
@@ -142,7 +140,8 @@
         "Dice sadece binary segmentation için kullanılır"
       ],
       "correctAnswer": 2,
-      "explanation": "IoU = |X∩Y|/|X∪Y|, Dice = 2|X∩Y|/(|X|+|Y|). Both measure overlap! Similar values, different formulations. Dice: More sensitive to small objects, popular in medical imaging. IoU: COCO dataset standard. Dice ∈ [0,1], IoU ∈ [0,1]. High Dice ≈ High IoU."
+      "explanation": "IoU = |X∩Y|/|X∪Y|, Dice = 2|X∩Y|/(|X|+|Y|). Both measure overlap! Similar values, different formulations. Dice: More sensitive to small objects, popular in medical imaging. IoU: COCO dataset standard. Dice ∈ [0,1], IoU ∈ [0,1]. High Dice ≈ High IoU.",
+      "id": "image-segmentation-q3"
     },
     {
       "question": "Mask R-CNN'de RoI Align, RoI Pooling'den neden daha iyi?",
@@ -153,7 +152,8 @@
         "Sadece instance segmentation için çalışır"
       ],
       "correctAnswer": 1,
-      "explanation": "RoI Pool: Quantization (rounding) → misalignment! Pixel-level tasks'ta problem. RoI Align: Bilinear interpolation kullanır, exact locations preserve eder. No rounding! Mask prediction için critical. 1-2% mAP improvement. Instance segmentation'da precise boundaries gerektiği için essential!"
+      "explanation": "RoI Pool: Quantization (rounding) → misalignment! Pixel-level tasks'ta problem. RoI Align: Bilinear interpolation kullanır, exact locations preserve eder. No rounding! Mask prediction için critical. 1-2% mAP improvement. Instance segmentation'da precise boundaries gerektiği için essential!",
+      "id": "image-segmentation-q4"
     },
     {
       "question": "Dice Loss, Cross-Entropy Loss'a göre imbalanced segmentation'da neden daha iyi?",
@@ -164,7 +164,8 @@
         "Multi-class segmentation için design edilmiştir"
       ],
       "correctAnswer": 1,
-      "explanation": "Cross-Entropy: Per-pixel loss. 99% background → loss dominated by background! Small tumor (1% pixels) ignored. Dice Loss: Overlap-based (intersection/union), region-level metric. Small object'lere equal importance! Medical imaging'de critical: Tiny tumor detection. Practice: Combined loss (CE + Dice) often best!"
+      "explanation": "Cross-Entropy: Per-pixel loss. 99% background → loss dominated by background! Small tumor (1% pixels) ignored. Dice Loss: Overlap-based (intersection/union), region-level metric. Small object'lere equal importance! Medical imaging'de critical: Tiny tumor detection. Practice: Combined loss (CE + Dice) often best!",
+      "id": "image-segmentation-q5"
     },
     {
       "question": "Image Segmentation'ın real-world applications'ları nelerdir?",
@@ -175,7 +176,8 @@
         "Sadece binary classification tasks"
       ],
       "correctAnswer": 1,
-      "explanation": "Applications: (1) Medical: Tumor/organ segmentation, surgery planning. (2) Autonomous Driving: Drivable area, lane detection. (3) Photo Editing: Background removal, portrait mode. (4) Satellite: Building/road extraction, land use. (5) Agriculture: Crop monitoring, disease detection. (6) AR/VR: Scene understanding. Pixel-level understanding → precise boundaries needed!"
+      "explanation": "Applications: (1) Medical: Tumor/organ segmentation, surgery planning. (2) Autonomous Driving: Drivable area, lane detection. (3) Photo Editing: Background removal, portrait mode. (4) Satellite: Building/road extraction, land use. (5) Agriculture: Crop monitoring, disease detection. (6) AR/VR: Scene understanding. Pixel-level understanding → precise boundaries needed!",
+      "id": "image-segmentation-q6"
     }
   ],
   "flashcards": [

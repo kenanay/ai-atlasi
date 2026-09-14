@@ -46,16 +46,15 @@
     "batch-normalization"
   ],
   "nextTopics": [
-    "densenet",
-    "unet-segmentation",
-    "efficientnet",
+    "image-segmentation",
+    "convolutional-neural-networks",
     "vision-transformers"
   ],
   "relatedTopics": [
     "batch-normalization",
     "transfer-learning",
     "gradient-descent",
-    "cnn"
+    "convolutional-neural-networks"
   ],
   "tags": [
     "resnet",

@@ -5,8 +5,18 @@
   "level": 1,
   "estimatedTime": 45,
   "description": "Makine öğrenmesi modellerinin performansını ölçmek için kullanılan temel metrikler: Accuracy, Precision, Recall, F1-Score, ROC-AUC, Confusion Matrix.",
-  "prerequisites": ["logistic-regression"],
-  "tags": ["metrics", "evaluation", "accuracy", "precision", "recall", "f1-score", "roc-auc"],
+  "prerequisites": [
+    "logistic-regression"
+  ],
+  "tags": [
+    "metrics",
+    "evaluation",
+    "accuracy",
+    "precision",
+    "recall",
+    "f1-score",
+    "roc-auc"
+  ],
   "content": {
     "level0_basic": "Bir öğrencinin sınav sonuçlarını düşünün: 100 sorudan 85'ini doğru yaptıysa başarı oranı %85'tir (Accuracy). Ama şimdi 100 spam email'den 20'sini 'spam değil' diye işaretlersen ne olur? Accuracy %80 olabilir ama gerçek spam'leri kaçırıyorsun! İşte bu yüzden sadece accuracy yetmez, Precision (hassasiyet) ve Recall (duyarlılık) da gerekir. Model değerlendirmede birden fazla metrik kullanmak şarttır!",
     "level1_beginner": "Model performansını tek bir metrikle ölçmek yanıltıcıdır. Farklı problemler farklı metrikler gerektirir.\n\n**Confusion Matrix (Karmaşıklık Matrisi):**\nTüm metriklerin temeli!\n\n|                | Predicted Positive | Predicted Negative |\n|----------------|-------------------|-------------------|\n| **Actual Positive** | TP (True Positive)  | FN (False Negative) |\n| **Actual Negative** | FP (False Positive) | TN (True Negative)  |\n\n**Temel Metrikler:**\n\n1. **Accuracy (Doğruluk):**\n$$\\text{Accuracy} = \\frac{TP + TN}{TP + TN + FP + FN}$$\nToplam doğru tahminlerin oranı. Balanced data için iyi, imbalanced'da yanıltıcı!\n\n2. **Precision (Hassasiyet/Kesinlik):**\n$$\\text{Precision} = \\frac{TP}{TP + FP}$$\n'Positive' dediğim şeyler gerçekten positive mı? False alarm'ı minimize eder.\n\n3. **Recall (Duyarlılık/Sensitivity):**\n$$\\text{Recall} = \\frac{TP}{TP + FN}$$\nGerçek positive'lerin ne kadarını buldum? Miss'i minimize eder.\n\n4. **F1-Score (Harmonic Mean):**\n$$F1 = 2 \\cdot \\frac{\\text{Precision} \\cdot \\text{Recall}}{\\text{Precision} + \\text{Recall}}$$\nPrecision ve Recall'ın dengeli ortalaması. İmbalanced data için ideal!\n\n**Trade-off:**\n- Precision ↑ → Recall ↓ (çok seçici ol → bazılarını kaçır)\n- Recall ↑ → Precision ↓ (hepsini yakala → yanlış alarm artar)\n\n**Hangi Metrik?**\n- **Spam detection:** Precision öncelik (false alarm kötü)\n- **Cancer detection:** Recall öncelik (miss etmek kötü!)\n- **Genel:** F1-Score (her ikisini dengele)",
@@ -96,8 +106,9 @@
         "Precision",
         "Recall"
       ],
-      "correct": 0,
-      "explanation": "Accuracy imbalanced data'da yanıltıcı! Hep 'negative' tahmin edersen accuracy %95 olur ama hiçbir positive yakalayamazsın. F1, Precision, Recall daha güvenilir."
+      "explanation": "Accuracy imbalanced data'da yanıltıcı! Hep 'negative' tahmin edersen accuracy %95 olur ama hiçbir positive yakalayamazsın. F1, Precision, Recall daha güvenilir.",
+      "id": "evaluation-metrics-q1",
+      "correctAnswer": 0
     },
     {
       "question": "Precision ve Recall arasındaki trade-off nedir?",
@@ -107,8 +118,9 @@
         "İkisi birbirinden bağımsızdır",
         "Recall her zaman Precision'dan yüksek olmalıdır"
       ],
-      "correct": 1,
-      "explanation": "Precision ↑ → Recall ↓. Çok seçici olursan (yüksek threshold) false positive azalır (precision ↑) ama bazı gerçek positive'leri kaçırırsın (recall ↓)."
+      "explanation": "Precision ↑ → Recall ↓. Çok seçici olursan (yüksek threshold) false positive azalır (precision ↑) ama bazı gerçek positive'leri kaçırırsın (recall ↓).",
+      "id": "evaluation-metrics-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Cancer detection sisteminde hangi metrik önceliklidir?",
@@ -118,8 +130,9 @@
         "Accuracy (toplam doğruluk)",
         "F1-Score (her ikisi eşit)"
       ],
-      "correct": 1,
-      "explanation": "Cancer detection'da Recall kritik! Hasta kaçırmak (False Negative) çok kötü. False positive (yanlış alarm) kabul edilebilir, o hastaya ek test yapılır. Recall'ı maksimize et!"
+      "explanation": "Cancer detection'da Recall kritik! Hasta kaçırmak (False Negative) çok kötü. False positive (yanlış alarm) kabul edilebilir, o hastaya ek test yapılır. Recall'ı maksimize et!",
+      "id": "evaluation-metrics-q3",
+      "correctAnswer": 1
     },
     {
       "question": "ROC-AUC ve Precision-Recall AUC arasındaki fark nedir?",
@@ -129,8 +142,9 @@
         "PR-AUC her zaman ROC-AUC'dan büyüktür",
         "ROC-AUC regression, PR-AUC classification içindir"
       ],
-      "correct": 1,
-      "explanation": "ROC-AUC balanced data için iyi. İmbalanced data'da (örn. %1 positive) ROC-AUC yanıltıcı olabilir. PR-AUC minority class'a focus eder, imbalanced için daha güvenilir!"
+      "explanation": "ROC-AUC balanced data için iyi. İmbalanced data'da (örn. %1 positive) ROC-AUC yanıltıcı olabilir. PR-AUC minority class'a focus eder, imbalanced için daha güvenilir!",
+      "id": "evaluation-metrics-q4",
+      "correctAnswer": 1
     },
     {
       "question": "R² score negative olabilir mi?",
@@ -140,8 +154,9 @@
         "Sadece regression'da negative olabilir",
         "Sadece normalization yapılmazsa negative olur"
       ],
-      "correct": 1,
-      "explanation": "R² = 1 - (SS_res / SS_tot). Eğer model baseline (her zaman mean tahmin et)'den kötüyse SS_res > SS_tot olur ve R² negative çıkar! 0.0 = baseline kadar, negative = baseline'dan kötü."
+      "explanation": "R² = 1 - (SS_res / SS_tot). Eğer model baseline (her zaman mean tahmin et)'den kötüyse SS_res > SS_tot olur ve R² negative çıkar! 0.0 = baseline kadar, negative = baseline'dan kötü.",
+      "id": "evaluation-metrics-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Multi-class classification'da macro vs weighted average farkı nedir?",
@@ -151,8 +166,9 @@
         "Macro: training, Weighted: test için kullanılır",
         "Weighted her zaman macro'dan büyüktür"
       ],
-      "correct": 1,
-      "explanation": "Macro average: Her sınıfın metriğini eşit ağırlıkla ortala (balanced data için). Weighted average: Sınıf sayısına göre ağırlıklı ortalama (imbalanced data için daha uygun)."
+      "explanation": "Macro average: Her sınıfın metriğini eşit ağırlıkla ortala (balanced data için). Weighted average: Sınıf sayısına göre ağırlıklı ortalama (imbalanced data için daha uygun).",
+      "id": "evaluation-metrics-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -258,5 +274,9 @@
       "description": "Spam detection, cancer detection, fraud detection gibi farklı senaryolarda hangi metriğin neden önemli olduğunu gösterir.",
       "component": "MetricScenarios"
     }
+  ],
+  "nextTopics": [
+    "imbalanced-data-handling",
+    "cross-validation"
   ]
 }

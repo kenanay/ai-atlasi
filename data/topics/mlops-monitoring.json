@@ -5,8 +5,18 @@
   "level": 1,
   "estimatedTime": 40,
   "description": "Production ML model monitoring! Data drift detection, model performance degradation, prediction quality tracking. Alerting systems, retraining triggers, observability.",
-  "prerequisites": ["evaluation-metrics", "model-deployment-production"],
-  "tags": ["mlops", "monitoring", "drift", "production", "observability", "alerts"],
+  "prerequisites": [
+    "evaluation-metrics",
+    "model-deployment-production"
+  ],
+  "tags": [
+    "mlops",
+    "monitoring",
+    "drift",
+    "production",
+    "observability",
+    "alerts"
+  ],
   "content": {
     "level0_basic": "Model deploy ettikten sonra monitoring critical! Real-world data değişir (data drift), model performance düşer. Monitor: Prediction accuracy, latency, data distribution shifts. Alerts set et: accuracy drop → retrain! Metrics: precision/recall, feature distributions, prediction confidence. Continuous monitoring → production ML success!",
     "level1_beginner": "**Why MLOps Monitoring?**\n\n**Problem:** ML models production'da degrade olur!\n\n**Reasons:**\n\n**1. Data Drift:**\nInput data distribution changes.\n\n**Example:** COVID-19 → e-commerce behavior changed → recommendation model fails!\n\n**2. Concept Drift:**\nRelationship between input-output changes.\n\n**Example:** Fraud patterns evolve → fraud detection model outdated.\n\n**3. Model Decay:**\nWorld changes, model static.\n\n**Without monitoring:** Silent failures, bad predictions, unhappy users!\n\n**With monitoring:** Detect issues early, retrain, maintain quality.\n\n**Key Metrics to Monitor:**\n\n**1. Model Performance:**\n- Accuracy, precision, recall, F1\n- Track over time!\n\n**2. Prediction Distribution:**\n- Are predictions changing?\n- Example: Classifier suddenly predicting 90% class A (was 50%)\n\n**3. Feature Distribution:**\n- Input data changing?\n- Compare: Train distribution vs Production distribution\n\n**4. Prediction Confidence:**\n- Low confidence → uncertain model\n- Alert if avg confidence drops\n\n**5. Latency:**\n- Inference time\n- P50, P95, P99 latency\n\n**6. Error Rate:**\n- 4xx, 5xx errors\n- Timeouts, crashes\n\n**Basic Monitoring Architecture:**\n\n```\nUser Request\n     ↓\n  Model API\n     ↓\n  Prediction + Log\n     ↓\n  Monitoring System ← Compare with ground truth (delayed)\n     ↓\n  Alerts / Dashboard\n```\n\n**Data Drift Detection:**\n\n**Statistical Tests:**\n\n**1. Kolmogorov-Smirnov (KS) Test:**\n\nCompare two distributions.\n\n$$D = \\max_x |F_{\\text{train}}(x) - F_{\\text{prod}}(x)|$$\n\n- Small D → similar\n- Large D → drift!\n\n**2. Population Stability Index (PSI):**\n\n$$\\text{PSI} = \\sum_{i} (\\text{Actual}_i - \\text{Expected}_i) \\times \\ln\\left(\\frac{\\text{Actual}_i}{\\text{Expected}_i}\\right)$$\n\n**Interpretation:**\n- PSI < 0.1: No drift\n- 0.1 < PSI < 0.25: Moderate drift\n- PSI > 0.25: Significant drift!\n\n**3. Jensen-Shannon Divergence:**\n\nMeasure distribution similarity.\n\n**Thresholds:** Set alerts when drift detected!",
@@ -80,8 +90,9 @@
         "Sadece ilk hafta",
         "Sadece large models"
       ],
-      "correct": 1,
-      "explanation": "Production models degrade! Data changes (drift), concepts evolve, world changes. Without monitoring: silent failures. With monitoring: detect early, retrain, maintain quality!"
+      "explanation": "Production models degrade! Data changes (drift), concepts evolve, world changes. Without monitoring: silent failures. With monitoring: detect early, retrain, maintain quality!",
+      "id": "mlops-monitoring-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Data drift nedir?",
@@ -91,8 +102,9 @@
         "Bug",
         "Latency increase"
       ],
-      "correct": 1,
-      "explanation": "Data drift: Input distribution changes over time! Example: COVID → shopping behavior changed. Train distribution ≠ Prod distribution. PSI, KS test ile detect et!"
+      "explanation": "Data drift: Input distribution changes over time! Example: COVID → shopping behavior changed. Train distribution ≠ Prod distribution. PSI, KS test ile detect et!",
+      "id": "mlops-monitoring-q2",
+      "correctAnswer": 1
     },
     {
       "question": "PSI (Population Stability Index) thresholds?",
@@ -102,8 +114,9 @@
         "Higher better",
         "No thresholds"
       ],
-      "correct": 1,
-      "explanation": "PSI thresholds: <0.1 no drift (OK), 0.1-0.25 moderate drift (watch), >0.25 significant drift (alert, retrain!). Distribution similarity measure!"
+      "explanation": "PSI thresholds: <0.1 no drift (OK), 0.1-0.25 moderate drift (watch), >0.25 significant drift (alert, retrain!). Distribution similarity measure!",
+      "id": "mlops-monitoring-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Ground truth collection challenge?",
@@ -113,8 +126,9 @@
         "Impossible",
         "Sadece classification"
       ],
-      "correct": 1,
-      "explanation": "Ground truth challenge: Labels arrive delayed! Fraud detection: days (investigation), churn: weeks (observation). Store predictions, join later, compute metrics retrospectively!"
+      "explanation": "Ground truth challenge: Labels arrive delayed! Fraud detection: days (investigation), churn: weeks (observation). Store predictions, join later, compute metrics retrospectively!",
+      "id": "mlops-monitoring-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Retraining ne zaman trigger edilir?",
@@ -124,8 +138,9 @@
         "Sadece manual",
         "Rastgele"
       ],
-      "correct": 1,
-      "explanation": "Retraining triggers: 1) Performance < threshold, 2) Data drift (PSI>0.25), 3) Concept drift, 4) Scheduled (weekly/monthly), 5) Control limit violated. Automated + proactive!"
+      "explanation": "Retraining triggers: 1) Performance < threshold, 2) Data drift (PSI>0.25), 3) Concept drift, 4) Scheduled (weekly/monthly), 5) Control limit violated. Automated + proactive!",
+      "id": "mlops-monitoring-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Shadow mode nedir?",
@@ -135,8 +150,9 @@
         "A/B test",
         "Production only"
       ],
-      "correct": 1,
-      "explanation": "Shadow mode: New model runs parallel, predictions logged (not returned). Zero user impact! Compare metrics. If better → promote to production. Safe testing strategy!"
+      "explanation": "Shadow mode: New model runs parallel, predictions logged (not returned). Zero user impact! Compare metrics. If better → promote to production. Safe testing strategy!",
+      "id": "mlops-monitoring-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -242,5 +258,9 @@
       "description": "End-to-end pipeline animation: Prediction → Logging → Metrics aggregation → Ground truth join → Drift detection → Alert → Retrain. Flow visualization.",
       "component": "MonitoringPipelineAnimation"
     }
+  ],
+  "nextTopics": [
+    "model-deployment-production",
+    "distributed-training"
   ]
 }

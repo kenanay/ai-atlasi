@@ -5,8 +5,17 @@
   "level": 2,
   "estimatedTime": 40,
   "description": "Neural network'lerde overfitting'i önleyen güçlü regularization tekniği. Training'de random olarak neuron'ları devre dışı bırakır, ensemble learning effect yaratır.",
-  "prerequisites": ["neural-networks", "backpropagation"],
-  "tags": ["regularization", "dropout", "overfitting", "deep-learning", "ensemble"],
+  "prerequisites": [
+    "neural-networks",
+    "backpropagation"
+  ],
+  "tags": [
+    "regularization",
+    "dropout",
+    "overfitting",
+    "deep-learning",
+    "ensemble"
+  ],
   "content": {
     "level0_basic": "Bir sınava çalışırken hep aynı arkadaşından kopya çekersen, o arkadaş sınava gelmezse ne yaparsın? Hiçbir şey bilemezsin! Neural network'ler de aynı probleme sahip: bazı neuron'lar çok güçlü olur, diğerleri onlara 'güvenir', kendi öğrenmez (co-adaptation). Dropout bu problemi çözer: training sırasında random olarak neuron'ları kapat (%50 vs). Her neuron artık tek başına öğrenmek zorunda, kimseye güvenemez! Test'te hepsini aç. Sonuç: çok daha robust model, overfitting azalır!",
     "level1_beginner": "Overfitting neural network'lerin en büyük problemi. Model training data'yı ezberler, test data'da kötü perform eder.\n\n**Dropout (Hinton et al., 2012):**\nEn etkili regularization technique'lerinden biri!\n\n**Temel Fikir:**\nTraining sırasında her iteration'da random olarak bir grup neuron'u 'kapat' (output = 0). Bu neuron'lar gradient almaz, update edilmez.\n\n**Matematiksel Formülasyon:**\n\nDropout rate: $p$ (genelde 0.5)\n\n**Training phase:**\nHer neuron için:\n$$r_i \\sim \\text{Bernoulli}(p)$$\n$$\\tilde{h}_i = r_i \\cdot h_i$$\n\n- $h_i$: neuron activation\n- $r_i$: dropout mask (0 veya 1)\n- $\\tilde{h}_i$: dropped activation\n\n**Test phase:**\nTüm neuron'lar aktif ama output'ları scale edilir:\n$$h_{\\text{test}} = p \\cdot h$$\n\nNeden? Training'de ortalama %50 neuron aktifti, test'te %100 → output'ları scale et!\n\n**Inverted Dropout (modern approach):**\nScaling'i training'de yap, test'te yapma (daha efficient!):\n\n**Training:**\n$$\\tilde{h}_i = \\frac{r_i \\cdot h_i}{p}$$\n\n**Test:**\n$$h_{\\text{test}} = h \\quad \\text{(no scaling needed!)}$$\n\n**Neden Çalışır?**\n\n1. **Ensemble Learning:**\nHer iteration farklı sub-network train edilir. $n$ neuron → $2^n$ possible networks! Test'te tüm bu networks'ün ortalaması alınır (implicit ensemble).\n\n2. **Co-adaptation Prevention:**\nNeuron'lar birbirine 'güvenemez', herkes robust features öğrenir.\n\n3. **Noise Injection:**\nStochastic noise model'i more general yapar.",
@@ -92,8 +101,9 @@
         "Her ikisinde de aynı davranır",
         "Test'te dropout rate 2 katına çıkar"
       ],
-      "correct": 1,
-      "explanation": "Training: Random neuron'ları drop et (p probability). Test: Tüm neuron'lar aktif, ama output'lar p ile scale edilir (veya inverted dropout ile training'de scale et, test'te etme)."
+      "explanation": "Training: Random neuron'ları drop et (p probability). Test: Tüm neuron'lar aktif, ama output'lar p ile scale edilir (veya inverted dropout ile training'de scale et, test'te etme).",
+      "id": "dropout-regularization-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Inverted dropout'un avantajı nedir?",
@@ -103,8 +113,9 @@
         "Daha az memory kullanır",
         "Avantajı yok, standard dropout ile aynı"
       ],
-      "correct": 1,
-      "explanation": "Inverted dropout training'de scale eder (h_dropped = mask * h / keep_prob), test'te scaling yok (h_test = h). Production'da test latency için kritik!"
+      "explanation": "Inverted dropout training'de scale eder (h_dropped = mask * h / keep_prob), test'te scaling yok (h_test = h). Production'da test latency için kritik!",
+      "id": "dropout-regularization-q2",
+      "correctAnswer": 1
     },
     {
       "question": "CNN'lerde neden standard Dropout yerine Spatial Dropout (Dropout2d) kullanılır?",
@@ -114,8 +125,9 @@
         "Daha az memory kullanır",
         "Sadece isim farklı, işlev aynı"
       ],
-      "correct": 1,
-      "explanation": "Convolutional features spatially correlated. Random pixels drop etmek etkisiz çünkü nearby pixels aynı info taşır. Spatial dropout entire channels'ı drop eder!"
+      "explanation": "Convolutional features spatially correlated. Random pixels drop etmek etkisiz çünkü nearby pixels aynı info taşır. Spatial dropout entire channels'ı drop eder!",
+      "id": "dropout-regularization-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Dropout neden ensemble learning effect yaratır?",
@@ -125,8 +137,9 @@
         "Ensemble learning ile ilgisi yok",
         "Sadece büyük dataset'lerde ensemble effect var"
       ],
-      "correct": 1,
-      "explanation": "n neuron → 2^n possible sub-networks. Her iteration'da farklı subset aktif → farklı sub-network train edilir. Test'te tüm neuron'lar aktif → tüm sub-networks'ün ortalaması (implicit ensemble)!"
+      "explanation": "n neuron → 2^n possible sub-networks. Her iteration'da farklı subset aktif → farklı sub-network train edilir. Test'te tüm neuron'lar aktif → tüm sub-networks'ün ortalaması (implicit ensemble)!",
+      "id": "dropout-regularization-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Monte Carlo Dropout ne için kullanılır?",
@@ -136,8 +149,9 @@
         "Overfitting'i önlemek için",
         "Model compression için"
       ],
-      "correct": 1,
-      "explanation": "MC Dropout: Test'te dropout ON tut, multiple forward passes yap. Mean = prediction, std = epistemic uncertainty. Bayesian approximation!"
+      "explanation": "MC Dropout: Test'te dropout ON tut, multiple forward passes yap. Mean = prediction, std = epistemic uncertainty. Bayesian approximation!",
+      "id": "dropout-regularization-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Dropout rate tipik olarak ne kadar seçilir?",
@@ -147,8 +161,9 @@
         "Her zaman 0.9 (maximum regularization)",
         "Random seç"
       ],
-      "correct": 1,
-      "explanation": "Input layer: 0.2 (conservative), Conv: 0.2-0.3 (spatial dropout), FC: 0.5 (aggressive). Modern architectures (Transformer): 0.1. Experiment ile optimize et!"
+      "explanation": "Input layer: 0.2 (conservative), Conv: 0.2-0.3 (spatial dropout), FC: 0.5 (aggressive). Modern architectures (Transformer): 0.1. Experiment ile optimize et!",
+      "id": "dropout-regularization-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -254,5 +269,10 @@
       "description": "Monte Carlo Dropout ile uncertainty estimation. Farklı regions'ta uncertainty'yi interaktif keşfet.",
       "component": "MCDropoutUncertainty"
     }
+  ],
+  "nextTopics": [
+    "batch-normalization",
+    "learning-rate-scheduling",
+    "weight-initialization"
   ]
 }

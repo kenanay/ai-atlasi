@@ -3,15 +3,27 @@
   "title": "DBSCAN & Hierarchical Clustering",
   "category": "unsupervised-learning",
   "description": "K-Means'in ötesinde - Yoğunluk tabanlı ve hiyerarşik kümeleme algoritmaları",
-  "prerequisites": ["kmeans-clustering"],
+  "prerequisites": [
+    "kmeans-clustering"
+  ],
   "difficulty": "intermediate",
   "level": 2,
   "estimatedTime": 35,
-  "tags": ["dbscan", "hierarchical", "clustering", "density-based", "dendrogram"],
+  "tags": [
+    "dbscan",
+    "hierarchical",
+    "clustering",
+    "density-based",
+    "dendrogram"
+  ],
   "nextTopics": [],
-  "relatedTopics": ["anomaly-detection"],
-  "levels": {
-    "beginner": {
+  "relatedTopics": [
+    "anomaly-detection"
+  ],
+  "levels": [
+    {
+      "level": 0,
+      "title": "Temel Kavramlar",
       "content": "# DBSCAN & Hierarchical Clustering\n\n## 🎯 K-Means'in Sorunları\n\n### Problem 1: Küme sayısı K gerekli\n```python\n# K-Means: K'yı önceden bilmeliyiz\nkmeans = KMeans(n_clusters=3)  # 3 küme olacak mı?\n```\n\n### Problem 2: Spherical kümeler\n```\nK-Means sadece dairesel kümeleri bulur:\n\n  ⭕ ⭕ ⭕  ← Bunları bulur ✅\n  \n  🌙  📐  ⭐  ← Bunları bulamaz ❌\n  (crescent, triangle, star shapes)\n```\n\n### Problem 3: Noise/Outlier\n```\nK-Means her noktayı bir kümeye atar:\n\n  ●●●     ●●●\n  ●●●     ●●●\n    \n    •  ← Outlier, ama zorla bir kümeye atanır ❌\n```\n\n## 🚀 DBSCAN (Density-Based)\n\n**DBSCAN** = Density-Based Spatial Clustering of Applications with Noise\n\n### Ana Fikir:\n```\nYoğun bölgeleri bul, seyrek noktaları noise say!\n\n●●●●●        ●●●●\n●●●●●●       ●●●●●\n●●●●●    •   ●●●●\n  Cluster 1  ^  Cluster 2\n           Noise\n```\n\n### 2 Parametre:\n1. **eps (ε)**: Komşuluk yarıçapı\n2. **min_samples**: Minimum nokta sayısı\n\n```python\nfrom sklearn.cluster import DBSCAN\n\n# DBSCAN\ndbscan = DBSCAN(eps=0.5, min_samples=5)\nlabels = dbscan.fit_predict(X)\n\nprint(np.unique(labels))\n# [0, 1, 2, -1]  # -1 = Noise!\n```\n\n## 🔑 DBSCAN Kavramları\n\n### 1. Core Point (Çekirdek Nokta)\n```\neps yarıçapında en az min_samples nokta var:\n\n      ●\n    ● ● ●\n  ● ●●● ●\n    ● ● ●\n      ●\n      ↑\n   Core point (9 komşu ≥ min_samples=5)\n```\n\n### 2. Border Point (Sınır Nokta)\n```\nCore point'in komşusu ama kendisi core değil:\n\n  ●●●●●\n  ●●●●●\n  ●●●●●  ●  ← Border point\n```\n\n### 3. Noise Point (Gürültü)\n```\nNe core ne de border:\n\n  ●●●●●\n  ●●●●●\n  ●●●●●\n  \n          •  ← Noise\n```\n\n## 📊 DBSCAN Avantajları\n\n✅ **K gerekmez**: Küme sayısı otomatik\n✅ **Arbitrary shapes**: Ay, yıldız, spiral kümeler\n✅ **Noise detection**: Outlier'ları -1 label ile işaretle\n✅ **Robust**: Outlier'lara dayanıklı\n\n❌ **Dezavantajlar**:\n- eps ve min_samples ayarı zor\n- Farklı yoğunluktaki kümelerde zorlanır\n\n## 🌳 Hierarchical Clustering (Hiyerarşik)\n\n### Ana Fikir:\n```\nKümeleri aşamalı oluştur:\n\nAdım 1: Her nokta ayrı küme\nAdım 2: En yakın 2 kümeyi birleştir\nAdım 3: Tekrar en yakın 2'yi birleştir\n...\nSon: Tek küme\n```\n\n### 2 Tür:\n\n**1. Agglomerative (Bottom-up) - Yaygın ✅**\n```\n●  ●  ●  ●  ●  ●  (6 küme)\n \\/  \\/  \\/\n ●●  ●●  ●●         (3 küme)\n  \\  /  /\n   ●●  ●●           (2 küme)\n     \\/\n     ●●●●           (1 küme)\n```\n\n**2. Divisive (Top-down) - Nadir**\n```\nTek kümeden başla, böl\n```\n\n## 🎯 Dendrogram (Ağaç Diyagramı)\n\n```\n       ┌─────────────┐\n       │             │\n     ┌─┴─┐         ┌─┴─┐\n     │   │         │   │\n   ┌─┴┐ ┌┴─┐     ┌─┴┐ ┌┴─┐\n   A  B C  D     E  F G  H\n   \nYükseklik = Uzaklık\nKesim yaparak küme sayısını belirle!\n```\n\n### Python ile:\n```python\nfrom sklearn.cluster import AgglomerativeClustering\nimport scipy.cluster.hierarchy as sch\nimport matplotlib.pyplot as plt\n\n# Dendrogram çiz\ndendrogram = sch.dendrogram(sch.linkage(X, method='ward'))\nplt.title('Dendrogram')\nplt.xlabel('Noktalar')\nplt.ylabel('Euclidean uzaklık')\nplt.show()\n\n# Kümeleme yap (3 küme seç)\nhc = AgglomerativeClustering(n_clusters=3, linkage='ward')\nlabels = hc.fit_predict(X)\n```\n\n## 📐 Linkage Methods (Birleştirme)\n\n### 1. Single Linkage\n```\nİki küme arasındaki EN YAKIN nokta:\n\nA: ●  ●  ●\nB:    ●  ●  ●\n      ↑\n   Distance\n\n→ Chain effect (zincirleme)\n```\n\n### 2. Complete Linkage\n```\nİki küme arasındaki EN UZAK nokta:\n\nA: ●  ●  ●\nB:    ●  ●  ●\n   ↑\nDistance\n\n→ Compact clusters\n```\n\n### 3. Average Linkage\n```\nTüm nokta çiftlerinin ortalaması:\n\nA: ●  ●  ●\nB:    ●  ●  ●\n   Average distance\n\n→ Dengeli\n```\n\n### 4. Ward Linkage ⭐ (En iyi)\n```\nVariance artışını minimize et:\n\n→ En popüler!\n```\n\n## 💻 Pratik Örnek\n\n```python\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_moons\nfrom sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering\n\n# Crescent şeklinde veri (K-Means başarısız olur)\nX, _ = make_moons(n_samples=200, noise=0.05, random_state=42)\n\n# 1. K-Means (başarısız)\nkmeans = KMeans(n_clusters=2)\nkmeans_labels = kmeans.fit_predict(X)\n\n# 2. DBSCAN (başarılı!)\ndbscan = DBSCAN(eps=0.3, min_samples=5)\ndbscan_labels = dbscan.fit_predict(X)\n\n# 3. Hierarchical (başarılı!)\nhc = AgglomerativeClustering(n_clusters=2, linkage='ward')\nhc_labels = hc.fit_predict(X)\n\n# Görselleştir\nfig, axes = plt.subplots(1, 3, figsize=(15, 5))\n\naxes[0].scatter(X[:, 0], X[:, 1], c=kmeans_labels, cmap='viridis')\naxes[0].set_title('K-Means (Fail)')\n\naxes[1].scatter(X[:, 0], X[:, 1], c=dbscan_labels, cmap='viridis')\naxes[1].set_title('DBSCAN (Success!)')\n\naxes[2].scatter(X[:, 0], X[:, 1], c=hc_labels, cmap='viridis')\naxes[2].set_title('Hierarchical (Success!)')\n\nplt.show()\n```\n\n## 🎯 Ne Zaman Hangisi?\n\n| Durum | Algoritma |\n|-------|----------|\n| **Küme sayısı belli** | K-Means |\n| **Arbitrary shapes** | DBSCAN |\n| **Noise var** | DBSCAN |\n| **Hiyerarşi görmek istiyorum** | Hierarchical |\n| **Küme sayısı belli değil** | DBSCAN veya Hierarchical |\n| **Çok büyük veri** | K-Means (O(n)) |\n| **Küçük/orta veri** | DBSCAN (O(n log n)) veya Hierarchical (O(n²)) |\n\n## 🎯 Özet\n\n> **DBSCAN = Yoğunluk tabanlı, noise detection**\n> **Hierarchical = Ağaç yapısı, dendrogram**\n\n✅ **DBSCAN**: eps + min_samples, arbitrary shapes, -1=noise\n✅ **Hierarchical**: Dendrogram, linkage methods, kesim yaparak K seç\n✅ **K-Means**: Hızlı ama spherical clusters\n✅ **Seçim**: Veri yapısına ve ihtiyaca göre",
       "keyPoints": [
         "DBSCAN: Yoğunluk tabanlı, K gerekmez, noise detection",
@@ -20,7 +32,20 @@
         "Ward linkage en popüler, compact clusters"
       ]
     },
-    "intermediate": {
+    {
+      "level": 1,
+      "title": "Başlangıç ve Mantık",
+      "content": "# DBSCAN & Hierarchical Clustering\n\n## 🎯 K-Means'in Sorunları\n\n### Problem 1: Küme sayısı K gerekli\n```python\n# K-Means: K'yı önceden bilmeliyiz\nkmeans = KMeans(n_clusters=3)  # 3 küme olacak mı?\n```\n\n### Problem 2: Spherical kümeler\n```\nK-Means sadece dairesel kümeleri bulur:\n\n  ⭕ ⭕ ⭕  ← Bunları bulur ✅\n  \n  🌙  📐  ⭐  ← Bunları bulamaz ❌\n  (crescent, triangle, star shapes)\n```\n\n### Problem 3: Noise/Outlier\n```\nK-Means her noktayı bir kümeye atar:\n\n  ●●●     ●●●\n  ●●●     ●●●\n    \n    •  ← Outlier, ama zorla bir kümeye atanır ❌\n```\n\n## 🚀 DBSCAN (Density-Based)\n\n**DBSCAN** = Density-Based Spatial Clustering of Applications with Noise\n\n### Ana Fikir:\n```\nYoğun bölgeleri bul, seyrek noktaları noise say!\n\n●●●●●        ●●●●\n●●●●●●       ●●●●●\n●●●●●    •   ●●●●\n  Cluster 1  ^  Cluster 2\n           Noise\n```\n\n### 2 Parametre:\n1. **eps (ε)**: Komşuluk yarıçapı\n2. **min_samples**: Minimum nokta sayısı\n\n```python\nfrom sklearn.cluster import DBSCAN\n\n# DBSCAN\ndbscan = DBSCAN(eps=0.5, min_samples=5)\nlabels = dbscan.fit_predict(X)\n\nprint(np.unique(labels))\n# [0, 1, 2, -1]  # -1 = Noise!\n```\n\n## 🔑 DBSCAN Kavramları\n\n### 1. Core Point (Çekirdek Nokta)\n```\neps yarıçapında en az min_samples nokta var:\n\n      ●\n    ● ● ●\n  ● ●●● ●\n    ● ● ●\n      ●\n      ↑\n   Core point (9 komşu ≥ min_samples=5)\n```\n\n### 2. Border Point (Sınır Nokta)\n```\nCore point'in komşusu ama kendisi core değil:\n\n  ●●●●●\n  ●●●●●\n  ●●●●●  ●  ← Border point\n```\n\n### 3. Noise Point (Gürültü)\n```\nNe core ne de border:\n\n  ●●●●●\n  ●●●●●\n  ●●●●●\n  \n          •  ← Noise\n```\n\n## 📊 DBSCAN Avantajları\n\n✅ **K gerekmez**: Küme sayısı otomatik\n✅ **Arbitrary shapes**: Ay, yıldız, spiral kümeler\n✅ **Noise detection**: Outlier'ları -1 label ile işaretle\n✅ **Robust**: Outlier'lara dayanıklı\n\n❌ **Dezavantajlar**:\n- eps ve min_samples ayarı zor\n- Farklı yoğunluktaki kümelerde zorlanır\n\n## 🌳 Hierarchical Clustering (Hiyerarşik)\n\n### Ana Fikir:\n```\nKümeleri aşamalı oluştur:\n\nAdım 1: Her nokta ayrı küme\nAdım 2: En yakın 2 kümeyi birleştir\nAdım 3: Tekrar en yakın 2'yi birleştir\n...\nSon: Tek küme\n```\n\n### 2 Tür:\n\n**1. Agglomerative (Bottom-up) - Yaygın ✅**\n```\n●  ●  ●  ●  ●  ●  (6 küme)\n \\/  \\/  \\/\n ●●  ●●  ●●         (3 küme)\n  \\  /  /\n   ●●  ●●           (2 küme)\n     \\/\n     ●●●●           (1 küme)\n```\n\n**2. Divisive (Top-down) - Nadir**\n```\nTek kümeden başla, böl\n```\n\n## 🎯 Dendrogram (Ağaç Diyagramı)\n\n```\n       ┌─────────────┐\n       │             │\n     ┌─┴─┐         ┌─┴─┐\n     │   │         │   │\n   ┌─┴┐ ┌┴─┐     ┌─┴┐ ┌┴─┐\n   A  B C  D     E  F G  H\n   \nYükseklik = Uzaklık\nKesim yaparak küme sayısını belirle!\n```\n\n### Python ile:\n```python\nfrom sklearn.cluster import AgglomerativeClustering\nimport scipy.cluster.hierarchy as sch\nimport matplotlib.pyplot as plt\n\n# Dendrogram çiz\ndendrogram = sch.dendrogram(sch.linkage(X, method='ward'))\nplt.title('Dendrogram')\nplt.xlabel('Noktalar')\nplt.ylabel('Euclidean uzaklık')\nplt.show()\n\n# Kümeleme yap (3 küme seç)\nhc = AgglomerativeClustering(n_clusters=3, linkage='ward')\nlabels = hc.fit_predict(X)\n```\n\n## 📐 Linkage Methods (Birleştirme)\n\n### 1. Single Linkage\n```\nİki küme arasındaki EN YAKIN nokta:\n\nA: ●  ●  ●\nB:    ●  ●  ●\n      ↑\n   Distance\n\n→ Chain effect (zincirleme)\n```\n\n### 2. Complete Linkage\n```\nİki küme arasındaki EN UZAK nokta:\n\nA: ●  ●  ●\nB:    ●  ●  ●\n   ↑\nDistance\n\n→ Compact clusters\n```\n\n### 3. Average Linkage\n```\nTüm nokta çiftlerinin ortalaması:\n\nA: ●  ●  ●\nB:    ●  ●  ●\n   Average distance\n\n→ Dengeli\n```\n\n### 4. Ward Linkage ⭐ (En iyi)\n```\nVariance artışını minimize et:\n\n→ En popüler!\n```\n\n## 💻 Pratik Örnek\n\n```python\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_moons\nfrom sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering\n\n# Crescent şeklinde veri (K-Means başarısız olur)\nX, _ = make_moons(n_samples=200, noise=0.05, random_state=42)\n\n# 1. K-Means (başarısız)\nkmeans = KMeans(n_clusters=2)\nkmeans_labels = kmeans.fit_predict(X)\n\n# 2. DBSCAN (başarılı!)\ndbscan = DBSCAN(eps=0.3, min_samples=5)\ndbscan_labels = dbscan.fit_predict(X)\n\n# 3. Hierarchical (başarılı!)\nhc = AgglomerativeClustering(n_clusters=2, linkage='ward')\nhc_labels = hc.fit_predict(X)\n\n# Görselleştir\nfig, axes = plt.subplots(1, 3, figsize=(15, 5))\n\naxes[0].scatter(X[:, 0], X[:, 1], c=kmeans_labels, cmap='viridis')\naxes[0].set_title('K-Means (Fail)')\n\naxes[1].scatter(X[:, 0], X[:, 1], c=dbscan_labels, cmap='viridis')\naxes[1].set_title('DBSCAN (Success!)')\n\naxes[2].scatter(X[:, 0], X[:, 1], c=hc_labels, cmap='viridis')\naxes[2].set_title('Hierarchical (Success!)')\n\nplt.show()\n```\n\n## 🎯 Ne Zaman Hangisi?\n\n| Durum | Algoritma |\n|-------|----------|\n| **Küme sayısı belli** | K-Means |\n| **Arbitrary shapes** | DBSCAN |\n| **Noise var** | DBSCAN |\n| **Hiyerarşi görmek istiyorum** | Hierarchical |\n| **Küme sayısı belli değil** | DBSCAN veya Hierarchical |\n| **Çok büyük veri** | K-Means (O(n)) |\n| **Küçük/orta veri** | DBSCAN (O(n log n)) veya Hierarchical (O(n²)) |\n\n## 🎯 Özet\n\n> **DBSCAN = Yoğunluk tabanlı, noise detection**\n> **Hierarchical = Ağaç yapısı, dendrogram**\n\n✅ **DBSCAN**: eps + min_samples, arbitrary shapes, -1=noise\n✅ **Hierarchical**: Dendrogram, linkage methods, kesim yaparak K seç\n✅ **K-Means**: Hızlı ama spherical clusters\n✅ **Seçim**: Veri yapısına ve ihtiyaca göre",
+      "keyPoints": [
+        "DBSCAN: Yoğunluk tabanlı, K gerekmez, noise detection",
+        "Core/Border/Noise points: eps + min_samples",
+        "Hierarchical: Bottom-up, dendrogram, linkage methods",
+        "Ward linkage en popüler, compact clusters"
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Uygulama ve Kodlama",
       "content": "# DBSCAN & Hierarchical - Technical Details\n\n## 🔬 DBSCAN Algorithm\n\n```python\nimport numpy as np\nfrom collections import deque\n\nclass DBSCAN:\n    def __init__(self, eps=0.5, min_samples=5):\n        self.eps = eps\n        self.min_samples = min_samples\n    \n    def fit_predict(self, X):\n        n = len(X)\n        labels = np.full(n, -1)  # -1 = unvisited\n        cluster_id = 0\n        \n        for i in range(n):\n            if labels[i] != -1:  # Already visited\n                continue\n            \n            # Find neighbors\n            neighbors = self._region_query(X, i)\n            \n            if len(neighbors) < self.min_samples:\n                labels[i] = -1  # Noise\n            else:\n                # Start new cluster\n                self._expand_cluster(X, labels, i, neighbors, cluster_id)\n                cluster_id += 1\n        \n        return labels\n    \n    def _region_query(self, X, point_idx):\n        \"\"\"Find all points within eps distance\"\"\"\n        neighbors = []\n        for i in range(len(X)):\n            if np.linalg.norm(X[point_idx] - X[i]) <= self.eps:\n                neighbors.append(i)\n        return neighbors\n    \n    def _expand_cluster(self, X, labels, point_idx, neighbors, cluster_id):\n        \"\"\"Expand cluster using BFS\"\"\"\n        labels[point_idx] = cluster_id\n        \n        queue = deque(neighbors)\n        \n        while queue:\n            current = queue.popleft()\n            \n            if labels[current] == -1:  # Was noise\n                labels[current] = cluster_id\n            \n            if labels[current] != -1:  # Already processed\n                continue\n            \n            labels[current] = cluster_id\n            \n            # Find current's neighbors\n            current_neighbors = self._region_query(X, current)\n            \n            if len(current_neighbors) >= self.min_samples:\n                # Core point, add neighbors to queue\n                queue.extend(current_neighbors)\n\n# Usage\ndbscan = DBSCAN(eps=0.5, min_samples=5)\nlabels = dbscan.fit_predict(X)\n```\n\n## 📊 DBSCAN Parameter Selection\n\n### K-Distance Graph (Elbow method)\n```python\nfrom sklearn.neighbors import NearestNeighbors\nimport matplotlib.pyplot as plt\n\ndef find_optimal_eps(X, k=5):\n    # Find k-nearest neighbors\n    nbrs = NearestNeighbors(n_neighbors=k).fit(X)\n    distances, indices = nbrs.kneighbors(X)\n    \n    # Sort distances\n    distances = np.sort(distances[:, k-1], axis=0)\n    \n    # Plot\n    plt.plot(distances)\n    plt.ylabel(f'{k}-NN distance')\n    plt.xlabel('Data Points sorted by distance')\n    plt.title('K-distance Graph')\n    plt.show()\n    \n    # Elbow point → optimal eps\n    # (Visual inspection)\n\n# Find optimal eps\nfind_optimal_eps(X, k=5)\neps = 0.5  # From elbow point\n```\n\n## 🌳 Hierarchical Clustering Implementation\n\n### Agglomerative (Bottom-up):\n```python\nimport numpy as np\nfrom scipy.spatial.distance import pdist, squareform\n\nclass AgglomerativeClustering:\n    def __init__(self, n_clusters=2, linkage='ward'):\n        self.n_clusters = n_clusters\n        self.linkage = linkage\n    \n    def fit_predict(self, X):\n        n = len(X)\n        \n        # Initial: each point is a cluster\n        clusters = [[i] for i in range(n)]\n        \n        # Distance matrix\n        dist_matrix = squareform(pdist(X, 'euclidean'))\n        \n        # Merge until n_clusters\n        while len(clusters) > self.n_clusters:\n            # Find closest pair\n            min_dist = float('inf')\n            merge_i, merge_j = 0, 1\n            \n            for i in range(len(clusters)):\n                for j in range(i + 1, len(clusters)):\n                    dist = self._linkage_distance(\n                        clusters[i],\n                        clusters[j],\n                        dist_matrix\n                    )\n                    \n                    if dist < min_dist:\n                        min_dist = dist\n                        merge_i, merge_j = i, j\n            \n            # Merge\n            clusters[merge_i].extend(clusters[merge_j])\n            clusters.pop(merge_j)\n        \n        # Create labels\n        labels = np.zeros(n, dtype=int)\n        for cluster_id, cluster in enumerate(clusters):\n            for point_idx in cluster:\n                labels[point_idx] = cluster_id\n        \n        return labels\n    \n    def _linkage_distance(self, cluster1, cluster2, dist_matrix):\n        if self.linkage == 'single':\n            # Minimum distance\n            return min(dist_matrix[i, j]\n                      for i in cluster1\n                      for j in cluster2)\n        \n        elif self.linkage == 'complete':\n            # Maximum distance\n            return max(dist_matrix[i, j]\n                      for i in cluster1\n                      for j in cluster2)\n        \n        elif self.linkage == 'average':\n            # Average distance\n            distances = [dist_matrix[i, j]\n                        for i in cluster1\n                        for j in cluster2]\n            return np.mean(distances)\n        \n        elif self.linkage == 'ward':\n            # Ward's method (minimize variance)\n            # Simplified implementation\n            return self._ward_distance(cluster1, cluster2, dist_matrix)\n    \n    def _ward_distance(self, cluster1, cluster2, dist_matrix):\n        n1, n2 = len(cluster1), len(cluster2)\n        \n        # Within-cluster variance increase\n        total = 0\n        for i in cluster1:\n            for j in cluster2:\n                total += dist_matrix[i, j] ** 2\n        \n        return np.sqrt(total * n1 * n2 / (n1 + n2))\n```\n\n## 📊 Dendrogram Analysis\n\n```python\nimport scipy.cluster.hierarchy as sch\nimport matplotlib.pyplot as plt\n\ndef plot_dendrogram_with_cut(X, n_clusters=3):\n    # Compute linkage\n    linkage = sch.linkage(X, method='ward')\n    \n    # Plot dendrogram\n    plt.figure(figsize=(10, 7))\n    dendrogram = sch.dendrogram(\n        linkage,\n        truncate_mode='lastp',\n        p=30,\n        show_leaf_counts=True\n    )\n    \n    # Add cutoff line\n    max_distance = linkage[-n_clusters+1, 2]\n    plt.axhline(y=max_distance, c='red', linestyle='--', label='Cut')\n    plt.legend()\n    \n    plt.title('Hierarchical Clustering Dendrogram')\n    plt.xlabel('Sample index or (cluster size)')\n    plt.ylabel('Distance')\n    plt.show()\n\nplot_dendrogram_with_cut(X, n_clusters=3)\n```\n\n## 🎯 Özet\n\n✅ DBSCAN: O(n log n) with spatial indexing\n✅ Hierarchical: O(n²) space, O(n³) time\n✅ Parameter selection: K-distance graph, dendrogram\n✅ sklearn implementations: Optimized with C",
       "keyPoints": [
         "DBSCAN: BFS expansion, O(n log n) with index",
@@ -29,7 +54,9 @@
         "Dendrogram: Visual tool for choosing K"
       ]
     },
-    "advanced": {
+    {
+      "level": 3,
+      "title": "İleri Düzey Matematik ve Analiz",
       "content": "# DBSCAN & Hierarchical - Advanced\n\n## 🔬 HDBSCAN (Hierarchical DBSCAN)\n\n```python\nimport hdbscan\n\n# Automatic parameter selection!\nclusterer = hdbscan.HDBSCAN(\n    min_cluster_size=5,\n    min_samples=5\n)\n\nlabels = clusterer.fit_predict(X)\n\n# Soft clustering (probabilities)\nprobs = clusterer.probabilities_\n\n# Cluster hierarchy\nclusterer.condensed_tree_.plot()\n```\n\n## 🚀 OPTICS (Ordering Points)\n\n```python\nfrom sklearn.cluster import OPTICS\n\n# Like DBSCAN but automatic eps!\noptics = OPTICS(\n    min_samples=5,\n    xi=0.05,\n    min_cluster_size=0.1\n)\n\nlabels = optics.fit_predict(X)\n\n# Reachability plot\nimport matplotlib.pyplot as plt\n\nspace = np.arange(len(X))\nreachability = optics.reachability_[optics.ordering_]\nlabels = optics.labels_[optics.ordering_]\n\nplt.plot(space, reachability, 'k-', alpha=0.5)\nplt.fill_between(space, 0, reachability, alpha=0.5)\nplt.show()\n```\n\n## 🎯 Özet\n\n✅ HDBSCAN: Automatic parameters\n✅ OPTICS: Reachability distance\n✅ Production: Use sklearn/hdbscan\n✅ Large data: Use spatial indexing",
       "keyPoints": [
         "HDBSCAN: Hierarchical + DBSCAN, auto params",
@@ -38,25 +65,22 @@
         "Production: sklearn optimized implementations"
       ]
     },
-    "expert": {
-      "content": "# DBSCAN & Hierarchical - Production\n\n## 🏭 Large-Scale Clustering\n\n```python\n# For large datasets (>1M points)\nfrom sklearn.cluster import MiniBatchKMeans\nfrom hdbscan import HDBSCAN\n\n# Option 1: Subsample + DBSCAN\nfrom sklearn.utils import shuffle\nX_sample = shuffle(X, n_samples=10000, random_state=42)\ndbscan = DBSCAN(eps=0.5, min_samples=5).fit(X_sample)\n\n# Option 2: HDBSCAN (better for large data)\nhdbscan = HDBSCAN(min_cluster_size=100).fit(X)\n\n# Option 3: Approximate with sampling\nfrom sklearn.cluster import Birch\nbirch = Birch(n_clusters=None, threshold=0.5).fit(X)\n```\n\n## 🎯 Özet\n\n✅ Large data: HDBSCAN or Birch\n✅ Spatial indexing: 100x speedup\n✅ GPU: cuML DBSCAN\n✅ Distributed: Dask + sklearn",
+    {
+      "level": 4,
+      "title": "Uzmanlık ve Üretim Ortamı",
+      "content": "# DBSCAN & Hierarchical - Production\n\n## 🏭 Large-Scale Clustering\n\n```python\n# For large datasets (>1M points)\nfrom sklearn.cluster import MiniBatchKMeans\nfrom hdbscan import HDBSCAN\n\n# Option 1: Subsample + DBSCAN\nfrom sklearn.utils import shuffle\nX_sample = shuffle(X, n_samples=10000, random_state=42)\ndbscan = DBSCAN(eps=0.5, min_samples=5).fit(X_sample)\n\n# Option 2: HDBSCAN (better for large data)\nhdbscan = HDBSCAN(min_cluster_size=100).fit(X)\n\n# Option 3: Approximate with sampling\nfrom sklearn.cluster import Birch\nbirch = Birch(n_clusters=None, threshold=0.5).fit(X)\n```\n\n## 🎯 Özet\n\n✅ Large data: HDBSCAN or Birch\n✅ Spatial indexing: 100x speedup\n✅ GPU: cuML DBSCAN\n✅ Distributed: Dask + sklearn\n\n## 🌍 Gerçek Dünya Senaryoları ve Üretim\n\n# DBSCAN & Hierarchical - Real World\n\n## 🏆 Use Cases\n\n### 1. Anomaly Detection\n```\nDBSCAN noise points = Anomalies\nFinance: Fraud detection\nNetSecurity: Intrusion detection\n```\n\n### 2. Geospatial Clustering\n```\nRestaurant clusters in city\nTraffic accident hotspots\nCustomer location clustering\n```\n\n### 3. Customer Segmentation\n```\nHierarchical: Different granularities\nMarketing: Micro-segments\n```\n\n## 🎯 Best Practices\n\n1. **Start with K-Means** (fast baseline)\n2. **Try DBSCAN** if arbitrary shapes\n3. **Use Hierarchical** for exploration\n4. **HDBSCAN** for production\n\n## 🎯 Özet\n\n✅ DBSCAN: Geospatial, anomaly detection\n✅ Hierarchical: Exploratory analysis\n✅ Production: HDBSCAN recommended\n✅ Always visualize: 2D projection (t-SNE/UMAP)",
       "keyPoints": [
         "Large scale: HDBSCAN or sampling",
         "GPU: cuML DBSCAN (RAPIDS)",
         "Distributed: Dask-ML",
-        "Production: Monitor cluster quality metrics"
-      ]
-    },
-    "real_world": {
-      "content": "# DBSCAN & Hierarchical - Real World\n\n## 🏆 Use Cases\n\n### 1. Anomaly Detection\n```\nDBSCAN noise points = Anomalies\nFinance: Fraud detection\nNetSecurity: Intrusion detection\n```\n\n### 2. Geospatial Clustering\n```\nRestaurant clusters in city\nTraffic accident hotspots\nCustomer location clustering\n```\n\n### 3. Customer Segmentation\n```\nHierarchical: Different granularities\nMarketing: Micro-segments\n```\n\n## 🎯 Best Practices\n\n1. **Start with K-Means** (fast baseline)\n2. **Try DBSCAN** if arbitrary shapes\n3. **Use Hierarchical** for exploration\n4. **HDBSCAN** for production\n\n## 🎯 Özet\n\n✅ DBSCAN: Geospatial, anomaly detection\n✅ Hierarchical: Exploratory analysis\n✅ Production: HDBSCAN recommended\n✅ Always visualize: 2D projection (t-SNE/UMAP)",
-      "keyPoints": [
+        "Production: Monitor cluster quality metrics",
         "DBSCAN: Geo-clustering, anomaly detection",
         "Hierarchical: Customer segmentation",
         "Production: HDBSCAN auto-params",
         "Visualize: t-SNE/UMAP before clustering"
       ]
     }
-  },
+  ],
   "quiz": [
     {
       "question": "DBSCAN'in K-Means'e göre avantajı nedir?",
@@ -67,7 +91,8 @@
         "Daha büyük veri setleri için uygundur"
       ],
       "correctAnswer": 1,
-      "explanation": "DBSCAN, K-Means'ten farklı olarak arbitrary (ay, yıldız gibi) şekillerdeki kümeleri bulabilir ve noise/outlier detection yapar. -1 label'ı noise noktalarını gösterir."
+      "explanation": "DBSCAN, K-Means'ten farklı olarak arbitrary (ay, yıldız gibi) şekillerdeki kümeleri bulabilir ve noise/outlier detection yapar. -1 label'ı noise noktalarını gösterir.",
+      "id": "dbscan-hierarchical-clustering-q1"
     },
     {
       "question": "Hierarchical clustering'de en popüler linkage metodu hangisidir?",
@@ -78,7 +103,8 @@
         "Ward linkage"
       ],
       "correctAnswer": 3,
-      "explanation": "Ward linkage en popüler methoddur. Variance artışını minimize ederek compact ve dengeli kümeler oluşturur."
+      "explanation": "Ward linkage en popüler methoddur. Variance artışını minimize ederek compact ve dengeli kümeler oluşturur.",
+      "id": "dbscan-hierarchical-clustering-q2"
     },
     {
       "question": "DBSCAN'de -1 label'ı ne anlama gelir?",
@@ -89,7 +115,8 @@
         "Border point"
       ],
       "correctAnswer": 1,
-      "explanation": "DBSCAN'de -1 label'ı noise veya outlier noktaları temsil eder. Bu noktalar hiçbir kümeye ait değildir."
+      "explanation": "DBSCAN'de -1 label'ı noise veya outlier noktaları temsil eder. Bu noktalar hiçbir kümeye ait değildir.",
+      "id": "dbscan-hierarchical-clustering-q3"
     }
   ],
   "flashcards": [
@@ -107,5 +134,25 @@
     }
   ],
   "visualization": null,
-  "interactiveDemo": null
+  "interactiveDemo": null,
+  "codeExamples": [
+    {
+      "title": "DBSCAN & Hierarchical Clustering - Kod Örneği 1",
+      "language": "python",
+      "code": "# K-Means: K'yı önceden bilmeliyiz\nkmeans = KMeans(n_clusters=3)  # 3 küme olacak mı?",
+      "explanation": "DBSCAN & Hierarchical Clustering konusunun pratik Python/kütüphane implementasyonu."
+    },
+    {
+      "title": "DBSCAN & Hierarchical Clustering - Kod Örneği 2",
+      "language": "python",
+      "code": "K-Means sadece dairesel kümeleri bulur:\n\n  ⭕ ⭕ ⭕  ← Bunları bulur ✅\n  \n  🌙  📐  ⭐  ← Bunları bulamaz ❌\n  (crescent, triangle, star shapes)",
+      "explanation": "DBSCAN & Hierarchical Clustering konusunun pratik Python/kütüphane implementasyonu."
+    },
+    {
+      "title": "DBSCAN & Hierarchical Clustering - Kod Örneği 3",
+      "language": "python",
+      "code": "K-Means her noktayı bir kümeye atar:\n\n  ●●●     ●●●\n  ●●●     ●●●\n    \n    •  ← Outlier, ama zorla bir kümeye atanır ❌",
+      "explanation": "DBSCAN & Hierarchical Clustering konusunun pratik Python/kütüphane implementasyonu."
+    }
+  ]
 }

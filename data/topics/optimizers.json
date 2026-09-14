@@ -49,8 +49,7 @@
   ],
   "nextTopics": [
     "learning-rate-scheduling",
-    "regularization-techniques",
-    "hyperparameter-tuning",
+    "regularization",
     "batch-normalization"
   ],
   "relatedTopics": [

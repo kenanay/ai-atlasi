@@ -151,48 +151,54 @@ export function TopicContent({ topic, level }: TopicContentProps) {
             </div>
 
             {/* What Is It */}
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
-                  <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  Bu Konu Nedir?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm">{topic.whatIsIt}</p>
-              </CardContent>
-            </Card>
+            {topic.whatIsIt && (
+              <Card className="border-l-4 border-l-blue-500">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    Bu Konu Nedir?
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm">{topic.whatIsIt}</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Why Needed */}
-            <Card className="border-l-4 border-l-emerald-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
-                  <Lightbulb className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  Neden Gerekli?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm">{topic.whyNeeded}</p>
-              </CardContent>
-            </Card>
+            {topic.whyNeeded && (
+              <Card className="border-l-4 border-l-emerald-500">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
+                    <Lightbulb className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    Neden Gerekli?
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm">{topic.whyNeeded}</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Real World Analogy */}
-            <Card className="border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-bold text-amber-900 dark:text-amber-200">
-                  <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  Günlük Hayattan Benzetme
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-amber-950 dark:text-amber-200/90 leading-relaxed italic text-sm">
-                  &ldquo;{topic.realWorldAnalogy}&rdquo;
-                </p>
-              </CardContent>
-            </Card>
+            {topic.realWorldAnalogy && (
+              <Card className="border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base font-bold text-amber-900 dark:text-amber-200">
+                    <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    Günlük Hayattan Benzetme
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-amber-950 dark:text-amber-200/90 leading-relaxed italic text-sm">
+                    &ldquo;{topic.realWorldAnalogy}&rdquo;
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Mathematics (Level 2+) */}
-            {level >= 2 && topic.mathematics && topic.mathematics.formulas.length > 0 && (
+            {level >= 2 && topic.mathematics && topic.mathematics.formulas && topic.mathematics.formulas.length > 0 && (
               <Card className="border-l-4 border-l-purple-500">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">

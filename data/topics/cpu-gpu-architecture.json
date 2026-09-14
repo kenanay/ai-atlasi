@@ -82,8 +82,9 @@
         "Daha büyük cache",
         "Daha iyi branching"
       ],
-      "correct": 1,
-      "explanation": "GPU thousands of simple cores var! Matrix operations (deep learning core) parallel yapar. CPU few powerful cores, sequential. GPU 10-100× faster AI/ML için!"
+      "explanation": "GPU thousands of simple cores var! Matrix operations (deep learning core) parallel yapar. CPU few powerful cores, sequential. GPU 10-100× faster AI/ML için!",
+      "id": "cpu-gpu-architecture-q1",
+      "correctAnswer": 1
     },
     {
       "question": "CUDA nedir?",
@@ -93,8 +94,9 @@
         "CPU optimization tool",
         "Cloud service"
       ],
-      "correct": 1,
-      "explanation": "CUDA: NVIDIA GPU programming platform! Custom kernels yaz, GPU parallelism exploit et. PyTorch/TensorFlow CUDA kullanır (automatic, hidden)."
+      "explanation": "CUDA: NVIDIA GPU programming platform! Custom kernels yaz, GPU parallelism exploit et. PyTorch/TensorFlow CUDA kullanır (automatic, hidden).",
+      "id": "cpu-gpu-architecture-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Tensor cores ne için?",
@@ -104,8 +106,9 @@
         "Memory compression",
         "Data transfer"
       ],
-      "correct": 1,
-      "explanation": "Tensor cores: Specialized hardware modern GPUs'ta! Matrix multiply accelerate eder (FP16/BF16). Mixed precision training ile 2-4× speedup! V100, A100, H100'de var."
+      "explanation": "Tensor cores: Specialized hardware modern GPUs'ta! Matrix multiply accelerate eder (FP16/BF16). Mixed precision training ile 2-4× speedup! V100, A100, H100'de var.",
+      "id": "cpu-gpu-architecture-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Mixed precision training neden?",
@@ -115,8 +118,9 @@
         "Sadece small models için",
         "Gereksiz"
       ],
-      "correct": 1,
-      "explanation": "Mixed precision: FP16 forward pass (fast, tensor cores!) + FP32 gradients (numerical stability). 2-4× speedup, 50% less memory, same accuracy! Always use!"
+      "explanation": "Mixed precision: FP16 forward pass (fast, tensor cores!) + FP32 gradients (numerical stability). 2-4× speedup, 50% less memory, same accuracy! Always use!",
+      "id": "cpu-gpu-architecture-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Gradient checkpointing trade-off?",
@@ -126,8 +130,9 @@
         "Always better",
         "Sadece CPU için"
       ],
-      "correct": 1,
-      "explanation": "Gradient checkpointing: Don't store activations, recompute in backward! 50-80% memory reduction, ama 20-30% slower. Use when memory-constrained (large models)!"
+      "explanation": "Gradient checkpointing: Don't store activations, recompute in backward! 50-80% memory reduction, ama 20-30% slower. Use when memory-constrained (large models)!",
+      "id": "cpu-gpu-architecture-q5",
+      "correctAnswer": 1
     },
     {
       "question": "CPU-GPU data transfer bottleneck nasıl azaltılır?",
@@ -137,8 +142,9 @@
         "Impossible",
         "Sadece CPU kullan"
       ],
-      "correct": 1,
-      "explanation": "CPU-GPU transfer PCIe bottleneck! Solutions: Large batches (not single samples), pinned memory (pin_memory=True), keep data on GPU, avoid loop transfers!"
+      "explanation": "CPU-GPU transfer PCIe bottleneck! Solutions: Large batches (not single samples), pinned memory (pin_memory=True), keep data on GPU, avoid loop transfers!",
+      "id": "cpu-gpu-architecture-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -244,5 +250,10 @@
       "description": "Registers, shared memory, global memory. Access patterns, coalescing, bandwidth. Interactive memory access simulation.",
       "component": "GPUMemoryHierarchy"
     }
+  ],
+  "nextTopics": [
+    "distributed-training",
+    "edge-ai-mobile",
+    "model-deployment-production"
   ]
 }

@@ -5,8 +5,18 @@
   "level": 3,
   "estimatedTime": 50,
   "description": "Reinforcement learning'in temel algoritması Q-Learning ve deep learning ile kombinasyonu DQN. Agent'lar environment'ta optimal policy öğrenir, Atari games'te human-level performance.",
-  "prerequisites": ["neural-networks", "gradient-descent"],
-  "tags": ["reinforcement-learning", "q-learning", "dqn", "deep-q-networks", "atari", "bellman-equation"],
+  "prerequisites": [
+    "neural-networks",
+    "gradient-descent"
+  ],
+  "tags": [
+    "reinforcement-learning",
+    "q-learning",
+    "dqn",
+    "deep-q-networks",
+    "atari",
+    "bellman-equation"
+  ],
   "content": {
     "level0_basic": "Bir oyun oynamayı düşün: Her adımda bir aksiyon seç (yukarı, aşağı, sol, sağ), bir sonuç gör (puan, yenilgi). Nasıl öğrenirsin? Deneme-yanılma! Q-Learning tam bunu yapar: her (state, action) çifti için 'quality' (Q-value) öğrenir. Yüksek Q = iyi aksiyon. Zamanla optimal strateji (policy) öğrenir. DQN (Deep Q-Network) Q-table yerine neural network kullanır → milyonlarca state handle edebilir! Atari Breakout, Space Invaders gibi oyunları human-level oynayabilir!",
     "level1_beginner": "**Reinforcement Learning (RL) Temel Kavramlar:**\n\n**Components:**\n- **Agent:** Karar veren entity (oyuncu)\n- **Environment:** Agent'ın etkileşimde bulunduğu dünya (oyun)\n- **State (s):** Environment'ın mevcut durumu\n- **Action (a):** Agent'ın yapabileceği aksiyon\n- **Reward (r):** Action sonrası alınan feedback (puan)\n- **Policy (π):** State'ten action'a mapping (strategy)\n\n**Goal:** Cumulative reward'ı maksimize et!\n\n$$G_t = r_t + r_{t+1} + r_{t+2} + ... = \\sum_{k=0}^{\\infty} r_{t+k}$$\n\n**Discount factor (γ):**\nGelecekteki rewards'ı discount et:\n\n$$G_t = r_t + \\gamma r_{t+1} + \\gamma^2 r_{t+2} + ... = \\sum_{k=0}^{\\infty} \\gamma^k r_{t+k}$$\n\n- $\\gamma = 0$: Sadece immediate reward\n- $\\gamma = 1$: Tüm future rewards eşit\n- Typical: $\\gamma = 0.9-0.99$\n\n**Q-Learning (Watkins, 1989):**\n\n**Q-Value (Action-Value Function):**\n\n$$Q(s, a) = \\mathbb{E}[G_t | s_t = s, a_t = a]$$\n\nState $s$'te action $a$ yapmanın expected cumulative reward'ı.\n\n**Bellman Equation:**\n\n$$Q(s, a) = r + \\gamma \\max_{a'} Q(s', a')$$\n\n- $s'$: next state\n- $a'$: next action\n- Recursive definition!\n\n**Q-Learning Update:**\n\n$$Q(s, a) \\leftarrow Q(s, a) + \\alpha [r + \\gamma \\max_{a'} Q(s', a') - Q(s, a)]$$\n\n- $\\alpha$: learning rate\n- $[...]$: TD error (temporal difference)\n\n**Algorithm:**\n```\n1. Initialize Q(s, a) arbitrarily\n2. For each episode:\n   a. Observe state s\n   b. Select action a (ε-greedy)\n   c. Execute a, observe r, s'\n   d. Update Q(s, a) using Bellman equation\n   e. s ← s'\n3. Repeat until convergence\n```\n\n**ε-Greedy Exploration:**\n\n- Probability $\\epsilon$: random action (explore)\n- Probability $1-\\epsilon$: argmax Q (exploit)\n\n$$a = \\begin{cases}\n\\text{random action} & \\text{with prob } \\epsilon \\\\\n\\arg\\max_a Q(s, a) & \\text{with prob } 1-\\epsilon\n\\end{cases}$$\n\nExploration vs Exploitation trade-off!",
@@ -84,8 +94,9 @@
         "Q(s,a) = max Q(s', a')",
         "Q(s,a) = r + s'"
       ],
-      "correct": 1,
-      "explanation": "Bellman equation: Q(s,a) = r + γ max Q(s',a'). Current Q-value = immediate reward + discounted best future Q-value. Recursive definition!"
+      "explanation": "Bellman equation: Q(s,a) = r + γ max Q(s',a'). Current Q-value = immediate reward + discounted best future Q-value. Recursive definition!",
+      "id": "q-learning-dqn-q1",
+      "correctAnswer": 1
     },
     {
       "question": "DQN'de experience replay neden kullanılır?",
@@ -95,8 +106,9 @@
         "Model size'ı küçültür",
         "Sadece memory save için"
       ],
-      "correct": 1,
-      "explanation": "Experience replay: (s,a,r,s') transitions'ı store et, random batch sample et. Successive states correlated → batch'te mix et → stable training. Data reuse → efficiency!"
+      "explanation": "Experience replay: (s,a,r,s') transitions'ı store et, random batch sample et. Successive states correlated → batch'te mix et → stable training. Data reuse → efficiency!",
+      "id": "q-learning-dqn-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Target network neden gerekli?",
@@ -106,8 +118,9 @@
         "Memory save",
         "Daha iyi exploration"
       ],
-      "correct": 1,
-      "explanation": "Target network frozen (periodic update). Online network her step değişirse target da değişir (moving target) → unstable! Target frozen → stable training."
+      "explanation": "Target network frozen (periodic update). Online network her step değişirse target da değişir (moving target) → unstable! Target frozen → stable training.",
+      "id": "q-learning-dqn-q3",
+      "correctAnswer": 1
     },
     {
       "question": "ε-greedy exploration nedir?",
@@ -117,8 +130,9 @@
         "ε probability random (explore), 1-ε probability best (exploit)",
         "Sadece training başında explore"
       ],
-      "correct": 2,
-      "explanation": "ε-greedy: ε prob'de random action (explore), 1-ε prob'de argmax Q (exploit). ε decay ile exploration azalır (1.0 → 0.01). Balance explore-exploit!"
+      "explanation": "ε-greedy: ε prob'de random action (explore), 1-ε prob'de argmax Q (exploit). ε decay ile exploration azalır (1.0 → 0.01). Balance explore-exploit!",
+      "id": "q-learning-dqn-q4",
+      "correctAnswer": 2
     },
     {
       "question": "Double DQN standard DQN'den nasıl farklı?",
@@ -128,8 +142,9 @@
         "2 kat hızlı",
         "Aynıdır"
       ],
-      "correct": 1,
-      "explanation": "Double DQN: Online network action seçer, target network evaluate eder. DQN'deki overestimation bias'ını düzeltir. Tek network hem seçip hem evaluate ederse bias!"
+      "explanation": "Double DQN: Online network action seçer, target network evaluate eder. DQN'deki overestimation bias'ını düzeltir. Tek network hem seçip hem evaluate ederse bias!",
+      "id": "q-learning-dqn-q5",
+      "correctAnswer": 1
     },
     {
       "question": "Dueling DQN'de Q(s,a) nasıl decompose edilir?",
@@ -139,8 +154,9 @@
         "Q(s,a) = V(s) × A(s,a)",
         "Decompose edilmez"
       ],
-      "correct": 1,
-      "explanation": "Dueling: Q(s,a) = V(s) + A(s,a). V(s) =얼마나good state, A(s,a) = bu action얼마나 better. Separate streams, faster learning!"
+      "explanation": "Dueling: Q(s,a) = V(s) + A(s,a). V(s) =얼마나good state, A(s,a) = bu action얼마나 better. Separate streams, faster learning!",
+      "id": "q-learning-dqn-q6",
+      "correctAnswer": 1
     }
   ],
   "commonMistakes": [
@@ -246,5 +262,9 @@
       "description": "Q-value overestimation comparison. Standard DQN vs Double DQN, bias visualization.",
       "component": "DoubleDQNComparison"
     }
+  ],
+  "nextTopics": [
+    "reinforcement-learning-basics",
+    "ai-agents-tool-calling"
   ]
 }

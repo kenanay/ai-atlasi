@@ -48,8 +48,8 @@
   "nextTopics": [
     "convolutional-neural-networks",
     "recurrent-neural-networks",
-    "deep-learning-optimization",
-    "regularization-techniques"
+    "optimizers",
+    "regularization"
   ],
   "tags": [
     "neural-networks",

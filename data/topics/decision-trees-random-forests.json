@@ -53,7 +53,8 @@
         "Training time"
       ],
       "correctAnswer": 1,
-      "explanation": "Gini: 1 - Σ(pᵢ²). Measures class mixture! Pure node (all one class): Gini=0. Equal classes: Gini=0.5 (binary). Why important: Training finds splits that minimize impurity → maximize purity. Lower Gini after split = better split! Alternative: Entropy (similar, slightly different math). Both work well. Gini slightly faster to compute."
+      "explanation": "Gini: 1 - Σ(pᵢ²). Measures class mixture! Pure node (all one class): Gini=0. Equal classes: Gini=0.5 (binary). Why important: Training finds splits that minimize impurity → maximize purity. Lower Gini after split = better split! Alternative: Entropy (similar, slightly different math). Both work well. Gini slightly faster to compute.",
+      "id": "decision-trees-random-forests-q1"
     },
     {
       "question": "Random Forest neden single decision tree'den daha iyi?",
@@ -64,7 +65,8 @@
         "Daha az memory"
       ],
       "correctAnswer": 1,
-      "explanation": "Single tree: High variance (small data change → very different tree), overfits easily. Random Forest: Bagging + random features → decorrelates trees. Each tree sees different data/features → different mistakes. Average predictions → errors cancel out! Result: Lower variance, better generalization. Bias-variance tradeoff: Slightly higher bias, much lower variance. Overall: Better! Ensemble wisdom > individual."
+      "explanation": "Single tree: High variance (small data change → very different tree), overfits easily. Random Forest: Bagging + random features → decorrelates trees. Each tree sees different data/features → different mistakes. Average predictions → errors cancel out! Result: Lower variance, better generalization. Bias-variance tradeoff: Slightly higher bias, much lower variance. Overall: Better! Ensemble wisdom > individual.",
+      "id": "decision-trees-random-forests-q2"
     },
     {
       "question": "Random Forest'ta feature importance nasıl hesaplanır?",
@@ -75,7 +77,8 @@
         "Random"
       ],
       "correctAnswer": 1,
-      "explanation": "Feature importance: For each feature, sum all impurity decreases when splitting on that feature. Across all trees! High importance = feature used often + splits data well. Low importance = rarely used or poor splits. Applications: Feature selection (drop low importance), interpretability (which features matter?). Warning: Biased toward high-cardinality features. Use permutation importance for unbiased estimate."
+      "explanation": "Feature importance: For each feature, sum all impurity decreases when splitting on that feature. Across all trees! High importance = feature used often + splits data well. Low importance = rarely used or poor splits. Applications: Feature selection (drop low importance), interpretability (which features matter?). Warning: Biased toward high-cardinality features. Use permutation importance for unbiased estimate.",
+      "id": "decision-trees-random-forests-q3"
     },
     {
       "question": "Decision Tree hangi durumlarda iyi çalışmaz?",
@@ -86,7 +89,8 @@
         "Multi-class"
       ],
       "correctAnswer": 1,
-      "explanation": "Trees excel at: Non-linear, interactions, different feature scales. Struggle with: Linear relationships! Must approximate line with many horizontal/vertical splits → inefficient, deep tree. Example: y = 2x + 3 → tree needs 100s of splits. Linear regression: 1 line. Also poor: Extrapolation (can't predict beyond training range), smooth functions (step-wise approximation). When to avoid: Linear data (use linear models), need smooth predictions, online learning."
+      "explanation": "Trees excel at: Non-linear, interactions, different feature scales. Struggle with: Linear relationships! Must approximate line with many horizontal/vertical splits → inefficient, deep tree. Example: y = 2x + 3 → tree needs 100s of splits. Linear regression: 1 line. Also poor: Extrapolation (can't predict beyond training range), smooth functions (step-wise approximation). When to avoid: Linear data (use linear models), need smooth predictions, online learning.",
+      "id": "decision-trees-random-forests-q4"
     },
     {
       "question": "Bootstrap aggregating (bagging)'in amacı nedir?",
@@ -97,7 +101,8 @@
         "Sadece speed"
       ],
       "correctAnswer": 1,
-      "explanation": "Bagging: Bootstrap (sample with replacement) + Aggregate. Each tree sees ~63% unique samples, 37% repeated. Effect: Trees trained on slightly different data → different predictions. Aggregate (vote/average): Reduces variance! Individual predictions fluctuate, average is stable. Why works: Errors uncorrelated → cancel out. Signal correlated → reinforces. Bias unchanged (each tree has same bias), variance reduced significantly. Foundation of Random Forests!"
+      "explanation": "Bagging: Bootstrap (sample with replacement) + Aggregate. Each tree sees ~63% unique samples, 37% repeated. Effect: Trees trained on slightly different data → different predictions. Aggregate (vote/average): Reduces variance! Individual predictions fluctuate, average is stable. Why works: Errors uncorrelated → cancel out. Signal correlated → reinforces. Bias unchanged (each tree has same bias), variance reduced significantly. Foundation of Random Forests!",
+      "id": "decision-trees-random-forests-q5"
     },
     {
       "question": "Tree pruning neden yapılır?",
@@ -108,7 +113,8 @@
         "Memory"
       ],
       "correctAnswer": 1,
-      "explanation": "Full tree: Often overfits (perfect training accuracy, poor test). Pruning: Remove branches that hurt generalization. Two types: (1) Pre-pruning: Stop early (max_depth, min_samples_split). (2) Post-pruning: Grow full tree, then remove branches. Method: Cost-complexity pruning. Trade-off: Accuracy vs tree size. Sklearn: Use max_depth, min_samples. Manual pruning less common (Random Forest handles overfitting via ensemble). Pruning = regularization for trees!"
+      "explanation": "Full tree: Often overfits (perfect training accuracy, poor test). Pruning: Remove branches that hurt generalization. Two types: (1) Pre-pruning: Stop early (max_depth, min_samples_split). (2) Post-pruning: Grow full tree, then remove branches. Method: Cost-complexity pruning. Trade-off: Accuracy vs tree size. Sklearn: Use max_depth, min_samples. Manual pruning less common (Random Forest handles overfitting via ensemble). Pruning = regularization for trees!",
+      "id": "decision-trees-random-forests-q6"
     }
   ],
   "flashcards": [
@@ -285,11 +291,9 @@
   ],
   "nextTopics": [
     "xgboost-gradient-boosting",
-    "xgboost",
-    "feature-engineering"
+    "data-preprocessing-features"
   ],
   "relatedTopics": [
-    "random-forests",
     "xgboost-gradient-boosting",
     "ensemble-methods"
   ],

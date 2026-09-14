@@ -5,8 +5,16 @@
   "level": 1,
   "estimatedTime": 40,
   "description": "Bayes teoremini kullanarak olasılıklı sınıflandırma yapan, 'naive' (naif) özellik bağımsızlığı varsayımı ile hızlı ve etkili bir algoritma.",
-  "prerequisites": ["logistic-regression"],
-  "tags": ["classification", "probabilistic", "text-classification", "spam-filter", "supervised"],
+  "prerequisites": [
+    "logistic-regression"
+  ],
+  "tags": [
+    "classification",
+    "probabilistic",
+    "text-classification",
+    "spam-filter",
+    "supervised"
+  ],
   "content": {
     "level0_basic": "E-posta kutunuza gelen bir mesajı düşünün. 'Ücretsiz', 'Kazan', 'Tıkla' gibi kelimeler varsa spam olma olasılığı yüksektir. Naive Bayes tam olarak bunu yapar: Geçmişte spam/normal e-postalar gördü, her kelimenin spam olma olasılığını öğrendi. Yeni bir e-posta geldiğinde, içindeki kelimelerin olasılıklarını çarparak 'Bu %95 spam!' der. Gmail'in spam filtresi de benzer çalışır!",
     "level1_beginner": "Naive Bayes, Bayes Teoremi'ne dayanan olasılıksal bir sınıflandırıcıdır. 'Naive' (naif) kelimesi, özelliklerin birbirinden **bağımsız** olduğunu varsaymasından gelir (gerçekte bağımlı olsalar bile!).\n\n**Bayes Teoremi:**\n$$P(y|X) = \\frac{P(X|y) \\cdot P(y)}{P(X)}$$\n\nBurada:\n- $P(y|X)$: **Posterior** - X özellikleri verildiğinde y sınıfının olasılığı (bulmak istediğimiz!)\n- $P(X|y)$: **Likelihood** - y sınıfındayken X özelliklerini görme olasılığı\n- $P(y)$: **Prior** - y sınıfının genel olasılığı (eğitim verisinden)\n- $P(X)$: **Evidence** - X'in genel olasılığı (tüm sınıflarda sabit, görmezden gelebiliriz)\n\n**Naive Varsayım:**\nTüm özellikler birbirinden bağımsızdır:\n$$P(X|y) = P(x_1|y) \\cdot P(x_2|y) \\cdot ... \\cdot P(x_n|y)$$\n\n**Sınıflandırma:**\nEn yüksek posterior olasılığa sahip sınıfı seç:\n$$\\hat{y} = \\arg\\max_{y} P(y) \\prod_{i=1}^{n} P(x_i|y)$$\n\n**Çeşitleri:**\n- **Gaussian NB:** Sürekli özellikler için (normal dağılım varsayımı)\n- **Multinomial NB:** Sayma verisi için (text classification, word counts)\n- **Bernoulli NB:** Binary özellikler için (kelime var/yok)",
@@ -102,8 +110,9 @@
         "Sadece küçük veri setlerinde çalıştığı için",
         "Eğitim süresi çok kısa olduğu için"
       ],
-      "correct": 1,
-      "explanation": "Naive Bayes, özelliklerin birbirinden bağımsız olduğunu varsayar (P(X|y) = ∏P(xi|y)). Gerçekte özellikler bağımlı olsa bile bu varsayım pratikte iyi çalışır!"
+      "explanation": "Naive Bayes, özelliklerin birbirinden bağımsız olduğunu varsayar (P(X|y) = ∏P(xi|y)). Gerçekte özellikler bağımlı olsa bile bu varsayım pratikte iyi çalışır!",
+      "id": "naive-bayes-q1",
+      "correctAnswer": 1
     },
     {
       "question": "Text classification için hangi Naive Bayes varyantı en uygun?",
@@ -113,8 +122,9 @@
         "Bernoulli NB - binary features için",
         "Complement NB - sadece balanced data için"
       ],
-      "correct": 1,
-      "explanation": "Multinomial NB text classification için ideal. Word counts, TF-IDF gibi count/frequency data ile çalışır. Spam detection, sentiment analysis'te yaygın kullanılır."
+      "explanation": "Multinomial NB text classification için ideal. Word counts, TF-IDF gibi count/frequency data ile çalışır. Spam detection, sentiment analysis'te yaygın kullanılır.",
+      "id": "naive-bayes-q2",
+      "correctAnswer": 1
     },
     {
       "question": "Laplace smoothing (alpha=1) neden kullanılır?",
@@ -124,8 +134,9 @@
         "Training süresini azaltmak için",
         "Feature sayısını azaltmak için"
       ],
-      "correct": 1,
-      "explanation": "Eğitimde görülmeyen bir kelime test'te çıkarsa P(kelime|sınıf)=0 olur ve tüm posterior sıfır olur! Laplace smoothing her kelimeye +alpha (genellikle 1) ekler, sıfır olasılıkları önler."
+      "explanation": "Eğitimde görülmeyen bir kelime test'te çıkarsa P(kelime|sınıf)=0 olur ve tüm posterior sıfır olur! Laplace smoothing her kelimeye +alpha (genellikle 1) ekler, sıfır olasılıkları önler.",
+      "id": "naive-bayes-q3",
+      "correctAnswer": 1
     },
     {
       "question": "Naive Bayes'in time complexity'si nedir?",
@@ -135,8 +146,9 @@
         "Training: O(n log n), Prediction: O(log n)",
         "Training: O(n³), Prediction: O(d²)"
       ],
-      "correct": 1,
-      "explanation": "Training O(n×d): her örnek için feature counts hesapla. Prediction O(c×d): her sınıf için tüm feature'ların likelihood'ını hesapla. Çok hızlı! (c: sınıf, d: feature, n: örnek)"
+      "explanation": "Training O(n×d): her örnek için feature counts hesapla. Prediction O(c×d): her sınıf için tüm feature'ların likelihood'ını hesapla. Çok hızlı! (c: sınıf, d: feature, n: örnek)",
+      "id": "naive-bayes-q4",
+      "correctAnswer": 1
     },
     {
       "question": "Imbalanced text classification için en iyi Naive Bayes varyantı hangisi?",
@@ -146,8 +158,9 @@
         "Complement NB",
         "Bernoulli NB"
       ],
-      "correct": 2,
-      "explanation": "Complement NB imbalanced data için özel olarak optimize edilmiştir. Her sınıf için 'diğer tüm sınıfların' feature'larını kullanır, minority class'ları daha iyi tanır."
+      "explanation": "Complement NB imbalanced data için özel olarak optimize edilmiştir. Her sınıf için 'diğer tüm sınıfların' feature'larını kullanır, minority class'ları daha iyi tanır.",
+      "id": "naive-bayes-q5",
+      "correctAnswer": 2
     },
     {
       "question": "Naive Bayes neden online learning için idealdir?",
@@ -157,8 +170,9 @@
         "partial_fit() ile incremental training yapılabilir",
         "Hiçbir parametre öğrenmez"
       ],
-      "correct": 2,
-      "explanation": "Naive Bayes'in partial_fit() metodu var. Yeni veri batch'leri geldikçe modeli günceller. Tüm veriyi tekrar eğitmeye gerek yok! Streaming data için perfect."
+      "explanation": "Naive Bayes'in partial_fit() metodu var. Yeni veri batch'leri geldikçe modeli günceller. Tüm veriyi tekrar eğitmeye gerek yok! Streaming data için perfect.",
+      "id": "naive-bayes-q6",
+      "correctAnswer": 2
     }
   ],
   "commonMistakes": [
@@ -264,5 +278,9 @@
       "description": "Yeni bir document için NB'nin nasıl tahmin yaptığını adım adım: 1) Prior hesapla, 2) Likelihood hesapla, 3) Posterior bul, 4) Argmax al.",
       "component": "NaiveBayesPrediction"
     }
+  ],
+  "nextTopics": [
+    "logistic-regression",
+    "k-nearest-neighbors"
   ]
 }

@@ -48,13 +48,10 @@
     "transformers-attention",
     "convolutional-neural-networks"
   ],
-  "nextTopics": [
-    "detection-transformers-detr",
-    "swin-transformer"
-  ],
+  "nextTopics": [],
   "relatedTopics": [
     "transformers-attention",
-    "image-classification",
+    "convolutional-neural-networks",
     "transfer-learning"
   ],
   "tags": [
@@ -119,7 +116,8 @@
         "Training speed için"
       ],
       "correctAnswer": 1,
-      "explanation": "Transformer architecture sequence of tokens için tasarlandı (NLP: words). ViT: Image → patches → treat as tokens! Each 16×16 patch = one token. Image (224×224) → 196 patches (14×14 grid). Self-attention: Patches attend to each other (like words in sentence). Without patching: Pixel-level attention O(H²W²) → too expensive! Patches reduce sequence length, make feasible."
+      "explanation": "Transformer architecture sequence of tokens için tasarlandı (NLP: words). ViT: Image → patches → treat as tokens! Each 16×16 patch = one token. Image (224×224) → 196 patches (14×14 grid). Self-attention: Patches attend to each other (like words in sentence). Without patching: Pixel-level attention O(H²W²) → too expensive! Patches reduce sequence length, make feasible.",
+      "id": "vision-transformers-q1"
     },
     {
       "question": "ViT'nin CNN'e göre en büyük avantajı?",
@@ -130,7 +128,8 @@
         "Daha az data gerekir"
       ],
       "correctAnswer": 1,
-      "explanation": "ViT: Global receptive field immediately! Self-attention: Each patch attends to ALL other patches from first layer. CNN: Local receptive field (3×3, 5×5), grows slowly through layers. Layer 1: 3×3. Layer 10: Still limited. ViT: Better for understanding relationships across image. Example: Object in top-left relates to object in bottom-right → ViT captures easily. Why matters: Long-range dependencies, global context. Trade-off: Needs more data to learn (less inductive bias)."
+      "explanation": "ViT: Global receptive field immediately! Self-attention: Each patch attends to ALL other patches from first layer. CNN: Local receptive field (3×3, 5×5), grows slowly through layers. Layer 1: 3×3. Layer 10: Still limited. ViT: Better for understanding relationships across image. Example: Object in top-left relates to object in bottom-right → ViT captures easily. Why matters: Long-range dependencies, global context. Trade-off: Needs more data to learn (less inductive bias).",
+      "id": "vision-transformers-q2"
     },
     {
       "question": "ViT neden büyük dataset gerektirir?",
@@ -141,7 +140,8 @@
         "Sadece benchmark için"
       ],
       "correctAnswer": 1,
-      "explanation": "Inductive Bias: Prior knowledge built into architecture. CNN: Strong bias (locality, translation equivariance). Knows 'nearby pixels related'. ViT: Weak bias. Doesn't assume spatial structure! Must learn from data. Result: CNN works with 10k images. ViT needs 1M+. With sufficient data: ViT outperforms CNN (more flexible). Small data: CNN wins (built-in knowledge helps). Solution: Pre-train ViT on ImageNet-21k (14M images), then fine-tune!"
+      "explanation": "Inductive Bias: Prior knowledge built into architecture. CNN: Strong bias (locality, translation equivariance). Knows 'nearby pixels related'. ViT: Weak bias. Doesn't assume spatial structure! Must learn from data. Result: CNN works with 10k images. ViT needs 1M+. With sufficient data: ViT outperforms CNN (more flexible). Small data: CNN wins (built-in knowledge helps). Solution: Pre-train ViT on ImageNet-21k (14M images), then fine-tune!",
+      "id": "vision-transformers-q3"
     },
     {
       "question": "[CLS] token'ın rolü nedir?",
@@ -152,7 +152,8 @@
         "Training stabilization"
       ],
       "correctAnswer": 1,
-      "explanation": "[CLS] token: Special token prepended to sequence (from BERT). Purpose: Global representation! Attends to all patches, aggregates information. Final layer: [CLS] output → classification head → class prediction. Alternative: Could use average of all patches. [CLS] advantages: Learned aggregation (better than simple average). During attention: [CLS] attends to important patches, ignores noise. Visualization: [CLS] attention shows which patches are important for classification!"
+      "explanation": "[CLS] token: Special token prepended to sequence (from BERT). Purpose: Global representation! Attends to all patches, aggregates information. Final layer: [CLS] output → classification head → class prediction. Alternative: Could use average of all patches. [CLS] advantages: Learned aggregation (better than simple average). During attention: [CLS] attends to important patches, ignores noise. Visualization: [CLS] attention shows which patches are important for classification!",
+      "id": "vision-transformers-q4"
     },
     {
       "question": "ViT'de positional embeddings neden gerekli?",
@@ -163,7 +164,8 @@
         "Sadece initialization"
       ],
       "correctAnswer": 1,
-      "explanation": "Transformer: Permutation-invariant! Without positional info: Same output for shuffled input. Problem for images: Spatial structure critical! Top-left ≠ bottom-right. Solution: Positional embeddings! Learnable vectors added to patch embeddings. Encode: 'This patch is at position (i,j)'. Two types: Absolute (learned per position) or relative (distances). ViT: Uses learnable absolute. Result: Model knows spatial relationships!"
+      "explanation": "Transformer: Permutation-invariant! Without positional info: Same output for shuffled input. Problem for images: Spatial structure critical! Top-left ≠ bottom-right. Solution: Positional embeddings! Learnable vectors added to patch embeddings. Encode: 'This patch is at position (i,j)'. Two types: Absolute (learned per position) or relative (distances). ViT: Uses learnable absolute. Result: Model knows spatial relationships!",
+      "id": "vision-transformers-q5"
     },
     {
       "question": "Hybrid ViT (CNN + Transformer) neden kullanılır?",
@@ -174,7 +176,8 @@
         "Backward compatibility"
       ],
       "correctAnswer": 1,
-      "explanation": "Hybrid: CNN stem (early layers) + Transformer (later layers). Benefits: (1) CNN: Low-level features (edges, textures) with inductive bias. (2) Transformer: High-level relationships with global attention. (3) Smaller dataset requirement than pure ViT. (4) Often better performance/data trade-off. Example: ResNet50 backbone → Transformer on top. CNN extracts feature map → treat as patches → Transformer processes. Popular: Combines strengths of both architectures!"
+      "explanation": "Hybrid: CNN stem (early layers) + Transformer (later layers). Benefits: (1) CNN: Low-level features (edges, textures) with inductive bias. (2) Transformer: High-level relationships with global attention. (3) Smaller dataset requirement than pure ViT. (4) Often better performance/data trade-off. Example: ResNet50 backbone → Transformer on top. CNN extracts feature map → treat as patches → Transformer processes. Popular: Combines strengths of both architectures!",
+      "id": "vision-transformers-q6"
     }
   ],
   "flashcards": [

@@ -6,7 +6,10 @@
   "subcategory": "probability-inference",
   "difficulty": "intermediate",
   "estimatedTime": 55,
-  "prerequisites": ["probability-statistics", "linear-regression"],
+  "prerequisites": [
+    "probability-statistics",
+    "linear-regression"
+  ],
   "description": "İstatistiksel çıkarımın temel taşları: Gözlemlenen veriden parametre kestirimi yapmak için kullanılan Maksimum Olabilirlik (Maximum Likelihood Estimation - MLE) ve Maksimum A Posteriori (MAP) yöntemlerini öğren. Makine öğrenmesindeki hemen her modelin arkasındaki matematiksel temeli keşfet.",
   "learningObjectives": [
     "MLE ve MAP'in matematiksel tanımlarını ve aralarındaki farkı kavramak",
@@ -334,6 +337,101 @@
     "reviewedBy": "İstatistik ve ML Uzmanları",
     "difficultyJustification": "Olasılık teorisi ve kalkülüs bilgisi gerektirir, ancak matematiksel türetmeler adım adım açıklanmıştır.",
     "estimatedTimeJustification": "Matematiksel türevler, kod örnekleri ve alıştırmalarla derinlemesine inceleme için 55 dakika uygun bir süredir.",
-    "tags": ["statistics", "probability", "inference", "optimization", "bayesian", "mle", "map", "regularization"]
-  }
+    "tags": [
+      "statistics",
+      "probability",
+      "inference",
+      "optimization",
+      "bayesian",
+      "mle",
+      "map",
+      "regularization"
+    ]
+  },
+  "level": 2,
+  "tags": [
+    "statistics",
+    "probability",
+    "inference",
+    "optimization",
+    "bayesian",
+    "mle",
+    "map",
+    "regularization"
+  ],
+  "nextTopics": [
+    "probability-statistics",
+    "kmeans-clustering",
+    "autoencoders-vae"
+  ],
+  "codeExamples": [
+    {
+      "title": "Olabilirlik Fonksiyonunu Görselleştirme",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom scipy.stats import norm\n\n# Gözlemlenen veri (boy ölçümleri)\ndata = np.array([175, 168, 182, 172, 165, 178, 170, 169, 181, 174])\n\n# Farklı μ değerleri için olabilirlik hesapla\nmu_values = np.linspace(160, 185, 100)\nsigma = 7  # Varsayılan standart sapma\n\nlikelihood = []\nlog_likelihood = []\n\nfor mu in mu_values:\n    # Her veri noktası için olasılık\n    probs = norm.pdf(data, loc=mu, scale=sigma)\n    \n    # Olabilirlik = çarpım\n    L = np.prod(probs)\n    likelihood.append(L)\n    \n    # Log-likelihood = toplam\n    log_L = np.sum(np.log(probs))\n    log_likelihood.append(log_L)\n\n# Görselleştirme\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Sol: Likelihood\naxes[0].plot(mu_values, likelihood, color='blue', linewidth=2)\naxes[0].axvline(data.mean(), color='red', linestyle='--', label=f'MLE (μ={data.mean():.1f})')\naxes[0].set_xlabel('μ (Ortalama)', fontsize=12)\naxes[0].set_ylabel('Likelihood L(μ)', fontsize=12)\naxes[0].set_title('Olabilirlik Fonksiyonu', fontsize=14, fontweight='bold')\naxes[0].legend()\naxes[0].grid(alpha=0.3)\n\n# Sağ: Log-Likelihood\naxes[1].plot(mu_values, log_likelihood, color='green', linewidth=2)\naxes[1].axvline(data.mean(), color='red', linestyle='--', label=f'MLE (μ={data.mean():.1f})')\naxes[1].set_xlabel('μ (Ortalama)', fontsize=12)\naxes[1].set_ylabel('Log-Likelihood ℓ(μ)', fontsize=12)\naxes[1].set_title('Log-Olabilirlik Fonksiyonu', fontsize=14, fontweight='bold')\naxes[1].legend()\naxes[1].grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()\n\nprint(f\"Gözlemlenen verinin ortalaması: {data.mean():.2f} cm\")\nprint(f\"MLE tahmini: μ_MLE = {data.mean():.2f} cm\")",
+      "explanation": "**Çıktı Analizi:**\n\n- Sol grafik: Likelihood fonksiyonu çok küçük değerler alır (10⁻²⁰ mertebesinde) ve optimize edilmesi zordur\n- Sağ grafik: Log-likelihood daha makul değerler alır ve türev almak kolaydır\n- Her ikisi de **μ ≈ 173 cm** civarında maksimuma ulaşır (gözlemlerin ortalaması)\n\n💡 **Sonuç**: Log-likelihood kullanmak hem sayısal stabilite hem de optimizasyon kolaylığı sağlar."
+    },
+    {
+      "title": "MLE ile Gauss Parametrelerini Tahmin Etme",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom scipy.stats import norm\n\n# Gerçek parametreler\ntrue_mu = 50\ntrue_sigma = 10\n\n# Veri üret\nnp.random.seed(42)\nn_samples = 100\ndata = np.random.normal(true_mu, true_sigma, n_samples)\n\n# MLE ile tahmin et\nmu_mle = np.mean(data)\nsigma_mle = np.sqrt(np.mean((data - mu_mle)**2))\n\nprint(\"=\"*50)\nprint(\"MLE PARAMETRE TAHMİNİ\")\nprint(\"=\"*50)\nprint(f\"Gerçek μ: {true_mu:.2f} | MLE Tahmini: {mu_mle:.2f}\")\nprint(f\"Gerçek σ: {true_sigma:.2f} | MLE Tahmini: {sigma_mle:.2f}\")\nprint(\"=\"*50)\n\n# Görselleştirme\nplt.figure(figsize=(12, 5))\n\n# Sol: Histogram + Gerçek + MLE\nplt.subplot(1, 2, 1)\nplt.hist(data, bins=20, density=True, alpha=0.6, color='gray', edgecolor='black', label='Veri')\n\n# Gerçek dağılım\nx = np.linspace(10, 90, 200)\nplt.plot(x, norm.pdf(x, true_mu, true_sigma), 'r-', linewidth=2, label=f'Gerçek: N({true_mu}, {true_sigma}²)')\n\n# MLE tahmini\nplt.plot(x, norm.pdf(x, mu_mle, sigma_mle), 'b--', linewidth=2, label=f'MLE: N({mu_mle:.1f}, {sigma_mle:.1f}²)')\n\nplt.xlabel('Değer', fontsize=12)\nplt.ylabel('Yoğunluk', fontsize=12)\nplt.title('MLE ile Gauss Parametrelerini Tahmin Etme', fontsize=14, fontweight='bold')\nplt.legend()\nplt.grid(alpha=0.3)\n\n# Sağ: Farklı örnek boyutlarında hata\nplt.subplot(1, 2, 2)\nsample_sizes = [10, 20, 50, 100, 200, 500, 1000]\nmu_errors = []\nsigma_errors = []\n\nfor n in sample_sizes:\n    samples = np.random.normal(true_mu, true_sigma, n)\n    mu_est = np.mean(samples)\n    sigma_est = np.sqrt(np.mean((samples - mu_est)**2))\n    \n    mu_errors.append(abs(mu_est - true_mu))\n    sigma_errors.append(abs(sigma_est - true_sigma))\n\nplt.plot(sample_sizes, mu_errors, 'o-', label='μ Hatası', linewidth=2)\nplt.plot(sample_sizes, sigma_errors, 's-', label='σ Hatası', linewidth=2)\nplt.xscale('log')\nplt.xlabel('Örnek Sayısı', fontsize=12)\nplt.ylabel('Mutlak Hata', fontsize=12)\nplt.title('MLE Tahmini ve Örnek Boyutu', fontsize=14, fontweight='bold')\nplt.legend()\nplt.grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()",
+      "explanation": "**Gözlemler:**\n\n1. **Sol Grafik**: MLE tahmini (mavi kesikli çizgi) gerçek dağılıma (kırmızı) çok yakın\n2. **Sağ Grafik**: Örnek sayısı arttıkça tahmin hatası azalır (MLE **tutarlı** bir tahmincidir)\n3. **100 örnekle**: μ tahmini ±1 hata içinde, σ tahmini ±0.5 hata içinde\n\n💡 **Sonuç**: MLE, yeterli veri olduğunda gerçek parametrelere yakınsar."
+    },
+    {
+      "title": "MLE ile Lineer Regresyon",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Gerçek parametreler\ntrue_beta0 = 2.5  # Kesim\ntrue_beta1 = 1.8  # Eğim\ntrue_sigma = 3.0  # Gürültü\n\n# Veri üret\nnp.random.seed(42)\nn = 50\nX = np.linspace(0, 10, n)\ny = true_beta0 + true_beta1 * X + np.random.normal(0, true_sigma, n)\n\n# MLE Çözümü (Kapalı Form)\nX_design = np.column_stack([np.ones(n), X])  # [1, x]\nbeta_mle = np.linalg.inv(X_design.T @ X_design) @ X_design.T @ y\n\nbeta0_mle, beta1_mle = beta_mle\ny_pred = beta0_mle + beta1_mle * X\n\nprint(\"=\"*60)\nprint(\"LİNEER REGRESYON İÇİN MLE PARAMETRELERİ\")\nprint(\"=\"*60)\nprint(f\"Gerçek β₀ (kesim): {true_beta0:.3f} | MLE: {beta0_mle:.3f}\")\nprint(f\"Gerçek β₁ (eğim):  {true_beta1:.3f} | MLE: {beta1_mle:.3f}\")\nprint(f\"MSE Kaybı: {np.mean((y - y_pred)**2):.3f}\")\nprint(\"=\"*60)\n\n# Görselleştirme\nplt.figure(figsize=(12, 5))\n\n# Sol: Veri + MLE Çizgisi\nplt.subplot(1, 2, 1)\nplt.scatter(X, y, alpha=0.6, s=50, color='gray', label='Veri')\nplt.plot(X, true_beta0 + true_beta1 * X, 'r-', linewidth=2, label=f'Gerçek: y={true_beta0}+{true_beta1}x')\nplt.plot(X, y_pred, 'b--', linewidth=2, label=f'MLE: y={beta0_mle:.2f}+{beta1_mle:.2f}x')\nplt.xlabel('x', fontsize=12)\nplt.ylabel('y', fontsize=12)\nplt.title('MLE ile Lineer Regresyon', fontsize=14, fontweight='bold')\nplt.legend()\nplt.grid(alpha=0.3)\n\n# Sağ: Residuals (Artıklar)\nplt.subplot(1, 2, 2)\nresiduals = y - y_pred\nplt.scatter(y_pred, residuals, alpha=0.6, s=50, color='purple')\nplt.axhline(0, color='red', linestyle='--', linewidth=2)\nplt.xlabel('Tahmin Edilen Değer (ŷ)', fontsize=12)\nplt.ylabel('Artık (y - ŷ)', fontsize=12)\nplt.title('Artık Analizi', fontsize=14, fontweight='bold')\nplt.grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()",
+      "explanation": "**MLE ve MSE Eşdeğerliği:**\n\n- Gauss gürültü varsayımı altında, MLE çözümü = MSE'yi minimize etme\n- Kapalı form çözüm: β = (XᵀX)⁻¹Xᵀy (Normal Equations)\n- Artıklar (residuals) sıfır etrafında rastgele dağılmalı (model varsayımı doğruysa)\n\n💡 **Sonuç**: Lineer regresyonda kullandığımız standart yöntem, aslında MLE'nin özel bir halidir!"
+    },
+    {
+      "title": "MAP vs MLE Karşılaştırması (Ridge Regularization)",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.preprocessing import PolynomialFeatures\n\n# Gerçek fonksiyon: y = 2 + 3x - x²\ndef true_function(x):\n    return 2 + 3*x - x**2\n\n# Veri üret (az sayıda, gürültülü)\nnp.random.seed(42)\nn = 15  # Az veri (overfitting riski yüksek)\nX_train = np.random.uniform(-2, 2, n)\ny_train = true_function(X_train) + np.random.normal(0, 2, n)\n\n# Test verisi\nX_test = np.linspace(-2, 2, 200)\ny_test = true_function(X_test)\n\n# Polinom özellikleri (8. derece - overfitting riski)\npoly = PolynomialFeatures(degree=8)\nX_train_poly = poly.fit_transform(X_train.reshape(-1, 1))\nX_test_poly = poly.transform(X_test.reshape(-1, 1))\n\n# MLE Çözümü (regularizasyon yok)\nbeta_mle = np.linalg.lstsq(X_train_poly, y_train, rcond=None)[0]\ny_pred_mle = X_test_poly @ beta_mle\n\n# MAP Çözümü (Ridge - L2 regularization)\nlambda_ridge = 10  # Prior strength\nI = np.eye(X_train_poly.shape[1])\nI[0, 0] = 0  # Bias terimini düzenlileştirme\nbeta_map = np.linalg.inv(X_train_poly.T @ X_train_poly + lambda_ridge * I) @ X_train_poly.T @ y_train\ny_pred_map = X_test_poly @ beta_map\n\n# Görselleştirme\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\n\n# Sol: MLE (Overfitting)\naxes[0].scatter(X_train, y_train, s=80, alpha=0.7, color='black', label='Eğitim Verisi')\naxes[0].plot(X_test, y_test, 'g-', linewidth=2, label='Gerçek Fonksiyon')\naxes[0].plot(X_test, y_pred_mle, 'r--', linewidth=2, label='MLE (8. Derece Polinom)')\naxes[0].set_xlabel('x', fontsize=12)\naxes[0].set_ylabel('y', fontsize=12)\naxes[0].set_title('MLE - Overfitting', fontsize=14, fontweight='bold')\naxes[0].legend()\naxes[0].grid(alpha=0.3)\naxes[0].set_ylim(-10, 15)\n\n# Orta: MAP (Regularized)\naxes[1].scatter(X_train, y_train, s=80, alpha=0.7, color='black', label='Eğitim Verisi')\naxes[1].plot(X_test, y_test, 'g-', linewidth=2, label='Gerçek Fonksiyon')\naxes[1].plot(X_test, y_pred_map, 'b--', linewidth=2, label='MAP (Ridge, λ=10)')\naxes[1].set_xlabel('x', fontsize=12)\naxes[1].set_ylabel('y', fontsize=12)\naxes[1].set_title('MAP - Düzenlileştirilmiş', fontsize=14, fontweight='bold')\naxes[1].legend()\naxes[1].grid(alpha=0.3)\naxes[1].set_ylim(-10, 15)\n\n# Sağ: Parametre Büyüklükleri\naxes[2].bar(range(len(beta_mle)), np.abs(beta_mle), alpha=0.6, label='MLE (L2 Norm: {:.1f})'.format(np.linalg.norm(beta_mle)))\naxes[2].bar(range(len(beta_map)), np.abs(beta_map), alpha=0.6, label='MAP (L2 Norm: {:.1f})'.format(np.linalg.norm(beta_map)))\naxes[2].set_xlabel('Parametre İndeksi', fontsize=12)\naxes[2].set_ylabel('Mutlak Değer |β|', fontsize=12)\naxes[2].set_title('Parametre Büyüklüklerinin Karşılaştırması', fontsize=14, fontweight='bold')\naxes[2].legend()\naxes[2].grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()\n\nprint(\"=\"*60)\nprint(\"MLE vs MAP KARŞILAŞTIRMASI\")\nprint(\"=\"*60)\nprint(f\"MLE Parametrelerinin L2 Normu: {np.linalg.norm(beta_mle):.2f}\")\nprint(f\"MAP Parametrelerinin L2 Normu: {np.linalg.norm(beta_map):.2f}\")\nprint(f\"MLE Test MSE: {np.mean((y_test - y_pred_mle)**2):.2f}\")\nprint(f\"MAP Test MSE: {np.mean((y_test - y_pred_map)**2):.2f}\")\nprint(\"=\"*60)",
+      "explanation": "**Gözlemler:**\n\n1. **Sol (MLE)**: 8. derece polinom veriyi **ezberler** (overfitting), eğitim noktaları arasında vahşi salınımlar yapar\n2. **Orta (MAP)**: Prior sayesinde daha **pürüzsüz** ve **gerçeğe yakın** bir eğri elde edilir\n3. **Sağ**: MAP parametreleri **daha küçük** (L2 norm MLE'nin ~%30'u), düzenlileştirme etkisi açık\n4. **Test MSE**: MAP genelleme performansı MLE'den çok daha iyi\n\n💡 **Sonuç**: Az veri + Karmaşık model = MLE overfit eder, MAP prior bilgisiyle genellemeyi iyileştirir."
+    },
+    {
+      "title": "Lojistik Regresyon için MLE (Gradient Descent)",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_classification\n\n# Sigmoid fonksiyonu\ndef sigmoid(z):\n    return 1 / (1 + np.exp(-np.clip(z, -500, 500)))  # Sayısal stabilite\n\n# Negatif log-likelihood (Binary Cross-Entropy)\ndef neg_log_likelihood(theta, X, y):\n    z = X @ theta\n    probs = sigmoid(z)\n    return -np.sum(y * np.log(probs + 1e-10) + (1 - y) * np.log(1 - probs + 1e-10))\n\n# Gradient\ndef gradient(theta, X, y):\n    z = X @ theta\n    probs = sigmoid(z)\n    return X.T @ (probs - y)\n\n# Veri üret\nnp.random.seed(42)\nX, y = make_classification(n_samples=200, n_features=2, n_informative=2, \n                           n_redundant=0, n_clusters_per_class=1, flip_y=0.1)\n\n# Bias terimi ekle\nX = np.column_stack([np.ones(X.shape[0]), X])\n\n# Gradient Descent ile MLE\ntheta = np.zeros(X.shape[1])\nlearning_rate = 0.1\nn_iterations = 1000\nloss_history = []\n\nfor i in range(n_iterations):\n    loss = neg_log_likelihood(theta, X, y)\n    loss_history.append(loss)\n    grad = gradient(theta, X, y)\n    theta -= learning_rate * grad\n\nprint(\"=\"*60)\nprint(\"LOJİSTİK REGRESYON İÇİN MLE\")\nprint(\"=\"*60)\nprint(f\"Öğrenilen Parametreler: {theta}\")\nprint(f\"Son Loss (Neg. Log-Likelihood): {loss_history[-1]:.4f}\")\nprint(f\"Eğitim Doğruluğu: {np.mean((sigmoid(X @ theta) > 0.5) == y):.2%}\")\nprint(\"=\"*60)\n\n# Görselleştirme\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Sol: Karar Sınırı\naxes[0].scatter(X[y==0, 1], X[y==0, 2], c='blue', alpha=0.6, s=50, label='Sınıf 0')\naxes[0].scatter(X[y==1, 1], X[y==1, 2], c='red', alpha=0.6, s=50, label='Sınıf 1')\n\n# Karar sınırı: θ₀ + θ₁x₁ + θ₂x₂ = 0 → x₂ = -(θ₀ + θ₁x₁) / θ₂\nx1_boundary = np.linspace(X[:, 1].min(), X[:, 1].max(), 100)\nx2_boundary = -(theta[0] + theta[1] * x1_boundary) / theta[2]\naxes[0].plot(x1_boundary, x2_boundary, 'g-', linewidth=2, label='Karar Sınırı (MLE)')\n\naxes[0].set_xlabel('Özellik 1', fontsize=12)\naxes[0].set_ylabel('Özellik 2', fontsize=12)\naxes[0].set_title('MLE ile Lojistik Regresyon', fontsize=14, fontweight='bold')\naxes[0].legend()\naxes[0].grid(alpha=0.3)\n\n# Sağ: Loss Değişimi\naxes[1].plot(loss_history, linewidth=2, color='purple')\naxes[1].set_xlabel('İterasyon', fontsize=12)\naxes[1].set_ylabel('Negative Log-Likelihood', fontsize=12)\naxes[1].set_title('MLE Optimizasyonu (Gradient Descent)', fontsize=14, fontweight='bold')\naxes[1].grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()",
+      "explanation": "**MLE ve Cross-Entropy İlişkisi:**\n\n- Lojistik regresyonda **maksimize ettiğimiz**: $\\sum [y_i \\log p_i + (1-y_i) \\log(1-p_i)]$\n- Sinir ağlarında **minimize ettiğimiz**: $-\\sum [y_i \\log p_i + (1-y_i) \\log(1-p_i)]$ (Binary Cross-Entropy)\n- İkisi matematiksel olarak **aynı optimizasyon problemidir**!\n\n💡 **Sonuç**: Cross-entropy loss, lojistik regresyon için MLE'nin doğal sonucudur."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "mle-map-q1",
+      "question": "Olasılık (Probability) ile Olabilirlik (Likelihood) arasındaki temel fark nedir?",
+      "options": [
+        "Olasılıkta veri sabit, parametre değişkendir; Olabilirlikte tam tersidir",
+        "Olasılıkta parametre sabit, veri değişkendir; Olabilirlikte veri sabit, parametre değişkendir",
+        "İkisi de tamamen aynı matematiksel fonksiyondur ve hiçbir fark yoktur",
+        "Likelihood her zaman 0 ile 1 arasındadır, olasılık ise sonsuza gidebilir"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Olasılık P(X|θ), sabit parametre verildiğinde verinin olasılığıdır. Olabilirlik L(θ|X) ise sabit veri karşısında parametrenin ne kadar olası olduğunu ölçer."
+    },
+    {
+      "id": "mle-map-q2",
+      "question": "Neden parametre kestiriminde doğrudan Likelihood yerine Log-Likelihood tercih edilir?",
+      "options": [
+        "Çarpımları toplamlara dönüştürerek sayısal kararlılık (underflow engelleme) ve kolay türev alma sağlar",
+        "Logaritma fonksiyonun maksimum noktasının yerini değiştirir",
+        "Sadece tek değişkenli problemlerde çalışır",
+        "Matematiksel olarak daha havalı görünür"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Bağımsız gözlemlerin çarpımı çok küçük sayılar üretir. Logaritma monoton artandır (maksimumu korur), çarpımları toplama çevirir ve türev almayı kolaylaştırır."
+    },
+    {
+      "id": "mle-map-q3",
+      "question": "Maksimum A Posteriori (MAP) yönteminin MLE'den en belirgin farkı ve avantajı nedir?",
+      "options": [
+        "MAP parametreler hakkında önsel (prior) bilgi kullanmaz",
+        "MAP prior dağılımı kullanarak düzenlileştirme (regularization) etkisi yaratır ve overfitting'i azaltır",
+        "MAP her zaman MLE'den daha hızlı hesaplanır",
+        "MAP sadece kategorik verilerde çalışır"
+      ],
+      "correctAnswer": 1,
+      "explanation": "MAP, Bayes kuralını kullanarak prior P(θ) bilgisini dahil eder. Bu önsel bilgi, L2 (Ridge) veya L1 (Lasso) benzeri bir ceza terimi gibi davranarak aşırı öğrenmeyi engeller."
+    }
+  ]
 }

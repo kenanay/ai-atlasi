@@ -4,3 +4,6 @@ export { FunctionPlot } from './FunctionPlot';
 export { MatrixVisualizer } from './MatrixVisualizer';
 export { PCAVisualizer } from './PCAVisualizer';
 export { KMeansAnimator } from './KMeansAnimator';
+export { AttentionVisualizer } from './AttentionVisualizer';
+export { NeuralNetworkSimulator } from './NeuralNetworkSimulator';
+export { CNNConvolutionVisualizer } from './CNNConvolutionVisualizer';

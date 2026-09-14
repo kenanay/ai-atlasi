@@ -257,46 +257,56 @@ async function main() {
     if (processInfo) {
       log(`   Kullanan: ${processInfo}`, 'yellow');
     }
-    
-    console.log('');
-    log('Ne yapmak istersiniz?', 'cyan');
-    console.log('  1) Alternatif port kullan (otomatik bul)');
-    console.log('  2) Manuel port gir');
-    console.log('  3) İptal');
-    console.log('');
-    
-    const choice = await askQuestion('Seçiminiz (1-3): ');
-    
-    switch (choice) {
-      case '1':
-        const newPort = await findAvailablePort(port);
-        if (newPort) {
-          port = newPort;
-          log(`✓ Port ${port} kullanılacak`, 'green');
-        } else {
-          log('✗ Boş port bulunamadı!', 'red');
-          process.exit(1);
-        }
-        break;
-      
-      case '2':
-        const manualPort = await askQuestion('Port numarası: ');
-        const portNum = parseInt(manualPort);
-        if (isNaN(portNum) || portNum < 1024 || portNum > 65535) {
-          log('✗ Geçersiz port numarası!', 'red');
-          process.exit(1);
-        }
-        port = portNum;
-        break;
-      
-      case '3':
-        log('İptal edildi.', 'yellow');
-        process.exit(0);
-        break;
-      
-      default:
-        log('✗ Geçersiz seçim!', 'red');
+    if (args.includes('--auto') || args.includes('-y')) {
+      const newPort = await findAvailablePort(port);
+      if (newPort) {
+        port = newPort;
+        log(`✓ Port ${port} otomatik seçildi`, 'green');
+      } else {
+        log('✗ Boş port bulunamadı!', 'red');
         process.exit(1);
+      }
+    } else {
+      console.log('');
+      log('Ne yapmak istersiniz?', 'cyan');
+      console.log('  1) Alternatif port kullan (otomatik bul)');
+      console.log('  2) Manuel port gir');
+      console.log('  3) İptal');
+      console.log('');
+      
+      const choice = await askQuestion('Seçiminiz (1-3): ');
+      
+      switch (choice) {
+        case '1':
+          const newPort = await findAvailablePort(port);
+          if (newPort) {
+            port = newPort;
+            log(`✓ Port ${port} kullanılacak`, 'green');
+          } else {
+            log('✗ Boş port bulunamadı!', 'red');
+            process.exit(1);
+          }
+          break;
+        
+        case '2':
+          const manualPort = await askQuestion('Port numarası: ');
+          const portNum = parseInt(manualPort);
+          if (isNaN(portNum) || portNum < 1024 || portNum > 65535) {
+            log('✗ Geçersiz port numarası!', 'red');
+            process.exit(1);
+          }
+          port = portNum;
+          break;
+        
+        case '3':
+          log('İptal edildi.', 'yellow');
+          process.exit(0);
+          break;
+        
+        default:
+          log('✗ Geçersiz seçim!', 'red');
+          process.exit(1);
+      }
     }
     
     console.log('');

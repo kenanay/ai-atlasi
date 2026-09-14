@@ -49,15 +49,13 @@
     "backpropagation"
   ],
   "nextTopics": [
-    "bert-gpt-models",
+    "bert-language-models",
     "vision-transformers",
-    "efficient-transformers",
-    "large-language-models"
+    "large-language-models-basics"
   ],
   "relatedTopics": [
     "word-embeddings",
-    "positional-encoding",
-    "layer-normalization"
+    "batch-normalization"
   ],
   "tags": [
     "transformers",

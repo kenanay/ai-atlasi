@@ -105,9 +105,7 @@
     "linear-regression"
   ],
   "relatedTopics": [
-    "backpropagation",
-    "stochastic-gradient-descent",
-    "mini-batch"
+    "backpropagation"
   ],
   "quiz": [
     {
