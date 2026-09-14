@@ -18,6 +18,7 @@ import { TopicRightPanel } from '@/components/topic/TopicRightPanel';
 import { TopicLevel } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { ChevronLeft, ChevronRight, CheckCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { usePyodidePreload } from '@/hooks/usePyodidePreload';
 
 interface TopicPageProps {
   params: Promise<{
@@ -37,6 +38,9 @@ function TopicSession({ id }: { id: string }) {
   const allProgress = useProgress();
   const progress = allProgress.find(p => p.topicId === id) ?? null;
   const currentLevel = progress?.currentLevel ?? 0;
+
+  // Pyodide preload for Level 2+ (background WebAssembly load)
+  usePyodidePreload(currentLevel >= 2);
 
   // Panel collapse state with localStorage persistence
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);

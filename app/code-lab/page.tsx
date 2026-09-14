@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, Play, Code, BookOpen } from 'lucide-react';
+import { usePyodidePreload } from '@/hooks/usePyodidePreload';
 
 interface CodeCell {
   id: string;
@@ -41,6 +42,9 @@ print("Nokta çarpım:", np.dot(v1, v2))`,
 
 export default function CodeLabPage() {
   const [cells, setCells] = useState<CodeCell[]>(initialCells);
+
+  // Preload Pyodide in background (Python WebAssembly)
+  usePyodidePreload(true);
 
   const addCell = () => {
     const newCell: CodeCell = {
