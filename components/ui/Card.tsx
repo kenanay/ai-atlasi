@@ -1,5 +1,8 @@
+'use client';
+
 import { cn } from '@/lib/utils';
 import { HTMLAttributes, forwardRef } from 'react';
+import { motion } from 'framer-motion';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   hover?: boolean;
@@ -7,18 +10,25 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, hover = false, children, ...props }, ref) => {
+    const MotionDiv = motion.div;
+    
     return (
-      <div
+      <MotionDiv
         ref={ref}
         className={cn(
-          'rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm transition-all duration-300',
-          hover && 'hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-950/50 hover:border-slate-300 dark:hover:border-slate-700 hover:-translate-y-1 cursor-pointer',
+          'rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm transition-colors duration-300',
+          hover && 'cursor-pointer',
           className
         )}
-        {...props}
+        whileHover={hover ? { 
+          y: -4, 
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        } : undefined}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        {...(props as any)}
       >
         {children}
-      </div>
+      </MotionDiv>
     );
   }
 );

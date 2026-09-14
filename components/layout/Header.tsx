@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Brain, Search, BookOpen, Settings, Home, TrendingUp, Code, Award, Map, Sparkles, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Header() {
   const pathname = usePathname();
@@ -128,16 +129,27 @@ export function Header() {
       </header>
 
       {/* Mobile Menu Overlay & Drawer */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          
-          {/* Drawer */}
-          <div className="fixed left-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl animate-in slide-in-from-left duration-300 overflow-y-auto">
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-[60] md:hidden">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            
+            {/* Drawer */}
+            <motion.div 
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed left-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl overflow-y-auto"
+            >
             {/* Drawer Header */}
             <div className="sticky top-0 z-10 bg-gradient-to-br from-blue-600 to-indigo-600 p-6 shadow-lg">
               <div className="flex items-center justify-between mb-4">
@@ -210,9 +222,10 @@ export function Header() {
                 <span>Klavye Kısayolları</span>
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+      </AnimatePresence>
     </>
   );
 }

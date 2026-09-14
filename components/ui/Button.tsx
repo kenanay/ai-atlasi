@@ -1,5 +1,8 @@
+'use client';
+
 import { cn } from '@/lib/utils';
 import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { motion } from 'framer-motion';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -8,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer active:scale-[0.97] hover:scale-[1.02]';
+    const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer';
     
     const variants = {
       primary: 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 shadow-md focus-visible:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 dark:hover:shadow-blue-500/40 dark:focus-visible:ring-offset-slate-900',
@@ -24,14 +27,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       lg: 'h-11 px-6 text-base gap-2.5',
     };
     
+    const MotionButton = motion.button;
+    
     return (
-      <button
+      <MotionButton
         ref={ref}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
-        {...props}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        {...(props as any)}
       >
         {children}
-      </button>
+      </MotionButton>
     );
   }
 );
