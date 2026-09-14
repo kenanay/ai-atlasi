@@ -7,3 +7,4 @@ export { KMeansAnimator } from './KMeansAnimator';
 export { AttentionVisualizer } from './AttentionVisualizer';
 export { NeuralNetworkSimulator } from './NeuralNetworkSimulator';
 export { CNNConvolutionVisualizer } from './CNNConvolutionVisualizer';
+export { QLearningGridWorld } from './QLearningGridWorld';

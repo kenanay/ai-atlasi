@@ -7,9 +7,10 @@ import {
   CNNConvolutionVisualizer,
   GradientDescentPlot,
   KMeansAnimator,
-  PCAVisualizer
+  PCAVisualizer,
+  QLearningGridWorld
 } from '@/components/visualization';
-import { Brain, Eye, Network, TrendingDown, Layers, Maximize2 } from 'lucide-react';
+import { Brain, Eye, Network, TrendingDown, Layers, Maximize2, Gamepad2 } from 'lucide-react';
 
 export default function SimulatorsPage() {
   return (
@@ -34,7 +35,7 @@ export default function SimulatorsPage() {
                 <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">6</div>
+                <div className="text-2xl font-bold">7</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Simülasyon</div>
               </div>
             </div>
@@ -156,6 +157,23 @@ export default function SimulatorsPage() {
               </p>
             </div>
             <PCAVisualizer />
+          </section>
+
+          {/* Q-Learning Grid World */}
+          <section id="qlearning">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <Gamepad2 className="w-6 h-6 text-teal-600" />
+                Q-Learning - Pekiştirmeli Öğrenme
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Reinforcement Learning'in temel algoritması Q-Learning'i interaktif grid world üzerinde
+                gözlemleyin. Ajan, epsilon-greedy policy ile keşif/sömürü dengesini koruyarak optimal
+                politikayı öğrenir. Learning rate, discount factor ve epsilon parametrelerini değiştirerek
+                öğrenme sürecini etkileyin.
+              </p>
+            </div>
+            <QLearningGridWorld />
           </section>
         </div>
 
