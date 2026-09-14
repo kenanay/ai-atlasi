@@ -4,261 +4,344 @@
   "category": "advanced",
   "level": 4,
   "estimatedTime": 80,
-  "description": "Multimodal Models (CLIP): Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Multimodal modeller: Görüntü ve metin gibi farklı modaliteleri birleştiren AI sistemleri. CLIP (OpenAI) ile zero-shot image classification, image-text retrieval. Contrastive learning, vision-language pretraining. GPT-4V, DALL-E, Stable Diffusion'ın temeli.",
   "content": {
-    "level0_basic": "Multimodal Models (CLIP) basics: Core concepts explained simply.",
-    "level1_beginner": "Multimodal Models (CLIP) fundamentals with examples and code snippets.",
-    "level2_application": "Practical Multimodal Models (CLIP) implementation with real-world applications.",
-    "level3_advanced": "Advanced Multimodal Models (CLIP) techniques and optimizations.",
-    "level4_expert": "Expert-level Multimodal Models (CLIP) architectures and research directions."
+    "level0_basic": "Multimodal Models (Çok Modaliteli Modeller), farklı veri tiplerini (görüntü, metin, ses, video) birlikte işleyen AI sistemleridir. En ünlü örnek: **CLIP** (Contrastive Language-Image Pre-training - OpenAI). CLIP, görüntü ve metni aynı uzayda temsil eder. Örnek: 'Bir kedi fotoğrafı' metni ile kedi görseli yakın, köpek görseli uzak. Zero-shot classification: Eğitilmediği kategorileri bile tanır. GPT-4 Vision, DALL-E 3, Midjourney'in temelinde CLIP var.",
+    "level1_beginner": "CLIP'in temel prensibi: 400M görüntü-metin çiftini contrastive learning ile eğit. **Contrastive learning**: Eşleşen (görüntü, metin) çifti yakın, eşleşmeyen uzak olsun (embedding space'te). İki encoder: (1) **Vision Encoder** (ResNet veya ViT - Vision Transformer): Görüntü → embedding, (2) **Text Encoder** (Transformer): Metin → embedding. Eğitim: Batch'teki N görüntü, N metin → N² çift, N tanesi doğru eşleşme, geri kalan N²-N yanlış. Loss: InfoNCE (contrastive loss). Inference: Zero-shot classification - 'a photo of a {class}' template'leri embedding'e çevir, görüntüye en yakın olanı seç. Avantaj: Yeni kategorileri eğitim olmadan tanır.",
+    "level2_application": "CLIP uygulamaları geniştir: (1) **Zero-shot Image Classification**: ImageNet'te eğitilmeden %76 accuracy (supervised %88). (2) **Image-Text Retrieval**: Google Images gibi, metinle görüntü ara veya görüntüyle metin ara. (3) **Text-to-Image Generation**: DALL-E 2, Stable Diffusion - CLIP guidance ile 'a cat wearing a hat' → görüntü. (4) **Visual Question Answering**: 'Bu resimde kaç insan var?' (5) **Video Understanding**: Frame'leri CLIP'le encode et, temporal modeling ekle. (6) **Multimodal Embeddings**: E-ticaret product search (ürün görseli + açıklama). Modern evrim: **BLIP**, **ALIGN** (Google), **Florence** (Microsoft), **LLaVA** (vision-language chatbot). GPT-4V = GPT-4 + vision encoder (muhtemelen CLIP-benzeri).",
+    "level3_advanced": "İleri seviye multimodal modeling, architecture variants, training strategies ve limitations içerir. **Architecture**: CLIP vision encoder: ResNet-50/101 veya ViT-B/L/H (Vision Transformer daha iyi). Text encoder: 12-layer Transformer (GPT-2 benzeri). Embedding dim: 512-1024. **Training**: WebImageText dataset (400M çift, internet'ten scrape). Batch size 32K (çok büyük!), contrastive loss her GPU'da local + global. Data augmentation: Random crop, color jitter (görüntü), BPE tokenization (metin). **Prompt Engineering**: 'a photo of a {class}' vs 'a centered satellite photo of a {class}' (domain-specific) → %5-10 accuracy farkı. **Fine-tuning**: Linear probe (freeze encoders, sadece classifier eğit) vs full fine-tune. **Limitations**: Text reasoning zayıf (counting, spatial relations), fine-grained details (texture, small objects), compositional understanding ('red car next to blue house' - attribute binding).",
+    "level4_expert": "Expert seviyede, multimodal research frontiers, scaling laws ve production systems önemlidir. **Scaling**: CLIP model size (ViT-L/14 vs ViT-H/14), dataset size (400M → 2B+ LAION), compute (V100 × 256 GPU, 12 gün) → performance sürekli artar. **Architectural Improvements**: (1) **BLIP** - bootstrapping ile caption quality artır, (2) **ALBEF** - momentum distillation, (3) **CoCa** - contrastive + captioning dual loss, (4) **Flamingo** - few-shot learning (frozen vision encoder + cross-attention). **Unified Models**: **GPT-4V** (vision + language chat), **Gemini** (Google - native multimodal), **LLaVA** (CLIP + LLaMA). **Video Understanding**: **VideoMAE**, **TimeSformer** - temporal modeling. **3D Multimodal**: **ULIP** (3D point cloud + text). **Audio-Visual**: **AudioCLIP** - ses + görüntü + metin. **Production Challenges**: Latency (vision encoder inference 50-200ms), embedding storage (milyonlarca görüntü × 512 dim), approximate search (FAISS, Milvus). **Bias & Safety**: CLIP internet'ten öğrendi → stereotypes, NSFW content, misinformation. Red-teaming, content filtering, fairness evaluation şart."
   },
-  "whatIsIt": "Multimodal Models (CLIP): Technical definition and core concepts.",
-  "whyNeeded": "Why Multimodal Models (CLIP) matters: Applications and use cases.",
-  "realWorldAnalogy": "Multimodal Models (CLIP) explained through real-world analogy.",
+  "whatIsIt": "Multimodal Models, farklı modalitelerdeki (görüntü, metin, ses, video) veriyi ortak bir representation space'te birleştiren AI sistemleridir. **CLIP** (Contrastive Language-Image Pre-training), görüntü ve metni aynı embedding space'te temsil eder: $\\mathcal{L} = -\\log \\frac{\\exp(\\text{sim}(I_i, T_i) / \\tau)}{\\sum_{j=1}^N \\exp(\\text{sim}(I_i, T_j) / \\tau)}$ (InfoNCE loss). Vision encoder $f_v: \\mathbb{R}^{H \\times W \\times 3} \\to \\mathbb{R}^d$ (ResNet/ViT) ve text encoder $f_t: \\text{tokens} \\to \\mathbb{R}^d$ (Transformer). Eğitim: 400M görüntü-metin çifti, batch'te eşleşen çiftler yakın, eşleşmeyenler uzak (contrastive). Zero-shot: Yeni task'leri eğitim olmadan çöz.",
+  "whyNeeded": "Multimodal models kritik çünkü: (1) **Zero-shot Generalization**: Eğitilmediği kategorileri tanır (costly annotation gereksiz). (2) **Cross-modal Understanding**: Görüntü ile metin arasında ilişki (Google Lens, Pinterest visual search). (3) **Text-to-Image**: DALL-E, Midjourney, Stable Diffusion - CLIP guidance. (4) **Visual AI Chatbots**: GPT-4V, LLaVA - 'Bu resimde ne var?' (5) **E-commerce**: Product search (görsel + text query), visual recommendation. (6) **Accessibility**: Görme engelliler için image captioning, screen reader. (7) **Content Moderation**: NSFW detection, misinformation (deep fake). (8) **Scientific Discovery**: Medical imaging (X-ray + report), satellite imagery (görüntü + geo-tagging).",
+  "realWorldAnalogy": "Multimodal models'i çok dilli bir tercümana benzetebiliriz. Normalde bir model sadece İngilizce konuşur (sadece görüntü işler), başka bir model sadece Türkçe (sadece metin işler). Ancak **CLIP** her iki dili de bilen bir tercüman gibidir: Görüntüyü 'görsel dil'den okur, metni 'sözel dil'den okur, ikisini de ortak bir 'anlam uzayı'nda anlar. Örnek: Size bir kedi fotoğrafı gösteririm, CLIP 'kedi' der. Size 'a photo of a cat' metni veririm, CLIP aynı 'anlam uzayı'nda aynı noktayı gösterir. Bu sayede: (1) Hiç görmediği bir kategoriyi (örn: 'ördek') metin olarak tanımlarsam, fotoğrafta tanır (zero-shot), (2) Bir görüntü verip 'buna benzer metinleri bul' diyebilirim (retrieval), (3) Bir metin verip 'bunu çiz' diyebilirim (DALL-E). Tercüman hem kitap okur (metin), hem resim anlar (görüntü), ikisini birbirine çevirebilir!",
   "mathematics": {
     "formulas": [
-      "\\text{Multimodal Models (CLIP) formula}",
-      "\\text{Key equation}"
+      "\\text{InfoNCE Loss (CLIP)}: \\quad \\mathcal{L}_i = -\\log \\frac{\\exp(\\text{sim}(I_i, T_i) / \\tau)}{\\sum_{j=1}^N \\exp(\\text{sim}(I_i, T_j) / \\tau)}",
+      "\\text{Cosine Similarity}: \\quad \\text{sim}(I, T) = \\frac{I \\cdot T}{\\|I\\| \\|T\\|} = \\cos(\\theta)",
+      "\\text{Total Loss}: \\quad \\mathcal{L} = \\frac{1}{2} \\left( \\mathcal{L}_{I \\to T} + \\mathcal{L}_{T \\to I} \\right) \\quad \\text{(symmetric)}",
+      "\\text{Temperature}: \\quad \\tau \\in [0.01, 0.1] \\quad \\text{(learnable parameter, sharpness control)}",
+      "\\text{Zero-shot Classification}: \\quad P(y=c|x) = \\frac{\\exp(\\text{sim}(f_v(x), f_t(\\text{'a photo of a '} + c)) / \\tau)}{\\sum_{c'} \\exp(\\text{sim}(f_v(x), f_t(\\text{'a photo of a '} + c')) / \\tau)}",
+      "\\text{Vision Transformer}: \\quad \\text{Patch embedding: } x \\in \\mathbb{R}^{H \\times W \\times 3} \\to \\text{patches} \\in \\mathbb{R}^{N \\times d}",
+      "\\text{Cross-Entropy (Fine-tune)}: \\quad \\mathcal{L}_{CE} = -\\sum_{i=1}^N y_i \\log(\\hat{y}_i) \\quad \\text{(supervised)}",
+      "\\text{Contrastive Accuracy}: \\quad \\text{Acc} = \\frac{1}{N} \\sum_{i=1}^N \\mathbb{1}[\\arg\\max_j \\text{sim}(I_i, T_j) = i]"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Dataset Hazırlığı**: Web'den görüntü-metin çiftleri topla (alt text, captions). CLIP: 400M çift (WebImageText). Filtreleme: NSFW removal, language detection (English). Data augmentation: Random crop, flip, color jitter (görüntü).",
+      "2. **Model Architecture**: Vision encoder seç (ResNet-50 veya ViT-B/L/H). Text encoder seç (12-layer Transformer, BPE tokenization). Projection head: Her encoder'ın output'unu ortak embedding dim'e project et (örn: 512 veya 1024).",
+      "3. **Contrastive Learning Setup**: Batch size N (büyük olmalı: 256-32K). Her batch: N görüntü, N metin. Positive pairs: (I_i, T_i) - i. görüntü ile i. metin eşleşir. Negative pairs: (I_i, T_j) for j≠i - N²-N adet.",
+      "4. **Forward Pass**: Vision encoder: I_i → embedding v_i ∈ ℝ^d. Text encoder: T_i → embedding t_i ∈ ℝ^d. L2 normalize: v_i, t_i → unit vectors (cosine similarity için). Similarity matrix: S[i,j] = v_i · t_j (N×N matrix).",
+      "5. **Loss Hesaplama**: InfoNCE loss: Her görüntü için doğru metin'i N metin arasından seç (classification), her metin için doğru görüntüyü N görüntü arasından seç. Temperature τ ile scale. Symmetric loss: (image→text + text→image) / 2.",
+      "6. **Backpropagation & Update**: Loss'u minimize et, her iki encoder'ı güncelle. Optimizer: AdamW, learning rate schedule (warm-up + cosine decay). Batch size çok büyük → distributed training (multi-GPU, gradient accumulation).",
+      "7. **Training**: Epochs: 32 (400M veri, batch 32K → ~400K iterations). Checkpoint: Her epoch model kaydet. Evaluation: Zero-shot ImageNet accuracy, retrieval metrics (Recall@1, @5).",
+      "8. **Zero-shot Inference**: Class labels: ['cat', 'dog', 'bird', ...]. Prompt engineering: 'a photo of a {class}'. Text encode: Her class için embedding. Görüntü encode: Test image → embedding. Cosine similarity: Görüntü embedding ile her class embedding arasında. Prediction: argmax similarity.",
+      "9. **Fine-tuning (opsiyonel)**: Linear probe: Freeze encoders, sadece linear classifier eğit (hızlı). Full fine-tune: Her iki encoder'ı task-specific data ile eğit (yavaş ama daha iyi).",
+      "10. **Production Deployment**: Model serialize (ONNX, TorchScript), inference optimize (TensorRT, quantization), embedding database (FAISS for retrieval), API endpoint (image upload → classification veya retrieval)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: Vision encoder (ViT-L/14): O(N·d² + P²·d) (N=patches, P=patch count, d=embed dim), ~150ms/image (GPU). Text encoder: O(L·d² + V) (L=sequence length ~77, V=vocab ~50K), ~10ms/text. Training: O(Iterations · BatchSize · EncoderCost), 400M data, batch 32K, 256 GPU → 12 gün. **Inference**: Single image classification: 150ms (vision) + 10ms×K (text for K classes) + similarity O(K·d). Retrieval: 1M images, FAISS ANN O(log N), <100ms. **Uzay**: Model: ViT-L/14 ~400M params (~800MB), embeddings: 1M images × 512 dim × 4 bytes = 2GB. **Scalability**: Distributed training (DDP, FSDP), mixed precision (fp16/bf16), gradient checkpointing."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "convolutional-neural-networks",
+    "transformers-attention",
+    "transfer-learning"
+  ],
+  "nextTopics": [
+    "generative-adversarial-networks"
+  ],
+  "relatedTopics": [
+    "transformers-attention",
+    "transfer-learning",
+    "convolutional-neural-networks"
+  ],
   "tags": [
-    "multimodal"
+    "multimodal",
+    "clip",
+    "vision-language",
+    "contrastive-learning",
+    "zero-shot",
+    "transformers",
+    "advanced"
   ],
   "codeExamples": [
     {
-      "title": "Basic Multimodal Models (CLIP)",
+      "title": "CLIP Zero-Shot Classification",
       "language": "python",
-      "code": "# Multimodal Models (CLIP) example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Multimodal Models (CLIP) code"
-    },
-    {
-      "title": "Multimodal Models (CLIP) Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import torch\nimport clip\nfrom PIL import Image\n\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nmodel, preprocess = clip.load('ViT-B/32', device=device)\n\nimage = Image.open('cat.jpg')\nimage_input = preprocess(image).unsqueeze(0).to(device)\n\nlabels = ['cat', 'dog', 'bird']\ntexts = [f'a photo of a {label}' for label in labels]\ntext_inputs = clip.tokenize(texts).to(device)\n\nwith torch.no_grad():\n    image_features = model.encode_image(image_input)\n    text_features = model.encode_text(text_inputs)\n    image_features /= image_features.norm(dim=-1, keepdim=True)\n    text_features /= text_features.norm(dim=-1, keepdim=True)\n    similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)\n    values, indices = similarity[0].topk(3)\n\nfor i, (value, idx) in enumerate(zip(values, indices)):\n    print(f'{labels[idx]}: {value.item()*100:.2f}%')",
       "level": 2,
-      "explanation": "Multimodal Models (CLIP) Application code"
+      "explanation": "CLIP zero-shot: Hiç eğitilmediği kategorileri tanır. Görüntü ve text'i embedding'e çevir, cosine similarity hesapla."
     },
     {
-      "title": "Advanced Multimodal Models (CLIP)",
+      "title": "CLIP Image-Text Retrieval",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "import torch\nimport clip\nimport faiss\nimport numpy as np\n\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nmodel, preprocess = clip.load('ViT-B/32', device=device)\n\n# Pre-compute image embeddings\nimages = []  # Load your images\nimage_embeddings = []\nfor img in images:\n    with torch.no_grad():\n        emb = model.encode_image(preprocess(img).unsqueeze(0).to(device))\n        emb /= emb.norm()\n        image_embeddings.append(emb.cpu().numpy())\n\nimage_embeddings = np.vstack(image_embeddings).astype('float32')\n\n# FAISS index\nindex = faiss.IndexFlatIP(512)\nindex.add(image_embeddings)\n\n# Text query\nquery = 'a cute cat'\ntext_input = clip.tokenize([query]).to(device)\nwith torch.no_grad():\n    text_emb = model.encode_text(text_input)\n    text_emb /= text_emb.norm()\n\n# Retrieve top-5\nD, I = index.search(text_emb.cpu().numpy(), k=5)\nprint(f'Top-5 images for: {query}')\nfor idx in I[0]:\n    print(f'  Image {idx}')",
       "level": 3,
-      "explanation": "Advanced Multimodal Models (CLIP) code"
+      "explanation": "CLIP retrieval: Pre-compute embeddings, FAISS index, text query ile en benzer görüntüleri bul."
     },
     {
-      "title": "Multimodal Models (CLIP) Optimization",
+      "title": "CLIP Fine-Tuning (Linear Probe)",
       "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
+      "code": "import torch\nimport torch.nn as nn\nimport clip\n\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nclip_model, preprocess = clip.load('ViT-B/32', device=device)\n\n# Freeze CLIP\nfor param in clip_model.parameters():\n    param.requires_grad = False\n\n# Linear classifier\nclassifier = nn.Linear(512, 10).to(device)  # 10 classes\noptimizer = torch.optim.Adam(classifier.parameters(), lr=0.001)\ncriterion = nn.CrossEntropyLoss()\n\n# Training loop\nfor epoch in range(5):\n    for images, labels in train_loader:\n        images, labels = images.to(device), labels.to(device)\n        \n        with torch.no_grad():\n            features = clip_model.encode_image(images)\n            features /= features.norm(dim=-1, keepdim=True)\n        \n        logits = classifier(features.float())\n        loss = criterion(logits, labels)\n        \n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    \n    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')",
       "level": 3,
-      "explanation": "Multimodal Models (CLIP) Optimization code"
+      "explanation": "Linear probe: CLIP encoder'ı freeze et, sadece classifier eğit. Transfer learning, hızlı ve etkili."
     },
     {
-      "title": "Multimodal Models (CLIP) Visualization",
+      "title": "Custom Contrastive Learning",
       "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
-      "level": 2,
-      "explanation": "Multimodal Models (CLIP) Visualization code"
-    },
-    {
-      "title": "Production Multimodal Models (CLIP)",
-      "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass MiniCLIP(nn.Module):\n    def __init__(self, embed_dim=256):\n        super().__init__()\n        self.image_proj = nn.Linear(2048, embed_dim)\n        self.text_proj = nn.Linear(768, embed_dim)\n        self.temperature = nn.Parameter(torch.ones([]) * 0.07)\n    \n    def forward(self, image_feats, text_feats):\n        img_emb = F.normalize(self.image_proj(image_feats), dim=-1)\n        txt_emb = F.normalize(self.text_proj(text_feats), dim=-1)\n        \n        # InfoNCE loss\n        logits = (img_emb @ txt_emb.T) / self.temperature\n        labels = torch.arange(len(img_emb), device=img_emb.device)\n        \n        loss_i2t = F.cross_entropy(logits, labels)\n        loss_t2i = F.cross_entropy(logits.T, labels)\n        loss = (loss_i2t + loss_t2i) / 2\n        \n        return loss\n\nmodel = MiniCLIP()\noptimizer = torch.optim.Adam(model.parameters(), lr=1e-4)\n\nfor epoch in range(10):\n    for img_feats, txt_feats in dataloader:\n        loss = model(img_feats, txt_feats)\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')",
       "level": 4,
-      "explanation": "Production Multimodal Models (CLIP) code"
+      "explanation": "Mini-CLIP: Contrastive learning temelleri. InfoNCE loss, temperature parameter, symmetric loss."
+    },
+    {
+      "title": "CLIP Prompt Engineering",
+      "language": "python",
+      "code": "import torch\nimport clip\n\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nmodel, preprocess = clip.load('ViT-B/32', device=device)\n\nclass_name = 'cat'\n\n# Multiple prompt templates\ntemplates = [\n    'a photo of a {}.',\n    'a blurry photo of a {}.',\n    'a rendering of a {}.',\n    'a cropped photo of a {}.',\n    'a photo of my {}.',\n    'a close-up photo of a {}.',\n]\n\n# Ensemble\ntexts = [t.format(class_name) for t in templates]\ntext_inputs = clip.tokenize(texts).to(device)\n\nwith torch.no_grad():\n    text_features = model.encode_text(text_inputs)\n    text_features /= text_features.norm(dim=-1, keepdim=True)\n    # Average pooling\n    ensemble_features = text_features.mean(dim=0, keepdim=True)\n    ensemble_features /= ensemble_features.norm()\n\nprint(f'Ensemble of {len(templates)} templates')\nprint(f'Shape: {ensemble_features.shape}')",
+      "level": 3,
+      "explanation": "Prompt engineering: Multiple templates → average embedding → daha robust. CLIP paper 80 template kullanır."
+    },
+    {
+      "title": "Production CLIP + FAISS",
+      "language": "python",
+      "code": "import torch\nimport clip\nimport faiss\nimport numpy as np\nimport time\n\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nmodel, preprocess = clip.load('ViT-B/32', device=device)\n\n# Simülasyon: 10K image embeddings\nn_images = 10000\nimage_embeddings = np.random.randn(n_images, 512).astype('float32')\nimage_embeddings = image_embeddings / np.linalg.norm(image_embeddings, axis=1, keepdims=True)\n\n# FAISS index\nindex = faiss.IndexFlatIP(512)\nindex.add(image_embeddings)\n\nprint(f'Indexed {index.ntotal} images')\n\n# Query\nquery = 'a cute cat'\ntext_input = clip.tokenize([query]).to(device)\n\nwith torch.no_grad():\n    text_features = model.encode_text(text_input)\n    text_features /= text_features.norm()\n\nquery_emb = text_features.cpu().numpy()\n\n# Retrieve\nstart = time.time()\nD, I = index.search(query_emb, k=10)\nlatency = (time.time() - start) * 1000\n\nprint(f'Query: {query}')\nprint(f'Retrieved top-10 in {latency:.2f}ms')\nfor i, (dist, idx) in enumerate(zip(D[0], I[0])):\n    print(f'  {i+1}. Image {idx}: {dist:.4f}')",
+      "level": 4,
+      "explanation": "Production: Pre-compute embeddings, FAISS index, <100ms retrieval for 10K images. Scalable to millions."
     }
   ],
   "quiz": [
     {
-      "question": "What is Multimodal Models (CLIP)?",
+      "question": "CLIP'in temel prensibi nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Supervised classification",
+        "Contrastive learning ile görüntü-metin çiftleri",
+        "GAN ile görüntü üretir",
+        "Sadece görüntü üzerinde self-supervised"
       ],
       "correctAnswer": 1,
-      "explanation": "Multimodal Models (CLIP) explanation.",
-      "id": "multimodal-models-clip-q1"
+      "explanation": "CLIP contrastive learning kullanır. 400M görüntü-metin çifti, eşleşenler yakın, eşleşmeyenler uzak.",
+      "id": "clip-q1"
     },
     {
-      "question": "When to use Multimodal Models (CLIP)?",
+      "question": "Zero-shot classification nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her category için eğitim gerekir",
+        "Class names → prompt → text embedding → similarity",
+        "Sadece ImageNet için",
+        "Fine-tuning gerektirir"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "multimodal-models-clip-q2"
+      "explanation": "Zero-shot: Class names'i 'a photo of a {class}' ile encode et, görüntü ile similarity hesapla, argmax.",
+      "id": "clip-q2"
     },
     {
-      "question": "Multimodal Models (CLIP) advantage?",
+      "question": "InfoNCE loss nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Cross-entropy loss",
+        "Contrastive loss: Positive pairs yakın, negative uzak",
+        "MSE loss",
+        "GAN loss"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "multimodal-models-clip-q3"
+      "explanation": "InfoNCE: Batch'te N görüntü, N metin → N² pair. Positive pair'i seç (classification). Symmetric loss.",
+      "id": "clip-q3"
     },
     {
-      "question": "Multimodal Models (CLIP) limitation?",
+      "question": "Prompt engineering neden önemli?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Önemli değil",
+        "Template seçimi accuracy'yi %5-10 etkiler",
+        "Sadece training için",
+        "Sadece görsel quality için"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "multimodal-models-clip-q4"
+      "explanation": "Prompt engineering kritik: 'a photo of...' vs domain-specific → %5-10 fark. Ensemble daha robust.",
+      "id": "clip-q4"
     },
     {
-      "question": "Best practice for Multimodal Models (CLIP)?",
+      "question": "ViT avantajı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Daha hızlı",
+        "Büyük modellerde daha iyi scale olur",
+        "Daha az memory",
+        "Sadece küçük görüntüler için"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "multimodal-models-clip-q5"
+      "explanation": "Vision Transformer: Büyük modellerde (ViT-L, ViT-H) ResNet'ten daha iyi scale olur, daha yüksek accuracy.",
+      "id": "clip-q5"
     },
     {
-      "question": "Multimodal Models (CLIP) vs alternatives?",
+      "question": "CLIP limitasyonları?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Hiç yok",
+        "Text reasoning, fine-grained, compositional zayıf",
+        "Sadece ImageNet'te çalışır",
+        "Zero-shot yapamaz"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "multimodal-models-clip-q6"
+      "explanation": "CLIP limitations: Counting, spatial relations, fine-grained details, compositional understanding, bias.",
+      "id": "clip-q6"
+    },
+    {
+      "question": "Image-text retrieval nasıl?",
+      "options": [
+        "Supervised learning",
+        "Pre-compute embeddings → FAISS → cosine similarity",
+        "Her seferinde retrain",
+        "Sadece ImageNet için"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Retrieval: Offline image embeddings → FAISS index → query time text embedding → top-K retrieval.",
+      "id": "clip-q7"
+    },
+    {
+      "question": "Production challenge?",
+      "options": [
+        "Model çok küçük",
+        "Latency (150ms) ve storage (2GB for 1M images)",
+        "Sadece CPU'da çalışır",
+        "Training kolay"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Production: Latency (vision encoder 150ms), storage (1M × 512 × 4B = 2GB), FAISS ANN, bias & safety.",
+      "id": "clip-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Multimodal Models (CLIP)",
-      "back": "Core concept summary"
+      "front": "CLIP nedir?",
+      "back": "Contrastive Language-Image Pre-training. Görüntü ve metin aynı embedding space. 400M çift, zero-shot classification."
     },
     {
-      "front": "Multimodal Models (CLIP) Key Idea",
-      "back": "Main concept"
+      "front": "Contrastive Learning",
+      "back": "Positive pairs yakın, negative uzak. InfoNCE loss. Batch N görüntü, N metin → N² pair, N positive."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "Zero-shot Classification",
+      "back": "Eğitilmediği kategorileri tanır. Class names → text embedding → cosine similarity. Fine-tuning yok!"
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "InfoNCE Loss",
+      "back": "Contrastive loss: Positive pair'i N pair arasından seç. Temperature τ. Symmetric: image→text + text→image."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Prompt Engineering",
+      "back": "Template seçimi accuracy'yi %5-10 etkiler. Domain-specific templates. Ensemble: 80 template average → robust."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Vision Transformer",
+      "back": "CLIP vision encoder. Patches → transformer. ResNet'ten daha iyi scale. ViT-B/32, ViT-L/14."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Image-Text Retrieval",
+      "back": "Pre-compute embeddings → FAISS → text query → top-K. <100ms for 1M images. Google Images, Pinterest."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Linear Probe",
+      "back": "Freeze CLIP encoders, eğit linear classifier. Transfer learning, limited data için. Hızlı."
+    },
+    {
+      "front": "CLIP Limitations",
+      "back": "Text reasoning (counting, spatial), fine-grained, compositional, bias (internet data), OCR zayıf."
+    },
+    {
+      "front": "WebImageText Dataset",
+      "back": "CLIP training: 400M görüntü-metin çifti, internet scrape. NSFW removal, language detection."
+    },
+    {
+      "front": "BLIP vs CLIP",
+      "back": "BLIP: Bootstrapping, caption quality artır, captioning + contrastive. Daha iyi compositional understanding."
+    },
+    {
+      "front": "Production CLIP",
+      "back": "Batch inference, FAISS ANN, TensorRT/quantization, embedding database, monitoring (bias, latency)."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "CLIP'i supervised gibi fine-tune etmek",
+      "why": "Contrastive learning ile eğitilmiş, direkt supervised fine-tune performansı düşürebilir, overfitting riski.",
+      "fix": "Linear probe tercih et (freeze encoders). Eğer çok veri varsa full fine-tune ama learning rate düşük (1e-5), batch size büyük (256+)."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Generic prompt kullanmak",
+      "why": "Domain-specific dataset'lerde 'a photo of a...' suboptimal. Satellite images için %5-10 daha kötü.",
+      "fix": "Domain-specific prompts: Medical, satellite, retail için özel template'ler. Ensemble: 80 template average. A/B test."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Her inference'ta text encoding",
+      "why": "Class names sabit. Her görüntü için aynı text'leri encode etmek gereksiz compute. Latency artar.",
+      "fix": "Pre-compute text embeddings: Offline encode, disk/memory'de sakla. Inference: Sadece image encode, pre-computed yükle."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Batch inference yapmamak",
+      "why": "Tek tek encode çok yavaş (150ms/image). 1000 görüntü → 150 saniye. GPU underutilized.",
+      "fix": "Batch inference: 32-128 batch → 200ms for 32 images (6ms/image). Async batching. TensorRT/ONNX. 10x-20x hızlanma."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "FAISS kullanmadan linear search",
+      "why": "1M image brute-force O(N·d) → çok yavaş (saniyeler). Real-time imkansız.",
+      "fix": "FAISS ANN: IndexIVFFlat (10x hızlı, %99 recall), IndexHNSW (daha hızlı), PQ (8x compression). 1M images → <50ms."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "CLIP'in her şeyi anlayacağını varsaymak",
+      "why": "Limitations: Counting, spatial reasoning, fine-grained, compositional. Kullanıcılar hayal kırıklığı.",
+      "fix": "Realistic expectations. CLIP strength'leri kullan (object recognition, retrieval). Hybrid: CLIP + specialized model. Upgrade: GPT-4V, LLaVA."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Bias kontrolü yapmadan deploy",
+      "why": "CLIP internet'ten öğrendi (filtrelenmemiş). Stereotypes, NSFW, misinformation. Legal, ethical risk.",
+      "fix": "Bias evaluation: Red-teaming, fairness metrics, content filtering, NSFW classifier, human-in-the-loop, monitoring."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Multimodal Models (CLIP) Overview",
-      "description": "Visual explanation"
+      "title": "CLIP Architecture",
+      "description": "Vision encoder (ResNet/ViT) + Text encoder (Transformer) → shared embedding space (512-dim). InfoNCE loss."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "Zero-shot vs Fine-tuned",
+      "description": "ImageNet accuracy: Supervised ResNet (%76), CLIP zero-shot (%76), CLIP fine-tuned (%85). Trade-offs."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "CLIP Playground",
+      "description": "User upload image, custom prompts, real-time similarity. Prompt engineering demo."
+    },
+    {
+      "type": "metric",
+      "title": "Production Dashboard",
+      "description": "Latency (ms), retrieval time, storage (GB), accuracy, bias metrics, NSFW rate."
     }
   ],
   "references": [
     {
-      "title": "Multimodal Models (CLIP) Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Learning Transferable Visual Models (CLIP)",
+      "authors": "Radford, A. et al. (OpenAI)",
+      "year": 2021,
+      "link": "https://arxiv.org/abs/2103.00020",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "title": "BLIP: Bootstrapping Language-Image Pre-training",
+      "authors": "Li, J. et al. (Salesforce)",
+      "year": 2022,
+      "link": "https://arxiv.org/abs/2201.12086",
+      "type": "paper"
+    },
+    {
+      "title": "An Image is Worth 16x16 Words (ViT)",
+      "authors": "Dosovitskiy, A. et al. (Google)",
+      "year": 2021,
+      "link": "https://arxiv.org/abs/2010.11929",
+      "type": "paper"
+    },
+    {
+      "title": "OpenAI CLIP GitHub",
+      "authors": "OpenAI",
+      "year": 2024,
+      "link": "https://github.com/openai/CLIP",
       "type": "documentation"
     }
   ]
