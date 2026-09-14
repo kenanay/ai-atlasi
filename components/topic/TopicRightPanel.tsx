@@ -6,10 +6,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { VectorPlot, GradientDescentPlot, FunctionPlot, MatrixVisualizer, PCAVisualizer, KMeansAnimator } from '@/components/visualization';
-import AttentionVisualizer from '@/components/visualization/AttentionVisualizer';
-import CNNConvolutionVisualizer from '@/components/visualization/CNNConvolutionVisualizer';
-import NeuralNetworkSimulator from '@/components/visualization/NeuralNetworkSimulator';
-import QLearningGridWorld from '@/components/visualization/QLearningGridWorld';
+import { AttentionVisualizer } from '@/components/visualization/AttentionVisualizer';
+import { CNNConvolutionVisualizer } from '@/components/visualization/CNNConvolutionVisualizer';
+import { NeuralNetworkSimulator } from '@/components/visualization/NeuralNetworkSimulator';
+import { QLearningGridWorld } from '@/components/visualization/QLearningGridWorld';
 import { 
   Code2, 
   ChevronDown, 
