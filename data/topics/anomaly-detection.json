@@ -4,262 +4,345 @@
   "category": "unsupervised-learning",
   "level": 2,
   "estimatedTime": 60,
-  "description": "Anomaly Detection: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Anomaly detection: Normal davranıştan sapan outlier'ları tespit etme. Isolation Forest, One-Class SVM, LOF, Autoencoders. Fraud detection, network security, predictive maintenance.",
   "content": {
-    "level0_basic": "Anomaly Detection basics: Core concepts explained simply.",
-    "level1_beginner": "Anomaly Detection fundamentals with examples and code snippets.",
-    "level2_application": "Practical Anomaly Detection implementation with real-world applications.",
-    "level3_advanced": "Advanced Anomaly Detection techniques and optimizations.",
-    "level4_expert": "Expert-level Anomaly Detection architectures and research directions."
+    "level0_basic": "Anomaly Detection (Anormallik Tespiti), normal davranıştan sapan nadir örnekleri (outlier, anomaly) bulma işlemidir. Örnek: Kredi kartı fraud (normal: küçük alışveriş, anomaly: 10K$ harcama), network security (normal trafik vs DDoS attack), predictive maintenance (makine normal çalışır, anomaly: arıza belirtisi). Çoğunlukla unsupervised: Sadece normal data var, anomaly'ler nadirdir (%0.1-5). Anomaly = normal distribution'dan çok uzak.",
+    "level1_beginner": "Anomaly detection yaklaşımları: (1) **Statistical**: Z-score, Gaussian distribution (|z|>3 → anomaly). (2) **Distance-based**: KNN, LOF (Local Outlier Factor) - komşulardan çok uzak → anomaly. (3) **Isolation-based**: Isolation Forest - anomaly'leri izole etmek kolay (az split). (4) **Density-based**: DBSCAN - düşük density bölgesi. (5) **One-Class SVM**: Normal data boundary öğren, dışarısı anomaly. (6) **Deep learning**: Autoencoder - normal data'yı reconstruct et, anomaly → yüksek reconstruction error. Metrikler: Precision, Recall, F1 (imbalanced), ROC-AUC.",
+    "level2_application": "Pratik uygulamalar: (1) **Fraud Detection**: Kredi kartı, sigorta, e-ticaret. Isolation Forest, LSTM (sequential patterns). (2) **Network Security**: Intrusion detection, DDoS, malware. One-Class SVM, deep learning. (3) **Predictive Maintenance**: Sensör data, makine arızası. Time series anomaly, LSTM autoencoder. (4) **Healthcare**: EKG, MRI anomaly, hasta monitoring. CNN autoencoder (image), LSTM (time series). (5) **Quality Control**: Üretim hatası tespiti, görsel inspection. Computer vision + anomaly detection. (6) **IoT**: Sensör data anomaly, smart city. Streaming anomaly detection (online learning). Framework'ler: PyOD (Python Outlier Detection), Alibi Detect, scikit-learn.",
+    "level3_advanced": "İleri seviye: (1) **Time Series Anomaly**: STL decomposition, ARIMA residuals, LSTM autoencoder, Prophet anomaly detection. Contextual anomaly (seasonal). (2) **Deep Learning**: VAE (Variational Autoencoder) - probabilistic, GAN (Generative Adversarial Network) - generator learns normal. (3) **Ensemble**: Isolation Forest + LOF + Autoencoder → voting, stacking. (4) **Semi-supervised**: Labeled anomalies varsa (rare), PU learning (Positive-Unlabeled). (5) **Online Learning**: Streaming data, concept drift. Incremental learning, sliding window. (6) **Explainability**: Hangi feature anomaly'yi tetikledi? SHAP, attention weights. (7) **Contextual**: Aynı değer normal olabilir (context'e göre): Yaz 30°C normal, kış 30°C anomaly.",
+    "level4_expert": "Expert seviyede, production systems, real-time detection ve research frontiers önemlidir. (1) **Production**: Model serving (ONNX, TorchScript), streaming (Kafka, Flink), alert system, dashboard (Grafana). (2) **Threshold Tuning**: False positive vs false negative trade-off. Dynamic threshold (adaptive), percentile-based. (3) **Imbalanced Data**: Anomaly %0.1 → extreme imbalance. Focal loss, cost-sensitive learning, anomaly generation (SMOTE for anomalies). (4) **Multi-modal Anomaly**: Birden fazla data source (log + metrics + image). Multi-modal fusion, late/early fusion. (5) **Graph Anomaly**: Social network fraud, knowledge graph. GNN-based anomaly detection. (6) **Causal Anomaly**: Correlation vs causation. Root cause analysis. (7) **Federated Anomaly**: Privacy-preserving (healthcare, finance). Federated learning. Research: **Self-supervised anomaly** (contrastive learning), **Zero-shot** (no normal training data), **Adversarial robustness** (adversarial anomalies)."
   },
-  "whatIsIt": "Anomaly Detection: Technical definition and core concepts.",
-  "whyNeeded": "Why Anomaly Detection matters: Applications and use cases.",
-  "realWorldAnalogy": "Anomaly Detection explained through real-world analogy.",
+  "whatIsIt": "Anomaly Detection, normal pattern'den önemli ölçüde sapan rare instance'ları tespit etme. Matematiksel: P(x) << threshold → anomaly. Statistical: Gaussian, z-score (|z|>3). Distance: k-NN distance >> normal. Isolation: Isolation Forest, az split ile izole edilir. Reconstruction: Autoencoder, reconstruction error >> threshold. Unsupervised: Sadece normal data (anomaly çok nadir). Semi-supervised: Az anomaly label varsa. Supervised: Yeterli anomaly label (classification).",
+  "whyNeeded": "Anomaly detection kritik çünkü: (1) **Fraud Prevention**: Yıllık $40B+ kayıp (credit card fraud). Early detection kritik. (2) **Cybersecurity**: DDoS, malware, intrusion detection. 0-day attacks. (3) **Predictive Maintenance**: Uçak motoru, fabrika, power grid. Downtime costly ($260K/hour). (4) **Healthcare**: Hasta kritik durum, arrhythmia detection. Hayat kurtarır. (5) **Rare Events**: Anomaly çok nadir (%0.1-5), supervised learning için yeterli label yok. (6) **Cost**: False negative çok costly (fraud $10K), false positive acceptable (manual review). (7) **Real-time**: Immediate action gerekli (network attack → block).",
+  "realWorldAnalogy": "Anomaly detection'ı havaalanı güvenliğine benzetebiliriz. **Normal yolcular**: Çoğunluk, benzer davranış (check-in, güvenlik, boarding). **Anomaly**: Şüpheli davranış (çok fazla bagaj, nervous, metalik obje). **Detection methods**: (1) **Statistical** (Z-score): Ortalama yolcudan çok farklı (ağırlık 100kg bagaj, normal 20kg). (2) **Distance-based** (LOF): Diğer yolculardan çok farklı davranış (tek başına, izole). (3) **Isolation Forest**: Şüpheli olanı izole etmek kolay (bir soru: 'metal var mı?' → ayırır). (4) **Autoencoder**: Normal yolcu profilini öğren, bu profile uymayan → şüpheli. **Trade-off**: Çok strict → çok false positive (normal yolcu rahatsız), çok loose → false negative (tehlikeli kaçar). Balance kritik!",
   "mathematics": {
     "formulas": [
-      "\\text{Anomaly Detection formula}",
-      "\\text{Key equation}"
+      "\\text{Z-score Anomaly}: \\quad |z| = \\left|\\frac{x - \\mu}{\\sigma}\\right| > \\text{threshold} \\quad \\text{(typically 3)}",
+      "\\text{Mahalanobis Distance}: \\quad D_M(x) = \\sqrt{(x - \\mu)^T \\Sigma^{-1} (x - \\mu)} \\quad \\text{(multivariate)}",
+      "\\text{LOF (Local Outlier Factor)}: \\quad \\text{LOF}(x) = \\frac{\\sum_{y \\in N_k(x)} \\frac{\\text{lrd}(y)}{\\text{lrd}(x)}}{|N_k(x)|}",
+      "\\text{Isolation Forest Score}: \\quad s(x, n) = 2^{-\\frac{E(h(x))}{c(n)}} \\quad \\text{(avg path length)}",
+      "\\text{Autoencoder Loss}: \\quad \\mathcal{L} = \\|x - \\hat{x}\\|^2 \\quad \\text{(reconstruction error)}",
+      "\\text{One-Class SVM}: \\quad \\min_{w, \\rho} \\frac{1}{2}\\|w\\|^2 - \\rho + \\frac{1}{\\nu n} \\sum_i \\xi_i \\quad \\text{s.t. } w^T \\phi(x_i) \\geq \\rho - \\xi_i",
+      "\\text{Anomaly Score}: \\quad A(x) = P(\\text{anomaly}|x) = 1 - P(\\text{normal}|x)",
+      "\\text{Threshold}: \\quad \\tau = Q_{\\alpha}(\\text{scores}) \\quad \\text{(α-percentile, e.g., 95th)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Problem Definition**: Anomaly tipi: Point (single instance), contextual (time/location dependent), collective (sequence). Labeled data var mı? (unsupervised, semi-supervised, supervised).",
+      "2. **Data Collection**: Normal data topla (çoğunluk). Anomaly varsa label et (az sayıda). Time series ise temporal order önemli. Feature engineering: domain knowledge.",
+      "3. **EDA**: Normal data distribution'ı anla. Histogram, scatter plots. Correlation, seasonality (time series). Anomaly examples varsa visualize et.",
+      "4. **Method Selection**: (a) Unlabeled: Isolation Forest, LOF, One-Class SVM, Autoencoder. (b) Few labeled anomalies: Semi-supervised, PU learning. (c) Sufficient labels: Supervised classification (imbalanced handling).",
+      "5. **Training**: Unsupervised: Sadece normal data ile train et. Contamination parameter (expected anomaly ratio, örn: 0.01). Semi-supervised: Normal + az anomaly. Validation split (temporal for time series).",
+      "6. **Anomaly Scoring**: Her instance için anomaly score hesapla. Isolation Forest: path length. Autoencoder: reconstruction error. LOF: local density ratio. One-Class SVM: decision function.",
+      "7. **Threshold Selection**: Percentile-based (örn: 95th percentile → top 5% anomaly). ROC curve ile optimal threshold (if validation labels var). Domain expert input (acceptable false positive rate).",
+      "8. **Evaluation**: Labeled test set varsa: Precision, Recall, F1, ROC-AUC. Unlabeled: Visual inspection, domain expert review. Confusion matrix (false positive analysis).",
+      "9. **Post-processing**: Anomaly explanation: Hangi feature'lar anomaly'ye sebep? SHAP, feature contribution. Alert system: Threshold aşıldığında notify. Manual review workflow.",
+      "10. **Production Deployment**: Real-time scoring (streaming data), model monitoring (concept drift, performance degradation), threshold adaptation (dynamic), feedback loop (manual labels → retrain)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: Z-score: O(N), LOF: O(N²) naive (O(N log N) with indexing), Isolation Forest: O(T·N·log N) (T=trees), One-Class SVM: O(N²) to O(N³), Autoencoder: O(epochs·batch·model_params). **Inference**: Isolation Forest O(T·log N), Autoencoder O(forward pass), LOF O(k·log N) with index. **Uzay**: Statistical O(D), Distance-based O(N·D), Isolation Forest O(T·N), Autoencoder O(model_params). **Scalability**: Streaming: Online LOF, Incremental Isolation Forest, mini-batch autoencoder. Big data: Spark MLlib, Dask."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "neural-networks",
+    "gradient-descent",
+    "loss-functions"
+  ],
+  "nextTopics": [
+    "time-series-forecasting",
+    "autoencoders-vae"
+  ],
+  "relatedTopics": [
+    "dbscan-hierarchical-clustering",
+    "neural-networks",
+    "time-series-forecasting"
+  ],
   "tags": [
-    "anomaly"
+    "anomaly-detection",
+    "outlier",
+    "fraud-detection",
+    "unsupervised",
+    "isolation-forest",
+    "autoencoder"
   ],
   "codeExamples": [
     {
-      "title": "Basic Anomaly Detection",
+      "title": "Z-score Anomaly Detection",
       "language": "python",
-      "code": "# Anomaly Detection example\nimport numpy as np\n\n# Implementation here",
+      "code": "import numpy as np\nimport pandas as pd\nfrom scipy import stats\nimport matplotlib.pyplot as plt\n\n# Sample data\nnp.random.seed(42)\nnormal_data = np.random.normal(50, 10, 1000)\nanomalies = np.array([120, 130, -20, -10])  # Outliers\ndata = np.concatenate([normal_data, anomalies])\n\ndf = pd.DataFrame({'value': data})\n\n# Z-score\nz_scores = np.abs(stats.zscore(df['value']))\nthreshold = 3\ndf['z_score'] = z_scores\ndf['is_anomaly'] = z_scores > threshold\n\nanomalies_detected = df[df['is_anomaly']]\nprint(f'Total: {len(df)}, Anomalies: {len(anomalies_detected)}')\nprint('\\nDetected anomalies:')\nprint(anomalies_detected[['value', 'z_score']].sort_values('z_score', ascending=False).head())\n\n# Visualization\nplt.figure(figsize=(12, 4))\nplt.subplot(1, 2, 1)\nplt.hist(df['value'], bins=50, alpha=0.7)\nplt.axvline(df['value'].mean(), color='r', linestyle='--', label='Mean')\nplt.axvline(df['value'].mean() + 3*df['value'].std(), color='orange', linestyle='--', label='+3σ')\nplt.axvline(df['value'].mean() - 3*df['value'].std(), color='orange', linestyle='--', label='-3σ')\nplt.legend()\nplt.title('Distribution')\n\nplt.subplot(1, 2, 2)\nplt.scatter(range(len(df)), df['value'], c=df['is_anomaly'], cmap='coolwarm', alpha=0.6)\nplt.title('Anomalies (red)')\nplt.tight_layout()\nplt.show()",
       "level": 1,
-      "explanation": "Basic Anomaly Detection code"
+      "explanation": "Z-score: En basit yöntem. |z|>3 → anomaly (Gaussian assumption). Univariate, hızlı, baseline."
     },
     {
-      "title": "Anomaly Detection Application",
+      "title": "Isolation Forest",
       "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import numpy as np\nfrom sklearn.ensemble import IsolationForest\nfrom sklearn.datasets import make_blobs\nimport matplotlib.pyplot as plt\n\n# Generate data\nX, _ = make_blobs(n_samples=300, centers=1, cluster_std=0.5, random_state=42)\nX_outliers = np.random.uniform(low=-4, high=4, size=(20, 2))\nX = np.vstack([X, X_outliers])\n\nprint(f'Total samples: {len(X)} (300 normal + 20 outliers)')\n\n# Isolation Forest\nclf = IsolationForest(\n    contamination=0.1,  # Expected outlier ratio\n    random_state=42,\n    n_estimators=100\n)\n\ny_pred = clf.fit_predict(X)\nanomalies = X[y_pred == -1]\nnormal = X[y_pred == 1]\n\nprint(f'\\nDetected: {len(anomalies)} anomalies, {len(normal)} normal')\n\n# Anomaly scores\nscores = clf.decision_function(X)\nprint(f'Score range: [{scores.min():.3f}, {scores.max():.3f}]')\nprint('Lower score = more anomalous')\n\n# Visualization\nplt.figure(figsize=(10, 5))\n\nplt.subplot(1, 2, 1)\nplt.scatter(normal[:, 0], normal[:, 1], c='blue', s=20, label='Normal')\nplt.scatter(anomalies[:, 0], anomalies[:, 1], c='red', s=50, label='Anomaly', marker='x')\nplt.legend()\nplt.title('Isolation Forest Detection')\n\nplt.subplot(1, 2, 2)\nplt.scatter(X[:, 0], X[:, 1], c=scores, cmap='coolwarm', s=20)\nplt.colorbar(label='Anomaly Score')\nplt.title('Anomaly Scores (lower = more anomalous)')\nplt.tight_layout()\nplt.show()",
       "level": 2,
-      "explanation": "Anomaly Detection Application code"
+      "explanation": "Isolation Forest: Anomaly'leri izole etmek kolay (az split). Tree ensemble, scalable, no distribution assumption."
     },
     {
-      "title": "Advanced Anomaly Detection",
+      "title": "LOF (Local Outlier Factor)",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
-      "level": 3,
-      "explanation": "Advanced Anomaly Detection code"
-    },
-    {
-      "title": "Anomaly Detection Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Anomaly Detection Optimization code"
-    },
-    {
-      "title": "Anomaly Detection Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import numpy as np\nfrom sklearn.neighbors import LocalOutlierFactor\nfrom sklearn.datasets import make_blobs\nimport matplotlib.pyplot as plt\n\n# Data with clusters\nX1, _ = make_blobs(n_samples=200, centers=[[0, 0]], cluster_std=0.3, random_state=42)\nX2, _ = make_blobs(n_samples=200, centers=[[3, 3]], cluster_std=0.3, random_state=42)\nX = np.vstack([X1, X2])\nX_outliers = np.array([[1.5, 1.5], [4, 0], [-1, 4]])  # Between clusters\nX = np.vstack([X, X_outliers])\n\nprint(f'Total: {len(X)} samples')\n\n# LOF\nlof = LocalOutlierFactor(\n    n_neighbors=20,\n    contamination=0.05\n)\n\ny_pred = lof.fit_predict(X)\nanomalies = X[y_pred == -1]\nnormal = X[y_pred == 1]\n\nprint(f'Detected: {len(anomalies)} anomalies')\n\n# LOF scores (negative = outlier)\nscores = lof.negative_outlier_factor_\nprint(f'\\nLOF score range: [{scores.min():.2f}, {scores.max():.2f}]')\nprint('More negative = more anomalous')\n\n# Visualization\nplt.figure(figsize=(10, 5))\n\nplt.subplot(1, 2, 1)\nplt.scatter(normal[:, 0], normal[:, 1], c='blue', s=20, label='Normal')\nplt.scatter(anomalies[:, 0], anomalies[:, 1], c='red', s=100, label='Anomaly', marker='x')\nplt.legend()\nplt.title('LOF Detection')\n\nplt.subplot(1, 2, 2)\nplt.scatter(X[:, 0], X[:, 1], c=scores, cmap='coolwarm', s=30)\nplt.colorbar(label='LOF Score')\nplt.title('LOF Scores (more negative = more anomalous)')\nplt.tight_layout()\nplt.show()\n\nprint('\\nLOF: Local density vs neighbors. Low density area = anomaly.')",
       "level": 2,
-      "explanation": "Anomaly Detection Visualization code"
+      "explanation": "LOF: Local density-based. Cluster içinde normal, cluster dışında/arası anomaly. k-NN based, density comparison."
     },
     {
-      "title": "Production Anomaly Detection",
+      "title": "One-Class SVM",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import numpy as np\nfrom sklearn.svm import OneClassSVM\nfrom sklearn.datasets import make_blobs\nimport matplotlib.pyplot as plt\n\n# Normal data (training)\nX_train, _ = make_blobs(n_samples=300, centers=1, cluster_std=0.5, random_state=42)\n\n# Test data (normal + outliers)\nX_test_normal, _ = make_blobs(n_samples=100, centers=1, cluster_std=0.5, random_state=99)\nX_test_outliers = np.random.uniform(low=-4, high=4, size=(20, 2))\nX_test = np.vstack([X_test_normal, X_test_outliers])\ny_test_true = np.array([1]*100 + [-1]*20)  # 1=normal, -1=anomaly\n\nprint(f'Train: {len(X_train)}, Test: {len(X_test)} (100 normal, 20 outliers)')\n\n# One-Class SVM\nclf = OneClassSVM(\n    kernel='rbf',\n    gamma='auto',\n    nu=0.05  # Upper bound on fraction of outliers\n)\n\nclf.fit(X_train)\ny_pred = clf.predict(X_test)\n\n# Evaluation\nfrom sklearn.metrics import classification_report, confusion_matrix\nprint('\\nClassification Report:')\nprint(classification_report(y_test_true, y_pred, target_names=['Anomaly', 'Normal']))\n\nprint('\\nConfusion Matrix:')\nprint(confusion_matrix(y_test_true, y_pred))\n\n# Decision boundary\nxx, yy = np.meshgrid(np.linspace(-4, 4, 100), np.linspace(-4, 4, 100))\nZ = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])\nZ = Z.reshape(xx.shape)\n\nplt.figure(figsize=(10, 5))\n\nplt.subplot(1, 2, 1)\nplt.contourf(xx, yy, Z, levels=np.linspace(Z.min(), 0, 7), cmap='Blues_r', alpha=0.6)\nplt.contour(xx, yy, Z, levels=[0], linewidths=2, colors='red')\nplt.scatter(X_train[:, 0], X_train[:, 1], c='blue', s=10, label='Train (normal)', alpha=0.5)\nplt.legend()\nplt.title('One-Class SVM Decision Boundary')\n\nplt.subplot(1, 2, 2)\nplt.scatter(X_test[y_pred == 1][:, 0], X_test[y_pred == 1][:, 1], c='blue', s=20, label='Normal')\nplt.scatter(X_test[y_pred == -1][:, 0], X_test[y_pred == -1][:, 1], c='red', s=50, label='Anomaly', marker='x')\nplt.legend()\nplt.title('Test Predictions')\nplt.tight_layout()\nplt.show()",
+      "level": 3,
+      "explanation": "One-Class SVM: Normal data boundary öğren. Kernel trick (RBF), non-linear boundary. nu parameter: outlier fraction upper bound."
+    },
+    {
+      "title": "Autoencoder Anomaly Detection",
+      "language": "python",
+      "code": "import numpy as np\nimport torch\nimport torch.nn as nn\nfrom sklearn.datasets import make_blobs\nimport matplotlib.pyplot as plt\n\n# Data\nX_train, _ = make_blobs(n_samples=500, centers=1, cluster_std=0.5, random_state=42)\nX_test_normal, _ = make_blobs(n_samples=100, centers=1, cluster_std=0.5, random_state=99)\nX_test_outliers = np.random.uniform(low=-4, high=4, size=(20, 2))\nX_test = np.vstack([X_test_normal, X_test_outliers])\n\nX_train_tensor = torch.FloatTensor(X_train)\nX_test_tensor = torch.FloatTensor(X_test)\n\nprint(f'Train: {len(X_train)}, Test: {len(X_test)}')\n\n# Autoencoder\nclass Autoencoder(nn.Module):\n    def __init__(self, input_dim=2, encoding_dim=1):\n        super().__init__()\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim, 4),\n            nn.ReLU(),\n            nn.Linear(4, encoding_dim)\n        )\n        self.decoder = nn.Sequential(\n            nn.Linear(encoding_dim, 4),\n            nn.ReLU(),\n            nn.Linear(4, input_dim)\n        )\n    \n    def forward(self, x):\n        encoded = self.encoder(x)\n        decoded = self.decoder(encoded)\n        return decoded\n\nmodel = Autoencoder()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\ncriterion = nn.MSELoss()\n\n# Train\nprint('\\nTraining autoencoder...')\nfor epoch in range(100):\n    model.train()\n    optimizer.zero_grad()\n    reconstructed = model(X_train_tensor)\n    loss = criterion(reconstructed, X_train_tensor)\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 20 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')\n\n# Test: Reconstruction error\nmodel.eval()\nwith torch.no_grad():\n    reconstructed = model(X_test_tensor)\n    errors = torch.mean((X_test_tensor - reconstructed) ** 2, dim=1).numpy()\n\n# Threshold: 95th percentile\nthreshold = np.percentile(errors, 95)\ny_pred = (errors > threshold).astype(int)\n\nprint(f'\\nReconstruction error range: [{errors.min():.4f}, {errors.max():.4f}]')\nprint(f'Threshold (95th percentile): {threshold:.4f}')\nprint(f'Detected: {y_pred.sum()} anomalies')\n\n# Visualization\nplt.figure(figsize=(12, 4))\n\nplt.subplot(1, 3, 1)\nplt.scatter(X_test[:, 0], X_test[:, 1], c=errors, cmap='coolwarm', s=30)\nplt.colorbar(label='Reconstruction Error')\nplt.title('Reconstruction Errors')\n\nplt.subplot(1, 3, 2)\nplt.hist(errors, bins=30, alpha=0.7)\nplt.axvline(threshold, color='r', linestyle='--', label='Threshold')\nplt.legend()\nplt.title('Error Distribution')\n\nplt.subplot(1, 3, 3)\nplt.scatter(X_test[y_pred==0][:, 0], X_test[y_pred==0][:, 1], c='blue', s=20, label='Normal')\nplt.scatter(X_test[y_pred==1][:, 0], X_test[y_pred==1][:, 1], c='red', s=50, label='Anomaly', marker='x')\nplt.legend()\nplt.title('Detected Anomalies')\nplt.tight_layout()\nplt.show()",
+      "level": 3,
+      "explanation": "Autoencoder: Normal data'yı reconstruct et. Anomaly → high reconstruction error. Deep learning, complex patterns, images/time series için güçlü."
+    },
+    {
+      "title": "Time Series Anomaly (LSTM Autoencoder)",
+      "language": "python",
+      "code": "import numpy as np\nimport torch\nimport torch.nn as nn\nimport matplotlib.pyplot as plt\n\n# Generate time series\nnp.random.seed(42)\nt = np.linspace(0, 100, 1000)\nnormal_series = np.sin(t/5) + 0.1*np.random.randn(1000)\n\n# Inject anomalies\nanomalies_idx = [200, 201, 202, 600, 601]\nfor idx in anomalies_idx:\n    normal_series[idx] += 3  # Spike\n\ndata = normal_series\n\n# Create sequences\ndef create_sequences(data, seq_length=50):\n    sequences = []\n    for i in range(len(data) - seq_length):\n        sequences.append(data[i:i+seq_length])\n    return np.array(sequences)\n\nseq_length = 50\nsequences = create_sequences(data, seq_length)\nX = torch.FloatTensor(sequences).unsqueeze(-1)  # (N, seq_len, 1)\n\nprint(f'Sequences: {X.shape}')\n\n# LSTM Autoencoder\nclass LSTMAutoencoder(nn.Module):\n    def __init__(self, input_dim=1, hidden_dim=32, num_layers=1):\n        super().__init__()\n        self.encoder = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)\n        self.decoder = nn.LSTM(hidden_dim, input_dim, num_layers, batch_first=True)\n    \n    def forward(self, x):\n        encoded, _ = self.encoder(x)\n        decoded, _ = self.decoder(encoded)\n        return decoded\n\nmodel = LSTMAutoencoder()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\ncriterion = nn.MSELoss()\n\n# Train\nprint('\\nTraining LSTM Autoencoder...')\nfor epoch in range(50):\n    model.train()\n    optimizer.zero_grad()\n    reconstructed = model(X)\n    loss = criterion(reconstructed, X)\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 10 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')\n\n# Detect anomalies\nmodel.eval()\nwith torch.no_grad():\n    reconstructed = model(X)\n    errors = torch.mean((X - reconstructed) ** 2, dim=(1, 2)).numpy()\n\nthreshold = np.percentile(errors, 95)\nanomalies_detected = errors > threshold\n\nprint(f'\\nDetected anomalies: {anomalies_detected.sum()}')\n\n# Visualization\nplt.figure(figsize=(14, 8))\n\nplt.subplot(3, 1, 1)\nplt.plot(data, label='Original')\nplt.scatter(anomalies_idx, data[anomalies_idx], c='red', s=100, marker='x', label='True Anomalies')\nplt.legend()\nplt.title('Time Series with Anomalies')\n\nplt.subplot(3, 1, 2)\nplt.plot(errors, label='Reconstruction Error')\nplt.axhline(threshold, color='r', linestyle='--', label='Threshold')\nplt.legend()\nplt.title('Reconstruction Errors')\n\nplt.subplot(3, 1, 3)\nplt.plot(data[seq_length:], alpha=0.5, label='Data')\ndetected_idx = np.where(anomalies_detected)[0] + seq_length\nplt.scatter(detected_idx, data[detected_idx], c='red', s=50, marker='x', label='Detected Anomalies')\nplt.legend()\nplt.title('Detected Anomalies')\nplt.tight_layout()\nplt.show()",
       "level": 4,
-      "explanation": "Production Anomaly Detection code"
+      "explanation": "LSTM Autoencoder: Time series anomaly. Temporal dependencies öğrenir. Reconstruction error → anomaly. Predictive maintenance, sensor monitoring için."
     }
   ],
   "quiz": [
     {
-      "question": "What is Anomaly Detection?",
+      "question": "Anomaly detection'ın temel prensibi nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her outlier'ı remove et",
+        "Normal pattern'den önemli ölçüde sapan rare instance'ları tespit et",
+        "Sadece supervised classification",
+        "Clustering yapar"
       ],
       "correctAnswer": 1,
-      "explanation": "Anomaly Detection explanation.",
-      "id": "anomaly-detection-q1"
+      "explanation": "Anomaly detection: Normal'den önemli sapma. Rare, unexpected patterns. Unsupervised (çoğunlukla), imbalanced (%0.1-5 anomaly).",
+      "id": "anom-q1"
     },
     {
-      "question": "When to use Anomaly Detection?",
+      "question": "Isolation Forest nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "K-means clustering",
+        "Anomaly'leri izole etmek kolay (az tree split), ensemble of trees",
+        "Sadece distance kullanır",
+        "Supervised learning"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "anomaly-detection-q2"
+      "explanation": "Isolation Forest: Anomaly'leri izole etmek kolay (az split yeterli). Random tree ensemble, avg path length. Scalable, no distribution assumption.",
+      "id": "anom-q2"
     },
     {
-      "question": "Anomaly Detection advantage?",
+      "question": "LOF (Local Outlier Factor) neyi ölçer?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Global distance",
+        "Local density vs neighbors. Düşük local density = anomaly",
+        "Reconstruction error",
+        "Z-score"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "anomaly-detection-q3"
+      "explanation": "LOF: Local density-based. Komşularla density karşılaştır. Cluster içinde normal, dışında/arası anomaly. K-NN based.",
+      "id": "anom-q3"
     },
     {
-      "question": "Anomaly Detection limitation?",
+      "question": "Autoencoder anomaly detection prensibi?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Classification",
+        "Normal data'yı reconstruct et, anomaly → yüksek reconstruction error",
+        "Clustering",
+        "Sadece supervised"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "anomaly-detection-q4"
+      "explanation": "Autoencoder: Normal data ile train et, reconstruct öğren. Anomaly'yi reconstruct edemez → high error. Deep learning, complex patterns için.",
+      "id": "anom-q4"
     },
     {
-      "question": "Best practice for Anomaly Detection?",
+      "question": "Anomaly detection'da contamination parameter nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model complexity",
+        "Expected anomaly ratio (örn: 0.01 = %1)",
+        "Learning rate",
+        "Number of trees"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "anomaly-detection-q5"
+      "explanation": "Contamination: Training data'daki expected anomaly ratio. Örn: 0.01 = %1 anomaly var. Threshold belirlemeye yardımcı. Isolation Forest, LOF'ta kullanılır.",
+      "id": "anom-q5"
     },
     {
-      "question": "Anomaly Detection vs alternatives?",
+      "question": "Time series anomaly için en uygun yöntem?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece Z-score",
+        "LSTM Autoencoder - temporal dependencies öğrenir, reconstruction error",
+        "Sadece Isolation Forest",
+        "One-Class SVM"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "anomaly-detection-q6"
+      "explanation": "Time series: LSTM Autoencoder ideal (temporal patterns). Alternatif: STL decomposition, ARIMA residuals, Prophet. Contextual anomaly (seasonal).",
+      "id": "anom-q6"
+    },
+    {
+      "question": "Anomaly detection evaluation metrikleri?",
+      "options": [
+        "Sadece accuracy",
+        "Precision, Recall, F1 (imbalanced), ROC-AUC, Confusion Matrix",
+        "Sadece MSE",
+        "Sadece R²"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Imbalanced problem: Precision (false positive), Recall (false negative), F1, ROC-AUC. Confusion matrix: FP vs FN trade-off analizi.",
+      "id": "anom-q7"
+    },
+    {
+      "question": "Production anomaly detection challenge?",
+      "options": [
+        "Model çok basit",
+        "Real-time scoring, threshold tuning (FP vs FN), concept drift, streaming data",
+        "Sadece training zor",
+        "Hiç challenge yok"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Production: (1) Real-time (streaming), (2) Threshold (dynamic, adaptive), (3) Concept drift (retrain), (4) Alert system, (5) Explainability (hangi feature?), (6) Feedback loop.",
+      "id": "anom-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Anomaly Detection",
-      "back": "Core concept summary"
+      "front": "Anomaly Detection nedir?",
+      "back": "Normal pattern'den sapan rare instance'ları tespit. Unsupervised (çoğunlukla), imbalanced (%0.1-5). Fraud, cybersecurity, predictive maintenance."
     },
     {
-      "front": "Anomaly Detection Key Idea",
-      "back": "Main concept"
+      "front": "Isolation Forest",
+      "back": "Anomaly'leri izole etmek kolay (az split). Random tree ensemble, avg path length. Scalable, no distribution assumption."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "LOF (Local Outlier Factor)",
+      "back": "Local density vs neighbors. Düşük local density = anomaly. Cluster içinde normal, dışında/arası anomaly. K-NN based."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "One-Class SVM",
+      "back": "Normal data boundary öğren. Kernel trick (RBF), non-linear boundary. nu parameter: outlier fraction upper bound."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Autoencoder Anomaly",
+      "back": "Normal data reconstruct et. Anomaly → high reconstruction error. Deep learning, complex patterns, images/time series için."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Z-score Anomaly",
+      "back": "|z| = |(x-μ)/σ| > 3 → anomaly. Gaussian assumption. Univariate, hızlı, baseline. Multivariate: Mahalanobis distance."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Contamination Parameter",
+      "back": "Expected anomaly ratio (örn: 0.01 = %1). Threshold belirlemeye yardımcı. Isolation Forest, LOF'ta kullanılır."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Time Series Anomaly",
+      "back": "LSTM Autoencoder (temporal dependencies), STL decomposition, ARIMA residuals, Prophet. Contextual anomaly (seasonal)."
+    },
+    {
+      "front": "Anomaly Types",
+      "back": "Point (single), Contextual (time/location dependent), Collective (sequence). Supervised, semi-supervised, unsupervised."
+    },
+    {
+      "front": "Threshold Selection",
+      "back": "Percentile-based (95th), ROC curve (if labels), domain expert (acceptable FP rate). Dynamic/adaptive (production)."
+    },
+    {
+      "front": "Explainability",
+      "back": "Hangi feature anomaly'yi tetikledi? SHAP, feature contribution, attention weights. Actionable insight."
+    },
+    {
+      "front": "Production Monitoring",
+      "back": "Real-time scoring, threshold adaptation, concept drift detection, alert system, feedback loop (manual labels → retrain)."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Tüm outlier'ları anomaly olarak kabul etmek",
+      "why": "Outlier ≠ her zaman anomaly. Domain context önemli. Bazı outlier'lar valid (rare but normal). Bazı in-distribution'lar anomaly (fraud mimicking normal).",
+      "fix": "Domain expert ile validate et. Contextual anomaly (seasonal, location). Semi-supervised: Az label varsa kullan. Explainability: Neden anomaly?"
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Imbalanced data'yı ignore etmek",
+      "why": "Anomaly %0.1-5 → extreme imbalance. Accuracy misleading (%99 normal → always predict normal = %99 accuracy!). Model bias towards majority.",
+      "fix": "Doğru metrikler: Precision, Recall, F1, ROC-AUC. Confusion matrix analizi (FP vs FN). Cost-sensitive learning (FN costly). SMOTE for anomalies (synthetic)."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Static threshold kullanmak",
+      "why": "Data distribution zamanla değişir (concept drift). Static threshold → false positive/negative artar. Seasonal patterns (summer vs winter).",
+      "fix": "Dynamic threshold: Percentile-based (sliding window), adaptive (feedback loop). Time-dependent threshold. Domain rules (business hours vs night)."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Contaminated training data",
+      "why": "Training'de anomaly var (unlabeled) → model anomaly'yi normal öğrenir. Performance düşer, false negatives artar.",
+      "fix": "Data cleaning: Training'den suspected anomalies'i çıkar (bootstrapping). Contamination parameter set et (expected ratio). Robust methods: Isolation Forest (handles some contamination)."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Feature engineering yapmamak",
+      "why": "Raw features yetersiz olabilir. Domain knowledge ile feature engineering → performance %50+ artabilir. Time series: Lag features, seasonality.",
+      "fix": "Domain features: Time series (lag, rolling stats), transactions (frequency, amount deviation), network (packet rate, unusual ports). Feature selection: İlgisiz features noise."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Explainability olmadan deploy etmek",
+      "why": "Anomaly detected ama neden? Actionable değil. Manual review zorlaşır. False positive'leri anlamak zor.",
+      "fix": "Explainability: SHAP (feature contribution), attention weights (autoencoder), feature deviation (which feature anomalous?). Alert'e explanation ekle."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Feedback loop olmadan production",
+      "why": "Manual review sonuçları modele dönmez. Model improve edemez. Same false positives tekrar eder.",
+      "fix": "Feedback loop: Manual labels (TP, FP, FN) → periodic retrain. Active learning (uncertain samples → label). Threshold tuning (FP rate acceptable mı?)."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Anomaly Detection Overview",
-      "description": "Visual explanation"
+      "title": "Anomaly Detection Taxonomy",
+      "description": "Methods: Statistical (Z-score, Mahalanobis), Distance (k-NN, LOF), Isolation (Isolation Forest), Density (DBSCAN), Boundary (One-Class SVM), Reconstruction (Autoencoder)."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "Methods Comparison",
+      "description": "Isolation Forest vs LOF vs One-Class SVM vs Autoencoder. Strengths, weaknesses, use cases, scalability, assumptions."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Anomaly Playground",
+      "description": "User uploads data, selects method (Isolation Forest, LOF, Autoencoder), tunes parameters, visualizes anomalies, ROC curve, confusion matrix."
+    },
+    {
+      "type": "metric",
+      "title": "Production Dashboard",
+      "description": "Real-time anomaly rate, false positive trend, threshold history, feature contribution, alert response time, retraining schedule."
     }
   ],
   "references": [
     {
-      "title": "Anomaly Detection Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Isolation Forest Paper",
+      "authors": "Liu, F.T. et al.",
+      "year": 2008,
+      "link": "https://ieeexplore.ieee.org/document/4781136",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "LOF: Identifying Density-Based Local Outliers",
+      "authors": "Breunig, M.M. et al.",
+      "year": 2000,
+      "link": "https://dl.acm.org/doi/10.1145/342009.335388",
+      "type": "paper"
+    },
+    {
+      "title": "PyOD: Python Outlier Detection",
+      "authors": "Zhao, Y. et al.",
+      "year": 2024,
+      "link": "https://github.com/yzhao062/pyod",
+      "type": "tool"
+    },
+    {
+      "title": "Alibi Detect: Anomaly & Drift Detection",
+      "authors": "Seldon",
+      "year": 2024,
+      "link": "https://github.com/SeldonIO/alibi-detect",
+      "type": "tool"
     }
   ]
 }
