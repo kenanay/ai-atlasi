@@ -4,262 +4,345 @@
   "category": "optimization",
   "level": 2,
   "estimatedTime": 60,
-  "description": "Imbalanced Data Handling: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Imbalanced data handling: Sınıf dağılımı dengesiz (minority %1-10) veri setlerinde çalışma. SMOTE, class weights, focal loss, ensemble methods. Fraud detection, medical diagnosis, anomaly detection.",
   "content": {
-    "level0_basic": "Imbalanced Data Handling basics: Core concepts explained simply.",
-    "level1_beginner": "Imbalanced Data Handling fundamentals with examples and code snippets.",
-    "level2_application": "Practical Imbalanced Data Handling implementation with real-world applications.",
-    "level3_advanced": "Advanced Imbalanced Data Handling techniques and optimizations.",
-    "level4_expert": "Expert-level Imbalanced Data Handling architectures and research directions."
+    "level0_basic": "Imbalanced Data, sınıflardan birinin çok az örneği olduğu (minority class) dataset'lerdir. Örnek: Fraud detection (fraud %0.1, normal %99.9), medical diagnosis (kanser %2, sağlıklı %98), spam detection (spam %10, ham %90). Problem: Model majority class'a bias olur (her zaman 'normal' predict → %99.9 accuracy ama hiç fraud yakalamaz!). Accuracy misleading. Metrikler: Precision, Recall, F1-score, ROC-AUC.",
+    "level1_beginner": "Imbalanced data çözümleri: (1) **Resampling**: (a) Oversampling: Minority class'ı duplicate et veya synthetic örnekler oluştur (SMOTE). (b) Undersampling: Majority class'tan random örnekler sil. (2) **Class Weights**: Loss function'da minority class'a daha fazla ağırlık ver (cost-sensitive learning). (3) **Algoritma Seçimi**: Tree-based (Random Forest, XGBoost) imbalanced data'da iyi. (4) **Ensemble**: Majority'yi böl, her parça ile minority'yi train et (EasyEnsemble). (5) **Threshold Tuning**: Probability threshold'ı ayarla (0.5 yerine 0.3). (6) **Metrikler**: Precision (false positive), Recall (false negative), F1 (harmonic mean), ROC-AUC, PR-AUC.",
+    "level2_application": "Pratik uygulamalar: (1) **Fraud Detection**: %0.1-1 fraud. SMOTE + XGBoost + class weights. Cost-sensitive: False negative çok costly. (2) **Medical Diagnosis**: Rare disease (%1-5). High recall kritik (false negative = hasta kaçar). SMOTE + ensemble. (3) **Spam Detection**: %10-30 spam. Threshold tuning (precision vs recall). Undersampling + oversampling hybrid. (4) **Churn Prediction**: %5-10 churn. SMOTE + Random Forest. Feature engineering (customer behavior). (5) **Anomaly Detection**: %0.1-5 anomaly. One-Class SVM, Isolation Forest (unsupervised). (6) **Click Prediction**: CTR %1-5. Focal loss (deep learning), class weights. Framework'ler: imbalanced-learn (SMOTE), XGBoost (scale_pos_weight), TensorFlow (class_weight).",
+    "level3_advanced": "İleri seviye: (1) **SMOTE Variants**: BorderlineSMOTE (borderline örnekler), ADASYN (adaptive synthetic), SVMSMOTE (SVM boundary). (2) **Deep Learning**: Focal Loss (hard examples'a focus), class weights, oversampling minority. Data augmentation (image, text). (3) **Ensemble**: EasyEnsemble (majority'yi böl), BalancedBagging (bootstrap with resampling), RUSBoost (undersampling + boosting). (4) **Cost Matrix**: Asymmetric cost (FN cost >> FP cost). Custom loss function. (5) **Threshold Optimization**: ROC curve → optimal threshold (Youden's J statistic). Precision-Recall curve (F1 max). (6) **Hybrid**: SMOTE + ENN (Edited Nearest Neighbors) → noise removal. SMOTE + Tomek Links → borderline cleanup. (7) **Anomaly-as-Imbalanced**: One-Class SVM, Isolation Forest, Autoencoder (unsupervised approach).",
+    "level4_expert": "Expert seviyede, production trade-offs, domain-specific strategies ve research frontiers önemlidir. (1) **Production**: Model monitoring (minority class metrics), threshold tuning (business KPIs), A/B testing (precision vs recall), retraining strategy (new minority samples). (2) **Domain-Specific**: (a) Finance: Regulatory (false negative costly), explainability (SHAP), fairness (protected attributes). (b) Healthcare: High recall (patient safety), calibration (probability accuracy), ensemble (reduce variance). (c) Fraud: Real-time (streaming), concept drift (fraud patterns change), feedback loop (manual review → retrain). (3) **Multi-class Imbalanced**: One-vs-rest SMOTE, class weight per class, macro/micro F1. (4) **Few-shot Learning**: Siamese networks, prototypical networks, meta-learning (when minority << 100). (5) **Fairness**: Imbalanced + bias (minority class in protected group). Fair oversampling, bias mitigation. (6) **Active Learning**: Label minority samples selectively (uncertainty sampling), reduce labeling cost. (7) **Contrastive Learning**: Self-supervised pre-training, few minority samples fine-tuning. Research: **Zero-shot imbalanced** (no minority training data), **Causal imbalanced** (confounding), **Dynamic imbalanced** (streaming data, concept drift)."
   },
-  "whatIsIt": "Imbalanced Data Handling: Technical definition and core concepts.",
-  "whyNeeded": "Why Imbalanced Data Handling matters: Applications and use cases.",
-  "realWorldAnalogy": "Imbalanced Data Handling explained through real-world analogy.",
+  "whatIsIt": "Imbalanced Data: Sınıf dağılımı dengesiz dataset. Matematiksel: Imbalance Ratio (IR) = |majority| / |minority|. IR>10 → imbalanced, IR>100 → extreme. Problem: Model majority bias (accuracy %99 ama minority recall %0). Metrikler: Precision = TP/(TP+FP), Recall = TP/(TP+FN), F1 = 2·(P·R)/(P+R), ROC-AUC (threshold-independent), PR-AUC (imbalanced için better). Çözümler: Resampling (SMOTE, undersampling), Class Weights (cost-sensitive), Threshold Tuning, Ensemble (BalancedBagging), Focal Loss (deep learning).",
+  "whyNeeded": "Imbalanced data handling kritik çünkü: (1) **Real-world Reality**: Çoğu domain imbalanced (fraud %0.1, cancer %2, spam %10, click %1). Balanced data nadir. (2) **Accuracy Misleading**: Model her zaman 'normal' predict → %99 accuracy ama hiç fraud/cancer yakalamaz! Recall %0. (3) **Cost Asymmetry**: False negative >> false positive cost. Fraud miss ($10K), cancer miss (hayat), spam miss (annoyance). (4) **Minority Critical**: Minority class genellikle critical (fraud, disease, failure). Majority class'a focus yanlış. (5) **Default Algorithms Fail**: Standard ML algorithms majority bias, minority ignore. Naive Bayes, Logistic Regression struggle. (6) **Threshold 0.5 Sub-optimal**: Default threshold imbalanced data'da kötü. Optimal threshold < 0.5 (minority favor). (7) **Evaluation Metrics**: Accuracy değil, Precision/Recall/F1/AUC kullan. Business KPI'lara align et.",
+  "realWorldAnalogy": "Imbalanced data'yı nadir hastalık teşhisine benzetebiliriz. **Durum**: 10,000 hasta, 50 kanser (%0.5), 9,950 sağlıklı (%99.5). **Naive model**: Her hastaya 'sağlıklı' de → %99.5 accuracy! Ama hiçbir kanser yakalanmadı (recall %0), felaketyön. **Çözümler**: (1) **Oversampling (SMOTE)**: Kanser hastalarını 'sentetik olarak çoğalt' (benzer profillere bakarak). Training: 5,000 kanser, 5,000 sağlıklı → balanced. (2) **Class Weights**: Model'e söyle: 'Kanser miss etme 200x worse'. Loss function'da kanser hatasına 200x ağırlık. (3) **Threshold**: Probability > 0.05 (not 0.5) → 'kanser' de. Daha sensitive, false positive artar ama false negative azalır. **Trade-off**: False positive (sağlıklı hasta gereksiz test) vs False negative (kanser kaçar, ölümcül). Healthcare: False negative >> false positive → high recall prioritize.",
   "mathematics": {
     "formulas": [
-      "\\text{Imbalanced Data Handling formula}",
-      "\\text{Key equation}"
+      "\\text{Imbalance Ratio}: \\quad \\text{IR} = \\frac{|\\text{majority}|}{|\\text{minority}|} \\quad \\text{(IR>10 imbalanced, IR>100 extreme)}",
+      "\\text{Precision}: \\quad P = \\frac{TP}{TP + FP} \\quad \\text{(false positive rate)}",
+      "\\text{Recall (Sensitivity)}: \\quad R = \\frac{TP}{TP + FN} \\quad \\text{(false negative rate)}",
+      "\\text{F1-Score}: \\quad F_1 = 2 \\cdot \\frac{P \\cdot R}{P + R} = \\frac{2 \\cdot TP}{2 \\cdot TP + FP + FN}",
+      "\\text{Weighted Loss}: \\quad \\mathcal{L} = -\\frac{1}{N} \\sum_{i=1}^N w_i \\cdot \\log p(y_i | x_i) \\quad \\text{where } w_{\\text{minority}} >> w_{\\text{majority}}",
+      "\\text{Focal Loss}: \\quad \\mathcal{L}_{\\text{focal}} = -\\alpha (1 - p_t)^\\gamma \\log p_t \\quad \\text{(focus hard examples)}",
+      "\\text{SMOTE}: \\quad x_{\\text{new}} = x_i + \\lambda (x_{\\text{nn}} - x_i) \\quad \\text{where } \\lambda \\in [0,1], \\text{ nn=nearest neighbor}",
+      "\\text{Cost-Sensitive Learning}: \\quad \\mathcal{L}_{\\text{cost}} = \\sum_{i,j} C(i,j) \\cdot P(\\text{predict } j | \\text{true } i)"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Problem Analysis**: Imbalance ratio hesapla (IR = majority/minority). IR>10 → handle gerekir. Minority class kaç örnek? (<100 → extreme). Domain cost: FN vs FP cost nedir?",
+      "2. **Baseline**: İlk önce baseline model train et (no handling). Metrikler: Accuracy (misleading), Precision, Recall, F1, ROC-AUC, PR-AUC. Confusion matrix: TP, TN, FP, FN.",
+      "3. **Metric Selection**: Business KPI'ya göre: (a) High Recall (healthcare, fraud) → false negative costly. (b) High Precision (spam, marketing) → false positive costly. (c) Balanced: F1-score. (d) Threshold-free: ROC-AUC, PR-AUC.",
+      "4. **Strategy Selection**: (a) IR<50: Class weights + threshold tuning. (b) IR<100: SMOTE + class weights. (c) IR>100: SMOTE + ensemble (EasyEnsemble, BalancedBagging). (d) Deep learning: Focal loss + data augmentation. (e) Extreme (<100 minority): Few-shot learning, anomaly detection.",
+      "5. **Resampling**: (a) Oversampling: SMOTE (synthetic), Random oversampling (duplicate). (b) Undersampling: Random (majority'den sil), Tomek Links (borderline). (c) Hybrid: SMOTE+ENN, SMOTE+Tomek. Split BEFORE resampling (test clean).",
+      "6. **Model Training**: (a) Class weights: sklearn class_weight='balanced', XGBoost scale_pos_weight=IR. (b) Loss function: Focal loss (PyTorch), weighted cross-entropy. (c) Algorithm: Tree-based (RF, XGBoost), ensemble (Bagging), deep learning (with focal loss).",
+      "7. **Threshold Tuning**: Default 0.5 sub-optimal. (a) ROC curve → Youden's J statistic (max sensitivity + specificity). (b) PR curve → max F1. (c) Business KPI → custom threshold (örn: Recall≥0.9). (d) Validation: Separate validation set.",
+      "8. **Evaluation**: Test set (imbalanced, original distribution). Metrikler: Precision, Recall, F1, ROC-AUC, PR-AUC. Confusion matrix analizi: FP rate, FN rate. Stratified CV (her fold'da minority represent).",
+      "9. **Error Analysis**: FN analizi (hangi minority miss?), FP analizi (hangi majority false alarm?). Feature importance (SHAP): Hangi features discriminative? Borderline examples: Hard cases nerede?",
+      "10. **Production Deployment**: Monitor minority class metrics (Recall, F1). Threshold adaptation (business KPI change). Retraining: New minority samples → retrain. A/B testing: New strategy vs old. Fairness check (protected attributes)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: SMOTE: O(N·k·D) (k=neighbors), Random oversampling: O(N), Undersampling: O(N), Class weights: No overhead (same as base model), Focal loss: O(N·C) per batch. **Training**: Resampling once O(N), then model training (depends on model). **Uzay**: SMOTE: O(synthetic_samples·D), Oversampling: 2-10x original data. **Inference**: No overhead (resampling only at training). **Scalability**: SMOTE scalable (k-NN with KDTree O(log N)), Undersampling reduces data. Big data: Spark MLlib (random resampling), Dask."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "logistic-regression",
+    "decision-trees-random-forests",
+    "neural-networks"
+  ],
+  "nextTopics": [
+    "anomaly-detection",
+    "xgboost-gradient-boosting"
+  ],
+  "relatedTopics": [
+    "logistic-regression",
+    "xgboost-gradient-boosting",
+    "anomaly-detection"
+  ],
   "tags": [
-    "imbalanced"
+    "imbalanced-data",
+    "smote",
+    "class-weights",
+    "oversampling",
+    "focal-loss",
+    "precision-recall"
   ],
   "codeExamples": [
     {
-      "title": "Basic Imbalanced Data Handling",
+      "title": "Baseline: Imbalanced Data Problem",
       "language": "python",
-      "code": "# Imbalanced Data Handling example\nimport numpy as np\n\n# Implementation here",
+      "code": "import numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import classification_report, confusion_matrix, roc_auc_score\nimport matplotlib.pyplot as plt\n\n# Imbalanced dataset: 95% class 0, 5% class 1\nX, y = make_classification(\n    n_samples=10000,\n    n_features=20,\n    n_informative=15,\n    n_redundant=5,\n    weights=[0.95, 0.05],  # Imbalance ratio = 19:1\n    flip_y=0.01,\n    random_state=42\n)\n\nprint(f'Total: {len(y)}')\nprint(f'Class 0: {(y==0).sum()} ({(y==0).mean()*100:.1f}%)')\nprint(f'Class 1: {(y==1).sum()} ({(y==1).mean()*100:.1f}%)')\nprint(f'Imbalance Ratio: {(y==0).sum()/(y==1).sum():.1f}:1')\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)\n\n# Naive model (no handling)\nclf = LogisticRegression(random_state=42, max_iter=1000)\nclf.fit(X_train, y_train)\ny_pred = clf.predict(X_test)\n\nprint('\\n=== NAIVE MODEL (No Imbalance Handling) ===')\nprint(f'Accuracy: {(y_pred == y_test).mean():.3f}')  # Misleading!\nprint('\\nClassification Report:')\nprint(classification_report(y_test, y_pred, target_names=['Class 0', 'Class 1']))\n\nprint('\\nConfusion Matrix:')\nprint(confusion_matrix(y_test, y_pred))\nprint('Note: High accuracy but poor recall for Class 1 (minority)!')\n\nprint(f'\\nROC-AUC: {roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1]):.3f}')",
       "level": 1,
-      "explanation": "Basic Imbalanced Data Handling code"
+      "explanation": "Baseline: Imbalanced data (95%/5%). Naive model → high accuracy (%95) ama minority recall poor. Accuracy misleading!"
     },
     {
-      "title": "Imbalanced Data Handling Application",
+      "title": "SMOTE (Synthetic Minority Oversampling)",
       "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import classification_report, confusion_matrix, roc_auc_score\nfrom imblearn.over_sampling import SMOTE\nimport matplotlib.pyplot as plt\n\n# Imbalanced data\nX, y = make_classification(\n    n_samples=10000,\n    n_features=20,\n    n_informative=15,\n    weights=[0.95, 0.05],\n    random_state=42\n)\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)\n\nprint('Before SMOTE:')\nprint(f'Train - Class 0: {(y_train==0).sum()}, Class 1: {(y_train==1).sum()}')\n\n# SMOTE: Synthetic minority oversampling\nsmote = SMOTE(random_state=42, k_neighbors=5)\nX_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)\n\nprint('\\nAfter SMOTE:')\nprint(f'Train - Class 0: {(y_train_smote==0).sum()}, Class 1: {(y_train_smote==1).sum()}')\nprint(f'Now balanced!')\n\n# Train with SMOTE\nclf = LogisticRegression(random_state=42, max_iter=1000)\nclf.fit(X_train_smote, y_train_smote)\ny_pred = clf.predict(X_test)\n\nprint('\\n=== MODEL WITH SMOTE ===')\nprint(f'Accuracy: {(y_pred == y_test).mean():.3f}')\nprint('\\nClassification Report:')\nprint(classification_report(y_test, y_pred, target_names=['Class 0', 'Class 1']))\n\nprint('\\nConfusion Matrix:')\nprint(confusion_matrix(y_test, y_pred))\n\nprint(f'\\nROC-AUC: {roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1]):.3f}')\nprint('Note: Better recall for minority class!')",
       "level": 2,
-      "explanation": "Imbalanced Data Handling Application code"
+      "explanation": "SMOTE: Synthetic minority samples (k-NN based). Balance training data. Minority recall ↑, overall performance better."
     },
     {
-      "title": "Advanced Imbalanced Data Handling",
+      "title": "Class Weights (Cost-Sensitive)",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
-      "level": 3,
-      "explanation": "Advanced Imbalanced Data Handling code"
-    },
-    {
-      "title": "Imbalanced Data Handling Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Imbalanced Data Handling Optimization code"
-    },
-    {
-      "title": "Imbalanced Data Handling Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "import numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import classification_report, confusion_matrix, roc_auc_score\nfrom sklearn.utils.class_weight import compute_class_weight\n\n# Imbalanced data\nX, y = make_classification(\n    n_samples=10000,\n    n_features=20,\n    n_informative=15,\n    weights=[0.95, 0.05],\n    random_state=42\n)\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)\n\n# Compute class weights\nclasses = np.unique(y_train)\nweights = compute_class_weight('balanced', classes=classes, y=y_train)\nclass_weight_dict = {classes[i]: weights[i] for i in range(len(classes))}\n\nprint('Class weights (balanced):')\nprint(class_weight_dict)\nprint(f'Minority class weight is {weights[1]/weights[0]:.1f}x higher')\n\n# Model WITHOUT class weights\nclf_no_weight = LogisticRegression(random_state=42, max_iter=1000)\nclf_no_weight.fit(X_train, y_train)\ny_pred_no_weight = clf_no_weight.predict(X_test)\n\nprint('\\n=== WITHOUT Class Weights ===')\nprint(classification_report(y_test, y_pred_no_weight, target_names=['Class 0', 'Class 1']))\n\n# Model WITH class weights\nclf_weight = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)\nclf_weight.fit(X_train, y_train)\ny_pred_weight = clf_weight.predict(X_test)\n\nprint('\\n=== WITH Class Weights ===')\nprint(classification_report(y_test, y_pred_weight, target_names=['Class 0', 'Class 1']))\n\nprint('\\nComparison:')\nprint(f'Without weights - ROC-AUC: {roc_auc_score(y_test, clf_no_weight.predict_proba(X_test)[:, 1]):.3f}')\nprint(f'With weights    - ROC-AUC: {roc_auc_score(y_test, clf_weight.predict_proba(X_test)[:, 1]):.3f}')\nprint('Note: Class weights improve minority recall!')",
       "level": 2,
-      "explanation": "Imbalanced Data Handling Visualization code"
+      "explanation": "Class Weights: Minority class'a daha fazla ağırlık. Loss function'da minority error >> majority error. Basit, etkili."
     },
     {
-      "title": "Production Imbalanced Data Handling",
+      "title": "Threshold Tuning",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import precision_recall_curve, roc_curve, f1_score\nimport matplotlib.pyplot as plt\n\n# Imbalanced data\nX, y = make_classification(\n    n_samples=10000,\n    n_features=20,\n    n_informative=15,\n    weights=[0.95, 0.05],\n    random_state=42\n)\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)\n\n# Train\nclf = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)\nclf.fit(X_train, y_train)\n\n# Probabilities\ny_proba = clf.predict_proba(X_test)[:, 1]\n\n# Find optimal threshold (max F1)\nprecisions, recalls, thresholds_pr = precision_recall_curve(y_test, y_proba)\nf1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-10)\noptimal_idx = np.argmax(f1_scores)\noptimal_threshold = thresholds_pr[optimal_idx] if optimal_idx < len(thresholds_pr) else 0.5\n\nprint(f'Default threshold: 0.5')\nprint(f'Optimal threshold (max F1): {optimal_threshold:.3f}')\n\n# Predictions with different thresholds\ny_pred_default = (y_proba >= 0.5).astype(int)\ny_pred_optimal = (y_proba >= optimal_threshold).astype(int)\n\nprint('\\n=== Default Threshold (0.5) ===')\nprint(f'F1-score: {f1_score(y_test, y_pred_default):.3f}')\n\nprint('\\n=== Optimal Threshold ({:.3f}) ==='.format(optimal_threshold))\nprint(f'F1-score: {f1_score(y_test, y_pred_optimal):.3f}')\n\n# Visualization\nfig, axes = plt.subplots(1, 2, figsize=(12, 4))\n\n# Precision-Recall curve\naxes[0].plot(recalls, precisions, label='PR Curve')\naxes[0].scatter(recalls[optimal_idx], precisions[optimal_idx], c='red', s=100, marker='x', label=f'Optimal (th={optimal_threshold:.2f})')\naxes[0].set_xlabel('Recall')\naxes[0].set_ylabel('Precision')\naxes[0].set_title('Precision-Recall Curve')\naxes[0].legend()\naxes[0].grid(alpha=0.3)\n\n# F1 vs Threshold\naxes[1].plot(thresholds_pr, f1_scores[:-1], label='F1-score')\naxes[1].axvline(optimal_threshold, color='r', linestyle='--', label=f'Optimal={optimal_threshold:.2f}')\naxes[1].set_xlabel('Threshold')\naxes[1].set_ylabel('F1-Score')\naxes[1].set_title('F1-Score vs Threshold')\naxes[1].legend()\naxes[1].grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()\n\nprint('\\nNote: Optimal threshold < 0.5 for imbalanced data!')",
+      "level": 3,
+      "explanation": "Threshold Tuning: Default 0.5 sub-optimal. Precision-Recall curve → max F1 threshold. Imbalanced: optimal < 0.5."
+    },
+    {
+      "title": "Ensemble: BalancedBagging",
+      "language": "python",
+      "code": "import numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import classification_report, roc_auc_score\nfrom imblearn.ensemble import BalancedBaggingClassifier\nfrom sklearn.tree import DecisionTreeClassifier\n\n# Imbalanced data\nX, y = make_classification(\n    n_samples=10000,\n    n_features=20,\n    n_informative=15,\n    weights=[0.95, 0.05],\n    random_state=42\n)\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)\n\nprint('Training data:')\nprint(f'Class 0: {(y_train==0).sum()}, Class 1: {(y_train==1).sum()}')\n\n# BalancedBaggingClassifier\n# Each bootstrap sample is balanced (undersample majority)\nbbc = BalancedBaggingClassifier(\n    estimator=DecisionTreeClassifier(max_depth=5, random_state=42),\n    n_estimators=10,\n    random_state=42,\n    n_jobs=-1\n)\n\nprint('\\nTraining BalancedBagging...')\nbbc.fit(X_train, y_train)\ny_pred = bbc.predict(X_test)\n\nprint('\\n=== BalancedBagging Results ===')\nprint(classification_report(y_test, y_pred, target_names=['Class 0', 'Class 1']))\n\nprint(f'\\nROC-AUC: {roc_auc_score(y_test, bbc.predict_proba(X_test)[:, 1]):.3f}')\n\nprint('\\nHow it works:')\nprint('1. Create N bootstrap samples')\nprint('2. Each sample: undersample majority to match minority')\nprint('3. Train weak learner on each balanced sample')\nprint('4. Ensemble: vote/average predictions')\nprint('Benefit: Diversity + balance → better minority recall')",
+      "level": 3,
+      "explanation": "BalancedBagging: Ensemble, her bootstrap balanced (majority undersample). Diversity + balance → minority recall ↑."
+    },
+    {
+      "title": "Focal Loss (Deep Learning)",
+      "language": "python",
+      "code": "import numpy as np\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom sklearn.datasets import make_classification\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import classification_report, roc_auc_score\n\n# Focal Loss: Focus on hard examples\nclass FocalLoss(nn.Module):\n    def __init__(self, alpha=0.25, gamma=2.0):\n        super().__init__()\n        self.alpha = alpha\n        self.gamma = gamma\n    \n    def forward(self, inputs, targets):\n        BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')\n        pt = torch.exp(-BCE_loss)  # p_t\n        focal_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss\n        return focal_loss.mean()\n\n# Data\nX, y = make_classification(\n    n_samples=10000,\n    n_features=20,\n    n_informative=15,\n    weights=[0.95, 0.05],\n    random_state=42\n)\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)\n\nX_train_t = torch.FloatTensor(X_train)\ny_train_t = torch.FloatTensor(y_train).unsqueeze(1)\nX_test_t = torch.FloatTensor(X_test)\n\nprint('Training with Focal Loss...')\n\n# Simple NN\nmodel = nn.Sequential(\n    nn.Linear(20, 64),\n    nn.ReLU(),\n    nn.Linear(64, 32),\n    nn.ReLU(),\n    nn.Linear(32, 1)\n)\n\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\nfocal_loss = FocalLoss(alpha=0.25, gamma=2.0)\n\n# Train\nfor epoch in range(50):\n    model.train()\n    optimizer.zero_grad()\n    outputs = model(X_train_t)\n    loss = focal_loss(outputs, y_train_t)\n    loss.backward()\n    optimizer.step()\n    \n    if (epoch + 1) % 10 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')\n\n# Evaluate\nmodel.eval()\nwith torch.no_grad():\n    y_proba = torch.sigmoid(model(X_test_t)).numpy().flatten()\n    y_pred = (y_proba >= 0.5).astype(int)\n\nprint('\\n=== Focal Loss Results ===')\nprint(classification_report(y_test, y_pred, target_names=['Class 0', 'Class 1']))\nprint(f'\\nROC-AUC: {roc_auc_score(y_test, y_proba):.3f}')\n\nprint('\\nFocal Loss: FL = -α(1-p_t)^γ log(p_t)')\nprint('γ=2: Hard examples (low p_t) get higher loss')\nprint('α=0.25: Weight for minority class')\nprint('Benefit: Focus on misclassified minority samples')",
       "level": 4,
-      "explanation": "Production Imbalanced Data Handling code"
+      "explanation": "Focal Loss: Hard examples'a focus (γ parameter). Deep learning için ideal. Minority class için α weight. Down-weight easy examples."
     }
   ],
   "quiz": [
     {
-      "question": "What is Imbalanced Data Handling?",
+      "question": "Imbalanced data'da accuracy neden misleading?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her zaman doğru",
+        "Model majority predict eder → %99 acc ama minority recall %0, kritik sınıfı kaçırır",
+        "Minority her zaman yanlış",
+        "Accuracy en iyi metrik"
       ],
       "correctAnswer": 1,
-      "explanation": "Imbalanced Data Handling explanation.",
-      "id": "imbalanced-data-handling-q1"
+      "explanation": "Accuracy misleading: Fraud %0.1, normal %99.9. Model her zaman 'normal' → %99.9 acc ama hiç fraud yakalamaz! Recall %0.",
+      "id": "imb-q1"
     },
     {
-      "question": "When to use Imbalanced Data Handling?",
+      "question": "SMOTE nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Majority class'ı siler",
+        "Minority class için synthetic örnekler oluşturur (k-NN based)",
+        "Sadece duplicate eder",
+        "Majority'yi çoğaltır"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "imbalanced-data-handling-q2"
+      "explanation": "SMOTE: Minority'nin k nearest neighbor'larına bakarak synthetic örnekler oluşturur. x_new = x + λ(x_nn - x). Balance elde edilir.",
+      "id": "imb-q2"
     },
     {
-      "question": "Imbalanced Data Handling advantage?",
+      "question": "Class weights ne yapar?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Data'yı değiştirir",
+        "Loss function'da minority class'a daha fazla ağırlık verir (cost-sensitive)",
+        "Model complexity artar",
+        "Sadece oversampling"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "imbalanced-data-handling-q3"
+      "explanation": "Class Weights: Minority error'a daha fazla ağırlık. Loss = Σ w_i·log(p_i). Minority w >> majority w. Model minority'ye focus.",
+      "id": "imb-q3"
     },
     {
-      "question": "Imbalanced Data Handling limitation?",
+      "question": "Imbalanced data için en iyi metrikler?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece accuracy",
+        "Precision, Recall, F1, ROC-AUC, PR-AUC. Confusion matrix (FP, FN analizi)",
+        "Sadece MSE",
+        "Sadece loss"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "imbalanced-data-handling-q4"
+      "explanation": "Metrikler: Precision (FP rate), Recall (FN rate), F1 (harmonic mean), ROC-AUC (threshold-free), PR-AUC (imbalanced için better). Confusion matrix: TP, TN, FP, FN.",
+      "id": "imb-q4"
     },
     {
-      "question": "Best practice for Imbalanced Data Handling?",
+      "question": "Threshold tuning neden gerekli?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her zaman 0.5 optimal",
+        "Default 0.5 imbalanced'da sub-optimal. Optimal < 0.5 (minority favor). PR curve → max F1",
+        "Sadece supervised'da",
+        "Threshold değiştirmek yasak"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "imbalanced-data-handling-q5"
+      "explanation": "Default threshold 0.5 balanced data için. Imbalanced: optimal < 0.5. PR curve → max F1 threshold. Youden's J statistic (ROC).",
+      "id": "imb-q5"
     },
     {
-      "question": "Imbalanced Data Handling vs alternatives?",
+      "question": "Focal Loss'un avantajı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her örneğe eşit ağırlık",
+        "Hard examples'a focus (γ parameter). Easy examples down-weight. Deep learning için",
+        "Sadece minority'yi ignore",
+        "Oversampling yapar"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "imbalanced-data-handling-q6"
+      "explanation": "Focal Loss: FL = -α(1-p_t)^γ log(p_t). γ=2: hard examples (low p_t) → high loss. α: minority weight. Down-weight easy examples.",
+      "id": "imb-q6"
+    },
+    {
+      "question": "Undersampling vs Oversampling?",
+      "options": [
+        "İkisi de aynı",
+        "Undersampling: majority'den sil (data loss). Oversampling: minority çoğalt (overfitting risk)",
+        "Undersampling her zaman better",
+        "Oversampling yasak"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Undersampling: Majority'den random sil (data loss, information loss). Oversampling: Minority duplicate/synthetic (overfitting risk, training slow). Hybrid: ikisini combine.",
+      "id": "imb-q7"
+    },
+    {
+      "question": "Production'da imbalanced data challenge?",
+      "options": [
+        "Hiç problem yok",
+        "Minority metrics monitor, threshold tuning (business KPI), concept drift, retraining strategy",
+        "Sadece training zor",
+        "Deploy sonrası değişmez"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Production: (1) Monitor minority Recall/F1, (2) Threshold tune (business KPI), (3) Concept drift (retrain), (4) A/B test, (5) Fairness (protected attributes), (6) Feedback loop.",
+      "id": "imb-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Imbalanced Data Handling",
-      "back": "Core concept summary"
+      "front": "Imbalanced Data nedir?",
+      "back": "Sınıf dağılımı dengesiz. IR = majority/minority. IR>10 imbalanced, IR>100 extreme. Problem: Model majority bias, accuracy misleading."
     },
     {
-      "front": "Imbalanced Data Handling Key Idea",
-      "back": "Main concept"
+      "front": "SMOTE",
+      "back": "Synthetic Minority Oversampling. k-NN based: x_new = x + λ(x_nn - x). Balance training data. Variants: BorderlineSMOTE, ADASYN, SVMSMOTE."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "Class Weights",
+      "back": "Cost-sensitive learning. Loss'ta minority'ye >> weight. sklearn: class_weight='balanced'. XGBoost: scale_pos_weight=IR. Basit, etkili."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Precision vs Recall",
+      "back": "Precision = TP/(TP+FP) (FP rate). Recall = TP/(TP+FN) (FN rate). F1 = harmonic mean. Trade-off: High recall → low precision."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Threshold Tuning",
+      "back": "Default 0.5 sub-optimal. PR curve → max F1. ROC → Youden's J. Imbalanced: optimal < 0.5 (minority favor)."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Focal Loss",
+      "back": "FL = -α(1-p_t)^γ log(p_t). γ=2: hard examples focus. α: minority weight. Down-weight easy. Deep learning için ideal."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "BalancedBagging",
+      "back": "Ensemble: Her bootstrap balanced (undersample majority). Diversity + balance → minority recall ↑. imbalanced-learn."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Undersampling",
+      "back": "Majority'den sil (random, Tomek Links). Data loss ama faster training. Extreme imbalance'da (IR>100) useful."
+    },
+    {
+      "front": "Oversampling",
+      "back": "Minority çoğalt. Random (duplicate), SMOTE (synthetic). Overfitting risk ama information preserve."
+    },
+    {
+      "front": "ROC-AUC vs PR-AUC",
+      "back": "ROC-AUC: Threshold-free, TPR vs FPR. PR-AUC: Imbalanced için better, Precision vs Recall. PR-AUC < ROC-AUC (imbalanced)."
+    },
+    {
+      "front": "Cost Matrix",
+      "back": "Asymmetric cost: C(FN) >> C(FP). Healthcare: FN = patient death. Fraud: FN = $10K loss. Custom loss function."
+    },
+    {
+      "front": "Production Monitoring",
+      "back": "Minority metrics (Recall, F1), threshold adaptation, concept drift, retraining, A/B test, fairness check."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Accuracy'ye güvenmek",
+      "why": "Imbalanced'da accuracy misleading. Model her zaman 'normal' → %99 acc ama minority recall %0. Kritik sınıfı kaçırır (fraud, cancer).",
+      "fix": "Metrikler: Precision, Recall, F1, ROC-AUC, PR-AUC. Confusion matrix analizi (TP, TN, FP, FN). Business KPI'ya align et (cost of FN vs FP)."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Test set'i de resample etmek",
+      "why": "Test set original distribution olmalı (production distribution). Test'i resample → overly optimistic results, production'da fail.",
+      "fix": "Sadece training set'i resample et. Test/validation original (imbalanced) kalsın. Stratified split (her fold'da minority represent)."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "SMOTE after split yapmamak",
+      "why": "SMOTE before split → data leakage (synthetic örnekler test'e gider). Overly optimistic results, production fail.",
+      "fix": "Split first (train/test), then SMOTE only on training. Test clean (original distribution). Cross-validation: SMOTE inside each fold."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Threshold 0.5 kullanmak",
+      "why": "Default 0.5 balanced data için. Imbalanced: sub-optimal, minority miss. Precision-Recall trade-off'u handle edemez.",
+      "fix": "Threshold tuning: PR curve → max F1, ROC → Youden's J. Business KPI (örn: Recall≥0.9). Optimal < 0.5 (minority favor)."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Oversampling + model complex = overfitting",
+      "why": "Synthetic data + complex model (deep NN) → overfitting minority patterns. Validation good, test bad.",
+      "fix": "Regularization (L2, dropout), simpler model (tree-based), cross-validation (monitor val/test gap), early stopping, data augmentation diversity."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Sadece resampling, no class weights",
+      "why": "Resampling alone yetersiz olabilir (extreme imbalance). Model hala majority bias. SMOTE + training slow (2-10x data).",
+      "fix": "Hybrid: SMOTE + class weights (double protection). Or: Undersampling + oversampling + class weights. Ensemble: BalancedBagging, EasyEnsemble."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Fairness ignore etmek",
+      "why": "Imbalanced + protected attributes (race, gender) → bias amplification. Minority class'ta protected group over/under represented. Legal risk.",
+      "fix": "Fairness metrics (demographic parity, equal opportunity). Fair oversampling (balance per group). Bias mitigation (reweighting, adversarial debiasing)."
     }
   ],
   "visualizations": [
     {
-      "type": "diagram",
-      "title": "Imbalanced Data Handling Overview",
-      "description": "Visual explanation"
-    },
-    {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "Resampling Strategies",
+      "description": "SMOTE vs Random Oversampling vs Undersampling vs Hybrid. 2D scatter: before/after resampling. Class distribution histograms."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Threshold Tuning Tool",
+      "description": "User uploads model predictions (probabilities). Interactive slider: threshold 0.0-1.0. Real-time: Precision, Recall, F1, Confusion Matrix. PR curve, ROC curve."
+    },
+    {
+      "type": "diagram",
+      "title": "Imbalanced Handling Decision Tree",
+      "description": "Flowchart: IR<50 → class weights. IR<100 → SMOTE. IR>100 → ensemble. Minority<100 → few-shot. Deep learning → focal loss."
+    },
+    {
+      "type": "metric",
+      "title": "Imbalanced Metrics Dashboard",
+      "description": "Confusion matrix (TP, TN, FP, FN), Precision/Recall/F1 per class, ROC-AUC, PR-AUC, Cost analysis (FN cost vs FP cost)."
     }
   ],
   "references": [
     {
-      "title": "Imbalanced Data Handling Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "SMOTE: Synthetic Minority Over-sampling Technique",
+      "authors": "Chawla, N.V. et al.",
+      "year": 2002,
+      "link": "https://arxiv.org/abs/1106.1813",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "Focal Loss for Dense Object Detection",
+      "authors": "Lin, T.Y. et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1708.02002",
+      "type": "paper"
+    },
+    {
+      "title": "imbalanced-learn: Python Library",
+      "authors": "Lemaître, G. et al.",
+      "year": 2024,
+      "link": "https://imbalanced-learn.org/",
+      "type": "tool"
+    },
+    {
+      "title": "Learning from Imbalanced Data",
+      "authors": "He, H. & Garcia, E.A.",
+      "year": 2009,
+      "link": "https://ieeexplore.ieee.org/document/5128907",
+      "type": "paper"
     }
   ]
 }
