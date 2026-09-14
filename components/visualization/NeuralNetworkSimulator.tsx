@@ -3,69 +3,82 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Play, RotateCcw, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Play, RotateCcw, ArrowRight, ArrowLeft, Share2, Zap, Info, Check } from 'lucide-react';
 
 interface NeuralNetworkSimulatorProps {
   title?: string;
 }
 
+const EXAMPLES = [
+  {
+    name: 'Örnek 1',
+    input: [0.8, 0.3],
+    target: 0.9,
+  },
+  {
+    name: 'Örnek 2',
+    input: [0.2, 0.7],
+    target: 0.3,
+  },
+  {
+    name: 'Örnek 3',
+    input: [0.6, 0.6],
+    target: 0.7,
+  },
+];
+
 export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: NeuralNetworkSimulatorProps) {
   const [mode, setMode] = useState<'forward' | 'backward'>('forward');
   const [step, setStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [exampleIdx, setExampleIdx] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const [showTooltip, setShowTooltip] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Network architecture: 2 input -> 3 hidden -> 1 output
-  const [weights1] = useState([
-    [0.5, -0.3, 0.8],
-    [0.2, 0.6, -0.4],
-  ]); // 2x3
+  const example = EXAMPLES[exampleIdx];
+  const input = example.input;
+  const target = example.target;
 
-  const [weights2] = useState([[0.7], [-0.5], [0.9]]); // 3x1
+  // Network weights (constant for demo)
+  const [weights1] = useState([[0.5, -0.3, 0.8], [0.2, 0.6, -0.4]]);
+  const [weights2] = useState([[0.7], [-0.5], [0.9]]);
   const [bias1] = useState([0.1, -0.2, 0.3]);
   const [bias2] = useState([0.2]);
-
-  // Training example
-  const input = [0.8, 0.3];
-  const target = 0.9;
   const learningRate = 0.1;
 
-  // Forward pass calculations
+  useEffect(() => {
+    const saved = localStorage.getItem('simulator-speed');
+    if (saved) setSpeed(parseFloat(saved));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('simulator-speed', speed.toString());
+  }, [speed]);
+
   const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
   const sigmoidDerivative = (x: number) => {
     const s = sigmoid(x);
     return s * (1 - s);
   };
 
-  // Hidden layer
   const z1 = weights1[0].map((_, j) =>
     input.reduce((sum, inp, i) => sum + inp * weights1[i][j], 0) + bias1[j]
   );
   const a1 = z1.map(sigmoid);
-
-  // Output layer
   const z2 = weights2.reduce((sum, w, i) => sum + a1[i] * w[0], 0) + bias2[0];
   const output = sigmoid(z2);
-
-  // Loss
   const loss = Math.pow(target - output, 2) / 2;
 
-  // Backward pass
   const dL_dOutput = output - target;
   const dOutput_dZ2 = sigmoidDerivative(z2);
-  const dZ2_dW2 = a1;
-  const dZ2_dA1 = weights2.map(w => w[0]);
-
   const dL_dZ2 = dL_dOutput * dOutput_dZ2;
-  const dL_dW2 = dZ2_dW2.map(a => a * dL_dZ2);
+  const dL_dW2 = a1.map(a => a * dL_dZ2);
   const dL_dB2 = dL_dZ2;
-
-  const dL_dA1 = dZ2_dA1.map(w => w * dL_dZ2);
+  const dL_dA1 = weights2.map(w => w[0] * dL_dZ2);
   const dA1_dZ1 = z1.map(sigmoidDerivative);
   const dL_dZ1 = dL_dA1.map((dA, i) => dA * dA1_dZ1[i]);
-
-  const dL_dW1 = weights1.map((row, i) =>
-    row.map((_, j) => input[i] * dL_dZ1[j])
-  );
+  const dL_dW1 = weights1.map((row, i) => row.map((_, j) => input[i] * dL_dZ1[j]));
   const dL_dB1 = dL_dZ1;
 
   const maxSteps = mode === 'forward' ? 4 : 5;
@@ -84,12 +97,21 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
         setIsPlaying(false);
       }
       setStep(currentStep);
-    }, 1500);
+    }, 1500 / speed);
   };
 
   const handleReset = () => {
     setStep(0);
     setIsPlaying(false);
+  };
+
+  const handleShare = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('nn-mode', mode);
+    url.searchParams.set('nn-step', step.toString());
+    navigator.clipboard.writeText(url.toString());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const getWeightColor = (weight: number, isGradient: boolean = false) => {
@@ -99,82 +121,142 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
     
     if (isGradient) {
       return weight < 0
-        ? `rgba(34, 197, 94, ${intensity})` // Green for negative gradient (good update)
-        : `rgba(239, 68, 68, ${intensity})`; // Red for positive gradient
+        ? `rgba(34, 197, 94, ${intensity})`
+        : `rgba(239, 68, 68, ${intensity})`;
     }
     
     return weight >= 0
-      ? `rgba(59, 130, 246, ${intensity})` // Blue for positive
-      : `rgba(239, 68, 68, ${intensity})`; // Red for negative
+      ? `rgba(59, 130, 246, ${intensity})`
+      : `rgba(239, 68, 68, ${intensity})`;
   };
 
   const getActivationColor = (activation: number) => {
     const intensity = Math.min(activation, 1);
-    return `rgba(168, 85, 247, ${intensity})`; // Purple
+    return `rgba(168, 85, 247, ${intensity})`;
+  };
+
+  const tooltips = {
+    forward: [
+      'Girdi katmanı: Ağa verilen başlangıç değerleri',
+      'W1 ağırlıkları: Girdi-gizli katman arası bağlantı güçleri',
+      'Gizli katman: Sigmoid aktivasyonu uygulanmış nöronlar',
+      'W2 ağırlıkları: Gizli-çıktı katman arası bağlantı güçleri',
+      'Çıktı: Ağın tahmin ettiği değer',
+    ],
+    backward: [
+      'Çıktı hatası: Hedef - Tahmin farkı',
+      'W2 gradyanları: Çıktı ağırlıklarının güncelleme yönü',
+      'Gizli katman gradyanları: Geri yayılan hata sinyalleri',
+      'W1 gradyanları: Girdi ağırlıklarının güncelleme yönü',
+      'Güncelleme: Yeni ağırlıklar = Eski - (öğrenme_hızı × gradyan)',
+    ],
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-          <span>{title}</span>
-          <div className="flex gap-2">
+        <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <span className="text-lg sm:text-xl">{title}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={exampleIdx}
+              onChange={(e) => setExampleIdx(parseInt(e.target.value))}
+              className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+            >
+              {EXAMPLES.map((ex, idx) => (
+                <option key={idx} value={idx}>{ex.name}</option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1 text-xs">
+              <Zap className="w-3 h-3" />
+              {[0.5, 1, 2].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSpeed(s)}
+                  className={`px-2 py-1 rounded ${
+                    speed === s ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+
             <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
               <button
                 onClick={() => setMode('forward')}
-                className={`px-3 py-1 text-sm flex items-center gap-1 ${
-                  mode === 'forward'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-800'
+                className={`px-2 sm:px-3 py-1 text-xs flex items-center gap-1 ${
+                  mode === 'forward' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800'
                 }`}
               >
-                <ArrowRight className="w-4 h-4" />
-                Forward
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Forward</span>
               </button>
               <button
                 onClick={() => setMode('backward')}
-                className={`px-3 py-1 text-sm flex items-center gap-1 ${
-                  mode === 'backward'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-800'
+                className={`px-2 sm:px-3 py-1 text-xs flex items-center gap-1 ${
+                  mode === 'backward' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800'
                 }`}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Backward
+                <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Backward</span>
               </button>
             </div>
             <Button size="sm" onClick={handlePlay} disabled={isPlaying || step === maxSteps}>
               <Play className="w-4 h-4 mr-1" />
-              Oynat
+              <span className="hidden sm:inline">Oynat</span>
             </Button>
             <Button size="sm" variant="ghost" onClick={handleReset}>
               <RotateCcw className="w-4 h-4" />
             </Button>
+            <Button size="sm" variant="ghost" onClick={handleShare}>
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+            </Button>
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Architecture: 2-3-1 Network */}
-        <div className="flex items-center justify-center gap-8">
-          {/* Input Layer */}
-          <div className="flex flex-col gap-4">
-            <div className="text-xs font-semibold text-center text-gray-500">Input</div>
-            {input.map((val, idx) => (
-              <div
-                key={idx}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all ${
-                  step >= 0 && mode === 'forward'
-                    ? 'border-purple-500 scale-110'
-                    : 'border-gray-300 dark:border-gray-600'
-                }`}
-                style={{
-                  backgroundColor: step >= 0 && mode === 'forward' ? getActivationColor(val) : 'white',
-                  color: step >= 0 && mode === 'forward' && val > 0.5 ? 'white' : 'black',
-                }}
-              >
-                {val.toFixed(1)}
+      <CardContent className="space-y-4 sm:space-y-6">
+        {/* Step Info with Tooltip */}
+        <div className="flex items-center justify-center gap-2 text-sm">
+          <span className="font-semibold">Adım {step + 1}/{maxSteps}</span>
+          <button
+            onMouseEnter={() => setShowTooltip('step')}
+            onMouseLeave={() => setShowTooltip(null)}
+            className="relative"
+          >
+            <Info className="w-4 h-4 text-gray-400 hover:text-blue-500" />
+            {showTooltip === 'step' && (
+              <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-black text-white text-xs rounded shadow-lg">
+                {mode === 'forward' ? tooltips.forward[step] : tooltips.backward[step]}
               </div>
-            ))}
+            )}
+          </button>
+        </div>
+
+        {/* Network Architecture - Responsive */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 overflow-x-auto pb-4">
+          {/* Input Layer */}
+          <div className="flex sm:flex-col gap-4">
+            <div className="text-xs font-semibold text-center text-gray-500">Input</div>
+            <div className="flex sm:flex-col gap-4">
+              {input.map((val, idx) => (
+                <div
+                  key={idx}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm border-2 transition-all ${
+                    step >= 0 && mode === 'forward'
+                      ? 'border-purple-500 scale-110'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                  style={{
+                    backgroundColor: step >= 0 && mode === 'forward' ? getActivationColor(val) : 'white',
+                    color: step >= 0 && mode === 'forward' && val > 0.5 ? 'white' : 'black',
+                  }}
+                >
+                  {val.toFixed(1)}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Weights 1 */}
@@ -186,7 +268,7 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
               {(mode === 'forward' ? weights1.flat() : dL_dW1.flat()).map((w, idx) => (
                 <div
                   key={idx}
-                  className={`w-10 h-10 rounded flex items-center justify-center text-xs font-mono transition-all ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded flex items-center justify-center text-[10px] sm:text-xs font-mono transition-all ${
                     (mode === 'forward' && step >= 1) || (mode === 'backward' && step >= 4)
                       ? 'scale-110 border-2 border-yellow-400'
                       : ''
@@ -203,30 +285,32 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
           </div>
 
           {/* Hidden Layer */}
-          <div className="flex flex-col gap-4">
+          <div className="flex sm:flex-col gap-4">
             <div className="text-xs font-semibold text-center text-gray-500">Hidden</div>
-            {a1.map((val, idx) => (
-              <div
-                key={idx}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all ${
-                  (mode === 'forward' && step >= 2) || (mode === 'backward' && step >= 3)
-                    ? 'border-purple-500 scale-110'
-                    : 'border-gray-300 dark:border-gray-600'
-                }`}
-                style={{
-                  backgroundColor:
+            <div className="flex sm:flex-col gap-4">
+              {a1.map((val, idx) => (
+                <div
+                  key={idx}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm border-2 transition-all ${
                     (mode === 'forward' && step >= 2) || (mode === 'backward' && step >= 3)
-                      ? getActivationColor(val)
-                      : 'white',
-                  color:
-                    ((mode === 'forward' && step >= 2) || (mode === 'backward' && step >= 3)) && val > 0.5
-                      ? 'white'
-                      : 'black',
-                }}
-              >
-                {val.toFixed(2)}
-              </div>
-            ))}
+                      ? 'border-purple-500 scale-110'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                  style={{
+                    backgroundColor:
+                      (mode === 'forward' && step >= 2) || (mode === 'backward' && step >= 3)
+                        ? getActivationColor(val)
+                        : 'white',
+                    color:
+                      ((mode === 'forward' && step >= 2) || (mode === 'backward' && step >= 3)) && val > 0.5
+                        ? 'white'
+                        : 'black',
+                  }}
+                >
+                  {val.toFixed(2)}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Weights 2 */}
@@ -238,7 +322,7 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
               {(mode === 'forward' ? weights2.flat() : dL_dW2).map((w, idx) => (
                 <div
                   key={idx}
-                  className={`w-10 h-10 rounded flex items-center justify-center text-xs font-mono transition-all ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded flex items-center justify-center text-[10px] sm:text-xs font-mono transition-all ${
                     (mode === 'forward' && step >= 3) || (mode === 'backward' && step >= 2)
                       ? 'scale-110 border-2 border-yellow-400'
                       : ''
@@ -255,10 +339,10 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
           </div>
 
           {/* Output Layer */}
-          <div className="flex flex-col gap-4">
+          <div className="flex sm:flex-col gap-4">
             <div className="text-xs font-semibold text-center text-gray-500">Output</div>
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all ${
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm border-2 transition-all ${
                 (mode === 'forward' && step >= 4) || (mode === 'backward' && step >= 1)
                   ? 'border-purple-500 scale-110'
                   : 'border-gray-300 dark:border-gray-600'
@@ -280,34 +364,34 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
         </div>
 
         {/* Info Panel */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg space-y-2">
+        <div className="bg-gray-50 dark:bg-gray-800/50 p-3 sm:p-4 rounded-lg space-y-2">
           {mode === 'forward' ? (
             <>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs sm:text-sm">
                 <span>Hedef:</span>
                 <span className="font-mono font-bold">{target.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs sm:text-sm">
                 <span>Çıktı:</span>
                 <span className="font-mono font-bold">{output.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs sm:text-sm">
                 <span>Kayıp (MSE):</span>
                 <span className="font-mono font-bold text-red-600">{loss.toFixed(4)}</span>
               </div>
             </>
           ) : (
             <>
-              <div className="text-sm mb-2">
+              <div className="text-xs sm:text-sm mb-2">
                 <span className="font-semibold">Gradyanlar:</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-xs">
                 <div>∂L/∂W2: {dL_dW2[0].toFixed(3)}</div>
                 <div>∂L/∂b2: {dL_dB2.toFixed(3)}</div>
                 <div>∂L/∂W1: {dL_dW1[0][0].toFixed(3)}</div>
                 <div>∂L/∂b1: {dL_dB1[0].toFixed(3)}</div>
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+              <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-2">
                 Yeşil = Ağırlık azalacak (iyi), Kırmızı = Ağırlık artacak
               </div>
             </>
@@ -315,17 +399,17 @@ export function NeuralNetworkSimulator({ title = 'Neural Network Simulator' }: N
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 text-xs">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-wrap">
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(59, 130, 246, 0.7)' }}></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded" style={{ backgroundColor: 'rgba(59, 130, 246, 0.7)' }}></div>
             <span>Pozitif</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(239, 68, 68, 0.7)' }}></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded" style={{ backgroundColor: 'rgba(239, 68, 68, 0.7)' }}></div>
             <span>Negatif</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: 'rgba(168, 85, 247, 0.7)' }}></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: 'rgba(168, 85, 247, 0.7)' }}></div>
             <span>Aktivasyon</span>
           </div>
         </div>
