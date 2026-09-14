@@ -1,265 +1,348 @@
 {
   "id": "meta-learning-few-shot",
-  "title": "Meta-Learning & Few-Shot",
+  "title": "Meta-Learning & Few-Shot Learning",
   "category": "advanced",
   "level": 4,
   "estimatedTime": 80,
-  "description": "Meta-Learning & Few-Shot: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Meta-learning: Learn to learn (öğrenmeyi öğrenme). Few-shot learning: Az örnekle (1-5 örnek) yeni task öğrenme. MAML, Prototypical Networks, Matching Networks. Rapid adaptation, personalization, rare classes.",
   "content": {
-    "level0_basic": "Meta-Learning & Few-Shot basics: Core concepts explained simply.",
-    "level1_beginner": "Meta-Learning & Few-Shot fundamentals with examples and code snippets.",
-    "level2_application": "Practical Meta-Learning & Few-Shot implementation with real-world applications.",
-    "level3_advanced": "Advanced Meta-Learning & Few-Shot techniques and optimizations.",
-    "level4_expert": "Expert-level Meta-Learning & Few-Shot architectures and research directions."
+    "level0_basic": "Meta-Learning (Learning to Learn), model'in hızlı adaptation yeteneğini öğrenmesidir. Standard ML: Yüzlerce/binlerce örnek gerekir. Meta-learning: 1-5 örnekle (few-shot) yeni task öğrenir. Örnek: Çocuk ilk kez zebra görür (few examples), 'at benzeri ama çizgili' → zebra'yı öğrenir (infer). Standard model: Binlerce zebra fotoğrafı gerekir. Few-shot scenarios: N-way K-shot (N sınıf, her sınıftan K örnek). 5-way 1-shot: 5 yeni sınıf, her birinden 1 örnek → classify. Meta-training: Çok sayıda task (episodes) ile train et. Meta-testing: Yeni task (görülmemiş sınıflar) → rapid adaptation. Applications: Personalization (user preferences, few data), rare diseases (medical imaging, az hasta), robot learning (new environment, few trials).",
+    "level1_beginner": "Meta-learning yaklaşımları: (1) **Metric Learning**: Embedding space'te similarity öğren. Prototypical Networks (class prototypes), Matching Networks (attention), Siamese Networks (pairwise). (2) **Model-Based**: Memory-augmented (MANN, Neural Turing Machine). Recurrent meta-learner. Explicit memory (episodic). (3) **Optimization-Based**: MAML (Model-Agnostic Meta-Learning) - good initialization, few gradient steps → adapt. Reptile (first-order MAML). (4) **Hybrid**: Meta-SGD (learn LR per parameter), TAML (task-adaptive). Few-shot terminoloji: Support set (training examples, K-shot), Query set (test examples), Episode (task instance), N-way classification (N sınıf). 1-shot: Her sınıftan 1 örnek, 5-shot: 5 örnek. Zero-shot: Hiç örnek yok (semantic/text description).",
+    "level2_application": "Pratik uygulamalar: (1) **Computer Vision**: Few-shot classification (Omniglot, miniImageNet). Rare object detection (1-5 örnekle yeni obje). Siamese/Prototypical Networks. (2) **NLP**: Few-shot text classification (intent detection, 5 örnek), sentiment analysis (new domain). GPT-3 in-context learning (prompt engineering). (3) **Medical Imaging**: Rare diseases (az hasta data). Few-shot segmentation (new organ, 1-5 scans). Prototypical Networks. (4) **Personalization**: User-specific recommendation (few interactions), voice assistant (user adaptation, 5 utterances). MAML. (5) **Robotics**: New task learning (few demonstrations). Sim-to-real transfer (adaptation). Meta-RL (reinforcement learning). (6) **Drug Discovery**: Few molecules data (rare targets). Molecular property prediction. Graph networks + meta-learning. Framework'ler: learn2learn (PyTorch), Torchmeta, higher (PyTorch MAML), JAX meta-learning.",
+    "level3_advanced": "İleri seviye: (1) **MAML (Model-Agnostic)**: θ* = θ - α∇L_task(θ). Meta-objective: min Σ_tasks L(θ - α∇L_task(θ)). İki nested optimization (inner loop: task adaptation, outer loop: meta-update). Second-order gradient (expensive), first-order approximation (Reptile). (2) **Prototypical Networks**: Class prototype = mean of support embeddings. Distance metric (Euclidean, cosine). Query → nearest prototype. Inductive bias: classes = clusters. (3) **Matching Networks**: Attention-based, full context embedding (LSTM). Support set → keys, query → attend. End-to-end differentiable k-NN. (4) **Relation Networks**: Learn similarity metric (CNN). Pairwise comparison, not fixed metric. Flexible. (5) **Task-Conditional**: Task embedding (task2vec). Conditional on task. Hypernetworks (generate weights per task). (6) **Meta-Reinforcement Learning**: Learn exploration strategy. Model-based (world model), model-free (policy). RL² (RL^2). (7) **Continual Meta-Learning**: Prevent catastrophic forgetting. Online meta-learning (streaming tasks).",
+    "level4_expert": "Expert seviyede, advanced algorithms, theory ve research frontiers önemlidir. (1) **Theoretical Foundations**: PAC-Bayes bounds (generalization), Bayesian meta-learning (posterior over tasks), information-theoretic (mutual information). (2) **Meta-Overfitting**: Meta-train tasks çok benzer → meta-test fail. Task diversity kritik. Augmentation, task generation. (3) **ANIL (Almost No Inner Loop)**: MAML analysis, only last layer adapt → performance ~. Feature reuse hypothesis. Efficiency ↑. (4) **Meta-Dataset**: Large-scale benchmark (10 datasets, diverse domains). Cross-domain meta-learning. Domain shift challenge. (5) **Transductive Few-Shot**: Query set available (transductive). Label propagation, semi-supervised. Better accuracy vs inductive. (6) **Self-Supervised Pre-training + Meta-Learning**: Pre-train (SimCLR, BYOL), then meta-train. Transfer learning + meta-learning. SOTA. (7) **Neural Architecture Search (NAS) + Meta**: Meta-learn architecture (per task). Auto-ML. (8) **Meta-Learning for Optimization**: Learn optimizer (learning rate schedule, momentum). Meta-optimizer. Research: **Cross-modal meta-learning** (vision+language), **Meta-learning with graph networks**, **Hierarchical meta-learning** (task families), **Meta-learning for causal inference**, **Foundation models few-shot** (GPT-4, CLIP)."
   },
-  "whatIsIt": "Meta-Learning & Few-Shot: Technical definition and core concepts.",
-  "whyNeeded": "Why Meta-Learning & Few-Shot matters: Applications and use cases.",
-  "realWorldAnalogy": "Meta-Learning & Few-Shot explained through real-world analogy.",
+  "whatIsIt": "Meta-Learning: Learning to learn. Model learns across tasks, rapid adaptation to new tasks (few examples). Matematiksel: θ_meta (meta-parameters), task T_i, adapt: θ_i = θ_meta - α∇L_Ti(θ_meta). Meta-objective: min E_T [L_T(θ_T)] (expectation over task distribution). Few-shot: N-way K-shot (N classes, K examples each). Support set (train), Query set (test). Episode-based training. Metric learning: d(f(x), f(y)) (learned embedding, distance). MAML: Good initialization (fast adaptation, few gradients).",
+  "whyNeeded": "Meta-learning kritik çünkü: (1) **Data Scarcity**: Çoğu domain'de data az (medical: rare diseases, robotics: expensive trials, personalization: few user data). Standard ML fail. (2) **Rapid Adaptation**: New task → hızlı öğren (1-5 examples, 5-10 gradient steps). Production'da frequent new classes/users. (3) **Generalization**: Task distribution'dan öğren → unseen tasks'a generalize. Transfer learning'den better (task-agnostic). (4) **Sample Efficiency**: Az data ile öğren → cost ↓ (labeling expensive). Human-like learning (humans: few examples yeter). (5) **Personalization**: User-specific models (recommendation, voice, UI). Few user data ile adapt. Privacy (on-device). (6) **Long-Tail Distribution**: Rare classes (fraud types, animal species, medical conditions). Az örnek → meta-learning. (7) **Foundation Models**: GPT-3/4 few-shot prompting. CLIP zero-shot. In-context learning = meta-learning at inference.",
+  "realWorldAnalogy": "Meta-learning'i dil öğrenmeye benzetebiliriz. **Standard ML**: İngilizce öğren (10K hours). Sonra Fransızca öğren (yine 10K hours, sıfırdan). Her dil ayrı, no transfer. **Meta-Learning**: Birden fazla dil öğren (İngilizce, Almanca, İspanyolca → 3 task). Şimdi: (1) **Learn to Learn**: Dil öğrenme strategies öğrendin (grammar patterns, vocabulary building, pronunciation). (2) **Few-Shot**: Yeni dil (İtalyanca, 1-5 saat). Strategies uygula → hızlı öğren (İspanyolca benzeri, grammar familiar). (3) **Adaptation**: Few examples (5 cümle İtalyanca) → infer rules, apply. **MAML**: Good starting point (universal grammar), few steps → Italian-specific. **Prototypical Networks**: 'Merhaba' class (prototype = average of [Hello, Hola, Hallo, Bonjour]) → Yeni dil 'Ciao' → measure distance, classify. **Support Set**: 5 Italian phrases (training). **Query**: Test phrase → classify. Meta-learning: Task distribution (languages) öğrendin, yeni task (new language) → rapid adaptation. Human-like intelligence!",
   "mathematics": {
     "formulas": [
-      "\\text{Meta-Learning & Few-Shot formula}",
-      "\\text{Key equation}"
+      "\\text{MAML Meta-Objective}: \\quad \\min_{\\theta} \\sum_{\\mathcal{T}_i \\sim p(\\mathcal{T})} \\mathcal{L}_{\\mathcal{T}_i}(\\theta - \\alpha \\nabla_{\\theta} \\mathcal{L}_{\\mathcal{T}_i}(\\theta)) \\quad \\text{(meta-train loss after adaptation)}",
+      "\\text{Task Adaptation (Inner Loop)}: \\quad \\theta_i' = \\theta - \\alpha \\nabla_{\\theta} \\mathcal{L}_{\\mathcal{T}_i}^{\\text{support}}(\\theta) \\quad \\text{(few gradient steps)}",
+      "\\text{Meta-Update (Outer Loop)}: \\quad \\theta \\leftarrow \\theta - \\beta \\nabla_{\\theta} \\sum_i \\mathcal{L}_{\\mathcal{T}_i}^{\\text{query}}(\\theta_i') \\quad \\text{(meta-gradient)}",
+      "\\text{Prototypical Networks}: \\quad c_k = \\frac{1}{|S_k|} \\sum_{(x_i, y_i) \\in S_k} f_{\\theta}(x_i) \\quad \\text{(class prototype, mean embedding)}",
+      "\\text{Distance}: \\quad d(f_{\\theta}(x), c_k) = \\|f_{\\theta}(x) - c_k\\|_2^2 \\quad \\text{(Euclidean distance)}",
+      "\\text{Prediction}: \\quad p(y = k | x) = \\frac{\\exp(-d(f_{\\theta}(x), c_k))}{\\sum_{k'} \\exp(-d(f_{\\theta}(x), c_{k'}))} \\quad \\text{(softmax over distances)}",
+      "\\text{N-way K-shot}: \\quad N \\text{ classes, } K \\text{ examples per class (support set)} \\quad \\text{Query: test examples}",
+      "\\text{Episode}: \\quad \\mathcal{E} = \\{S, Q\\} \\quad \\text{where } S = \\{(x_i, y_i)\\}_{i=1}^{N \\cdot K} \\text{ (support)}, Q = \\{(x_j, y_j)\\}_j \\text{ (query)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Problem Definition**: Few-shot task: N-way K-shot classification (N classes, K examples each). Support set S (N×K examples), Query set Q (test). Meta-training: Task distribution p(T), sample tasks. Meta-testing: New tasks (unseen classes).",
+      "2. **Data Preparation**: (a) Meta-training set: Many classes (e.g., 64 classes). (b) Meta-validation: Separate classes (16). (c) Meta-test: Disjoint classes (20). Episode sampling: Random N classes, random K examples per class (support), random Q examples (query). Repeat for many episodes (1000-10000).",
+      "3. **Model Selection**: (a) Metric Learning: Prototypical Networks (simple, effective), Matching Networks (attention), Relation Networks (learned metric). (b) Optimization-Based: MAML (model-agnostic, flexible), Reptile (first-order, simpler). (c) Hybrid: Meta-SGD, TAML. Choice: Prototypical (simple baseline), MAML (flexible, SOTA).",
+      "4. **MAML Training (Optimization-Based)**: (a) Sample task T_i (episode: N-way K-shot). (b) Inner loop (task adaptation): Compute loss L_support on support set, gradient descent: θ_i = θ - α∇L_support(θ), few steps (1-5). (c) Outer loop (meta-update): Compute loss L_query on query set with θ_i, meta-gradient: ∇_θ L_query(θ_i), meta-update: θ ← θ - β∇_θ Σ_tasks L_query(θ_i). (d) Repeat for many tasks (batch).",
+      "5. **Prototypical Networks Training (Metric Learning)**: (a) Sample episode (N-way K-shot). (b) Embed support examples: z_i = f_θ(x_i). (c) Compute class prototypes: c_k = mean(z_i for y_i=k). (d) Embed query examples: z_q = f_θ(x_q). (e) Compute distances: d_k = ||z_q - c_k||². (f) Loss: cross-entropy (softmax over -distances). (g) Backprop, update θ. Repeat for many episodes.",
+      "6. **Validation**: Sample episodes from meta-validation set (unseen classes). Evaluate accuracy (query set). Early stopping (meta-overfitting). Hyperparameter tuning (α, β, architecture).",
+      "7. **Meta-Testing**: Sample episodes from meta-test set (completely unseen classes). (a) MAML: Adapt θ → θ_test (support set, few gradient steps), evaluate on query. (b) Prototypical: Compute prototypes (support), classify query (nearest prototype). Report accuracy (mean, std over episodes).",
+      "8. **Transductive (Optional)**: Query set available during adaptation (transductive few-shot). Label propagation, semi-supervised clustering. Better accuracy vs inductive (query unseen).",
+      "9. **Hyperparameter Tuning**: (a) Inner LR (α): 0.01-0.1 (MAML). (b) Outer LR (β): 0.001 (meta-update). (c) Inner steps: 1-5 (MAML). (d) Embedding dimension: 64-512. (e) N-way: 5-20, K-shot: 1-5. (f) Episodes per epoch: 100-1000.",
+      "10. **Production Deployment**: (a) Personalization: User-specific adaptation (few interactions → adapt). (b) Continual learning: New classes → meta-adapt (no retraining from scratch). (c) On-device: Few gradient steps (efficient), privacy (local adaptation). (d) Monitoring: Adaptation accuracy, convergence speed."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: MAML: O(T·S·F·P) per task (T=inner steps, S=support size, F=forward, P=parameters). Meta-update: O(B·T·S·P) (B=batch tasks). Second-order: O(P²) (Hessian), First-order (Reptile): O(P). Prototypical: O(S·F + Q·F·N) per episode (S=support, Q=query, N=classes, F=forward). Simpler than MAML. **Meta-Training**: 1000-10000 episodes (days-weeks). **Meta-Testing**: O(K·F) (K-shot forward) + O(adaptation). MAML: Few gradient steps (ms-seconds). Prototypical: Compute prototypes (instant). **Uzay**: Model parameters O(P). Episode storage: O(N·K·D) (support), O(Q·D) (query). MAML: Computation graph (inner loop, backprop through backprop). **Scalability**: Large N (20-way) or K (5-shot) → training slow. Batch tasks (parallel episodes). GPU acceleration."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "neural-networks",
+    "transfer-learning",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "transfer-learning",
+    "neural-architecture-search"
+  ],
+  "relatedTopics": [
+    "transfer-learning",
+    "neural-networks",
+    "convolutional-neural-networks"
+  ],
   "tags": [
-    "meta"
+    "meta-learning",
+    "few-shot",
+    "maml",
+    "prototypical-networks",
+    "learning-to-learn",
+    "rapid-adaptation"
   ],
   "codeExamples": [
     {
-      "title": "Basic Meta-Learning & Few-Shot",
+      "title": "Prototypical Networks (PyTorch)",
       "language": "python",
-      "code": "# Meta-Learning & Few-Shot example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Meta-Learning & Few-Shot code"
-    },
-    {
-      "title": "Meta-Learning & Few-Shot Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
-      "level": 2,
-      "explanation": "Meta-Learning & Few-Shot Application code"
-    },
-    {
-      "title": "Advanced Meta-Learning & Few-Shot",
-      "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\n\nclass ProtoNet(nn.Module):\n    def __init__(self, input_dim=784, hidden_dim=64):\n        super().__init__()\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, hidden_dim)\n        )\n    \n    def forward(self, support, support_labels, query):\n        \"\"\"\n        support: (N*K, input_dim) - N classes, K examples each\n        support_labels: (N*K,)\n        query: (Q, input_dim)\n        \"\"\"\n        # Embed\n        support_embeddings = self.encoder(support)  # (N*K, hidden_dim)\n        query_embeddings = self.encoder(query)  # (Q, hidden_dim)\n        \n        # Compute class prototypes (mean of support embeddings per class)\n        classes = torch.unique(support_labels)\n        prototypes = []\n        for c in classes:\n            mask = (support_labels == c)\n            class_embeddings = support_embeddings[mask]\n            prototype = class_embeddings.mean(dim=0)\n            prototypes.append(prototype)\n        \n        prototypes = torch.stack(prototypes)  # (N, hidden_dim)\n        \n        # Compute distances (query to prototypes)\n        distances = torch.cdist(query_embeddings, prototypes)  # (Q, N), Euclidean\n        \n        # Predict (softmax over negative distances)\n        logits = -distances\n        return logits\n\n# Example: 5-way 1-shot\nN_way = 5\nK_shot = 1\nQ_query = 15\n\nsupport = torch.randn(N_way * K_shot, 784)\nsupport_labels = torch.arange(N_way).repeat_interleave(K_shot)\nquery = torch.randn(Q_query, 784)\nquery_labels = torch.randint(0, N_way, (Q_query,))\n\nmodel = ProtoNet()\nlogits = model(support, support_labels, query)\npredictions = logits.argmax(dim=1)\n\naccuracy = (predictions == query_labels).float().mean()\nprint(f'5-way 1-shot')\nprint(f'Support: {N_way} classes × {K_shot} examples = {N_way * K_shot} total')\nprint(f'Query: {Q_query} examples')\nprint(f'Predictions: {predictions}')\nprint(f'Accuracy: {accuracy:.2%}')\nprint('\\nPrototypical Networks: Class prototype = mean(support embeddings), classify by nearest prototype')",
       "level": 3,
-      "explanation": "Advanced Meta-Learning & Few-Shot code"
+      "explanation": "Prototypical Networks: Metric learning. Class prototype = mean embeddings. Query → nearest prototype (Euclidean). Simple, effective, few-shot baseline."
     },
     {
-      "title": "Meta-Learning & Few-Shot Optimization",
+      "title": "MAML (Model-Agnostic Meta-Learning)",
       "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Meta-Learning & Few-Shot Optimization code"
-    },
-    {
-      "title": "Meta-Learning & Few-Shot Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
-      "level": 2,
-      "explanation": "Meta-Learning & Few-Shot Visualization code"
-    },
-    {
-      "title": "Production Meta-Learning & Few-Shot",
-      "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport copy\n\nclass SimpleNet(nn.Module):\n    def __init__(self, input_dim=784, hidden_dim=64, output_dim=5):\n        super().__init__()\n        self.fc1 = nn.Linear(input_dim, hidden_dim)\n        self.fc2 = nn.Linear(hidden_dim, output_dim)\n    \n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        return self.fc2(x)\n\ndef maml_inner_loop(model, support_x, support_y, inner_lr=0.01, inner_steps=5):\n    \"\"\"Task adaptation (inner loop)\"\"\"\n    # Clone model\n    adapted_model = copy.deepcopy(model)\n    optimizer = optim.SGD(adapted_model.parameters(), lr=inner_lr)\n    \n    for step in range(inner_steps):\n        optimizer.zero_grad()\n        logits = adapted_model(support_x)\n        loss = F.cross_entropy(logits, support_y)\n        loss.backward()\n        optimizer.step()\n    \n    return adapted_model\n\ndef maml_meta_train_step(model, tasks, inner_lr=0.01, outer_lr=0.001):\n    \"\"\"Meta-training step (outer loop)\"\"\"\n    meta_optimizer = optim.Adam(model.parameters(), lr=outer_lr)\n    \n    meta_loss = 0.0\n    for task in tasks:\n        support_x, support_y, query_x, query_y = task\n        \n        # Inner loop: adapt to task\n        adapted_model = maml_inner_loop(model, support_x, support_y, inner_lr)\n        \n        # Outer loop: meta-loss on query set\n        logits = adapted_model(query_x)\n        loss = F.cross_entropy(logits, query_y)\n        meta_loss += loss\n    \n    # Meta-update\n    meta_optimizer.zero_grad()\n    meta_loss.backward()\n    meta_optimizer.step()\n    \n    return meta_loss.item() / len(tasks)\n\n# Example: 5-way 1-shot, 3 tasks\nmodel = SimpleNet(input_dim=784, hidden_dim=64, output_dim=5)\n\ntasks = [\n    (torch.randn(5, 784), torch.arange(5),  # support\n     torch.randn(15, 784), torch.randint(0, 5, (15,))),  # query\n    (torch.randn(5, 784), torch.arange(5),\n     torch.randn(15, 784), torch.randint(0, 5, (15,))),\n    (torch.randn(5, 784), torch.arange(5),\n     torch.randn(15, 784), torch.randint(0, 5, (15,)))\n]\n\nprint('=== MAML Meta-Training ===')\nfor epoch in range(5):\n    meta_loss = maml_meta_train_step(model, tasks, inner_lr=0.01, outer_lr=0.001)\n    print(f'Epoch {epoch+1}, Meta-Loss: {meta_loss:.4f}')\n\nprint('\\nMAML: Good initialization → few gradient steps (5) → adapt to new task')\nprint('Inner loop: task adaptation, Outer loop: meta-update')",
       "level": 4,
-      "explanation": "Production Meta-Learning & Few-Shot code"
+      "explanation": "MAML: Optimization-based meta-learning. Good initialization (θ_meta), few gradient steps → adapt. Inner loop (task), outer loop (meta). Model-agnostic."
+    },
+    {
+      "title": "N-way K-shot Episode Sampling",
+      "language": "python",
+      "code": "import numpy as np\nimport torch\nfrom collections import defaultdict\n\ndef sample_episode(data, labels, N_way=5, K_shot=1, Q_query=15):\n    \"\"\"\n    Sample N-way K-shot episode\n    data: (num_samples, features)\n    labels: (num_samples,)\n    Returns: support_x, support_y, query_x, query_y\n    \"\"\"\n    # Group by class\n    class_data = defaultdict(list)\n    for x, y in zip(data, labels):\n        class_data[y].append(x)\n    \n    # Sample N classes\n    all_classes = list(class_data.keys())\n    selected_classes = np.random.choice(all_classes, N_way, replace=False)\n    \n    support_x, support_y = [], []\n    query_x, query_y = [], []\n    \n    for i, c in enumerate(selected_classes):\n        # Sample K+Q examples\n        class_samples = np.array(class_data[c])\n        indices = np.random.choice(len(class_samples), K_shot + Q_query, replace=False)\n        \n        # Support (first K)\n        support_x.extend(class_samples[indices[:K_shot]])\n        support_y.extend([i] * K_shot)  # Relabel 0 to N-1\n        \n        # Query (remaining Q)\n        query_x.extend(class_samples[indices[K_shot:]])\n        query_y.extend([i] * Q_query)\n    \n    # Convert to tensors\n    support_x = torch.FloatTensor(np.array(support_x))\n    support_y = torch.LongTensor(support_y)\n    query_x = torch.FloatTensor(np.array(query_x))\n    query_y = torch.LongTensor(query_y)\n    \n    return support_x, support_y, query_x, query_y\n\n# Example dataset\nnum_classes = 20\nsamples_per_class = 100\nfeature_dim = 784\n\ndata = []\nlabels = []\nfor c in range(num_classes):\n    class_data = np.random.randn(samples_per_class, feature_dim)\n    data.extend(class_data)\n    labels.extend([c] * samples_per_class)\n\ndata = np.array(data)\nlabels = np.array(labels)\n\nprint(f'Dataset: {num_classes} classes, {samples_per_class} samples/class')\n\n# Sample episodes\nprint('\\n=== Episode Sampling ===')\nfor ep in range(3):\n    support_x, support_y, query_x, query_y = sample_episode(\n        data, labels, N_way=5, K_shot=1, Q_query=15\n    )\n    print(f'\\nEpisode {ep+1}:')\n    print(f'  Support: {support_x.shape} (5 classes × 1 shot = 5 examples)')\n    print(f'  Query: {query_x.shape} (5 classes × 15 examples = 75 total)')\n    print(f'  Support labels: {support_y.unique().tolist()} (relabeled 0-4)')\n\nprint('\\nEpisodic training: Sample many episodes (1000-10000), different classes each time')",
+      "level": 2,
+      "explanation": "Episode Sampling: N-way K-shot. Random N classes, K examples per class (support), Q query. Episodic training: many tasks, different classes."
+    },
+    {
+      "title": "Few-Shot Evaluation",
+      "language": "python",
+      "code": "import torch\nimport numpy as np\n\ndef evaluate_few_shot(model, data, labels, N_way=5, K_shot=1, num_episodes=100):\n    \"\"\"\n    Evaluate few-shot performance\n    \"\"\"\n    accuracies = []\n    \n    for ep in range(num_episodes):\n        # Sample episode\n        support_x, support_y, query_x, query_y = sample_episode(\n            data, labels, N_way, K_shot, Q_query=15\n        )\n        \n        # Model prediction (Prototypical Network example)\n        with torch.no_grad():\n            logits = model(support_x, support_y, query_x)\n            predictions = logits.argmax(dim=1)\n            accuracy = (predictions == query_y).float().mean().item()\n        \n        accuracies.append(accuracy)\n    \n    mean_acc = np.mean(accuracies)\n    std_acc = np.std(accuracies)\n    ci_95 = 1.96 * std_acc / np.sqrt(num_episodes)\n    \n    return mean_acc, std_acc, ci_95\n\n# Dummy data and model\nclass DummyProtoNet(nn.Module):\n    def forward(self, support, support_labels, query):\n        # Random predictions for demo\n        return torch.randn(query.size(0), 5)\n\nmodel = DummyProtoNet()\n\n# Generate dummy data\nnum_classes = 20\ndata = np.random.randn(num_classes * 100, 784)\nlabels = np.repeat(np.arange(num_classes), 100)\n\n# Evaluate\nprint('=== Few-Shot Evaluation ===')\n\nfor N_way in [5, 10, 20]:\n    for K_shot in [1, 5]:\n        mean_acc, std_acc, ci_95 = evaluate_few_shot(\n            model, data, labels, N_way, K_shot, num_episodes=100\n        )\n        \n        print(f'\\n{N_way}-way {K_shot}-shot:')\n        print(f'  Mean Accuracy: {mean_acc:.2%} ± {ci_95:.2%} (95% CI)')\n        print(f'  Std: {std_acc:.4f}')\n\nprint('\\nReport: Mean ± 95% confidence interval (100 episodes)')\nprint('Higher N-way (more classes) → lower accuracy')\nprint('Higher K-shot (more examples) → higher accuracy')",
+      "level": 2,
+      "explanation": "Few-Shot Evaluation: 100-1000 episodes, report mean ± 95% CI. N-way ↑ → accuracy ↓. K-shot ↑ → accuracy ↑. Standard benchmark."
+    },
+    {
+      "title": "Siamese Networks (Pairwise)",
+      "language": "python",
+      "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SiameseNet(nn.Module):\n    def __init__(self, input_dim=784, hidden_dim=128):\n        super().__init__()\n        self.encoder = nn.Sequential(\n            nn.Linear(input_dim, hidden_dim),\n            nn.ReLU(),\n            nn.Linear(hidden_dim, hidden_dim)\n        )\n    \n    def forward(self, x1, x2):\n        \"\"\"Encode both inputs\"\"\"\n        z1 = self.encoder(x1)\n        z2 = self.encoder(x2)\n        return z1, z2\n    \n    def similarity(self, z1, z2):\n        \"\"\"Compute similarity (cosine or Euclidean distance)\"\"\"\n        # Cosine similarity\n        cos_sim = F.cosine_similarity(z1, z2)\n        return cos_sim\n\n# Contrastive loss\ndef contrastive_loss(z1, z2, label, margin=1.0):\n    \"\"\"\n    label: 1 if same class, 0 if different\n    \"\"\"\n    distance = torch.norm(z1 - z2, p=2, dim=1)\n    loss = label * distance**2 + (1 - label) * torch.clamp(margin - distance, min=0)**2\n    return loss.mean()\n\n# Example\nmodel = SiameseNet()\n\n# Pairs\nx1 = torch.randn(10, 784)  # 10 pairs\nx2 = torch.randn(10, 784)\nlabels = torch.tensor([1, 1, 0, 1, 0, 0, 1, 1, 0, 1], dtype=torch.float32)  # 1=same, 0=different\n\nz1, z2 = model(x1, x2)\nloss = contrastive_loss(z1, z2, labels)\n\nprint('=== Siamese Networks ===')\nprint(f'Input pairs: {x1.shape}')\nprint(f'Embeddings: {z1.shape}')\nprint(f'Contrastive loss: {loss.item():.4f}')\n\nprint('\\nSiamese: Pairwise comparison, learn embedding (same class → close, different → far)')\nprint('Few-shot: Compare query to support (all pairs), k-NN style')\n\n# Few-shot prediction (k-NN)\nsupport = torch.randn(5, 784)  # 5 examples (5-way 1-shot)\nquery = torch.randn(1, 784)\n\nwith torch.no_grad():\n    query_emb = model.encoder(query)\n    support_emb = model.encoder(support)\n    \n    # Compute similarities\n    similarities = F.cosine_similarity(query_emb, support_emb)\n    prediction = similarities.argmax()\n    \n    print(f'\\nQuery → Support similarities: {similarities}')\n    print(f'Predicted class: {prediction.item()}')",
+      "level": 3,
+      "explanation": "Siamese Networks: Pairwise comparison. Learn embedding (same class → close, different → far). Few-shot: k-NN (compare query to all support). Contrastive loss."
+    },
+    {
+      "title": "Meta-Learning Metrics Dashboard",
+      "language": "python",
+      "code": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Simulate few-shot evaluation results\nnp.random.seed(42)\n\nN_ways = [5, 10, 20]\nK_shots = [1, 5, 10]\n\nresults = {}\nfor N in N_ways:\n    for K in K_shots:\n        # Simulate: higher K → higher accuracy, higher N → lower accuracy\n        base_acc = 0.9 - 0.02 * N + 0.05 * K\n        accuracies = np.random.normal(base_acc, 0.05, 100)\n        accuracies = np.clip(accuracies, 0, 1)\n        results[(N, K)] = accuracies\n\n# Plot\nfig, axes = plt.subplots(1, 2, figsize=(14, 5))\n\n# Plot 1: Accuracy vs N-way (different K-shot)\nax = axes[0]\nfor K in K_shots:\n    means = [results[(N, K)].mean() for N in N_ways]\n    stds = [results[(N, K)].std() for N in N_ways]\n    ax.errorbar(N_ways, means, yerr=stds, marker='o', label=f'{K}-shot', capsize=5)\n\nax.set_xlabel('N-way')\nax.set_ylabel('Accuracy')\nax.set_title('Few-Shot Accuracy vs N-way')\nax.legend()\nax.grid(alpha=0.3)\n\n# Plot 2: Accuracy vs K-shot (different N-way)\nax = axes[1]\nfor N in N_ways:\n    means = [results[(N, K)].mean() for K in K_shots]\n    stds = [results[(N, K)].std() for K in K_shots]\n    ax.errorbar(K_shots, means, yerr=stds, marker='s', label=f'{N}-way', capsize=5)\n\nax.set_xlabel('K-shot')\nax.set_ylabel('Accuracy')\nax.set_title('Few-Shot Accuracy vs K-shot')\nax.legend()\nax.grid(alpha=0.3)\n\nplt.tight_layout()\nplt.show()\n\nprint('=== Meta-Learning Insights ===')\nprint('1. Higher N-way (more classes) → lower accuracy (harder)')\nprint('2. Higher K-shot (more examples) → higher accuracy (more info)')\nprint('3. 1-shot most challenging, 5-shot practical balance')\nprint('4. Error bars: 100 episodes, 95% confidence interval')\n\n# Best/worst scenarios\nbest = max(results.items(), key=lambda x: x[1].mean())\nworst = min(results.items(), key=lambda x: x[1].mean())\n\nprint(f'\\nBest: {best[0][0]}-way {best[0][1]}-shot, Acc={best[1].mean():.2%}')\nprint(f'Worst: {worst[0][0]}-way {worst[0][1]}-shot, Acc={worst[1].mean():.2%}')",
+      "level": 2,
+      "explanation": "Meta-Learning Metrics: N-way vs K-shot analysis. Error bars (95% CI). Higher K → better. Higher N → harder. Benchmark evaluation."
     }
   ],
   "quiz": [
     {
-      "question": "What is Meta-Learning & Few-Shot?",
+      "question": "Meta-learning'in temel prensibi nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Her task ayrı train et",
+        "Learning to learn: Task distribution'dan öğren → yeni tasks'a rapid adaptation (few examples)",
+        "Sadece transfer learning",
+        "Her zaman zero-shot"
       ],
       "correctAnswer": 1,
-      "explanation": "Meta-Learning & Few-Shot explanation.",
-      "id": "meta-learning-few-shot-q1"
+      "explanation": "Meta-learning: Task distribution öğren, yeni task → hızlı adapt (1-5 examples). Learning to learn. Transfer learning'den farklı (task-agnostic, few-shot).",
+      "id": "meta-q1"
     },
     {
-      "question": "When to use Meta-Learning & Few-Shot?",
+      "question": "N-way K-shot nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "N epochs, K batches",
+        "N sınıf (classes), her sınıftan K örnek (examples). Support set: N×K examples, Query: test",
+        "N models, K tasks",
+        "N layers, K neurons"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
-      "id": "meta-learning-few-shot-q2"
+      "explanation": "N-way K-shot: N classes, K examples per class (support set). 5-way 1-shot: 5 classes, 1 example each. Query set: test examples. Episode.",
+      "id": "meta-q2"
     },
     {
-      "question": "Meta-Learning & Few-Shot advantage?",
+      "question": "MAML nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece embedding öğren",
+        "Good initialization (θ_meta), few gradient steps (5) → adapt to task. Inner loop (task), outer loop (meta-update)",
+        "Sadece prototype",
+        "Random initialization"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "meta-learning-few-shot-q3"
+      "explanation": "MAML: Optimization-based. θ_meta (good init), inner loop (task adapt: θ - α∇L), outer loop (meta-update). Model-agnostic, flexible.",
+      "id": "meta-q3"
     },
     {
-      "question": "Meta-Learning & Few-Shot limitation?",
+      "question": "Prototypical Networks prensibi?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Random prototypes",
+        "Class prototype = mean(support embeddings). Query → nearest prototype (Euclidean distance). Metric learning",
+        "Sadece clustering",
+        "Her query ayrı prototype"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "meta-learning-few-shot-q4"
+      "explanation": "Prototypical: Metric learning. Class prototype = mean embeddings (support). Query embedding → distance to prototypes → softmax. Simple, effective.",
+      "id": "meta-q4"
     },
     {
-      "question": "Best practice for Meta-Learning & Few-Shot?",
+      "question": "Few-shot vs zero-shot farkı?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "İkisi de aynı",
+        "Few-shot: 1-5 examples (support set). Zero-shot: 0 examples (semantic/text description, CLIP-style)",
+        "Few-shot her zaman better",
+        "Zero-shot daha kolay"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "meta-learning-few-shot-q5"
+      "explanation": "Few-shot: K≥1 examples (support). Zero-shot: K=0, semantic description (class name, attributes). CLIP, GPT zero-shot. Few-shot > zero-shot (more info).",
+      "id": "meta-q5"
     },
     {
-      "question": "Meta-Learning & Few-Shot vs alternatives?",
+      "question": "Meta-training vs meta-testing?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "İkisi de aynı",
+        "Meta-training: Many tasks (1000+ episodes, seen classes). Meta-testing: New tasks (unseen classes, evaluate generalization)",
+        "Meta-training bir kez",
+        "Meta-testing sadece validation"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "meta-learning-few-shot-q6"
+      "explanation": "Meta-training: Task distribution öğren (1000-10000 episodes, many classes). Meta-testing: Unseen classes (disjoint), evaluate generalization. Train/test split (class-level).",
+      "id": "meta-q6"
+    },
+    {
+      "question": "Support set vs query set?",
+      "options": [
+        "İkisi de aynı",
+        "Support: Training examples (K-shot, adapt). Query: Test examples (evaluate). Episode: {support, query}",
+        "Support test, query train",
+        "Query daha büyük"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Support set: Training (K examples per class, adapt). Query set: Test (evaluate accuracy). Episode = {support, query}. Inductive: query unseen during adapt.",
+      "id": "meta-q7"
+    },
+    {
+      "question": "Meta-learning application'ları?",
+      "options": [
+        "Sadece vision",
+        "Personalization (few user data), rare diseases (medical, az hasta), robotics (new task, few demos), drug discovery",
+        "Sadece NLP",
+        "Standard ML yeter"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Applications: (1) Personalization (few interactions), (2) Medical (rare diseases, az data), (3) Robotics (new environment), (4) NLP (intent, few examples), (5) Drug discovery (few molecules).",
+      "id": "meta-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Meta-Learning & Few-Shot",
-      "back": "Core concept summary"
+      "front": "Meta-Learning nedir?",
+      "back": "Learning to learn. Task distribution öğren → yeni tasks'a rapid adaptation (few examples). Inner loop (task adapt), outer loop (meta-update). Sample efficiency."
     },
     {
-      "front": "Meta-Learning & Few-Shot Key Idea",
-      "back": "Main concept"
+      "front": "N-way K-shot",
+      "back": "N classes, K examples per class (support set). 5-way 1-shot: 5 classes, 1 example each. Query set: test. Episode: {support, query}."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "MAML",
+      "back": "Model-Agnostic Meta-Learning. Good initialization (θ_meta), few gradient steps → adapt. Inner loop (task), outer loop (meta). Optimization-based. Flexible."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Prototypical Networks",
+      "back": "Metric learning. Class prototype = mean(support embeddings). Query → nearest prototype (Euclidean). Softmax over distances. Simple, effective."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Matching Networks",
+      "back": "Attention-based. Support → keys, query → attend (context). Full context embedding (LSTM). End-to-end k-NN. Metric learning."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Few-Shot vs Zero-Shot",
+      "back": "Few-shot: K≥1 (support examples). Zero-shot: K=0 (semantic description, CLIP). Few-shot better (more info). GPT-3 few-shot prompting."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Meta-Training",
+      "back": "Train on many tasks (1000-10000 episodes). Sample episodes (N-way K-shot). Learn task distribution. Separate classes (train/val/test split)."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Support vs Query Set",
+      "back": "Support: Training (K-shot, adaptation). Query: Test (evaluate accuracy). Episode = {support, query}. Inductive: query unseen."
+    },
+    {
+      "front": "Episodic Training",
+      "back": "Sample episodes (random N classes, K examples). Many episodes (1000-10000). Task distribution. Meta-train: seen classes. Meta-test: unseen classes."
+    },
+    {
+      "front": "Meta-Overfitting",
+      "back": "Meta-train tasks çok benzer → meta-test fail. Task diversity kritik. Augmentation, task generation. Regularization (dropout)."
+    },
+    {
+      "front": "Transductive Few-Shot",
+      "back": "Query set available during adaptation (transductive). Label propagation, semi-supervised. Better accuracy vs inductive (query unseen). SOTA benchmarks."
+    },
+    {
+      "front": "Applications",
+      "back": "Personalization (few interactions), medical (rare diseases), robotics (new tasks), NLP (intent, few examples), drug discovery (few molecules). Data scarcity."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Train/val/test class overlap",
+      "why": "Meta-test classes meta-train'de görülmüş → cheating, no generalization test. Accuracy inflated, production fail.",
+      "fix": "Disjoint classes: Meta-train (64 classes), Meta-val (16), Meta-test (20, completely unseen). Class-level split, not example-level. miniImageNet standard."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Episode sampling imbalance",
+      "why": "Her episode'da aynı classes → no task diversity. Model specific classes'a overfit, generalization poor.",
+      "fix": "Random class sampling (uniform). Augmentation (rotation, crop). Task augmentation (different N/K per episode). Diverse task distribution."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Forgetting inner loop optimizer state",
+      "why": "MAML: Her task yeni optimizer (reset). State carry-over → task leakage, cheating.",
+      "fix": "Inner loop: Fresh optimizer per task (no momentum carry). Outer loop: Persistent optimizer (Adam). Clear separation."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Inductive vs transductive confusion",
+      "why": "Transductive: Query available (label propagation, semi-supervised). Inductive: Query unseen (harder). Results not comparable.",
+      "fix": "Specify: Inductive (standard, harder) vs transductive (query available, better). Benchmark reports both. SOTA often transductive."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Second-order MAML without check",
+      "why": "MAML second-order: Hessian (O(P²)), memory intensive, slow (10x). OOM for large models.",
+      "fix": "First-order approximation (Reptile, FOMAML): Ignore second-order terms. 90-95% performance, 10x faster. Or: smaller inner_steps (1-3)."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "K-shot too high (10-20)",
+      "why": "10-20 shot: Not really few-shot (standard supervised). Meta-learning advantage kaybolur. Data scarcity yok.",
+      "fix": "True few-shot: K=1-5. 1-shot: extreme, 5-shot: practical. 10+ shot: standard transfer learning yeterli (fine-tuning)."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "No meta-validation",
+      "why": "Meta-overfitting: Meta-train tasks overfit. Meta-test surprise (poor generalization). No early stopping.",
+      "fix": "Meta-validation set (separate classes, 16). Early stopping (meta-val accuracy plateau). Hyperparameter tuning (inner LR, outer LR, architecture)."
     }
   ],
   "visualizations": [
     {
+      "type": "interactive",
+      "title": "Few-Shot Playground",
+      "description": "User selects N-way, K-shot (sliders). Upload images (5 classes). Model adapts (Prototypical), classify query. Visualize embeddings (t-SNE), prototypes, distances."
+    },
+    {
       "type": "diagram",
-      "title": "Meta-Learning & Few-Shot Overview",
-      "description": "Visual explanation"
+      "title": "MAML Inner/Outer Loop",
+      "description": "Flowchart: Meta-parameters θ → Sample task → Inner loop (gradient steps, adapt θ') → Query evaluation → Outer loop (meta-gradient, update θ). Multiple tasks parallel."
+    },
+    {
+      "type": "animation",
+      "title": "Prototypical Networks",
+      "description": "Animation: Support examples → embeddings → cluster (class prototypes). Query embedding → distances to prototypes → classification. Dynamic, step-by-step."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
-    },
-    {
-      "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Meta-Learning Methods",
+      "description": "Table: MAML vs Prototypical vs Matching vs Relation. Approach (optimization, metric), complexity, pros/cons, use cases. When to use each."
     }
   ],
   "references": [
     {
-      "title": "Meta-Learning & Few-Shot Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Model-Agnostic Meta-Learning (MAML)",
+      "authors": "Finn, C. et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1703.03400",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
-      "type": "documentation"
+      "title": "Prototypical Networks for Few-shot Learning",
+      "authors": "Snell, J. et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1703.05175",
+      "type": "paper"
+    },
+    {
+      "title": "Matching Networks for One Shot Learning",
+      "authors": "Vinyals, O. et al.",
+      "year": 2016,
+      "link": "https://arxiv.org/abs/1606.04080",
+      "type": "paper"
+    },
+    {
+      "title": "learn2learn: PyTorch Meta-Learning Library",
+      "authors": "Arnold, S. et al.",
+      "year": 2024,
+      "link": "http://learn2learn.net/",
+      "type": "tool"
     }
   ]
 }
