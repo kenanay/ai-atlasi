@@ -4,261 +4,344 @@
   "category": "supervised-learning",
   "level": 3,
   "estimatedTime": 70,
-  "description": "Time Series Forecasting: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Zaman serisi tahmini: Geçmiş verilere dayalı gelecek değerleri tahmin etme. ARIMA, LSTM, Prophet gibi yöntemlerle trend, seasonality ve pattern'leri yakalama. Hisse senedi, hava durumu, satış tahmini uygulamaları.",
   "content": {
-    "level0_basic": "Time Series Forecasting basics: Core concepts explained simply.",
-    "level1_beginner": "Time Series Forecasting fundamentals with examples and code snippets.",
-    "level2_application": "Practical Time Series Forecasting implementation with real-world applications.",
-    "level3_advanced": "Advanced Time Series Forecasting techniques and optimizations.",
-    "level4_expert": "Expert-level Time Series Forecasting architectures and research directions."
+    "level0_basic": "Time Series Forecasting (Zaman Serisi Tahmini), geçmişteki verilere bakarak geleceği tahmin etme işlemidir. Örneğin, son 12 aydaki satış rakamlarına bakarak gelecek ayki satışları tahmin etmek. Hava durumu, borsa, e-ticaret satışları, enerji tüketimi gibi alanlarda yaygın kullanılır. Temel fikir: Geçmiş patternler tekrar eder.",
+    "level1_beginner": "Zaman serisi verisinin 4 temel bileşeni vardır: (1) **Trend**: Uzun dönemli artış/azalış eğilimi, (2) **Seasonality (Mevsimsellik)**: Düzenli tekrar eden patternler (her yıl yazın satışlar artar), (3) **Cyclic**: Uzun dönemli dalgalanmalar (ekonomik döngüler), (4) **Noise (Gürültü)**: Rastgele değişimler. Tahmin yöntemleri ikiye ayrılır: **İstatistiksel** (ARIMA, Exponential Smoothing) ve **Machine Learning** (LSTM, Prophet). Basit yöntem: Moving Average (hareketli ortalama), karmaşık: Deep Learning RNN/LSTM.",
+    "level2_application": "Gerçek dünyada time series forecasting, finans (hisse tahmin), retail (stok optimizasyonu), enerji (talep tahmini), IoT (sensor verileri) gibi alanlarda kritiktir. **ARIMA** (AutoRegressive Integrated Moving Average), stokastik süreçler için klasik yöntemdir: AR (geçmiş değerlere bağlılık), I (differencing ile stationarity), MA (geçmiş hataların etkisi). **Prophet** (Facebook), trend + seasonality + holiday effects'i otomatik yakalar. **LSTM** (Long Short-Term Memory), uzun dönemli bağımlılıkları öğrenir. Veri ön işleme kritik: missing value imputation, outlier removal, normalization. Train/test split zamansal sırayı korumalı (random split YAPILMAZ!).",
+    "level3_advanced": "İleri seviye time series modeling, multivariate forecasting (birden fazla zaman serisi birlikte), exogenous variables (dış etkenler: tatil, kampanya, hava), ve ensemble yöntemleri içerir. **SARIMA** seasonal ARIMA, **SARIMAX** exogenous variable'lar ekler. **Vector Auto-Regression (VAR)** birden fazla seriyi birlikte modeller. **GRU** (Gated Recurrent Unit), LSTM'e alternatif, daha hızlı. **Attention mechanisms** ve **Transformer** modelleri (Temporal Fusion Transformer) state-of-the-art. **Evaluation metrics**: MAE, RMSE, MAPE, sMAPE - seçim business context'e bağlı. **Cross-validation** zamansal: rolling window, expanding window. **Concept drift**: Zaman içinde data distribution değişir, model retraining şart.",
+    "level4_expert": "Expert seviyede, time series deep learning araştırması ve production sistemlerin optimizasyonu önemlidir. **N-BEATS** (Neural Basis Expansion Analysis), pure deep learning ile ARIMA'yı geçti. **DeepAR** (Amazon), probabilistic forecasting ile uncertainty quantiles verir. **Prophet at scale**: binlerce seri paralel tahmin (Spark). **Online learning**: streaming data ile sürekli güncelleme. **Hierarchical forecasting**: Şirket → Bölge → Mağaza hiyerarşisinde tutarlılık (reconciliation). **Causal inference**: Correlation vs causation, intervention effects. **Anomaly detection** + forecasting entegrasyonu. **Cold start problem**: Yeni ürün/seriler için tahmin. Production challenges: latency, model versioning, monitoring (forecast accuracy tracking), automated retraining pipelines."
   },
-  "whatIsIt": "Time Series Forecasting: Technical definition and core concepts.",
-  "whyNeeded": "Why Time Series Forecasting matters: Applications and use cases.",
-  "realWorldAnalogy": "Time Series Forecasting explained through real-world analogy.",
+  "whatIsIt": "Time Series Forecasting, zaman içinde düzenli aralıklarla kaydedilen verilerin (zaman serisi) gelecekteki değerlerini tahmin etme görevidir. Matematiksel olarak: $y_{t+h} = f(y_t, y_{t-1}, ..., y_{t-p}, X_t)$ formülü ile gelecekteki $h$ adım sonrasını ($y_{t+h}$), geçmiş $p$ gözleme ve dış değişkenlere ($X_t$) dayanarak tahmin eder. İstatistiksel yöntemler (ARIMA, Exponential Smoothing), machine learning (Random Forest, XGBoost) ve deep learning (LSTM, Transformer) yaklaşımları kullanılır.",
+  "whyNeeded": "Time Series Forecasting kritik çünkü: (1) **İş Kararları**: Stok, üretim, personel planlama gelecek tahminine bağlı. (2) **Risk Yönetimi**: Finans'ta volatilite tahmini, enerji'de talep zirvesi tahmini. (3) **Kaynak Optimizasyonu**: AWS gibi cloud'da auto-scaling, elektrik grid'de üretim-tüketim dengesi. (4) **Erken Uyarı**: Anomali tespiti (sunucu çökmesi, hastalık salgını öncü göstergeleri). (5) **Rekabet Avantajı**: Doğru tahminle maliyetleri düşürme, müşteri memnuniyeti artırma. (6) **Bilimsel Araştırma**: İklim modelleri, ekonomi tahminleri, epidemiyoloji.",
+  "realWorldAnalogy": "Time Series Forecasting'i arabayla yolculuk yapmaya benzetebiliriz. Dikiz aynasına bakarak (geçmiş veriler) ilerideki yolu tahmin etmeye çalışırsınız. Eğer yol düz gidiyorsa (trend), muhtemelen düz devam edecektir. Eğer her kavşakta sağa-sola dönüyorsanız (seasonality - mevsimsel pattern), bir sonraki kavşakta da benzer hareket beklersiniz. Bazen beklenmedik engeller çıkar (noise - gürültü), bunlar tahmin edilemez. Hız göstergeniz, yakıt seviyeniz (exogenous variables - dış etkenler) de rotayı etkiler. İyi bir sürücü (model) hem aynaya bakar (geçmiş), hem yol işaretlerine (seasonality), hem de trafik durumuna (external factors) bakar.",
   "mathematics": {
     "formulas": [
-      "\\text{Time Series Forecasting formula}",
-      "\\text{Key equation}"
+      "y_t = \\mu + \\phi_1 y_{t-1} + \\phi_2 y_{t-2} + ... + \\phi_p y_{t-p} + \\epsilon_t \\quad \\text{(AR - AutoRegressive)}",
+      "y_t = \\mu + \\epsilon_t + \\theta_1 \\epsilon_{t-1} + \\theta_2 \\epsilon_{t-2} + ... + \\theta_q \\epsilon_{t-q} \\quad \\text{(MA - Moving Average)}",
+      "\\text{ARIMA}(p, d, q): \\quad \\nabla^d y_t = \\phi(L) y_t + \\theta(L) \\epsilon_t \\quad \\text{(d kez differencing)}",
+      "\\text{Exponential Smoothing}: \\quad \\hat{y}_{t+1} = \\alpha y_t + (1-\\alpha) \\hat{y}_t",
+      "\\text{LSTM cell}: \\quad f_t = \\sigma(W_f \\cdot [h_{t-1}, x_t] + b_f) \\quad \\text{(Forget gate)}",
+      "\\text{MAE} = \\frac{1}{n} \\sum_{i=1}^n |y_i - \\hat{y}_i| \\quad \\text{(Mean Absolute Error)}",
+      "\\text{MAPE} = \\frac{100}{n} \\sum_{i=1}^n \\left| \\frac{y_i - \\hat{y}_i}{y_i} \\right| \\quad \\text{(Mean Absolute Percentage Error)}",
+      "\\text{Seasonality}: \\quad y_t = T_t + S_t + R_t \\quad \\text{(Trend + Seasonal + Residual)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Veriyi Görselleştir**: Time plot çiz, trend, seasonality, outlier'ları gözlemle. Dönemsellik var mı (günlük, haftalık, aylık)?",
+      "2. **Stationarity Kontrolü**: ADF (Augmented Dickey-Fuller) testi yap. Eğer non-stationary ise differencing uygula (I bileşeni).",
+      "3. **Train/Test Split**: Son %20'yi test için ayır. RANDOM SPLIT YAPMA! Zamansal sırayı koru.",
+      "4. **Feature Engineering**: Lag features (y_{t-1}, y_{t-7}), rolling statistics (7-day mean, std), date features (day_of_week, month).",
+      "5. **Model Seçimi**: Basit → karmaşık: (1) Naive (son değeri tekrar et), (2) Moving Average, (3) ARIMA, (4) Prophet, (5) LSTM.",
+      "6. **Hiperparametre Tuning**: ARIMA için (p, d, q) grid search veya auto_arima. LSTM için layers, units, dropout.",
+      "7. **Model Eğitimi**: Fit model on train data. LSTM için: sequence oluştur, lookback window belirle (örn: 30 gün).",
+      "8. **Validation**: Rolling window cross-validation. Her seferinde 1 adım ileri git, tahmin yap, gerçek değerle karşılaştır.",
+      "9. **Evaluation**: MAE, RMSE, MAPE hesapla. Business metric ile ilişkilendir (örn: %5 MAPE → 50K$ maliyet tasarrufu).",
+      "10. **Production**: Model serialize et, API olarak deploy et, monitoring kur (forecast vs actual tracking), scheduled retraining."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: ARIMA O(n³) (MLE estimation), Prophet O(n log n) (Stan optimizer), LSTM O(n·m²) (n=sequence length, m=hidden units). **Uzay**: ARIMA O(p+q), LSTM O(m²). **Training**: ARIMA saniyeler-dakikalar, LSTM saatler (GPU ile). **Inference**: Tüm modeller milisaniyeler (single prediction). **Scalability**: Binlerce zaman serisi için Prophet ve LightGBM tercih edilir (parallelization)."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "probability-statistics",
+    "linear-regression"
+  ],
+  "nextTopics": [
+    "lstm-gru-networks",
+    "anomaly-detection"
+  ],
+  "relatedTopics": [
+    "linear-regression",
+    "lstm-gru-networks"
+  ],
   "tags": [
-    "time"
+    "time-series",
+    "forecasting",
+    "arima",
+    "lstm",
+    "prophet",
+    "seasonality",
+    "trend-analysis",
+    "supervised-learning"
   ],
   "codeExamples": [
     {
-      "title": "Basic Time Series Forecasting",
+      "title": "Basit Time Series - Moving Average",
       "language": "python",
-      "code": "# Time Series Forecasting example\nimport numpy as np\n\n# Implementation here",
+      "code": "import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Örnek veri: Günlük satış rakamları\nnp.random.seed(42)\ndates = pd.date_range('2023-01-01', periods=365, freq='D')\ntrend = np.linspace(100, 200, 365)\nseasonality = 50 * np.sin(2 * np.pi * np.arange(365) / 365)\nnoise = np.random.normal(0, 10, 365)\nsales = trend + seasonality + noise\n\ndf = pd.DataFrame({'date': dates, 'sales': sales})\ndf.set_index('date', inplace=True)\n\n# Moving Average (7-günlük)\ndf['MA_7'] = df['sales'].rolling(window=7).mean()\n\n# Basit tahmin: Son 7 günün ortalaması\nlast_7_days = df['sales'].tail(7).mean()\nprint(f\"Gelecek gün tahmini (MA-7): {last_7_days:.2f}\")\n\n# Görselleştirme\nplt.figure(figsize=(12, 6))\nplt.plot(df.index, df['sales'], label='Gerçek Satış', alpha=0.7)\nplt.plot(df.index, df['MA_7'], label='7-Günlük Ortalama', linewidth=2)\nplt.xlabel('Tarih')\nplt.ylabel('Satış')\nplt.title('Time Series: Moving Average')\nplt.legend()\nplt.grid(True)\nplt.show()",
       "level": 1,
-      "explanation": "Basic Time Series Forecasting code"
+      "explanation": "Moving Average (Hareketli Ortalama), en basit forecasting yöntemidir. Son N günün ortalamasını alarak trend'i smooth eder. Gürültüyü azaltır ama lag (gecikme) yaratır."
     },
     {
-      "title": "Time Series Forecasting Application",
+      "title": "ARIMA Modeli - Statsmodels",
       "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "from statsmodels.tsa.arima.model import ARIMA\nfrom statsmodels.tsa.stattools import adfuller\nfrom sklearn.metrics import mean_absolute_error, mean_squared_error\nimport warnings\nwarnings.filterwarnings('ignore')\n\n# Stationarity testi\ndef adf_test(series):\n    result = adfuller(series.dropna())\n    print(f'ADF Statistic: {result[0]:.4f}')\n    print(f'p-value: {result[1]:.4f}')\n    if result[1] <= 0.05:\n        print(\"✓ Seri stationary\")\n    else:\n        print(\"✗ Seri non-stationary, differencing gerekli\")\n\nadf_test(df['sales'])\n\n# Train-test split (son 30 gün test)\ntrain = df['sales'][:-30]\ntest = df['sales'][-30:]\n\n# ARIMA modeli: (p, d, q) = (2, 1, 2)\n# p: AR lag order, d: differencing, q: MA order\nmodel = ARIMA(train, order=(2, 1, 2))\nmodel_fit = model.fit()\n\nprint(model_fit.summary())\n\n# Tahmin (30 gün)\nforecast = model_fit.forecast(steps=30)\n\n# Evaluation\nmae = mean_absolute_error(test, forecast)\nrmse = np.sqrt(mean_squared_error(test, forecast))\nprint(f\"\\nMAE: {mae:.2f}\")\nprint(f\"RMSE: {rmse:.2f}\")\n\n# Görselleştirme\nplt.figure(figsize=(12, 6))\nplt.plot(train.index, train, label='Train', color='blue')\nplt.plot(test.index, test, label='Test (Gerçek)', color='green')\nplt.plot(test.index, forecast, label='Tahmin', color='red', linestyle='--')\nplt.xlabel('Tarih')\nplt.ylabel('Satış')\nplt.title('ARIMA Forecasting')\nplt.legend()\nplt.grid(True)\nplt.show()",
       "level": 2,
-      "explanation": "Time Series Forecasting Application code"
+      "explanation": "ARIMA, klasik istatistiksel time series modelidir. AutoRegressive (AR) + Integrated (I) + Moving Average (MA). Stationarity gerektirir, trend ve seasonality varsayımları vardır. (p,d,q) hiperparametreleri grid search ile optimize edilir."
     },
     {
-      "title": "Advanced Time Series Forecasting",
+      "title": "Facebook Prophet - Otomatik Seasonality",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
-      "level": 3,
-      "explanation": "Advanced Time Series Forecasting code"
-    },
-    {
-      "title": "Time Series Forecasting Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Time Series Forecasting Optimization code"
-    },
-    {
-      "title": "Time Series Forecasting Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
+      "code": "from prophet import Prophet\nimport pandas as pd\n\n# Prophet veri formatı: 'ds' (date) ve 'y' (value)\ndf_prophet = df.reset_index()\ndf_prophet.columns = ['ds', 'y']\n\n# Train-test split\ntrain_prophet = df_prophet[:-30]\ntest_prophet = df_prophet[-30:]\n\n# Prophet modeli\nmodel = Prophet(\n    yearly_seasonality=True,\n    weekly_seasonality=True,\n    daily_seasonality=False,\n    seasonality_mode='additive'  # veya 'multiplicative'\n)\n\nmodel.fit(train_prophet)\n\n# Tahmin için future dataframe\nfuture = model.make_future_dataframe(periods=30, freq='D')\nforecast = model.predict(future)\n\n# Son 30 günün tahmini\nforecast_30 = forecast.tail(30)\n\n# Evaluation\nmae = mean_absolute_error(test_prophet['y'], forecast_30['yhat'])\nprint(f\"Prophet MAE: {mae:.2f}\")\n\n# Görselleştirme\nfig1 = model.plot(forecast)\nplt.title('Prophet Forecast')\nplt.show()\n\n# Bileşenler (trend + seasonality)\nfig2 = model.plot_components(forecast)\nplt.show()\n\nprint(\"\\n💡 Prophet avantajları:\")\nprint(\"- Otomatik trend ve seasonality detection\")\nprint(\"- Holiday effects (tatil etkilerini ekleyebilirsiniz)\")\nprint(\"- Missing data handling\")\nprint(\"- Interpretable components\")",
       "level": 2,
-      "explanation": "Time Series Forecasting Visualization code"
+      "explanation": "Prophet (Facebook), additive model: y(t) = trend + seasonality + holidays + error. Otomatik olarak trend değişimlerini, yıllık/haftalık seasonality'yi yakalar. İş analistleri için user-friendly. Binlerce seriyi paralel çalıştırabilir."
     },
     {
-      "title": "Production Time Series Forecasting",
+      "title": "LSTM ile Deep Learning Forecasting",
       "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.preprocessing import MinMaxScaler\nfrom tensorflow.keras.models import Sequential\nfrom tensorflow.keras.layers import LSTM, Dense, Dropout\nfrom tensorflow.keras.callbacks import EarlyStopping\n\n# Veriyi normalize et\nscaler = MinMaxScaler(feature_range=(0, 1))\nscaled_data = scaler.fit_transform(df['sales'].values.reshape(-1, 1))\n\n# Sequence oluştur: lookback=30 gün\ndef create_sequences(data, lookback=30):\n    X, y = [], []\n    for i in range(lookback, len(data)):\n        X.append(data[i-lookback:i, 0])\n        y.append(data[i, 0])\n    return np.array(X), np.array(y)\n\nlookback = 30\nX, y = create_sequences(scaled_data, lookback)\n\n# Train-test split\ntrain_size = int(len(X) * 0.8)\nX_train, X_test = X[:train_size], X[train_size:]\ny_train, y_test = y[:train_size], y[train_size:]\n\n# LSTM input shape: (samples, timesteps, features)\nX_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)\nX_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)\n\n# LSTM model\nmodel = Sequential([\n    LSTM(50, return_sequences=True, input_shape=(lookback, 1)),\n    Dropout(0.2),\n    LSTM(50, return_sequences=False),\n    Dropout(0.2),\n    Dense(25, activation='relu'),\n    Dense(1)\n])\n\nmodel.compile(optimizer='adam', loss='mse')\n\n# Early stopping\nearly_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)\n\n# Eğitim\nhistory = model.fit(\n    X_train, y_train,\n    epochs=100,\n    batch_size=32,\n    validation_split=0.1,\n    callbacks=[early_stop],\n    verbose=0\n)\n\n# Tahmin\npredictions = model.predict(X_test)\npredictions = scaler.inverse_transform(predictions)\ny_test_inv = scaler.inverse_transform(y_test.reshape(-1, 1))\n\n# Evaluation\nmae = mean_absolute_error(y_test_inv, predictions)\nrmse = np.sqrt(mean_squared_error(y_test_inv, predictions))\nprint(f\"LSTM MAE: {mae:.2f}\")\nprint(f\"LSTM RMSE: {rmse:.2f}\")\n\n# Plot\nplt.figure(figsize=(12, 6))\nplt.plot(y_test_inv, label='Gerçek', color='blue')\nplt.plot(predictions, label='LSTM Tahmin', color='red')\nplt.xlabel('Zaman Adımı')\nplt.ylabel('Satış')\nplt.title('LSTM Time Series Forecasting')\nplt.legend()\nplt.show()\n\nprint(\"\\n💡 LSTM avantajları:\")\nprint(\"- Uzun dönemli bağımlılıkları (long-term dependencies) öğrenir\")\nprint(\"- Doğrusal olmayan pattern'leri yakalar\")\nprint(\"- Multivariate forecasting (birden fazla feature) için ideal\")",
+      "level": 3,
+      "explanation": "LSTM (Long Short-Term Memory), RNN'in gelişmiş versiyonudur. Vanishing gradient problemini çözer. Lookback window ile geçmiş N adımı görerek gelecektahmini yapar. Karmaşık non-linear pattern'ler için güçlüdür ancak yavaş eğitir."
+    },
+    {
+      "title": "Model Karşılaştırma ve Ensemble",
+      "language": "python",
+      "code": "import pandas as pd\nfrom sklearn.metrics import mean_absolute_error\n\n# Farklı modellerin tahminlerini topla\nresults = pd.DataFrame({\n    'Gerçek': test.values,\n    'Naive': [train.iloc[-1]] * len(test),  # Son değeri tekrarla\n    'MA_7': df['MA_7'][-30:].values,\n    'ARIMA': forecast.values,\n    'Prophet': forecast_30['yhat'].values,\n    'LSTM': predictions.flatten()\n})\n\n# Her modelin MAE'sini hesapla\nfor col in ['Naive', 'MA_7', 'ARIMA', 'Prophet', 'LSTM']:\n    mae = mean_absolute_error(results['Gerçek'], results[col])\n    print(f\"{col:10s} MAE: {mae:.2f}\")\n\n# Ensemble: Weighted average\nresults['Ensemble'] = (\n    0.1 * results['Naive'] +\n    0.1 * results['MA_7'] +\n    0.2 * results['ARIMA'] +\n    0.3 * results['Prophet'] +\n    0.3 * results['LSTM']\n)\n\nensemble_mae = mean_absolute_error(results['Gerçek'], results['Ensemble'])\nprint(f\"\\nEnsemble   MAE: {ensemble_mae:.2f}\")\nprint(\"\\n💡 Ensemble genellikle tek modelden daha iyi performans gösterir!\")\n\n# En iyi 3 modeli görselleştir\nplt.figure(figsize=(14, 6))\nplt.plot(results.index, results['Gerçek'], label='Gerçek', linewidth=2, color='black')\nplt.plot(results.index, results['ARIMA'], label='ARIMA', linestyle='--', alpha=0.7)\nplt.plot(results.index, results['Prophet'], label='Prophet', linestyle='--', alpha=0.7)\nplt.plot(results.index, results['LSTM'], label='LSTM', linestyle='--', alpha=0.7)\nplt.plot(results.index, results['Ensemble'], label='Ensemble', linewidth=2, color='red')\nplt.xlabel('Zaman')\nplt.ylabel('Satış')\nplt.title('Model Karşılaştırma')\nplt.legend()\nplt.grid(True)\nplt.show()",
+      "level": 3,
+      "explanation": "Farklı modeller farklı pattern'leri yakalar. Naive (baseline), ARIMA (linear), Prophet (additive), LSTM (non-linear). Ensemble (weighted average veya stacking) genellikle tek modelden daha robust ve doğrudur. Production'da risk dağıtımı sağlar."
+    },
+    {
+      "title": "Production: Multi-Step Forecast + Monitoring",
+      "language": "python",
+      "code": "import pandas as pd\nimport joblib\nfrom datetime import datetime, timedelta\n\n# Model kaydetme\njoblib.dump(model_fit, 'arima_model.pkl')\njoblib.dump(scaler, 'scaler.pkl')\n\nprint(\"✓ Modeller kaydedildi\")\n\n# Production inference function\ndef forecast_next_n_days(model_path, scaler_path, last_n_days_data, n_forecast=7):\n    \"\"\"\n    Son N günün verisiyle gelecek n_forecast gün tahmini\n    \"\"\"\n    model = joblib.load(model_path)\n    scaler = joblib.load(scaler_path)\n    \n    # Veriyi normalize et\n    scaled = scaler.transform(last_n_days_data.reshape(-1, 1))\n    \n    # Multi-step forecasting\n    forecast = model.forecast(steps=n_forecast)\n    \n    # Inverse transform\n    forecast_original = scaler.inverse_transform(forecast.reshape(-1, 1))\n    \n    # Tahmin tarihlerini oluştur\n    last_date = datetime.now()\n    forecast_dates = [last_date + timedelta(days=i+1) for i in range(n_forecast)]\n    \n    result = pd.DataFrame({\n        'date': forecast_dates,\n        'forecast': forecast_original.flatten()\n    })\n    \n    return result\n\n# Kullanım\nlast_30_days = df['sales'].tail(30).values\nprediction = forecast_next_n_days('arima_model.pkl', 'scaler.pkl', last_30_days, n_forecast=7)\nprint(\"\\n7 Günlük Tahmin:\")\nprint(prediction)\n\n# Monitoring: Forecast vs Actual tracking\ndef calculate_forecast_accuracy(forecasts, actuals):\n    \"\"\"\n    Tahmin doğruluğunu sürekli izle\n    \"\"\"\n    mae = mean_absolute_error(actuals, forecasts)\n    mape = np.mean(np.abs((actuals - forecasts) / actuals)) * 100\n    \n    # Alert: Eğer MAPE > %15 ise model retraining gerekir\n    if mape > 15:\n        print(f\"⚠️ ALERT: MAPE {mape:.1f}% (threshold: 15%)\")\n        print(\"   → Model retraining önerilir\")\n    else:\n        print(f\"✓ Forecast accuracy iyi: MAPE {mape:.1f}%\")\n    \n    return {'MAE': mae, 'MAPE': mape}\n\n# Örnek monitoring\nactuals_last_week = df['sales'].tail(7).values\nforecasts_last_week = prediction['forecast'].values[:7]\naccuracy = calculate_forecast_accuracy(forecasts_last_week, actuals_last_week)\n\nprint(\"\\n💡 Production Best Practices:\")\nprint(\"- Daily/weekly model performance tracking\")\nprint(\"- Automated retraining (monthly/quarterly)\")\nprint(\"- A/B testing (new model vs old model)\")\nprint(\"- Confidence intervals (uncertainty quantification)\")\nprint(\"- Feature drift detection\")",
       "level": 4,
-      "explanation": "Production Time Series Forecasting code"
+      "explanation": "Production'da multi-step forecasting, model serialization (joblib), monitoring (forecast accuracy tracking), automated alerting ve scheduled retraining kritiktir. MAPE threshold ile model degradation tespit edilir."
     }
   ],
   "quiz": [
     {
-      "question": "What is Time Series Forecasting?",
+      "question": "Time Series Forecasting'de train-test split nasıl yapılmalıdır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Random shuffle ile karıştırıp %80 train, %20 test",
+        "Zamansal sırayı koruyarak son %20'yi test için ayır",
+        "K-fold cross-validation ile random split",
+        "İlk %20'yi test, geri kalanı train olarak kullan"
       ],
       "correctAnswer": 1,
-      "explanation": "Time Series Forecasting explanation.",
+      "explanation": "Time series verisinde zamansal sıra kritiktir! Random split yaparsanız 'future information leakage' olur - modele gelecekteki bilgiyi göstermiş olursunuz. MUTLAKA son %20'yi (veya son N günü) test için ayırın, kalanıyla eğitin.",
       "id": "time-series-forecasting-q1"
     },
     {
-      "question": "When to use Time Series Forecasting?",
+      "question": "ARIMA modelinde (p, d, q) parametreleri neyi temsil eder?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "p: prediction steps, d: data points, q: quality score",
+        "p: AR lag order, d: differencing degree, q: MA order",
+        "p: polynomial degree, d: dimension, q: quantile",
+        "p: period, d: decay, q: queue size"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "ARIMA(p,d,q): p = AutoRegressive lag order (kaç önceki değere bakar), d = Differencing degree (stationarity için kaç kez fark al), q = Moving Average order (kaç önceki hataya bakar). Örnek: ARIMA(2,1,2) → 2 lag, 1 differencing, 2 error term.",
       "id": "time-series-forecasting-q2"
     },
     {
-      "question": "Time Series Forecasting advantage?",
+      "question": "Stationarity (durağanlık) neden önemlidir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece görselleştirme için gereklidir",
+        "ARIMA gibi modeller stationary veri varsayar; mean/variance sabit olmalı",
+        "Sadece LSTM için gereklidir, diğer modeller için değil",
+        "Önemli değildir, her veri stationary kabul edilebilir"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
+      "explanation": "Stationarity: Zaman serisinin mean, variance ve autocovariance'ı zamana bağlı değişmez. ARIMA, Exponential Smoothing gibi klasik modeller stationary veri varsayar. Non-stationary veri için differencing (d parametresi) veya detrending yapılır. ADF (Augmented Dickey-Fuller) testi ile kontrol edilir.",
       "id": "time-series-forecasting-q3"
     },
     {
-      "question": "Time Series Forecasting limitation?",
+      "question": "Seasonality (mevsimsellik) nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Verinin rastgele değişimi (noise)",
+        "Düzenli aralıklarla tekrar eden pattern (her yaz artış gibi)",
+        "Uzun dönemli trend (10 yıllık artış)",
+        "Outlier'ların oluşturduğu spike'lar"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
+      "explanation": "Seasonality, belirli periyotlarda (günlük, haftalık, aylık, yıllık) tekrar eden pattern'dir. Örnek: E-ticaret satışları her Aralık (yılbaşı) artar, elektrik tüketimi her yaz (klima) zirveler. SARIMA, Prophet gibi modeller seasonality'yi otomatik yakalar.",
       "id": "time-series-forecasting-q4"
     },
     {
-      "question": "Best practice for Time Series Forecasting?",
+      "question": "LSTM neden time series için uygun bir deep learning modelidir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Çok hızlı eğitilir ve basittir",
+        "Uzun dönemli bağımlılıkları (long-term dependencies) öğrenebilir",
+        "Sadece linear pattern'leri yakalar",
+        "Stationarity gerektirmez ve trend'e duyarsızdır"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
+      "explanation": "LSTM (Long Short-Term Memory), RNN'in vanishing gradient problemini çözer. Forget gate, input gate, output gate ile uzun dönemli bağımlılıkları (örn: 100 adım önceki bilgiyi) öğrenebilir. Non-linear, multivariate, karmaşık pattern'ler için güçlüdür. Ancak yavaş eğitir ve çok veri gerektirir.",
       "id": "time-series-forecasting-q5"
     },
     {
-      "question": "Time Series Forecasting vs alternatives?",
+      "question": "Prophet'in avantajı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "En yüksek doğruluğu garanti eder",
+        "Otomatik trend/seasonality detection, missing data handling, interpretable",
+        "Sadece finansal veriler için çalışır",
+        "LSTM'den daha hızlı eğitilir ama daha az doğrudur"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
+      "explanation": "Prophet (Facebook), additive model: y = trend + yearly_seasonality + weekly_seasonality + holidays + error. Avantajları: (1) Otomatik seasonality detection, (2) Holiday effects ekleme, (3) Missing data robust, (4) İnsan anlaşılır component'ler, (5) Binlerce seri paralel. Data scientist olmayan iş analistleri de kullanabilir.",
       "id": "time-series-forecasting-q6"
+    },
+    {
+      "question": "MAPE (Mean Absolute Percentage Error) neden MAE'den farklıdır?",
+      "options": [
+        "MAPE yüzde cinsinden olduğu için farklı ölçeklerdeki seriler karşılaştırılabilir",
+        "MAPE her zaman MAE'den daha iyi bir metriktir",
+        "MAPE sadece pozitif değerler için çalışır",
+        "İkisi aynıdır, sadece isimlendirme farkı"
+      ],
+      "correctAnswer": 0,
+      "explanation": "MAE = mutlak hata ortalaması (örn: 10 birim), MAPE = yüzde hata (örn: %5). MAPE'nin avantajı: Farklı ölçeklerdeki seriler karşılaştırılabilir ($100 vs $1M satış). Dezavantajı: y=0 veya y≈0 iken tanımsız. MAPE küçük değerlere karşı bias'lıdır, bu yüzden sMAPE (symmetric MAPE) tercih edilir.",
+      "id": "time-series-forecasting-q7"
+    },
+    {
+      "question": "Multi-step forecasting nedir?",
+      "options": [
+        "Bir seferde birden fazla zaman serisi tahmin etme",
+        "Gelecekte birden fazla adım (örn: 7 gün) tahmin etme",
+        "Birden fazla model kullanma (ensemble)",
+        "Birden fazla feature ile forecasting"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Multi-step forecasting: Gelecekte h>1 adım tahmin. İki yaklaşım: (1) Direct: Her h için ayrı model, (2) Recursive: 1 adım tahmin et, bunu input'a ekle, tekrar tahmin et. Recursive birikimli hata riski taşır. Direct daha robust ama h model gerektirir. Production'da genellikle 7-30 gün forward tahmin yapılır.",
+      "id": "time-series-forecasting-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Time Series Forecasting",
-      "back": "Core concept summary"
+      "front": "Time Series Forecasting nedir?",
+      "back": "Geçmiş zaman serisi verilerine dayalı gelecek değerleri tahmin etme. Trend, seasonality, cyclic ve noise bileşenlerinden oluşur."
     },
     {
-      "front": "Time Series Forecasting Key Idea",
-      "back": "Main concept"
+      "front": "Stationarity (Durağanlık)",
+      "back": "Mean, variance ve autocovariance'ın zamana bağlı değişmemesi. ARIMA için şart. ADF testi ile kontrol, differencing ile sağlanır."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "ARIMA(p,d,q)",
+      "back": "AutoRegressive (p) + Integrated (d=differencing) + Moving Average (q). Klasik istatistiksel forecasting. Örnek: ARIMA(2,1,2)."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "Seasonality vs Trend",
+      "back": "Seasonality: Düzenli tekrar eden pattern (haftalık, yıllık). Trend: Uzun dönemli artış/azalış eğilimi. İkisi de decomposition ile ayrıştırılır."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Prophet (Facebook)",
+      "back": "Additive model: y = trend + seasonality + holidays + error. Otomatik pattern detection, missing data robust, interpretable components."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "LSTM Time Series",
+      "back": "Long Short-Term Memory RNN. Uzun dönemli bağımlılıkları öğrenir. Lookback window (örn: 30 gün) ile sequence prediction. Non-linear pattern'ler için güçlü."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Train-Test Split (Temporal)",
+      "back": "RANDOM DEĞİL! Zamansal sırayı koru. Son %20'yi (veya son N gün) test için ayır. Yoksa future leakage olur."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Moving Average",
+      "back": "Son N adımın ortalaması. Basit smoothing yöntemi. Trend'i yakalar ama lag (gecikme) yaratır. Baseline model olarak kullanılır."
+    },
+    {
+      "front": "MAE vs MAPE vs RMSE",
+      "back": "MAE: Mutlak hata ortalaması. MAPE: Yüzde hata (farklı ölçekler karşılaştırılabilir). RMSE: Kök ortalama kare hata (outlier'a hassas)."
+    },
+    {
+      "front": "Multi-step Forecasting",
+      "back": "Gelecekte h>1 adım tahmin. İki yol: Direct (her h için ayrı model) veya Recursive (1 adım tahmin → input'a ekle → tekrar)."
+    },
+    {
+      "front": "Ensemble Forecasting",
+      "back": "Birden fazla modelin (ARIMA, Prophet, LSTM) weighted average'ı. Genellikle tek modelden daha robust ve doğru. Risk dağıtımı."
+    },
+    {
+      "front": "Production Monitoring",
+      "back": "Forecast vs actual tracking, MAPE threshold alerting, automated retraining (monthly/quarterly), A/B testing, feature drift detection."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Train-test split'i random yapmak",
+      "why": "Time series'te zamansal sıra kritiktir. Random split yaparsanız modele gelecekteki bilgiyi (future leakage) göstermiş olursunuz - model gerçekte asla görmeyeceği veriyle eğitilir.",
+      "fix": "MUTLAKA zamansal sırayı koruyun. Son %20'yi (veya son 30 gün gibi) test için ayırın: train = data[:-30], test = data[-30:]. Cross-validation için rolling window veya expanding window kullanın."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Stationarity kontrolü yapmadan ARIMA uygulamak",
+      "why": "ARIMA stationary veri varsayar. Non-stationary veri ile model kötü performans gösterir veya hatalı sonuçlar verir. Trend/seasonality varsa stationarity ihlal edilir.",
+      "fix": "ADF (Augmented Dickey-Fuller) testi yapın. Eğer p-value > 0.05 ise non-stationary. Differencing uygulayın (d=1 veya d=2) veya log/detrending ile stationary hale getirin."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Normalization yapmadan LSTM'e veri vermek",
+      "why": "LSTM gibi neural network'ler [0,1] veya [-1,1] aralığındaki verilerle daha iyi çalışır. Normalize edilmemiş veri (örn: 1000-10000 aralığı) gradient patlaması veya vanishing'e sebep olur.",
+      "fix": "MinMaxScaler veya StandardScaler kullanın. Eğitimden ÖNCE fit edin, train ve test'e ayrı ayrı transform edin. Tahminleri inverse_transform ile orijinal ölçeğe geri döndürün."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Feature engineering yapmamak",
+      "why": "Raw time series verisi yeterli değildir. Lag features (y_{t-1}, y_{t-7}), rolling statistics (7-day mean), date features (day_of_week, is_weekend) eklemek performansı artırır.",
+      "fix": "Lag features: df['lag_1'] = df['sales'].shift(1). Rolling: df['rolling_7_mean'] = df['sales'].rolling(7).mean(). Date: df['day_of_week'] = df.index.dayofweek. Bu feature'ları ML modeline (XGBoost, Random Forest) input olarak verin."
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "Tek metrikle (sadece MAE) değerlendirme",
+      "why": "MAE tek başına yeterli değil. Farklı metriklerin farklı özellikleri vardır: MAE (outlier'a robust), RMSE (outlier'a hassas), MAPE (ölçeksiz). Business context'e göre seçim yapılmalı.",
+      "fix": "Birden fazla metrik hesaplayın: MAE, RMSE, MAPE (veya sMAPE). Business metric ile ilişkilendirin: '%5 MAPE → yıllık 100K$ tasarruf'. Hangi hata tipi business için daha maliyetli? Residual plot yapın (hataların dağılımına bakın)."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Outlier'ları temizlememek",
+      "why": "Time series'te outlier'lar (COVID lockdown, Black Friday, veri hatası) modeli yanıltır. ARIMA gibi modeller outlier'a çok hassastır.",
+      "fix": "IQR veya Z-score ile outlier detection. Seçenekler: (1) Remove (dikkatli, bilgi kaybı), (2) Impute (interpolation, forward fill), (3) Cap (winsorize - üst/alt %1'i kes), (4) Model robust hale getir (Huber loss, quantile regression)."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "Model'i hiç retrain etmemek (Production'da)",
+      "why": "Zaman içinde data distribution değişir (concept drift). 6 ay önceki model bugünkü veri için kötü performans gösterir. Özellikle COVID gibi büyük değişimler sonrası model eskir.",
+      "fix": "Scheduled retraining: Aylık/çeyrek dönemlik otomatik retrain pipeline. Monitoring: Forecast vs actual MAPE'i track et, eğer threshold'u (örn: %15) geçerse alert + retrain. A/B test: Yeni model vs eski model karşılaştırması."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Time Series Forecasting Overview",
-      "description": "Visual explanation"
+      "title": "Time Series Decomposition",
+      "description": "Zaman serisinin trend, seasonality, cyclic ve residual (noise) bileşenlerine ayrıştırılması. Additive vs multiplicative decomposition. STL (Seasonal-Trend decomposition using Loess) gösterimi."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "ARIMA vs Prophet vs LSTM",
+      "description": "Aynı veri seti üzerinde 3 yöntemin tahmin performansı. MAE, RMSE, MAPE karşılaştırması. Eğitim süresi, interpretability, ease of use trade-off'ları."
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "Forecasting Sandbox",
+      "description": "Kullanıcı kendi zaman serisini yükler, model seçer (ARIMA, Prophet, LSTM), hiperparametreleri ayarlar, tahmin yapar ve sonuçları görselleştirir. Real-time MAE/RMSE feedback."
+    },
+    {
+      "type": "metric",
+      "title": "Model Performance Dashboard",
+      "description": "Production monitoring: Forecast vs actual line chart, MAPE trend (son 30 gün), residual distribution, prediction intervals (confidence bands), alert history."
     }
   ],
   "references": [
     {
-      "title": "Time Series Forecasting Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Forecasting: Principles and Practice",
+      "authors": "Hyndman, R.J., & Athanasopoulos, G.",
+      "year": 2021,
+      "link": "https://otexts.com/fpp3/",
+      "type": "book"
+    },
+    {
+      "title": "Prophet: Forecasting at Scale",
+      "authors": "Taylor, S.J., & Letham, B.",
+      "year": 2018,
+      "link": "https://peerj.com/preprints/3190/",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "title": "N-BEATS: Neural Basis Expansion Analysis for Time Series",
+      "authors": "Oreshkin, B.N. et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/abs/1905.10437",
+      "type": "paper"
+    },
+    {
+      "title": "Statsmodels ARIMA Documentation",
+      "authors": "Statsmodels Team",
+      "year": 2024,
+      "link": "https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html",
       "type": "documentation"
     }
   ]
