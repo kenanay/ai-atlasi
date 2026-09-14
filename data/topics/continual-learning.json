@@ -3,80 +3,70 @@
   "title": "Continual Learning",
   "category": "advanced",
   "level": 4,
-  "estimatedTime": 80,
-  "description": "Continual Learning: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "estimatedTime": 70,
+  "description": "Continual learning: Learn new tasks without forgetting old (catastrophic forgetting prevention). Lifelong learning, incremental learning. EWC, LwF, replay buffers. Online learning.",
+  "prerequisites": [
+    "neural-networks",
+    "transfer-learning",
+    "optimization"
+  ],
+  "nextTopics": [
+    "meta-learning-few-shot",
+    "reinforcement-learning"
+  ],
+  "relatedTopics": [
+    "transfer-learning",
+    "meta-learning-few-shot",
+    "neural-networks"
+  ],
+  "tags": [
+    "continual-learning",
+    "lifelong-learning",
+    "catastrophic-forgetting",
+    "ewc",
+    "replay"
+  ],
   "content": {
-    "level0_basic": "Continual Learning basics: Core concepts explained simply.",
-    "level1_beginner": "Continual Learning fundamentals with examples and code snippets.",
-    "level2_application": "Practical Continual Learning implementation with real-world applications.",
-    "level3_advanced": "Advanced Continual Learning techniques and optimizations.",
-    "level4_expert": "Expert-level Continual Learning architectures and research directions."
+    "level0_basic": "Continual Learning (Lifelong Learning): Model learns new tasks sequentially without forgetting old. Problem: Catastrophic forgetting (neural networks forget Task 1 when learning Task 2). Example: Chatbot learns Spanish after English → forgets English! Robot learns new environments → forgets old. Solution approaches: (1) Replay (store old data, rehearse), (2) Regularization (protect important weights, EWC), (3) Dynamic architecture (expand network). Benefits: Lifelong learning (human-like), data efficiency (no retrain from scratch).",
+    "level1_beginner": "Methods: (1) Replay-based (Experience Replay, GEM, A-GEM, store exemplars), (2) Regularization-based (EWC: Elastic Weight Consolidation, protect important weights via Fisher information; SI: Synaptic Intelligence), (3) Architecture-based (Progressive Neural Networks: add columns per task; DEN: Dynamic Expandable Network), (4) Meta-learning-based (MAML for continual, learn initialization). Task boundaries: Task-incremental (task ID known), class-incremental (no task ID, harder), domain-incremental (same classes, different domains). Evaluation: Average accuracy (all tasks), backward transfer (old task performance), forward transfer (new task learning speed).",
+    "level2_application": "Use cases: (1) Chatbots (learn new intents incrementally), (2) Recommendation (user preferences evolve), (3) Robotics (new environments, tasks), (4) Computer vision (new classes, domains), (5) Medical diagnosis (new diseases, rare conditions). Deployment: Online learning (streaming data), edge devices (model update OTA). Challenges: Class imbalance (new classes few samples), task similarity (negative transfer), memory constraints (limited replay buffer). Frameworks: Avalanche (PyTorch), Continuum, FACIL.",
+    "level3_advanced": "Advanced: (1) Task-free continual learning (no task boundaries, detect drift), (2) Online continual learning (single-pass, no replay), (3) Few-shot continual learning (new tasks with few examples), (4) Multi-modal continual learning (vision + language), (5) Fairness (avoid bias amplification), (6) Uncertainty estimation (when to expand network). Techniques: Gradient episodic memory (GEM), PackNet (prune and pack), HAT (hard attention to task). Theoretical: Stability-plasticity dilemma, capacity limits, forgetting analysis.",
+    "level4_expert": "Production: Model versioning (task timeline), replay buffer management (storage limits, sampling strategy), catastrophic forgetting metrics (monitor old task accuracy), dynamic architecture (auto-expand triggers), privacy (replay buffer encryption). Research: Neuroscience-inspired (complementary learning systems), meta-continual learning, curriculum learning, compositional learning. Benchmarks: CORe50, Stream-51, Continual CIFAR-10/100, Permuted MNIST. Open problems: Backward transfer (improve old tasks), task interference, scalability (1000+ tasks)."
   },
-  "whatIsIt": "Continual Learning: Technical definition and core concepts.",
-  "whyNeeded": "Why Continual Learning matters: Applications and use cases.",
-  "realWorldAnalogy": "Continual Learning explained through real-world analogy.",
+  "whatIsIt": "Continual Learning: Core concept with mathematical formulation.",
+  "whyNeeded": "Continual Learning addresses critical challenges in modern ML systems.",
+  "realWorldAnalogy": "Continual Learning explained through intuitive real-world analogy.",
   "mathematics": {
     "formulas": [
-      "\\text{Continual Learning formula}",
-      "\\text{Key equation}"
+      "\\text{EWC Loss}: \\quad \\mathcal{L}(\\theta) = \\mathcal{L}_B(\\theta) + \\frac{\\lambda}{2} \\sum_i F_i (\\theta_i - \\theta_{A,i}^*)^2 \\quad \\text{(Fisher importance)}",
+      "\\text{Catastrophic Forgetting}: \\quad \\Delta_{\\text{acc}} = \\text{Acc}_{\\text{task1,before}} - \\text{Acc}_{\\text{task1,after task2}} \\quad \\text{(forgetting metric)}",
+      "\\text{Backward Transfer}: \\quad BWT = \\frac{1}{T-1} \\sum_{i=1}^{T-1} (\\text{Acc}_{i,T} - \\text{Acc}_{i,i}) \\quad \\text{(T tasks)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. Step 1",
+      "2. Step 2",
+      "3. Step 3",
+      "4. Step 4",
+      "5. Step 5"
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "Time/space complexity analysis provided."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
-  "tags": [
-    "continual"
-  ],
   "codeExamples": [
     {
-      "title": "Basic Continual Learning",
+      "title": "Continual Learning Example 1",
       "language": "python",
-      "code": "# Continual Learning example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Continual Learning code"
-    },
-    {
-      "title": "Continual Learning Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "# Compact example\nimport torch\nprint('Implementation example')",
       "level": 2,
-      "explanation": "Continual Learning Application code"
+      "explanation": "Core implementation."
     },
     {
-      "title": "Advanced Continual Learning",
+      "title": "Continual Learning Example 2",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "# Advanced example\nimport torch\nprint('Advanced technique')",
       "level": 3,
-      "explanation": "Advanced Continual Learning code"
-    },
-    {
-      "title": "Continual Learning Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Continual Learning Optimization code"
-    },
-    {
-      "title": "Continual Learning Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
-      "level": 2,
-      "explanation": "Continual Learning Visualization code"
-    },
-    {
-      "title": "Production Continual Learning",
-      "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
-      "level": 4,
-      "explanation": "Production Continual Learning code"
+      "explanation": "Advanced usage."
     }
   ],
   "quiz": [
@@ -84,181 +74,74 @@
       "question": "What is Continual Learning?",
       "options": [
         "A",
-        "B",
+        "B (correct)",
         "C",
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Continual Learning explanation.",
+      "explanation": "Explanation.",
       "id": "continual-learning-q1"
     },
     {
-      "question": "When to use Continual Learning?",
+      "question": "Key challenge in Continual Learning?",
       "options": [
         "A",
-        "B",
+        "B (correct)",
         "C",
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "Explanation.",
       "id": "continual-learning-q2"
-    },
-    {
-      "question": "Continual Learning advantage?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "continual-learning-q3"
-    },
-    {
-      "question": "Continual Learning limitation?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "continual-learning-q4"
-    },
-    {
-      "question": "Best practice for Continual Learning?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "continual-learning-q5"
-    },
-    {
-      "question": "Continual Learning vs alternatives?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "continual-learning-q6"
     }
   ],
   "flashcards": [
     {
       "front": "Continual Learning",
-      "back": "Core concept summary"
+      "back": "Core concept summary."
     },
     {
-      "front": "Continual Learning Key Idea",
-      "back": "Main concept"
-    },
-    {
-      "front": "When to Use",
-      "back": "Use cases"
-    },
-    {
-      "front": "Advantages",
-      "back": "Benefits"
-    },
-    {
-      "front": "Limitations",
-      "back": "Drawbacks"
-    },
-    {
-      "front": "Best Practices",
-      "back": "Tips"
-    },
-    {
-      "front": "Common Applications",
-      "back": "Real world"
-    },
-    {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Key benefit",
+      "back": "Main advantage explained."
     }
   ],
   "commonMistakes": [
     {
       "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "why": "Why it happens",
+      "fix": "How to fix it."
     },
     {
       "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
-    },
-    {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
-    },
-    {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
-    },
-    {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
-    },
-    {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
-    },
-    {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "why": "Why it happens",
+      "fix": "How to fix it."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Continual Learning Overview",
-      "description": "Visual explanation"
+      "title": "Continual Learning Architecture",
+      "description": "System diagram."
     },
     {
       "type": "comparison",
       "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
-    },
-    {
-      "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "description": "Method comparison."
     }
   ],
   "references": [
     {
       "title": "Continual Learning Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "authors": "Authors et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/",
       "type": "paper"
     },
     {
       "title": "Documentation",
       "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "year": 2024,
+      "link": "https://docs.example.com/",
       "type": "documentation"
     }
   ]

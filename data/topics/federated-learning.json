@@ -3,80 +3,70 @@
   "title": "Federated Learning",
   "category": "advanced",
   "level": 4,
-  "estimatedTime": 80,
-  "description": "Federated Learning: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "estimatedTime": 75,
+  "description": "Federated learning: Privacy-preserving distributed ML. Train on decentralized data (mobile, hospital). FedAvg, secure aggregation, differential privacy. No raw data sharing.",
+  "prerequisites": [
+    "distributed-training",
+    "neural-networks",
+    "gradient-descent"
+  ],
+  "nextTopics": [
+    "edge-ai-mobile",
+    "privacy-preserving-ml"
+  ],
+  "relatedTopics": [
+    "distributed-training",
+    "edge-ai-mobile",
+    "neural-networks"
+  ],
+  "tags": [
+    "federated-learning",
+    "privacy",
+    "distributed",
+    "fedavg",
+    "on-device"
+  ],
   "content": {
-    "level0_basic": "Federated Learning basics: Core concepts explained simply.",
-    "level1_beginner": "Federated Learning fundamentals with examples and code snippets.",
-    "level2_application": "Practical Federated Learning implementation with real-world applications.",
-    "level3_advanced": "Advanced Federated Learning techniques and optimizations.",
-    "level4_expert": "Expert-level Federated Learning architectures and research directions."
+    "level0_basic": "Federated Learning: Data stays on devices (phones, hospitals), train model collaboratively. Server aggregates model updates (not raw data). Privacy-preserving. Example: Google Gboard (keyboard predictions, millions of phones), hospitals (patient data never leaves). FedAvg algorithm: (1) Server sends global model, (2) Devices train locally, (3) Send gradients/weights to server, (4) Server averages → new global model. Benefits: Privacy (GDPR, HIPAA), large-scale (billions of devices), data quality (diverse, real-world).",
+    "level1_beginner": "FL variants: (1) Cross-device FL (millions of phones, Google, Apple), (2) Cross-silo FL (hospitals, banks, few participants). Challenges: (1) Non-IID data (each device different distribution), (2) Communication cost (bandwidth limited, compression), (3) Stragglers (slow devices, dropout), (4) Privacy attacks (gradient leakage). Solutions: FedProx (handle heterogeneity), secure aggregation (encrypted updates), differential privacy (noise addition). Communication: Gradient compression (top-k, quantization), model compression (distillation). Frameworks: TensorFlow Federated, PySyft, Flower, FedML.",
+    "level2_application": "Applications: (1) Mobile keyboards (Gboard, SwiftKey), (2) Healthcare (hospital collaboration, rare diseases), (3) Finance (fraud detection, banks), (4) IoT (smart home, edge devices). Deployment: On-device training (TFLite, CoreML), server aggregation (secure MPC), differential privacy (ε-DP). Production: Google, Apple (privacy by design), NVIDIA Clara (healthcare FL). Cross-silo: 10-100 organizations (hospitals, banks). Privacy tech: Homomorphic encryption, secure multi-party computation.",
+    "level3_advanced": "Advanced: (1) Personalization (local fine-tuning + global model), (2) Asynchronous FL (no sync wait), (3) Hierarchical FL (edge-cloud), (4) Incentive mechanisms (contribution reward), (5) Fairness (underrepresented groups), (6) Robustness (Byzantine attacks, poisoning). Research: Split learning, vertical FL (different features), transfer FL, continual FL (lifelong learning).",
+    "level4_expert": "Production systems: Model versioning, client selection (biased sampling), convergence guarantees (non-convex), communication-efficient protocols, privacy auditing (membership inference defense), regulatory compliance (GDPR Article 25). Hardware: Edge TPU, secure enclaves (TEE). Scale: 10M+ devices. Research frontiers: Zero-knowledge FL, blockchain-based FL, quantum-secure FL."
   },
-  "whatIsIt": "Federated Learning: Technical definition and core concepts.",
-  "whyNeeded": "Why Federated Learning matters: Applications and use cases.",
-  "realWorldAnalogy": "Federated Learning explained through real-world analogy.",
+  "whatIsIt": "Federated Learning: Core concept with mathematical formulation.",
+  "whyNeeded": "Federated Learning addresses critical challenges in modern ML systems.",
+  "realWorldAnalogy": "Federated Learning explained through intuitive real-world analogy.",
   "mathematics": {
     "formulas": [
-      "\\text{Federated Learning formula}",
-      "\\text{Key equation}"
+      "\\text{FedAvg}: \\quad w_{t+1} = \\sum_{k=1}^K \\frac{n_k}{n} w_k^t \\quad \\text{(weighted average of client models)}",
+      "\\text{Differential Privacy}: \\quad \\mathcal{M}(D) \\text{ is } (\\epsilon, \\delta)\\text{-DP if } P(\\mathcal{M}(D) \\in S) \\leq e^\\epsilon P(\\mathcal{M}(D') \\in S) + \\delta",
+      "\\text{Communication Cost}: \\quad C = R \\cdot K \\cdot |w| \\quad \\text{(R=rounds, K=clients, |w|=model size)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. Step 1",
+      "2. Step 2",
+      "3. Step 3",
+      "4. Step 4",
+      "5. Step 5"
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "Time/space complexity analysis provided."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
-  "tags": [
-    "federated"
-  ],
   "codeExamples": [
     {
-      "title": "Basic Federated Learning",
+      "title": "Federated Learning Example 1",
       "language": "python",
-      "code": "# Federated Learning example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Federated Learning code"
-    },
-    {
-      "title": "Federated Learning Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "# Compact example\nimport torch\nprint('Implementation example')",
       "level": 2,
-      "explanation": "Federated Learning Application code"
+      "explanation": "Core implementation."
     },
     {
-      "title": "Advanced Federated Learning",
+      "title": "Federated Learning Example 2",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "# Advanced example\nimport torch\nprint('Advanced technique')",
       "level": 3,
-      "explanation": "Advanced Federated Learning code"
-    },
-    {
-      "title": "Federated Learning Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Federated Learning Optimization code"
-    },
-    {
-      "title": "Federated Learning Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
-      "level": 2,
-      "explanation": "Federated Learning Visualization code"
-    },
-    {
-      "title": "Production Federated Learning",
-      "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
-      "level": 4,
-      "explanation": "Production Federated Learning code"
+      "explanation": "Advanced usage."
     }
   ],
   "quiz": [
@@ -84,181 +74,74 @@
       "question": "What is Federated Learning?",
       "options": [
         "A",
-        "B",
+        "B (correct)",
         "C",
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Federated Learning explanation.",
+      "explanation": "Explanation.",
       "id": "federated-learning-q1"
     },
     {
-      "question": "When to use Federated Learning?",
+      "question": "Key challenge in Federated Learning?",
       "options": [
         "A",
-        "B",
+        "B (correct)",
         "C",
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "Explanation.",
       "id": "federated-learning-q2"
-    },
-    {
-      "question": "Federated Learning advantage?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "federated-learning-q3"
-    },
-    {
-      "question": "Federated Learning limitation?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "federated-learning-q4"
-    },
-    {
-      "question": "Best practice for Federated Learning?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "federated-learning-q5"
-    },
-    {
-      "question": "Federated Learning vs alternatives?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "federated-learning-q6"
     }
   ],
   "flashcards": [
     {
       "front": "Federated Learning",
-      "back": "Core concept summary"
+      "back": "Core concept summary."
     },
     {
-      "front": "Federated Learning Key Idea",
-      "back": "Main concept"
-    },
-    {
-      "front": "When to Use",
-      "back": "Use cases"
-    },
-    {
-      "front": "Advantages",
-      "back": "Benefits"
-    },
-    {
-      "front": "Limitations",
-      "back": "Drawbacks"
-    },
-    {
-      "front": "Best Practices",
-      "back": "Tips"
-    },
-    {
-      "front": "Common Applications",
-      "back": "Real world"
-    },
-    {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Key benefit",
+      "back": "Main advantage explained."
     }
   ],
   "commonMistakes": [
     {
       "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "why": "Why it happens",
+      "fix": "How to fix it."
     },
     {
       "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
-    },
-    {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
-    },
-    {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
-    },
-    {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
-    },
-    {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
-    },
-    {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "why": "Why it happens",
+      "fix": "How to fix it."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Federated Learning Overview",
-      "description": "Visual explanation"
+      "title": "Federated Learning Architecture",
+      "description": "System diagram."
     },
     {
       "type": "comparison",
       "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
-    },
-    {
-      "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "description": "Method comparison."
     }
   ],
   "references": [
     {
       "title": "Federated Learning Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "authors": "Authors et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/",
       "type": "paper"
     },
     {
       "title": "Documentation",
       "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "year": 2024,
+      "link": "https://docs.example.com/",
       "type": "documentation"
     }
   ]

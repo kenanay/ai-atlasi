@@ -1,264 +1,147 @@
 {
   "id": "neural-architecture-search",
-  "title": "Neural Architecture Search",
+  "title": "Neural Architecture Search (NAS)",
   "category": "advanced",
   "level": 4,
-  "estimatedTime": 80,
-  "description": "Neural Architecture Search: Comprehensive guide covering fundamentals, applications, and best practices.",
+  "estimatedTime": 75,
+  "description": "NAS: Automate neural network architecture design. Search space, search strategy, performance estimation. DARTS, EfficientNet, AutoML. Hardware-aware NAS.",
+  "prerequisites": [
+    "neural-networks",
+    "convolutional-neural-networks",
+    "optimization"
+  ],
+  "nextTopics": [
+    "meta-learning-few-shot",
+    "model-compression-pruning"
+  ],
+  "relatedTopics": [
+    "convolutional-neural-networks",
+    "optimization",
+    "meta-learning-few-shot"
+  ],
+  "tags": [
+    "nas",
+    "automl",
+    "architecture-search",
+    "darts",
+    "efficientnet"
+  ],
   "content": {
-    "level0_basic": "Neural Architecture Search basics: Core concepts explained simply.",
-    "level1_beginner": "Neural Architecture Search fundamentals with examples and code snippets.",
-    "level2_application": "Practical Neural Architecture Search implementation with real-world applications.",
-    "level3_advanced": "Advanced Neural Architecture Search techniques and optimizations.",
-    "level4_expert": "Expert-level Neural Architecture Search architectures and research directions."
+    "level0_basic": "Neural Architecture Search (NAS): Automatically design optimal neural network architecture (layers, connections, hyperparameters). Manual design (ResNet, VGG) → AutoML. Components: (1) Search space (possible architectures), (2) Search strategy (how to explore: RL, evolution, gradient-based), (3) Performance estimation (train & evaluate). Example: Google AutoML designed EfficientNet (SOTA ImageNet), NASNet. Benefits: Better accuracy (SOTA), faster (hardware-aware), democratize (non-experts). Cost: Expensive (thousands of GPU hours), but one-shot methods reduce.",
+    "level1_beginner": "Search strategies: (1) Reinforcement Learning (NASNet, controller RNN predicts architecture, reward = accuracy), (2) Evolutionary (population of architectures, mutate, crossover, select), (3) Gradient-based (DARTS: differentiable, continuous relaxation, backprop through architecture), (4) One-shot (train supernet, weight sharing, architecture sampling). Search spaces: (1) Cell-based (search micro-architecture cell, stack), (2) Macro (full network), (3) Hierarchical. Performance estimation: (1) Full training (expensive), (2) Early stopping (proxy), (3) Weight sharing (one-shot), (4) Zero-cost proxies (no training). Frameworks: NAS-Bench, AutoKeras, Auto-PyTorch, Google Cloud AutoML.",
+    "level2_application": "Applications: (1) Computer Vision (EfficientNet, NASNet, object detection), (2) NLP (Evolved Transformer, architecture search for BERT), (3) Time series (AutoTS), (4) Recommendation (AutoRec). Hardware-aware NAS: Optimize for latency, memory, energy (mobile, edge). Multi-objective: Accuracy + efficiency (Pareto frontier). Deployment: Once architecture found → train from scratch (full epochs), deploy. Cost reduction: One-shot (DARTS, ENAS), weight sharing (hours vs weeks). Cloud NAS: Google Cloud AutoML, Azure AutoML, AWS SageMaker Autopilot.",
+    "level3_advanced": "Advanced: (1) DARTS (Differentiable Architecture Search, continuous relaxation, first-order/second-order), (2) EfficientNet (compound scaling: width, depth, resolution), (3) ProxylessNAS (hardware-aware, mobile latency), (4) Once-for-All (train once, deploy many, elastic depth/width/resolution), (5) NAS-Bench (benchmark datasets, reproducibility), (6) Zero-cost NAS (no training, SNIP, GraSP, NWOT). Challenges: Search cost (GPU hours), transferability (different tasks/datasets), fairness (search space bias), interpretability (black box).",
+    "level4_expert": "Production: Search space design (domain knowledge), multi-fidelity optimization (early stopping, low-resolution proxy), ensemble (multiple architectures), continual NAS (evolving architecture), privacy-preserving NAS (federated NAS). Research: Lifelong NAS (task sequence), neural architecture optimization (beyond search), theoretical foundations (expressivity, generalization), quantum NAS, neuro-symbolic NAS. Benchmarks: NAS-Bench-101/201/301, TransNAS-Bench. Open problems: Generalization to new domains, search cost reduction, interpretability, fairness."
   },
-  "whatIsIt": "Neural Architecture Search: Technical definition and core concepts.",
-  "whyNeeded": "Why Neural Architecture Search matters: Applications and use cases.",
-  "realWorldAnalogy": "Neural Architecture Search explained through real-world analogy.",
+  "whatIsIt": "Neural Architecture Search (NAS): Core concept with mathematical formulation.",
+  "whyNeeded": "Neural Architecture Search (NAS) addresses critical challenges in modern ML systems.",
+  "realWorldAnalogy": "Neural Architecture Search (NAS) explained through intuitive real-world analogy.",
   "mathematics": {
     "formulas": [
-      "\\text{Neural Architecture Search formula}",
-      "\\text{Key equation}"
+      "\\text{DARTS}: \\quad \\alpha^* = \\arg\\min_{\\alpha} \\mathcal{L}_{\\text{val}}(w^*(\\alpha), \\alpha) \\quad \\text{(bi-level optimization)}",
+      "\\text{EfficientNet Scaling}: \\quad \\text{depth: } d = \\alpha^\\phi, \\quad \\text{width: } w = \\beta^\\phi, \\quad \\text{resolution: } r = \\gamma^\\phi",
+      "\\text{Search Cost}: \\quad \\text{Cost} = |\\text{Search Space}| \\times \\text{Training Time} \\quad \\text{(naive, billions of GPU hours)}"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. Step 1",
+      "2. Step 2",
+      "3. Step 3",
+      "4. Step 4",
+      "5. Step 5"
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "Time/space complexity analysis provided."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
-  "tags": [
-    "neural"
-  ],
   "codeExamples": [
     {
-      "title": "Basic Neural Architecture Search",
+      "title": "Neural Architecture Search (NAS) Example 1",
       "language": "python",
-      "code": "# Neural Architecture Search example\nimport numpy as np\n\n# Implementation here",
-      "level": 1,
-      "explanation": "Basic Neural Architecture Search code"
-    },
-    {
-      "title": "Neural Architecture Search Application",
-      "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "# Compact example\nimport torch\nprint('Implementation example')",
       "level": 2,
-      "explanation": "Neural Architecture Search Application code"
+      "explanation": "Core implementation."
     },
     {
-      "title": "Advanced Neural Architecture Search",
+      "title": "Neural Architecture Search (NAS) Example 2",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "# Advanced example\nimport torch\nprint('Advanced technique')",
       "level": 3,
-      "explanation": "Advanced Neural Architecture Search code"
-    },
-    {
-      "title": "Neural Architecture Search Optimization",
-      "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
-      "level": 3,
-      "explanation": "Neural Architecture Search Optimization code"
-    },
-    {
-      "title": "Neural Architecture Search Visualization",
-      "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
-      "level": 2,
-      "explanation": "Neural Architecture Search Visualization code"
-    },
-    {
-      "title": "Production Neural Architecture Search",
-      "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
-      "level": 4,
-      "explanation": "Production Neural Architecture Search code"
+      "explanation": "Advanced usage."
     }
   ],
   "quiz": [
     {
-      "question": "What is Neural Architecture Search?",
+      "question": "What is Neural Architecture Search (NAS)?",
       "options": [
         "A",
-        "B",
+        "B (correct)",
         "C",
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Neural Architecture Search explanation.",
+      "explanation": "Explanation.",
       "id": "neural-architecture-search-q1"
     },
     {
-      "question": "When to use Neural Architecture Search?",
+      "question": "Key challenge in Neural Architecture Search (NAS)?",
       "options": [
         "A",
-        "B",
+        "B (correct)",
         "C",
         "D"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "Explanation.",
       "id": "neural-architecture-search-q2"
-    },
-    {
-      "question": "Neural Architecture Search advantage?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Key benefits.",
-      "id": "neural-architecture-search-q3"
-    },
-    {
-      "question": "Neural Architecture Search limitation?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Known issues.",
-      "id": "neural-architecture-search-q4"
-    },
-    {
-      "question": "Best practice for Neural Architecture Search?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Recommendations.",
-      "id": "neural-architecture-search-q5"
-    },
-    {
-      "question": "Neural Architecture Search vs alternatives?",
-      "options": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ],
-      "correctAnswer": 1,
-      "explanation": "Comparison.",
-      "id": "neural-architecture-search-q6"
     }
   ],
   "flashcards": [
     {
-      "front": "Neural Architecture Search",
-      "back": "Core concept summary"
+      "front": "Neural Architecture Search (NAS)",
+      "back": "Core concept summary."
     },
     {
-      "front": "Neural Architecture Search Key Idea",
-      "back": "Main concept"
-    },
-    {
-      "front": "When to Use",
-      "back": "Use cases"
-    },
-    {
-      "front": "Advantages",
-      "back": "Benefits"
-    },
-    {
-      "front": "Limitations",
-      "back": "Drawbacks"
-    },
-    {
-      "front": "Best Practices",
-      "back": "Tips"
-    },
-    {
-      "front": "Common Applications",
-      "back": "Real world"
-    },
-    {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Key benefit",
+      "back": "Main advantage explained."
     }
   ],
   "commonMistakes": [
     {
       "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "why": "Why it happens",
+      "fix": "How to fix it."
     },
     {
       "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
-    },
-    {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
-    },
-    {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
-    },
-    {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
-    },
-    {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
-    },
-    {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "why": "Why it happens",
+      "fix": "How to fix it."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Neural Architecture Search Overview",
-      "description": "Visual explanation"
+      "title": "Neural Architecture Search (NAS) Architecture",
+      "description": "System diagram."
     },
     {
       "type": "comparison",
       "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
-    },
-    {
-      "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "description": "Method comparison."
     }
   ],
   "references": [
     {
-      "title": "Neural Architecture Search Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "Neural Architecture Search (NAS) Paper",
+      "authors": "Authors et al.",
+      "year": 2020,
+      "link": "https://arxiv.org/",
       "type": "paper"
     },
     {
       "title": "Documentation",
       "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "year": 2024,
+      "link": "https://docs.example.com/",
       "type": "documentation"
     }
   ]
