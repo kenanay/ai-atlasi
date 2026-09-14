@@ -4,261 +4,345 @@
   "category": "advanced",
   "level": 3,
   "estimatedTime": 70,
-  "description": "Explainable AI (XAI): Comprehensive guide covering fundamentals, applications, and best practices.",
+  "description": "Açıklanabilir yapay zeka: Black-box modellerin kararlarını anlaşılır hale getirme. SHAP, LIME, feature importance ile model interpretability. GDPR, sağlık, finans gibi kritik alanlarda zorunlu. Trust, debugging, bias detection.",
   "content": {
-    "level0_basic": "Explainable AI (XAI) basics: Core concepts explained simply.",
-    "level1_beginner": "Explainable AI (XAI) fundamentals with examples and code snippets.",
-    "level2_application": "Practical Explainable AI (XAI) implementation with real-world applications.",
-    "level3_advanced": "Advanced Explainable AI (XAI) techniques and optimizations.",
-    "level4_expert": "Expert-level Explainable AI (XAI) architectures and research directions."
+    "level0_basic": "Explainable AI (XAI - Açıklanabilir Yapay Zeka), karmaşık ML modellerinin neden belirli bir karar verdiğini anlaşılır şekilde açıklama yeteneğidir. Örneğin: Kredi başvurunuz reddedildi, neden? 'Geliriniz düşük ve borç geçmişiniz var' gibi açıklama. Black-box modeller (deep learning, ensemble) doğru tahmin yapar ama nasıl yaptığını açıklamaz. XAI bu sorunu çözer: güven, şeffaflık, debugging için kritik.",
+    "level1_beginner": "XAI'nin 2 ana yaklaşımı vardır: (1) **Intrinsic (Doğal)**: Model kendisi açıklanabilir (linear regression, decision tree - her karar izlenebilir). (2) **Post-hoc (Sonradan)**: Black-box modele sonradan açıklama ekle (SHAP, LIME, saliency maps). XAI yöntemleri ikiye ayrılır: **Global** (model genel olarak neye önem verir? - feature importance) ve **Local** (bu spesifik tahmin neden yapıldı? - LIME, SHAP). Gerçek dünyada: GDPR 'açıklama hakkı', sağlıkta doktor güveni, finansta regülasyon, bias detection için şart.",
+    "level2_application": "Pratik XAI teknikleri: (1) **Feature Importance**: Random Forest, XGBoost feature importance'ı (hangi feature en çok etkili?). (2) **LIME** (Local Interpretable Model-agnostic Explanations): Tahmin etrafında lokal linear model fit et. (3) **SHAP** (SHapley Additive exPlanations): Game theory'den Shapley values - her feature'ın katkısı. (4) **Saliency Maps**: Image classification'da hangi pikseller kritik (Grad-CAM). (5) **Counterfactual Explanations**: 'Eğer geliriniz 5K daha fazla olsaydı kredi onaylanırdı'. Production'da: Model monitoring (hangi feature'lar değişti?), bias detection (ırk, cinsiyet unfair etki ediyor mu?), debugging (neden yanlış tahmin?).",
+    "level3_advanced": "İleri seviye XAI, model-agnostic methods, deep learning interpretability ve production challenges içerir. **SHAP Deep Dive**: DeepSHAP (neural networks için), TreeSHAP (tree models için O(TLD) - hızlı), KernelSHAP (genel ama yavaş). **Integrated Gradients**: Baseline'dan input'a gradient path integration. **Attention Weights**: Transformer'larda attention score'ları (hangi token'lara baktı?). **Concept Activation Vectors (CAV)**: High-level concept'ler (örn: 'stripes' concept'i model'de var mı?). **Counterfactual Generation**: Optimization ile minimal değişiklikle farklı sonuç. **Faithfulness vs Interpretability trade-off**: Basit açıklama ≠ doğru açıklama. Evaluation: fidelity (açıklama modeli ne kadar temsil eder?), consistency, stability.",
+    "level4_expert": "Expert seviyede, XAI research frontiers, causal inference ve regulatory compliance önemlidir. **Causal Explanations**: Correlation değil causation - do-calculus, structural causal models. **Mechanistic Interpretability**: Neural network'ün internal representations'ını anlama (circuits, polysemanticity). **Natural Language Explanations**: GPT gibi modeller kendi kararlarını text olarak açıklasın. **Interactive Explanations**: What-if analysis, user customizable explanations. **XAI for Fairness**: Disparate impact detection, bias mitigation with explanations. **Regulatory**: GDPR Article 22 (automated decision right to explanation), EU AI Act (high-risk systems için transparency), FDA medical device approval. **Production Challenges**: Latency (SHAP hesaplama yavaş), scalability (milyonlarca tahmin için), user comprehension (teknik olmayan kullanıcılar anlamasın mı?), adversarial explanations (yanıltıcı açıklama üretme)."
   },
-  "whatIsIt": "Explainable AI (XAI): Technical definition and core concepts.",
-  "whyNeeded": "Why Explainable AI (XAI) matters: Applications and use cases.",
-  "realWorldAnalogy": "Explainable AI (XAI) explained through real-world analogy.",
+  "whatIsIt": "Explainable AI (XAI), machine learning modellerinin tahmin ve kararlarını insanların anlayabileceği şekilde açıklama yeteneğidir. Black-box modeller (deep neural networks, ensemble methods) yüksek accuracy'ye sahip olabilir ancak 'nasıl' çalıştıkları opaktır. XAI, model interpretability (modelin genel mantığı) ve explainability (spesifik tahminlerin nedeni) sağlar. Matematiksel olarak: Bir model $f(x) = y$ için, açıklama fonksiyonu $g$ bul ki insan için anlaşılır olsun ve $g \\approx f$ (faithful). SHAP: $\\phi_i = \\sum_{S \\subseteq N \\setminus \\{i\\}} \\frac{|S|!(|N|-|S|-1)!}{|N|!} [f(S \\cup \\{i\\}) - f(S)]$ (Shapley value).",
+  "whyNeeded": "XAI kritik çünkü: (1) **Trust & Adoption**: Kullanıcılar anlamadan sisteme güvenmez (doktor, hakim, pilot). (2) **Regulatory Compliance**: GDPR 'açıklama hakkı', EU AI Act, FDA medical device approval. (3) **Debugging & Improvement**: Neden model hata yaptı? Hangi feature eklemeli? (4) **Bias Detection**: Model ırk, cinsiyet, yaş'a unfair şekilde karar veriyor mu? (5) **Safety**: Autonomous driving, healthcare - hata kritik. (6) **Scientific Discovery**: Model hangi pattern'leri keşfetti? (protein folding, drug discovery). (7) **Accountability**: Yanlış karar verildiğinde kim sorumlu? (8) **User Empowerment**: 'Krediniz neden reddedildi?' - kullanıcı durumunu iyileştirebilir.",
+  "realWorldAnalogy": "XAI'yi bir öğretmene benzetebiliriz. **Black-box model** = öğretmen sadece cevabı söyler: 'Bu soru yanlış' der ama neden yanlış açıklamaz. Öğrenci öğrenemez, tekrar aynı hatayı yapar. **XAI** = iyi öğretmen hem cevabı söyler, hem adım adım açıklar: 'Bu formülü buraya uygulayamadın çünkü x değeri negatif, o yüzden karekök tanımsız'. Öğrenci anlayarak öğrenir. XAI teknikleri: (1) **Feature Importance** = 'Bu konuda en önemli 3 konu şunlar' (genel bakış), (2) **LIME/SHAP** = 'Bu spesifik soruyu yanlış yaptın çünkü 2. adımda işaret hatasına düştün' (lokal açıklama), (3) **Counterfactual** = 'Eğer burada artı yerine eksi koysaydın doğru olurdu' (alternatif senaryo).",
   "mathematics": {
     "formulas": [
-      "\\text{Explainable AI (XAI) formula}",
-      "\\text{Key equation}"
+      "\\text{SHAP (Shapley Value)}: \\quad \\phi_i = \\sum_{S \\subseteq N \\setminus \\{i\\}} \\frac{|S|!(|N|-|S|-1)!}{|N|!} [f(S \\cup \\{i\\}) - f(S)]",
+      "\\text{LIME Objective}: \\quad \\xi(x) = \\arg\\min_{g \\in G} \\mathcal{L}(f, g, \\pi_x) + \\Omega(g)",
+      "\\text{where } \\mathcal{L}(f, g, \\pi_x) = \\sum_{z \\in Z} \\pi_x(z) [f(z) - g(z)]^2 \\quad \\text{(fidelity loss)}",
+      "\\text{Integrated Gradients}: \\quad IG_i(x) = (x_i - x_i') \\int_{\\alpha=0}^1 \\frac{\\partial f(x' + \\alpha(x - x'))}{\\partial x_i} d\\alpha",
+      "\\text{Grad-CAM}: \\quad L_{\\text{Grad-CAM}}^c = \\text{ReLU}\\left(\\sum_k \\alpha_k^c A^k\\right), \\quad \\alpha_k^c = \\frac{1}{Z} \\sum_i \\sum_j \\frac{\\partial y^c}{\\partial A_{ij}^k}",
+      "\\text{Counterfactual}: \\quad \\min_{x'} \\|x - x'\\| \\quad \\text{s.t. } f(x') \\neq f(x) \\quad \\text{(minimal change)}",
+      "\\text{Fidelity}: \\quad \\text{Fidelity}(g, f) = 1 - \\frac{1}{n} \\sum_{i=1}^n \\mathbb{1}[g(x_i) \\neq f(x_i)]",
+      "\\text{Feature Importance (Permutation)}: \\quad I_j = \\mathbb{E}[\\mathcal{L}(y, f(X^{\\text{perm}_j}))] - \\mathbb{E}[\\mathcal{L}(y, f(X))]"
     ]
   },
   "algorithm": {
     "stepByStep": [
-      "1. Step one",
-      "2. Step two",
-      "3. Step three"
+      "1. **Model Seçimi ve Eğitimi**: İlk önce prediction model'i eğit (XGBoost, neural network vs). Accuracy'yi maksimize et, sonra açıklamaya geç.",
+      "2. **Global vs Local Karar**: Tüm modeli mi açıklayacaksın (global - feature importance, partial dependence plots)? Yoksa spesifik tahminleri mi (local - LIME, SHAP)?",
+      "3. **XAI Yöntemi Seç**: Model tipine göre: Tree models → TreeSHAP, SHAP feature importance. Neural networks → Integrated Gradients, Grad-CAM. Model-agnostic → LIME, KernelSHAP.",
+      "4. **Baseline Belirle (SHAP/IG için)**: SHAP: Training data mean veya median. Integrated Gradients: Zero baseline veya blurred image (görüntülerde).",
+      "5. **Açıklama Hesapla**: LIME: Tahmin etrafında 5000 perturbed sample oluştur, lokal linear model fit et. SHAP: Shapley value hesapla (coalition'lar üzerinde marginalization).",
+      "6. **Görselleştirme**: SHAP waterfall plot (her feature'ın katkısı), force plot (pozitif/negatif katkılar), beeswarm plot (tüm dataset için feature etkisi). LIME: Feature contribution bar chart.",
+      "7. **Validation**: Fidelity check (açıklama modeli orijinal modeli ne kadar temsil eder?), consistency (benzer input'lar benzer açıklama mı?), stability (küçük perturbation açıklamayı değiştirir mi?).",
+      "8. **Bias Detection**: Sensitive attributes (race, gender, age) unfair etki ediyor mu? SHAP ile bu feature'ların katkısını analiz et. Disparate impact hesapla.",
+      "9. **Counterfactual (opsiyonel)**: Optimization ile en yakın alternatif tahmin bul. 'Eğer yaş 25 yerine 30 olsaydı karar evet olurdu' gibi actionable insight.",
+      "10. **Production Deployment**: Explainer model serialize et, API olarak serve et. Latency optimize et (SHAP hesaplama yavaş → pre-compute veya approximate). User-friendly dashboard (teknik olmayan kullanıcılar için basitleştirilmiş görselleştirme)."
     ],
-    "complexity": "Computational complexity analysis."
+    "complexity": "**Zaman Karmaşıklığı**: LIME O(K·M) (K=perturbed samples ~5000, M=interpretable model cost), SHAP exact O(2^F) (F=features, intractable!), TreeSHAP O(TLD²) (T=trees, L=leaves, D=depth - polynomial!), KernelSHAP O(K·M) approximation, Integrated Gradients O(S·B) (S=steps ~50, B=backprop cost), Grad-CAM O(forward + 1 backward pass). **Production**: TreeSHAP milisaniyeler, KernelSHAP saniyeler, DeepSHAP 10-100ms. **Scalability**: Batch processing (offline), approximate methods (sampling), model distillation (explain simpler proxy model)."
   },
-  "prerequisites": [],
-  "nextTopics": [],
-  "relatedTopics": [],
+  "prerequisites": [
+    "neural-networks",
+    "decision-trees-random-forests",
+    "xgboost-gradient-boosting"
+  ],
+  "nextTopics": [
+    "generative-adversarial-networks"
+  ],
+  "relatedTopics": [
+    "decision-trees-random-forests",
+    "xgboost-gradient-boosting",
+    "neural-networks"
+  ],
   "tags": [
-    "explainable"
+    "explainability",
+    "interpretability",
+    "shap",
+    "lime",
+    "xai",
+    "transparency",
+    "trust",
+    "advanced"
   ],
   "codeExamples": [
     {
-      "title": "Basic Explainable AI (XAI)",
+      "title": "Feature Importance - Random Forest",
       "language": "python",
-      "code": "# Explainable AI (XAI) example\nimport numpy as np\n\n# Implementation here",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.datasets import load_breast_cancer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nimport matplotlib.pyplot as plt\n\n# Veri: Breast cancer dataset\ndata = load_breast_cancer()\nX = pd.DataFrame(data.data, columns=data.feature_names)\ny = data.target\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\n# Random Forest model\nrf = RandomForestClassifier(n_estimators=100, random_state=42)\nrf.fit(X_train, y_train)\n\nprint(f\"Test Accuracy: {rf.score(X_test, y_test):.3f}\")\n\n# Feature Importance (MDI - Mean Decrease in Impurity)\nimportances = rf.feature_importances_\nindices = np.argsort(importances)[::-1]\n\nprint(\"\\n🔍 Top 10 Most Important Features:\")\nfor i in range(10):\n    print(f\"  {i+1}. {data.feature_names[indices[i]]:30s} → {importances[indices[i]]:.4f}\")\n\n# Görselleştirme\nplt.figure(figsize=(10, 6))\nplt.bar(range(10), importances[indices[:10]])\nplt.xticks(range(10), [data.feature_names[i] for i in indices[:10]], rotation=45, ha='right')\nplt.xlabel('Feature')\nplt.ylabel('Importance')\nplt.title('Random Forest Feature Importance (Top 10)')\nplt.tight_layout()\nplt.show()\n\nprint(\"\\n💡 Feature Importance:\")\nprint(\"  - Global açıklama: Tüm model için hangi feature'lar önemli?\")\nprint(\"  - MDI (Gini importance): Her split'te feature'ın impurity azalması\")\nprint(\"  - Dezavantaj: Correlated features'larla sorunlu, high-cardinality bias\")\nprint(\"  - Alternatif: Permutation importance (daha robust)\")",
       "level": 1,
-      "explanation": "Basic Explainable AI (XAI) code"
+      "explanation": "Feature Importance, tree-based modellerde (Random Forest, XGBoost) hangi feature'ların en çok etkili olduğunu gösterir. Global açıklama yöntemidir. MDI (Mean Decrease in Impurity) her split'te Gini/entropy azalmasını ölçer."
     },
     {
-      "title": "Explainable AI (XAI) Application",
+      "title": "LIME - Local Interpretable Model",
       "language": "python",
-      "code": "# Practical use case\nfrom sklearn import *\n\n# Code here",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.datasets import load_breast_cancer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nfrom lime import lime_tabular\nimport matplotlib.pyplot as plt\n\n# Veri ve model (önceki örnekten devam)\ndata = load_breast_cancer()\nX = pd.DataFrame(data.data, columns=data.feature_names)\ny = data.target\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nrf = RandomForestClassifier(n_estimators=100, random_state=42)\nrf.fit(X_train, y_train)\n\n# LIME Explainer\nexplainer = lime_tabular.LimeTabularExplainer(\n    training_data=X_train.values,\n    feature_names=X_train.columns.tolist(),\n    class_names=['Malignant', 'Benign'],\n    mode='classification'\n)\n\n# Spesifik bir tahmin için açıklama\ninstance_idx = 0\ninstance = X_test.iloc[instance_idx].values\n\nprint(f\"\\n🔬 Instance {instance_idx} Tahmin Açıklaması:\")\nprint(f\"   Gerçek: {['Malignant', 'Benign'][y_test.iloc[instance_idx]]}\")\nprint(f\"   Model Tahmini: {['Malignant', 'Benign'][rf.predict([instance])[0]]}\")\nprint(f\"   Probability: Malignant={rf.predict_proba([instance])[0][0]:.3f}, Benign={rf.predict_proba([instance])[0][1]:.3f}\")\n\n# LIME açıklaması (5000 perturbed sample ile lokal linear model)\nexp = explainer.explain_instance(\n    data_row=instance,\n    predict_fn=rf.predict_proba,\n    num_features=10,\n    num_samples=5000\n)\n\nprint(\"\\n📊 LIME Açıklaması (Top 10 Feature):\")\nfor feature, weight in exp.as_list():\n    direction = '→ Benign' if weight > 0 else '→ Malignant'\n    print(f\"  {feature:40s} {weight:+.4f} {direction}\")\n\n# Görselleştirme\nexp.as_pyplot_figure()\nplt.title(f'LIME Explanation for Instance {instance_idx}')\nplt.tight_layout()\nplt.show()\n\n# HTML report (interaktif)\nexp.save_to_file('lime_explanation.html')\nprint(\"\\n✅ LIME HTML report saved: lime_explanation.html\")\n\nprint(\"\\n💡 LIME (Local Interpretable Model-agnostic Explanations):\")\nprint(\"  - Lokal açıklama: Bu spesifik tahmin neden yapıldı?\")\nprint(\"  - Tahmin etrafında perturbed samples oluştur (5000 adet)\")\nprint(\"  - Lokal linear/ridge regression fit et (interpretable!)\")\nprint(\"  - Model-agnostic: Her model ile çalışır (RF, XGBoost, NN)\")",
       "level": 2,
-      "explanation": "Explainable AI (XAI) Application code"
+      "explanation": "LIME, spesifik bir tahmin için lokal açıklama yapar. Tahmin etrafında perturbed sample'lar oluşturup basit linear model fit eder. Model-agnostic (her modelle çalışır). Her prediction için hangi feature'lar etkili?"
     },
     {
-      "title": "Advanced Explainable AI (XAI)",
+      "title": "SHAP - Shapley Values (TreeSHAP)",
       "language": "python",
-      "code": "# Advanced implementation\nimport torch\n\n# Advanced code",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.datasets import load_breast_cancer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nimport shap\nimport matplotlib.pyplot as plt\n\n# Veri ve model\ndata = load_breast_cancer()\nX = pd.DataFrame(data.data, columns=data.feature_names)\ny = data.target\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nrf = RandomForestClassifier(n_estimators=100, random_state=42, max_depth=5)\nrf.fit(X_train, y_train)\n\nprint(f\"Test Accuracy: {rf.score(X_test, y_test):.3f}\")\n\n# SHAP TreeExplainer (Random Forest için optimize edilmiş)\nexplainer = shap.TreeExplainer(rf)\nshap_values = explainer.shap_values(X_test)\n\nprint(f\"\\nSHAP values shape: {shap_values[1].shape}\")\nprint(f\"  (n_samples={len(X_test)}, n_features={len(X.columns)})\")\n\n# Spesifik bir instance için SHAP açıklaması\ninstance_idx = 0\nprint(f\"\\n🔬 Instance {instance_idx} SHAP Açıklaması:\")\nprint(f\"   Base value (expected): {explainer.expected_value[1]:.3f}\")\nprint(f\"   Model output: {rf.predict_proba(X_test.iloc[[instance_idx]])[0][1]:.3f}\")\n\n# Waterfall plot (tek instance)\nshap.waterfall_plot(\n    shap.Explanation(\n        values=shap_values[1][instance_idx],\n        base_values=explainer.expected_value[1],\n        data=X_test.iloc[instance_idx],\n        feature_names=X_test.columns.tolist()\n    )\n)\n\n# Force plot (interaktif HTML)\nshap.force_plot(\n    explainer.expected_value[1],\n    shap_values[1][instance_idx],\n    X_test.iloc[instance_idx],\n    matplotlib=True\n)\nplt.title(f'SHAP Force Plot - Instance {instance_idx}')\nplt.tight_layout()\nplt.show()\n\n# Summary plot: Tüm dataset için feature importance\nprint(\"\\n📊 Global SHAP Feature Importance:\")\nshap.summary_plot(shap_values[1], X_test, plot_type=\"bar\", show=False)\nplt.title('SHAP Feature Importance (Global)')\nplt.tight_layout()\nplt.show()\n\n# Beeswarm plot: Feature values vs SHAP values\nshap.summary_plot(shap_values[1], X_test, show=False)\nplt.title('SHAP Beeswarm Plot (Feature Impact)')\nplt.tight_layout()\nplt.show()\n\nprint(\"\\n💡 SHAP (SHapley Additive exPlanations):\")\nprint(\"  - Game theory'den Shapley values: Her feature'ın adil katkısı\")\nprint(\"  - TreeSHAP: Tree models için optimize (O(TLD²) - hızlı!)\")\nprint(\"  - Waterfall: Tek tahmin için feature contributions\")\nprint(\"  - Summary: Tüm dataset için global importance\")\nprint(\"  - Model-specific: Her model tipi için optimize explainer var\")",
       "level": 3,
-      "explanation": "Advanced Explainable AI (XAI) code"
+      "explanation": "SHAP (Shapley values), game theory'den gelen adil katkı hesabıdır. Her feature'ın tahmine katkısını hesaplar. TreeSHAP tree modeller için çok hızlıdır. Global ve lokal açıklama yapar. En güçlü XAI yöntemlerinden."
     },
     {
-      "title": "Explainable AI (XAI) Optimization",
+      "title": "Grad-CAM - CNN Visualization",
       "language": "python",
-      "code": "# Optimized version\n# Performance tuning",
+      "code": "import torch\nimport torch.nn as nn\nimport torchvision.models as models\nimport torchvision.transforms as transforms\nfrom PIL import Image\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport cv2\n\n# Pre-trained ResNet18\nmodel = models.resnet18(pretrained=True)\nmodel.eval()\n\n# Target layer: son conv layer\ntarget_layer = model.layer4[-1]\n\n# Grad-CAM sınıfı\nclass GradCAM:\n    def __init__(self, model, target_layer):\n        self.model = model\n        self.target_layer = target_layer\n        self.gradients = None\n        self.activations = None\n        \n        # Hook'lar\n        def forward_hook(module, input, output):\n            self.activations = output\n        \n        def backward_hook(module, grad_input, grad_output):\n            self.gradients = grad_output[0]\n        \n        target_layer.register_forward_hook(forward_hook)\n        target_layer.register_full_backward_hook(backward_hook)\n    \n    def generate_cam(self, input_image, target_class=None):\n        # Forward pass\n        output = self.model(input_image)\n        \n        if target_class is None:\n            target_class = output.argmax(dim=1).item()\n        \n        # Backward pass\n        self.model.zero_grad()\n        output[0, target_class].backward()\n        \n        # Global average pooling of gradients\n        pooled_gradients = torch.mean(self.gradients, dim=[0, 2, 3])\n        \n        # Weight activations\n        for i in range(self.activations.shape[1]):\n            self.activations[:, i, :, :] *= pooled_gradients[i]\n        \n        # Heatmap\n        heatmap = torch.mean(self.activations, dim=1).squeeze()\n        heatmap = np.maximum(heatmap.detach().cpu().numpy(), 0)  # ReLU\n        heatmap /= np.max(heatmap)  # Normalize [0,1]\n        \n        return heatmap, target_class\n\n# Örnek görüntü (kendi görüntünüzü kullanın)\n# Burada random image kullanıyoruz\nimg = torch.randn(1, 3, 224, 224)  # (batch, channels, height, width)\n\n# Grad-CAM\ngrad_cam = GradCAM(model, target_layer)\nheatmap, predicted_class = grad_cam.generate_cam(img)\n\nprint(f\"\\n🖼️  Predicted Class: {predicted_class}\")\nprint(f\"   Heatmap shape: {heatmap.shape}\")\n\n# Visualize heatmap\nplt.figure(figsize=(12, 4))\n\nplt.subplot(1, 3, 1)\nplt.imshow(img.squeeze().permute(1, 2, 0).cpu().numpy())\nplt.title('Original Image')\nplt.axis('off')\n\nplt.subplot(1, 3, 2)\nplt.imshow(heatmap, cmap='jet')\nplt.title('Grad-CAM Heatmap')\nplt.axis('off')\n\nplt.subplot(1, 3, 3)\n# Overlay\nimg_np = img.squeeze().permute(1, 2, 0).cpu().numpy()\nheatmap_resized = cv2.resize(heatmap, (224, 224))\nheatmap_colored = plt.cm.jet(heatmap_resized)[:, :, :3]\noverlay = 0.5 * img_np + 0.5 * heatmap_colored\nplt.imshow(overlay)\nplt.title('Overlay')\nplt.axis('off')\n\nplt.tight_layout()\nplt.show()\n\nprint(\"\\n💡 Grad-CAM (Gradient-weighted Class Activation Mapping):\")\nprint(\"  - CNN için görsel açıklama: Hangi pikseller tahmini etkiliyor?\")\nprint(\"  - Target class'a göre son conv layer'ın gradient'ini al\")\nprint(\"  - Gradients × activations → heatmap\")\nprint(\"  - Kullanım: Medical imaging (tumor tespiti), quality control\")",
       "level": 3,
-      "explanation": "Explainable AI (XAI) Optimization code"
+      "explanation": "Grad-CAM, CNN'ler için görsel açıklama yapar. Hangi piksellerin/bölgelerin tahmini etkilediğini heatmap ile gösterir. Target class'a göre gradient hesaplayıp activation'larla ağırlıklandırır. Medical imaging, autonomous driving için kritik."
     },
     {
-      "title": "Explainable AI (XAI) Visualization",
+      "title": "Counterfactual Explanations",
       "language": "python",
-      "code": "# Plotting and viz\nimport matplotlib.pyplot as plt",
-      "level": 2,
-      "explanation": "Explainable AI (XAI) Visualization code"
-    },
-    {
-      "title": "Production Explainable AI (XAI)",
-      "language": "python",
-      "code": "# Production-ready code\n# Deployment considerations",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.datasets import load_breast_cancer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nfrom scipy.optimize import minimize\n\n# Veri ve model\ndata = load_breast_cancer()\nX = pd.DataFrame(data.data, columns=data.feature_names)\ny = data.target\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nrf = RandomForestClassifier(n_estimators=100, random_state=42)\nrf.fit(X_train, y_train)\n\n# Malignant tahmin edilen bir instance seç\nmalignant_indices = np.where(rf.predict(X_test) == 0)[0]\ninstance_idx = malignant_indices[0]\noriginal = X_test.iloc[instance_idx].values\noriginal_pred = rf.predict([original])[0]\noriginal_proba = rf.predict_proba([original])[0]\n\nprint(f\"\\n🔬 Original Instance:\")\nprint(f\"   Prediction: {['Malignant', 'Benign'][original_pred]}\")\nprint(f\"   Probability: Malignant={original_proba[0]:.3f}, Benign={original_proba[1]:.3f}\")\n\n# Counterfactual: En yakın 'Benign' tahminini bul\ndef counterfactual_objective(x_cf, x_orig, model, target_class):\n    \"\"\"\n    Minimize: L2 distance + soft constraint (model prediction = target)\n    \"\"\"\n    distance = np.sum((x_cf - x_orig) ** 2)\n    \n    # Soft constraint: Model tahmini target class'a yakın olmalı\n    pred_proba = model.predict_proba([x_cf])[0][target_class]\n    penalty = 100 * (1 - pred_proba) ** 2  # Penalize if not close to target\n    \n    return distance + penalty\n\n# Optimization\ntarget_class = 1  # Benign\nresult = minimize(\n    fun=lambda x: counterfactual_objective(x, original, rf, target_class),\n    x0=original,\n    method='L-BFGS-B',\n    bounds=[(X_train.min()[i], X_train.max()[i]) for i in range(len(original))]\n)\n\ncounterfactual = result.x\ncf_pred = rf.predict([counterfactual])[0]\ncf_proba = rf.predict_proba([counterfactual])[0]\n\nprint(f\"\\n🎯 Counterfactual Instance:\")\nprint(f\"   Prediction: {['Malignant', 'Benign'][cf_pred]}\")\nprint(f\"   Probability: Malignant={cf_proba[0]:.3f}, Benign={cf_proba[1]:.3f}\")\n\n# Feature değişimleri\nchanges = counterfactual - original\nchanges_df = pd.DataFrame({\n    'Feature': X_test.columns,\n    'Original': original,\n    'Counterfactual': counterfactual,\n    'Change': changes,\n    'Change %': (changes / (original + 1e-8)) * 100\n})\n\n# En çok değişen feature'lar\nchanges_df['AbsChange'] = np.abs(changes_df['Change'])\nchanges_df = changes_df.sort_values('AbsChange', ascending=False)\n\nprint(f\"\\n📋 Top 5 Değişen Feature:\")\nfor idx, row in changes_df.head(5).iterrows():\n    print(f\"  • {row['Feature']:30s}\")\n    print(f\"    Original: {row['Original']:.2f} → Counterfactual: {row['Counterfactual']:.2f}\")\n    print(f\"    Change: {row['Change']:+.2f} ({row['Change %']:+.1f}%)\\n\")\n\nprint(\"💡 Counterfactual Explanations:\")\nprint(\"  - 'Eğer X olsaydı, Y olurdu' şeklinde açıklama\")\nprint(\"  - Minimal feature değişikliği ile farklı tahmin\")\nprint(\"  - Actionable: Kullanıcı neyi değiştirmeli?\")\nprint(\"  - Optimization: L2 distance minimize + target class constraint\")",
       "level": 4,
-      "explanation": "Production Explainable AI (XAI) code"
+      "explanation": "Counterfactual Explanations, 'eğer ... olsaydı' türü açıklama yapar. Minimal feature değişikliği ile farklı tahmin elde etmek. Actionable insight: Kullanıcı neyi değiştirmeli ki sonuç değişsin? Optimization problemi: minimize distance, subject to target class."
+    },
+    {
+      "title": "Production XAI: SHAP API + Monitoring",
+      "language": "python",
+      "code": "import numpy as np\nimport pandas as pd\nfrom sklearn.ensemble import RandomForestClassifier\nimport shap\nimport joblib\nimport time\nfrom flask import Flask, request, jsonify\n\n# Flask API (production serving)\napp = Flask(__name__)\n\n# Model ve SHAP explainer'ı yükle\nmodel = joblib.load('model.pkl')  # Pre-trained model\nexplainer = joblib.load('explainer.pkl')  # Pre-computed SHAP explainer\n\nprint(\"✅ Model ve explainer yüklendi\")\n\n# Explanation endpoint\n@app.route('/predict_explain', methods=['POST'])\ndef predict_and_explain():\n    \"\"\"\n    Prediction + SHAP explanation API\n    Input: JSON {\"features\": [...]}\n    Output: {\"prediction\": ..., \"shap_values\": {...}, \"latency_ms\": ...}\n    \"\"\"\n    start_time = time.time()\n    \n    # Input\n    data = request.json\n    features = np.array(data['features']).reshape(1, -1)\n    \n    # Prediction\n    prediction = model.predict(features)[0]\n    proba = model.predict_proba(features)[0]\n    \n    # SHAP explanation\n    shap_values = explainer.shap_values(features)\n    \n    # Top-5 contributing features\n    feature_names = data.get('feature_names', [f'feature_{i}' for i in range(len(features[0]))])\n    shap_contrib = {\n        feature_names[i]: float(shap_values[1][0][i])\n        for i in range(len(feature_names))\n    }\n    top_5 = sorted(shap_contrib.items(), key=lambda x: abs(x[1]), reverse=True)[:5]\n    \n    latency_ms = (time.time() - start_time) * 1000\n    \n    # Response\n    response = {\n        'prediction': int(prediction),\n        'probability': {'class_0': float(proba[0]), 'class_1': float(proba[1])},\n        'explanation': {\n            'base_value': float(explainer.expected_value[1]),\n            'top_5_features': [{'feature': f, 'shap_value': v} for f, v in top_5],\n            'all_shap_values': shap_contrib\n        },\n        'latency_ms': round(latency_ms, 2)\n    }\n    \n    # Logging (monitoring)\n    log_prediction(features, prediction, shap_contrib, latency_ms)\n    \n    return jsonify(response)\n\n# Monitoring: SHAP drift detection\nprediction_log = []\n\ndef log_prediction(features, prediction, shap_values, latency):\n    \"\"\"\n    Her prediction'ı logla, SHAP değerlerini track et\n    \"\"\"\n    prediction_log.append({\n        'timestamp': time.time(),\n        'features': features.tolist(),\n        'prediction': prediction,\n        'shap_values': shap_values,\n        'latency_ms': latency\n    })\n    \n    # SHAP drift detection (her 100 tahmin)\n    if len(prediction_log) % 100 == 0:\n        detect_shap_drift()\n\ndef detect_shap_drift():\n    \"\"\"\n    Son 100 tahmin için SHAP distribution değişti mi?\n    \"\"\"\n    recent = prediction_log[-100:]\n    shap_means = {}\n    \n    for log in recent:\n        for feature, value in log['shap_values'].items():\n            if feature not in shap_means:\n                shap_means[feature] = []\n            shap_means[feature].append(value)\n    \n    print(\"\\n📊 SHAP Drift Check (last 100 predictions):\")\n    for feature, values in list(shap_means.items())[:5]:\n        mean = np.mean(values)\n        std = np.std(values)\n        print(f\"  {feature:30s} → Mean SHAP: {mean:+.4f} (±{std:.4f})\")\n    \n    # Alert: Eğer bir feature'ın SHAP değeri çok değiştiyse\n    # (model behavior değişmiş olabilir - retraining sinyali)\n\nif __name__ == '__main__':\n    print(\"\\n🚀 XAI API Server başlatılıyor...\")\n    print(\"   Endpoint: POST /predict_explain\")\n    print(\"   Monitoring: SHAP drift detection her 100 tahmin\")\n    print(\"\\n💡 Production XAI Best Practices:\")\n    print(\"  - Pre-compute explainer (offline), serialize (joblib)\")\n    print(\"  - API endpoint: prediction + explanation birlikte\")\n    print(\"  - Latency tracking: SHAP hesaplama <50ms olmalı\")\n    print(\"  - SHAP drift detection: Feature importance değişti mi?\")\n    print(\"  - User-friendly: Top-5 feature göster, detay opsiyonel\")\n    \n    # app.run(host='0.0.0.0', port=5000)  # Production'da uncomment",
+      "level": 4,
+      "explanation": "Production XAI: Model + explainer birlikte serve et. API endpoint prediction ile explanation'ı birlikte döner. SHAP drift monitoring: Feature importance değişti mi? (model degradation sinyali). Latency optimize et, user-friendly response (top-5 feature)."
     }
   ],
   "quiz": [
     {
-      "question": "What is Explainable AI (XAI)?",
+      "question": "XAI (Explainable AI) neden önemlidir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece model accuracy'sini artırır",
+        "Trust, regulatory compliance, debugging, bias detection için kritik",
+        "Sadece deep learning için gereklidir",
+        "Model training'i hızlandırır"
       ],
       "correctAnswer": 1,
-      "explanation": "Explainable AI (XAI) explanation.",
+      "explanation": "XAI kritik çünkü: (1) Trust & Adoption (kullanıcılar anlamadan güvenmez), (2) Regulatory (GDPR, EU AI Act), (3) Debugging (neden hata yaptı?), (4) Bias detection (unfair karar?), (5) Safety (healthcare, autonomous driving), (6) Scientific discovery. Model accuracy'yi artırmaz ama production'da deployment için şart.",
       "id": "explainable-ai-xai-q1"
     },
     {
-      "question": "When to use Explainable AI (XAI)?",
+      "question": "SHAP (Shapley values) nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Sadece linear regression için kullanılan bir metrik",
+        "Game theory'den her feature'ın adil katkısını hesaplayan yöntem",
+        "Sadece image classification için",
+        "Model accuracy'yi ölçen bir metric"
       ],
       "correctAnswer": 1,
-      "explanation": "Use cases explained.",
+      "explanation": "SHAP (SHapley Additive exPlanations), game theory'den Shapley values kullanır. Her feature'ın tahmine 'adil' katkısını hesaplar. Coalition'lar (feature kombinasyonları) üzerinde marginalization. TreeSHAP tree modeller için O(TLD²) - çok hızlı. Model-agnostic (her modelle çalışır). Global ve lokal açıklama.",
       "id": "explainable-ai-xai-q2"
     },
     {
-      "question": "Explainable AI (XAI) advantage?",
+      "question": "LIME nasıl çalışır?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Tüm training data'yı yeniden eğitir",
+        "Tahmin etrafında perturbed sample'lar oluşturup lokal linear model fit eder",
+        "Sadece neural network'ler için çalışır",
+        "Feature importance'ı hesaplar"
       ],
       "correctAnswer": 1,
-      "explanation": "Key benefits.",
+      "explanation": "LIME (Local Interpretable Model-agnostic Explanations): (1) Spesifik tahmin etrafında perturbed sample'lar oluştur (5000 adet), (2) Black-box model'le bu sample'ları tahmin et, (3) Lokal linear/ridge regression fit et (interpretable!), (4) Linear model'in katsayıları = feature importance. Model-agnostic, lokal açıklama.",
       "id": "explainable-ai-xai-q3"
     },
     {
-      "question": "Explainable AI (XAI) limitation?",
+      "question": "Global vs Local explanation farkı nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "İkisi de aynıdır",
+        "Global: Tüm model nasıl çalışır? Local: Bu spesifik tahmin neden yapıldı?",
+        "Global sadece neural network'ler için",
+        "Local her zaman daha doğrudur"
       ],
       "correctAnswer": 1,
-      "explanation": "Known issues.",
+      "explanation": "Global explanation: Tüm model için genel davranış (feature importance, partial dependence plots). 'Model genel olarak neye önem verir?' Local explanation: Spesifik bir tahmin için açıklama (LIME, SHAP for one instance). 'Bu hasta için kanser tahmini neden pozitif?' İkisi de önemli, farklı kullanım senaryoları.",
       "id": "explainable-ai-xai-q4"
     },
     {
-      "question": "Best practice for Explainable AI (XAI)?",
+      "question": "Grad-CAM neyi açıklar?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Tabular data için feature importance",
+        "CNN'lerde hangi piksellerin/bölgelerin tahmini etkilediğini heatmap ile gösterir",
+        "Sadece text classification için",
+        "Model accuracy'yi artırır"
       ],
       "correctAnswer": 1,
-      "explanation": "Recommendations.",
+      "explanation": "Grad-CAM (Gradient-weighted Class Activation Mapping): CNN'ler için görsel açıklama. Target class'a göre son conv layer'ın gradient'ini hesapla, activation'larla ağırlıklandır → heatmap. Hangi pikseller/bölgeler tahmini etkiliyor? Medical imaging (tumor detection), autonomous driving, quality control için kritik.",
       "id": "explainable-ai-xai-q5"
     },
     {
-      "question": "Explainable AI (XAI) vs alternatives?",
+      "question": "Counterfactual explanation nedir?",
       "options": [
-        "A",
-        "B",
-        "C",
-        "D"
+        "Model accuracy'yi gösteren bir metrik",
+        "'Eğer X feature Y olsaydı, tahmin Z olurdu' şeklinde minimal değişiklik açıklaması",
+        "Sadece classification için",
+        "Training data'nın açıklaması"
       ],
       "correctAnswer": 1,
-      "explanation": "Comparison.",
+      "explanation": "Counterfactual: 'Eğer ... olsaydı' açıklaması. Minimal feature değişikliği ile farklı tahmin. Örnek: 'Eğer geliriniz 5K daha fazla olsaydı kredi onaylanırdı'. Actionable (kullanıcı neyi değiştirmeli?). Optimization: minimize L2 distance, subject to target class. GDPR 'recourse' hakkı için önemli.",
       "id": "explainable-ai-xai-q6"
+    },
+    {
+      "question": "Faithfulness (fidelity) nedir?",
+      "options": [
+        "Model accuracy'si",
+        "Açıklama orijinal modeli ne kadar doğru temsil eder?",
+        "User satisfaction",
+        "Training süresi"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Faithfulness (fidelity): Açıklama orijinal model'i ne kadar doğru temsil eder? Basit açıklama ≠ doğru açıklama. LIME lokal linear model fit eder ama black-box model non-linear olabilir → fidelity düşük. Evaluation: Açıklamanın prediction'ı ile orijinal modelin prediction'ı karşılaştır. High fidelity = güvenilir açıklama.",
+      "id": "explainable-ai-xai-q7"
+    },
+    {
+      "question": "XAI production'da hangi challenge'lar var?",
+      "options": [
+        "Sadece accuracy düşer",
+        "Latency (SHAP yavaş), scalability, user comprehension, adversarial explanations",
+        "Hiç challenge yok",
+        "Sadece memory kullanımı"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Production XAI challenges: (1) Latency: SHAP/LIME hesaplama yavaş (50-500ms), (2) Scalability: Milyonlarca tahmin için, (3) User comprehension: Teknik olmayan kullanıcılar anlamasın mı?, (4) Adversarial explanations: Yanıltıcı açıklama üretme, (5) Monitoring: SHAP drift detection. Çözüm: Pre-compute, approximate, user-friendly dashboard.",
+      "id": "explainable-ai-xai-q8"
     }
   ],
   "flashcards": [
     {
-      "front": "Explainable AI (XAI)",
-      "back": "Core concept summary"
+      "front": "Explainable AI (XAI) nedir?",
+      "back": "ML modellerinin tahmin ve kararlarını insanların anlayabileceği şekilde açıklama. Trust, regulatory, debugging, bias detection için kritik."
     },
     {
-      "front": "Explainable AI (XAI) Key Idea",
-      "back": "Main concept"
+      "front": "Global vs Local Explanation",
+      "back": "Global: Tüm model nasıl çalışır? (feature importance). Local: Bu spesifik tahmin neden yapıldı? (LIME, SHAP instance-level)."
     },
     {
-      "front": "When to Use",
-      "back": "Use cases"
+      "front": "SHAP (Shapley Values)",
+      "back": "Game theory: Her feature'ın adil katkısı. Coalition'lar üzerinde marginalization. TreeSHAP tree modeller için O(TLD²) - hızlı. Global + lokal."
     },
     {
-      "front": "Advantages",
-      "back": "Benefits"
+      "front": "LIME",
+      "back": "Local Interpretable Model-agnostic: Tahmin etrafında perturbed samples (5000), lokal linear model fit et. Model-agnostic, spesifik tahmin açıklaması."
     },
     {
-      "front": "Limitations",
-      "back": "Drawbacks"
+      "front": "Grad-CAM",
+      "back": "CNN görsel açıklama. Gradient × activations → heatmap. Hangi pikseller tahmini etkiliyor? Medical imaging, autonomous driving için."
     },
     {
-      "front": "Best Practices",
-      "back": "Tips"
+      "front": "Counterfactual Explanation",
+      "back": "'Eğer X olsaydı Y olurdu'. Minimal feature değişikliği ile farklı tahmin. Actionable insight. Optimization: minimize distance + target class."
     },
     {
-      "front": "Common Applications",
-      "back": "Real world"
+      "front": "Feature Importance",
+      "back": "Global açıklama: Hangi feature'lar en önemli? Tree models: MDI (Gini decrease). Model-agnostic: Permutation importance. Basit ama correlated features'la sorunlu."
     },
     {
-      "front": "Related Topics",
-      "back": "Connections"
+      "front": "Faithfulness (Fidelity)",
+      "back": "Açıklama orijinal modeli ne kadar doğru temsil eder? Basit açıklama ≠ doğru. LIME linear ama model non-linear olabilir. Evaluation kritik."
+    },
+    {
+      "front": "GDPR & XAI",
+      "back": "GDPR Article 22: Automated decision 'right to explanation'. EU AI Act: High-risk systems (healthcare, finance) için transparency şart. XAI compliance için gerekli."
+    },
+    {
+      "front": "Intrinsic vs Post-hoc",
+      "back": "Intrinsic: Model kendisi açıklanabilir (linear, tree). Post-hoc: Black-box'a sonradan açıklama (SHAP, LIME). Deep learning → post-hoc şart."
+    },
+    {
+      "front": "XAI for Bias Detection",
+      "back": "Sensitive attributes (race, gender, age) unfair etki ediyor mu? SHAP ile feature katkılarını analiz. Disparate impact hesapla. Fairness için kritik."
+    },
+    {
+      "front": "Production XAI Challenges",
+      "back": "Latency (SHAP 50-500ms), scalability (millions), user comprehension (non-technical), adversarial explanations, monitoring (SHAP drift). Pre-compute + approximate."
     }
   ],
   "commonMistakes": [
     {
-      "mistake": "Common error 1",
-      "why": "Why this happens",
-      "fix": "How to fix"
+      "mistake": "Accuracy yüksek = açıklama gerekmez düşüncesi",
+      "why": "Black-box modeller %95 accuracy'ye sahip olabilir ama nasıl karar verdiği belirsiz. Trust, debugging, bias detection, regulatory compliance için açıklama şart. Accuracy tek başına yeterli değil.",
+      "fix": "XAI'yi model development pipeline'ının parçası yapın. Her model için: (1) Feature importance (global), (2) SHAP/LIME (local), (3) Bias detection (sensitive attributes analizi), (4) Counterfactual (actionable insights). Production'da explanation API endpoint ekleyin."
     },
     {
-      "mistake": "Common error 2",
-      "why": "Root cause",
-      "fix": "Solution"
+      "mistake": "Basit açıklama = doğru açıklama varsayımı",
+      "why": "LIME lokal linear model fit eder ama orijinal model non-linear, karmaşık interactions'a sahip olabilir. Basit açıklama faithful olmayabilir (modeli doğru temsil etmez). Yanıltıcı insight'lar.",
+      "fix": "Faithfulness (fidelity) evaluate edin: Açıklama modeli ile orijinal modelin prediction'ı karşılaştırın. LIME için: R² score, prediction consistency. SHAP: Additivity check (sum of SHAP values = f(x) - E[f(x)]). Birden fazla XAI yöntemi kullanıp sonuçları karşılaştırın."
     },
     {
-      "mistake": "Common error 3",
-      "why": "Why it's wrong",
-      "fix": "Correct approach"
+      "mistake": "Feature importance'ı correlated features ile yanlış yorumlama",
+      "why": "Eğer iki feature yüksek correlation'a sahipse (örn: 'boy' ve 'kilo'), model birini seçer, diğeri low importance gösterir. Ama ikisi de önemlidir. MDI (Gini importance) high-cardinality features'a bias'lıdır.",
+      "fix": "Permutation importance kullanın (daha robust). Correlation matrix kontrol edin, correlated feature'lardan birini drop edin veya PCA/factor analysis yapın. Partial dependence plots: Her feature'ın marginal effect'ini gösterir (diğerleri sabitken). Multiple XAI methods: SHAP + permutation importance birlikte."
     },
     {
-      "mistake": "Common error 4",
-      "why": "Impact",
-      "fix": "Best practice"
+      "mistake": "Tüm kullanıcılara teknik açıklama göstermek",
+      "why": "SHAP values, feature importance gibi teknik metrikler data scientist için anlamlıdır ama non-technical kullanıcılar (doctor, hakim, müşteri) için karmaşıktır. Kullanıcı deneyimi kötü, güven azalır.",
+      "fix": "User persona'ya göre açıklama seviyesi ayarlayın: (1) Non-technical: Basit natural language ('Krediniz reddedildi çünkü geliriniz düşük'), top-3 feature, (2) Expert: Full SHAP values, waterfall plot, counterfactual. Interactive dashboard: Kullanıcı detay isterse açılır. A/B testing: Hangi açıklama formatı daha etkili?"
     },
     {
-      "mistake": "Common error 5",
-      "why": "Consequences",
-      "fix": "Remedy"
+      "mistake": "SHAP hesaplamasını production'da her seferinde yapmak",
+      "why": "KernelSHAP exact hesaplama O(2^F) - intractable. KernelSHAP approximation ~5000 sample, her tahmin için 500ms-2s sürer. Production'da <100ms latency gerekli. Scalability sorunu.",
+      "fix": "Model-specific explainer kullanın: TreeSHAP (tree models için O(TLD²) - milisaniyeler), DeepSHAP (neural networks için). Pre-computation: Popüler scenario'lar için offline hesapla, cache'le. Approximate methods: Sampling, early stopping. Batch processing: Offline explanation generation, dashboard'da göster."
     },
     {
-      "mistake": "Common error 6",
-      "why": "Problem explanation",
-      "fix": "Fix method"
+      "mistake": "Bias detection yapmadan production'a almak",
+      "why": "Model training data'daki bias'ı öğrenir (örn: tarihsel veri - kadınlara daha az kredi verilmiş → model kadınları discriminate eder). Legal risk, reputational damage, ethical sorunlar.",
+      "fix": "XAI ile bias detection: (1) Sensitive attributes (race, gender, age) SHAP katkılarını analiz et, (2) Disparate impact hesapla (protected group vs non-protected), (3) Counterfactual: Sadece gender değişince tahmin değişiyor mu?, (4) Fairness metrics: Demographic parity, equal opportunity. Bias varsa: Reweighting, adversarial debiasing, fair representation learning."
     },
     {
-      "mistake": "Common error 7",
-      "why": "Why avoid",
-      "fix": "Alternative"
+      "mistake": "XAI monitoring yapmamak (post-deployment)",
+      "why": "Model zamanla degradation yaşar (concept drift). Feature importance değişir. SHAP distribution shift olabilir. Bu değişimleri track etmezseniz model behavior'ı fark edilmeden değişir.",
+      "fix": "SHAP drift monitoring: Her 100/1000 tahmin için SHAP values distribution'ı track et. Alert: Bir feature'ın SHAP mean/std çok değiştiyse (örn: 2σ). Feature importance trend: Hangi feature'lar önem kazanıyor/kaybediyor? Model retraining trigger: SHAP drift + accuracy drop → retrain. Dashboard: Real-time SHAP monitoring."
     }
   ],
   "visualizations": [
     {
       "type": "diagram",
-      "title": "Explainable AI (XAI) Overview",
-      "description": "Visual explanation"
+      "title": "XAI Taxonomy",
+      "description": "Explainable AI yöntemlerinin sınıflandırması: Intrinsic vs Post-hoc, Global vs Local, Model-specific vs Model-agnostic. SHAP, LIME, Grad-CAM, Integrated Gradients, Attention, Counterfactual konumlandırması."
     },
     {
       "type": "comparison",
-      "title": "Comparison",
-      "description": "Side-by-side"
-    },
-    {
-      "type": "metric",
-      "title": "Performance",
-      "description": "Metrics visualization"
+      "title": "SHAP vs LIME vs Feature Importance",
+      "description": "Aynı model ve tahmin için üç yöntemin karşılaştırması. Top-10 feature'lar, contribution değerleri, computation time, faithfulness. Hangi yöntem ne zaman tercih edilmeli?"
     },
     {
       "type": "interactive",
-      "title": "Interactive Demo",
-      "description": "Hands-on"
+      "title": "XAI Sandbox",
+      "description": "Kullanıcı kendi veri setini yükler, model seçer (RF, XGBoost, NN), XAI yöntemi seçer (SHAP, LIME, Grad-CAM). Real-time explanation generation, waterfall plot, force plot, heatmap. Bias detection analizi."
+    },
+    {
+      "type": "metric",
+      "title": "Production XAI Dashboard",
+      "description": "Real-time monitoring: SHAP values distribution (last 1000 predictions), feature importance trend (weekly), bias metrics (disparate impact), latency (SHAP computation ms), explanation request rate."
     }
   ],
   "references": [
     {
-      "title": "Explainable AI (XAI) Paper",
-      "authors": "Authors",
-      "year": 2023,
-      "link": "https://arxiv.org",
+      "title": "A Unified Approach to Interpreting Model Predictions (SHAP)",
+      "authors": "Lundberg, S.M., & Lee, S.I.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1705.07874",
       "type": "paper"
     },
     {
-      "title": "Documentation",
-      "authors": "Team",
-      "year": 2023,
-      "link": "https://docs",
+      "title": "Why Should I Trust You? Explaining the Predictions (LIME)",
+      "authors": "Ribeiro, M.T., Singh, S., & Guestrin, C.",
+      "year": 2016,
+      "link": "https://arxiv.org/abs/1602.04938",
+      "type": "paper"
+    },
+    {
+      "title": "Grad-CAM: Visual Explanations from Deep Networks",
+      "authors": "Selvaraju, R.R. et al.",
+      "year": 2017,
+      "link": "https://arxiv.org/abs/1610.02391",
+      "type": "paper"
+    },
+    {
+      "title": "SHAP Documentation",
+      "authors": "Lundberg, S.M.",
+      "year": 2024,
+      "link": "https://shap.readthedocs.io/",
       "type": "documentation"
     }
   ]
