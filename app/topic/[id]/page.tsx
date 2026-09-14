@@ -19,6 +19,7 @@ import { TopicLevel } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { ChevronLeft, ChevronRight, CheckCircle, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { usePyodidePreload } from '@/hooks/usePyodidePreload';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 interface TopicPageProps {
   params: Promise<{
@@ -191,13 +192,15 @@ function TopicSession({ id }: { id: string }) {
     <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 overflow-hidden">
       {/* Left Sidebar with Collapse */}
       <div className={`relative transition-all duration-300 ease-in-out ${isLeftPanelOpen ? 'w-80' : 'w-0'} overflow-hidden`}>
-        <TopicSidebar
-          topic={topic}
-          currentLevel={currentLevel}
-          progress={progress}
-          onLevelChange={handleLevelChange}
-          onBookmarkToggle={handleBookmarkToggle}
-        />
+        <ErrorBoundary componentName="Sol Panel (Konu Ağacı)">
+          <TopicSidebar
+            topic={topic}
+            currentLevel={currentLevel}
+            progress={progress}
+            onLevelChange={handleLevelChange}
+            onBookmarkToggle={handleBookmarkToggle}
+          />
+        </ErrorBoundary>
       </div>
 
       {/* Left Panel Toggle Button */}
@@ -216,7 +219,9 @@ function TopicSession({ id }: { id: string }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
-        <TopicContent topic={topic} level={currentLevel} />
+        <ErrorBoundary componentName="Konu İçeriği">
+          <TopicContent topic={topic} level={currentLevel} />
+        </ErrorBoundary>
         
         {/* Bottom Navigation */}
         <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-8 py-3.5 flex items-center justify-between shadow-xs transition-colors shrink-0">
@@ -277,7 +282,9 @@ function TopicSession({ id }: { id: string }) {
 
       {/* Right Panel with Collapse */}
       <div className={`relative transition-all duration-300 ease-in-out ${isRightPanelOpen ? 'w-96' : 'w-0'} overflow-hidden`}>
-        <TopicRightPanel topic={topic} level={currentLevel} />
+        <ErrorBoundary componentName="Sağ Panel (Quiz & Kod Editörü)">
+          <TopicRightPanel topic={topic} level={currentLevel} />
+        </ErrorBoundary>
       </div>
     </div>
   );

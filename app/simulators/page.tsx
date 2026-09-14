@@ -11,6 +11,7 @@ import {
   QLearningGridWorld
 } from '@/components/visualization';
 import { Brain, Eye, Network, TrendingDown, Layers, Maximize2, Gamepad2 } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export default function SimulatorsPage() {
   return (
@@ -78,7 +79,9 @@ export default function SimulatorsPage() {
                 nasıl hesaplandığını görün. Transformer modellerin temelini oluşturan attention mekanizması.
               </p>
             </div>
-            <AttentionVisualizer />
+            <ErrorBoundary componentName="Attention Visualizer">
+              <AttentionVisualizer />
+            </ErrorBoundary>
           </section>
 
           {/* Neural Network */}
@@ -93,7 +96,9 @@ export default function SimulatorsPage() {
                 gradyanların nasıl geri yayıldığını ve ağırlıkların nasıl güncellendiğini izleyin.
               </p>
             </div>
-            <NeuralNetworkSimulator />
+            <ErrorBoundary componentName="Neural Network Simulator">
+              <NeuralNetworkSimulator />
+            </ErrorBoundary>
           </section>
 
           {/* CNN Convolution */}
@@ -108,7 +113,9 @@ export default function SimulatorsPage() {
                 görüntüsü üzerinde nasıl kaydırıldığını ve feature map'in nasıl oluştuğunu izleyin.
               </p>
             </div>
-            <CNNConvolutionVisualizer />
+            <ErrorBoundary componentName="CNN Convolution Visualizer">
+              <CNNConvolutionVisualizer />
+            </ErrorBoundary>
           </section>
 
           {/* Gradient Descent */}
@@ -124,7 +131,9 @@ export default function SimulatorsPage() {
                 minimum noktaya yakınsamasını izleyin.
               </p>
             </div>
-            <GradientDescentPlot />
+            <ErrorBoundary componentName="Gradient Descent Plot">
+              <GradientDescentPlot />
+            </ErrorBoundary>
           </section>
 
           {/* K-Means Clustering */}
@@ -140,7 +149,9 @@ export default function SimulatorsPage() {
                 canlı animasyonla görün.
               </p>
             </div>
-            <KMeansAnimator />
+            <ErrorBoundary componentName="K-Means Animator">
+              <KMeansAnimator />
+            </ErrorBoundary>
           </section>
 
           {/* PCA Visualization */}
@@ -156,7 +167,9 @@ export default function SimulatorsPage() {
                 3D'den 2D'ye indirgeme ile gözlemleyin.
               </p>
             </div>
-            <PCAVisualizer />
+            <ErrorBoundary componentName="PCA Visualizer">
+              <PCAVisualizer />
+            </ErrorBoundary>
           </section>
 
           {/* Q-Learning Grid World */}
@@ -173,7 +186,9 @@ export default function SimulatorsPage() {
                 öğrenme sürecini etkileyin.
               </p>
             </div>
-            <QLearningGridWorld />
+            <ErrorBoundary componentName="Q-Learning Grid World">
+              <QLearningGridWorld />
+            </ErrorBoundary>
           </section>
         </div>
 

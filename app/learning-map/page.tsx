@@ -7,6 +7,7 @@ import { useProgress } from '@/lib/use-progress';
 import LearningMapGraph from '@/components/learning-map/LearningMapGraph';
 import { CATEGORY_INFO } from '@/lib/utils';
 import { Maximize2, Minimize2, X } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export default function LearningMapPage() {
   const router = useRouter();
@@ -164,12 +165,14 @@ export default function LearningMapPage() {
 
         {/* Fullscreen Canvas */}
         <div className="flex-1 bg-slate-900">
-          <LearningMapGraph
-            topics={filteredTopics}
-            completedTopics={completedTopics}
-            onTopicClick={handleTopicClick}
-            fullscreen={true}
-          />
+          <ErrorBoundary componentName="Öğrenme Haritası Grafiği (Tam Ekran)">
+            <LearningMapGraph
+              topics={filteredTopics}
+              completedTopics={completedTopics}
+              onTopicClick={handleTopicClick}
+              fullscreen={true}
+            />
+          </ErrorBoundary>
         </div>
 
         {/* Fullscreen Floating Legend */}
@@ -372,11 +375,13 @@ export default function LearningMapPage() {
             </div>
           </div>
           
-          <LearningMapGraph
-            topics={filteredTopics}
-            completedTopics={completedTopics}
-            onTopicClick={handleTopicClick}
-          />
+          <ErrorBoundary componentName="Öğrenme Haritası Grafiği">
+            <LearningMapGraph
+              topics={filteredTopics}
+              completedTopics={completedTopics}
+              onTopicClick={handleTopicClick}
+            />
+          </ErrorBoundary>
         </div>
         
         {/* Yardım */}
