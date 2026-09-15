@@ -28,6 +28,8 @@ export function CodeEditor({
   const [isRunning, setIsRunning] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [plotImages, setPlotImages] = useState<string[]>([]); // Matplotlib base64 images
+  const [selectedPlotIndex, setSelectedPlotIndex] = useState<number | null>(null); // Zoom modal
   const { resolvedTheme } = useTheme();
 
   // Monaco Editor loader konfigürasyonu (CDN uyarılarını önler)
@@ -46,18 +48,22 @@ export function CodeEditor({
 
   // Fullscreen ESC key handler
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (!isFullscreen && selectedPlotIndex === null) return;
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        setIsFullscreen(false);
+        if (selectedPlotIndex !== null) {
+          setSelectedPlotIndex(null);
+        } else {
+          setIsFullscreen(false);
+        }
       }
     };
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [isFullscreen]);
+  }, [isFullscreen, selectedPlotIndex]);
 
   // Ctrl+Enter to run code in fullscreen
   useEffect(() => {
@@ -83,6 +89,7 @@ export function CodeEditor({
   const handleReset = () => {
     setCode(initialCode);
     setOutput('');
+    setPlotImages([]);
     setStatusMessage(null);
   };
 
@@ -177,13 +184,60 @@ export function CodeEditor({
             setStatusMessage('Matplotlib yükleniyor...');
             try {
               await pyodide.loadPackage('matplotlib');
+              
+              // Matplotlib backend'i agg'ye ayarla (PNG export için)
+              await pyodide.runPythonAsync(`
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+              `);
             } catch {
-              logs.push('ℹ️ Matplotlib çıktısı grafik paneli yerine terminal formatında üretildi.');
+              logs.push('ℹ️ Matplotlib yüklenemedi. Terminal çıktısı kullanılacak.');
             }
           }
 
           setStatusMessage('Python kodu çalıştırılıyor...');
           await pyodide.runPythonAsync(code);
+          
+          // Matplotlib plot'ları yakala (eğer varsa)
+          if (code.includes('matplotlib') || code.includes('plt.')) {
+            try {
+              const plotsData = await pyodide.runPythonAsync(`
+import matplotlib.pyplot as plt
+import io
+import base64
+
+def capture_plots():
+    """Tüm açık matplotlib figure'ları base64 PNG olarak yakala"""
+    plots = []
+    figures = [plt.figure(n) for n in plt.get_fignums()]
+    
+    for fig in figures:
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=100, bbox_inches='tight', facecolor='white')
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        plots.append(img_base64)
+        buf.close()
+    
+    # Figure'ları temizle (memory leak önleme)
+    plt.close('all')
+    
+    return plots
+
+capture_plots()
+              `) as string[];
+              
+              if (plotsData && plotsData.length > 0) {
+                setPlotImages(plotsData);
+                logs.push(`\n📊 ${plotsData.length} adet grafik oluşturuldu.`);
+              }
+            } catch (plotErr) {
+              console.warn('Plot yakalamada hata:', plotErr);
+              logs.push('ℹ️ Grafik yakalanırken hata oluştu. plt.show() kullanmayı deneyin.');
+            }
+          }
+          
           setOutput(logs.length > 0 ? logs.join('\n') : '✓ Python kodu başarıyla çalıştırıldı (Konsol çıktısı yok).');
           setIsRunning(false);
           setStatusMessage(null);
@@ -320,16 +374,75 @@ export function CodeEditor({
 
           {/* Output Console (Right 50%) */}
           <div className="flex-1 bg-slate-900 flex flex-col">
-            <div className="px-4 py-2 bg-slate-800 border-b border-slate-700">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Konsol Çıktısı
-              </span>
+            {/* Tab Header: Console vs Plots */}
+            <div className="flex border-b border-slate-700">
+              <button
+                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-300 hover:bg-slate-800 transition-colors border-b-2 border-emerald-500"
+              >
+                📊 Grafikler {plotImages.length > 0 && `(${plotImages.length})`}
+              </button>
+              <button
+                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 hover:bg-slate-800 transition-colors"
+              >
+                📝 Konsol
+              </button>
             </div>
+
+            {/* Plot Canvas Area */}
             <div className="flex-1 overflow-y-auto p-4">
-              {output ? (
-                <pre className="text-sm font-mono text-slate-100 whitespace-pre-wrap">
-                  {output}
-                </pre>
+              {plotImages.length > 0 ? (
+                <div className="space-y-6">
+                  {plotImages.map((imgBase64, index) => (
+                    <div key={index} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-700">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-slate-400">
+                          Grafik {index + 1} / {plotImages.length}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedPlotIndex(index)}
+                            className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                            title="Tam Ekran Görüntüle"
+                          >
+                            <Maximize2 className="w-3 h-3" />
+                            Büyüt
+                          </button>
+                          <button
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = `data:image/png;base64,${imgBase64}`;
+                              link.download = `plot-${index + 1}.png`;
+                              link.click();
+                            }}
+                            className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            İndir
+                          </button>
+                        </div>
+                      </div>
+                      <img
+                        src={`data:image/png;base64,${imgBase64}`}
+                        alt={`Matplotlib plot ${index + 1}`}
+                        className="w-full h-auto rounded shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setSelectedPlotIndex(index)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : output ? (
+                <div className="space-y-4">
+                  <pre className="text-sm font-mono text-slate-100 whitespace-pre-wrap">
+                    {output}
+                  </pre>
+                  {(code.includes('matplotlib') || code.includes('plt.')) && (
+                    <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-3 text-xs text-amber-300">
+                      💡 <strong>İpucu:</strong> plt.plot() veya plt.scatter() kullanıyorsanız, grafikler otomatik olarak yukarıda görünecektir.
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-slate-500 text-sm">
                   <div className="text-center">
@@ -429,15 +542,127 @@ export function CodeEditor({
         }}
       />
 
-      {/* Output */}
+      {/* Plot Canvas (if matplotlib plots exist) */}
+      {plotImages.length > 0 && (
+        <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide flex items-center justify-between">
+            <span>📊 Grafikler ({plotImages.length})</span>
+          </div>
+          <div className="space-y-4">
+            {plotImages.map((imgBase64, index) => (
+              <div key={index} className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                    Grafik {index + 1} / {plotImages.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedPlotIndex(index)}
+                      className="text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                      title="Tam Ekran Görüntüle"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                      Büyüt
+                    </button>
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = `data:image/png;base64,${imgBase64}`;
+                        link.download = `plot-${index + 1}.png`;
+                        link.click();
+                      }}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      PNG olarak indir
+                    </button>
+                  </div>
+                </div>
+                <img
+                  src={`data:image/png;base64,${imgBase64}`}
+                  alt={`Matplotlib plot ${index + 1}`}
+                  className="w-full h-auto rounded border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setSelectedPlotIndex(index)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Text Output */}
       {output && (
         <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 p-4">
           <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">
-            Çıktı:
+            📝 Konsol Çıktısı:
           </div>
           <pre className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-lg text-xs font-mono whitespace-pre-wrap text-slate-900 dark:text-slate-100">
             {output}
           </pre>
+        </div>
+      )}
+
+      {/* Plot Zoom Modal */}
+      {selectedPlotIndex !== null && (
+        <div 
+          className="fixed inset-0 z-[10000] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setSelectedPlotIndex(null)}
+        >
+          <div className="relative max-w-7xl max-h-[90vh] w-full">
+            {/* Close button */}
+            <button
+              onClick={() => setSelectedPlotIndex(null)}
+              className="absolute -top-12 right-0 text-white hover:text-slate-300 flex items-center gap-2 text-sm"
+            >
+              <X className="w-5 h-5" />
+              Kapat (ESC)
+            </button>
+            
+            {/* Navigation */}
+            {plotImages.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPlotIndex((selectedPlotIndex - 1 + plotImages.length) % plotImages.length);
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 backdrop-blur-sm transition-colors"
+                  title="Önceki Grafik"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPlotIndex((selectedPlotIndex + 1) % plotImages.length);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 backdrop-blur-sm transition-colors"
+                  title="Sonraki Grafik"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+            
+            {/* Image */}
+            <img
+              src={`data:image/png;base64,${plotImages[selectedPlotIndex]}`}
+              alt={`Matplotlib plot ${selectedPlotIndex + 1}`}
+              className="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+            {/* Info bar */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
+              Grafik {selectedPlotIndex + 1} / {plotImages.length}
+            </div>
+          </div>
         </div>
       )}
     </div>

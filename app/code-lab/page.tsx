@@ -15,27 +15,117 @@ interface CodeCell {
 const initialCells: CodeCell[] = [
   {
     id: '1',
-    code: `# Merhaba Dünya
-print("Merhaba, AI Atlası!")
+    code: `# 📊 Matplotlib Test: Basit Çizgi Grafiği
+import matplotlib.pyplot as plt
+import numpy as np
 
-# Basit hesaplama
-x = 10
-y = 20
-print(f"{x} + {y} = {x + y}")`,
+# Veri oluştur
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# Grafik çiz
+plt.figure(figsize=(8, 5))
+plt.plot(x, y, 'b-', linewidth=2, label='sin(x)')
+plt.xlabel('x')
+plt.ylabel('sin(x)')
+plt.title('Sinüs Fonksiyonu')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Not: plt.show() gerekmez, otomatik yakalanır!`,
     language: 'python'
   },
   {
     id: '2',
-    code: `import numpy as np
+    code: `# 📈 Multiple Plots Test: Subplot
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 2*np.pi, 100)
+
+# 2x2 subplot oluştur
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Sin
+axes[0, 0].plot(x, np.sin(x), 'r-')
+axes[0, 0].set_title('sin(x)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Cos
+axes[0, 1].plot(x, np.cos(x), 'g-')
+axes[0, 1].set_title('cos(x)')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Tan
+axes[1, 0].plot(x, np.tan(x), 'b-')
+axes[1, 0].set_title('tan(x)')
+axes[1, 0].set_ylim(-5, 5)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Sin^2 + Cos^2
+axes[1, 1].plot(x, np.sin(x)**2 + np.cos(x)**2, 'm-', linewidth=3)
+axes[1, 1].set_title('sin²(x) + cos²(x) = 1')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()`,
+    language: 'python'
+  },
+  {
+    id: '3',
+    code: `# 🎯 Scatter Plot & Histogram Test
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Rastgele veri
+np.random.seed(42)
+x = np.random.randn(200)
+y = 2 * x + np.random.randn(200) * 0.5
+
+# İki ayrı figure oluştur
+# Figure 1: Scatter plot
+plt.figure(figsize=(8, 6))
+plt.scatter(x, y, alpha=0.6, c=y, cmap='viridis', s=50)
+plt.colorbar(label='y değeri')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Scatter Plot: Y = 2X + gürültü')
+plt.grid(True, alpha=0.3)
+
+# Figure 2: Histogram
+plt.figure(figsize=(8, 6))
+plt.hist(y, bins=30, edgecolor='black', alpha=0.7, color='coral')
+plt.xlabel('Değer')
+plt.ylabel('Frekans')
+plt.title('Y Dağılımı Histogramı')
+plt.grid(True, alpha=0.3, axis='y')
+
+print(f"✓ 2 adet grafik oluşturuldu")
+print(f"Ortalama: {np.mean(y):.2f}")
+print(f"Standart sapma: {np.std(y):.2f}")`,
+    language: 'python'
+  },
+  {
+    id: '4',
+    code: `# 🔢 NumPy Vektör İşlemleri (Grafik yok)
+import numpy as np
 
 # Vektörler oluştur
 v1 = np.array([1, 2, 3])
 v2 = np.array([4, 5, 6])
 
-print("v1:", v1)
-print("v2:", v2)
-print("v1 + v2:", v1 + v2)
-print("Nokta çarpım:", np.dot(v1, v2))`,
+print("📐 Vektör İşlemleri")
+print("=" * 40)
+print(f"v1 = {v1}")
+print(f"v2 = {v2}")
+print(f"v1 + v2 = {v1 + v2}")
+print(f"v1 · v2 (nokta çarpım) = {np.dot(v1, v2)}")
+print(f"||v1|| (norm) = {np.linalg.norm(v1):.2f}")
+
+# Matris işlemleri
+A = np.array([[1, 2], [3, 4]])
+print(f"\\nMatris A:\\n{A}")
+print(f"Determinant: {np.linalg.det(A):.2f}")
+print(f"Trace: {np.trace(A)}")`,
     language: 'python'
   }
 ];
