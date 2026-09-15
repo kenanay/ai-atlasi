@@ -214,9 +214,9 @@ export default function Home() {
             {/* CTA */}
             <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 shadow-lg shadow-blue-500/10">
               <CardContent className="py-8">
-                <div className="text-center">
+                <div className="text-center flex flex-col items-center">
                   <h3 className="text-2xl font-bold mb-2">Tüm Konuları Keşfet</h3>
-                  <p className="text-blue-100 text-sm mb-6 max-w-md mx-auto">
+                  <p className="text-blue-100 text-sm mb-6 max-w-md">
                     {allTopics.length} konu, 5 seviye, interaktif simülasyonlar ve laboratuvar ortamı.
                   </p>
                   <Link href="/topics">
