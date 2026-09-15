@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BadgeDisplay } from '@/components/ui/BadgeDisplay';
-import { BADGES, getUnlockedBadges, getBadgeStats, Badge as BadgeType } from '@/lib/badges';
+import { BADGES, getUnlockedBadges, getBadgeStats, getBadgeProgress, Badge as BadgeType } from '@/lib/badges';
+import { loadProgress } from '@/lib/progress';
 import { Award, Trophy, Target, Sparkles } from 'lucide-react';
 
 type FilterType = 'all' | 'unlocked' | 'locked';
@@ -15,11 +16,13 @@ export default function BadgesPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [unlockedBadges, setUnlockedBadges] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState(getBadgeStats());
+  const [userProgress, setUserProgress] = useState(loadProgress());
 
   useEffect(() => {
     const unlocked = getUnlockedBadges();
     setUnlockedBadges(new Set(unlocked.map(b => b.badgeId)));
     setStats(getBadgeStats());
+    setUserProgress(loadProgress());
 
     const handleBadgeChange = () => {
       const updated = getUnlockedBadges();
@@ -27,8 +30,17 @@ export default function BadgesPage() {
       setStats(getBadgeStats());
     };
 
+    const handleProgressChange = () => {
+      setUserProgress(loadProgress());
+    };
+
     window.addEventListener('ai-atlasi-badges-change', handleBadgeChange);
-    return () => window.removeEventListener('ai-atlasi-badges-change', handleBadgeChange);
+    window.addEventListener('ai-atlasi-progress-change', handleProgressChange);
+    
+    return () => {
+      window.removeEventListener('ai-atlasi-badges-change', handleBadgeChange);
+      window.removeEventListener('ai-atlasi-progress-change', handleProgressChange);
+    };
   }, []);
 
   const allBadges = Object.values(BADGES);
@@ -62,7 +74,7 @@ export default function BadgesPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-600 to-orange-600 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 dark:from-yellow-600 dark:to-orange-700 flex items-center justify-center shadow-lg shadow-yellow-500/20 dark:shadow-yellow-600/30">
               <Trophy className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -78,7 +90,7 @@ export default function BadgesPage() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-l-4 border-l-yellow-500">
+          <Card className="border-l-4 border-l-yellow-500 dark:border-l-yellow-600">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-yellow-50 dark:bg-yellow-950/50 rounded-lg">
@@ -97,7 +109,7 @@ export default function BadgesPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-purple-500">
+          <Card className="border-l-4 border-l-purple-500 dark:border-l-purple-600">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-purple-50 dark:bg-purple-950/50 rounded-lg">
@@ -113,7 +125,7 @@ export default function BadgesPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-blue-500">
+          <Card className="border-l-4 border-l-blue-500 dark:border-l-blue-600">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
@@ -129,7 +141,7 @@ export default function BadgesPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-emerald-500">
+          <Card className="border-l-4 border-l-emerald-500 dark:border-l-emerald-600">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg">
@@ -163,7 +175,7 @@ export default function BadgesPage() {
                       className={`
                         flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all
                         ${filter === f
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                          ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-lg shadow-blue-500/30 dark:shadow-blue-400/20'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                         }
                       `}
@@ -187,7 +199,7 @@ export default function BadgesPage() {
                       className={`
                         px-3 py-2 rounded-lg text-xs font-semibold transition-all
                         ${categoryFilter === c
-                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                          ? 'bg-purple-600 dark:bg-purple-500 text-white shadow-lg shadow-purple-500/30 dark:shadow-purple-400/20'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                         }
                       `}
@@ -208,12 +220,17 @@ export default function BadgesPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {sortedBadges.map((badge) => {
             const userBadge = unlockedList.find(ub => ub.badgeId === badge.id);
+            const badgeProgress = !unlockedBadges.has(badge.id) 
+              ? getBadgeProgress(badge.id, userProgress)
+              : null;
+            
             return (
               <BadgeDisplay
                 key={badge.id}
                 badge={badge}
                 unlocked={unlockedBadges.has(badge.id)}
                 unlockedAt={userBadge?.unlockedAt}
+                progress={badgeProgress}
                 size="md"
                 showDetails
               />

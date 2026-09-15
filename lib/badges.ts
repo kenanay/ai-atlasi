@@ -44,6 +44,13 @@ export interface UserBadge {
   isNew?: boolean;
 }
 
+export interface BadgeProgress {
+  current: number;
+  total: number;
+  percentage: number;
+  label: string;
+}
+
 export const BADGES: Record<BadgeType, Badge> = {
   first_topic: {
     id: 'first_topic',
@@ -457,4 +464,138 @@ export function getBadgeStats() {
     byRarity,
     byCategory
   };
+}
+
+// Badge progress hesaplama
+export function getBadgeProgress(badgeId: BadgeType, progress: UserProgress[]): BadgeProgress | null {
+  const allTopics = getAllTopics();
+  const completedCount = progress.filter(p => p.status === 'completed').length;
+
+  // Completion badges
+  const completionMap: Record<string, { total: number; label: string }> = {
+    'first_topic': { total: 1, label: 'konu' },
+    'topic_5': { total: 5, label: 'konu' },
+    'topic_10': { total: 10, label: 'konu' },
+    'topic_25': { total: 25, label: 'konu' },
+    'topic_50': { total: 50, label: 'konu' },
+    'all_topics': { total: allTopics.length, label: 'konu' }
+  };
+
+  if (completionMap[badgeId]) {
+    const { total, label } = completionMap[badgeId];
+    return {
+      current: Math.min(completedCount, total),
+      total,
+      percentage: Math.round((Math.min(completedCount, total) / total) * 100),
+      label
+    };
+  }
+
+  // Level mastery badges
+  if (badgeId.startsWith('level_master_')) {
+    const level = parseInt(badgeId.replace('level_master_', ''));
+    const levelTopics = allTopics.filter(t => t.level === level);
+    const completedLevelTopics = levelTopics.filter(t =>
+      progress.find(p => p.topicId === t.id)?.status === 'completed'
+    );
+
+    return {
+      current: completedLevelTopics.length,
+      total: levelTopics.length,
+      percentage: levelTopics.length > 0 
+        ? Math.round((completedLevelTopics.length / levelTopics.length) * 100)
+        : 0,
+      label: `Seviye ${level} konu`
+    };
+  }
+
+  // Category mastery badges
+  const categoryMap: Record<string, { categories: string[]; label: string }> = {
+    'category_master_math': { categories: ['linear-algebra', 'calculus', 'math', 'matematik'], label: 'Matematik konu' },
+    'category_master_ml': { categories: ['supervised-learning', 'unsupervised-learning', 'classical-ml'], label: 'ML konu' },
+    'category_master_dl': { categories: ['neural-networks', 'deep-learning'], label: 'DL konu' }
+  };
+
+  if (categoryMap[badgeId]) {
+    const { categories, label } = categoryMap[badgeId];
+    const categoryTopics = allTopics.filter(t => categories.includes(t.category));
+    const completedCategoryTopics = categoryTopics.filter(t =>
+      progress.find(p => p.topicId === t.id)?.status === 'completed'
+    );
+
+    return {
+      current: completedCategoryTopics.length,
+      total: categoryTopics.length,
+      percentage: categoryTopics.length > 0
+        ? Math.round((completedCategoryTopics.length / categoryTopics.length) * 100)
+        : 0,
+      label
+    };
+  }
+
+  // Quiz master
+  if (badgeId === 'quiz_master') {
+    const highScoreQuizzes = progress.reduce((count, p) => {
+      const highScores = p.quizScores.filter(q => (q.score / q.totalQuestions) >= 0.9);
+      return count + highScores.length;
+    }, 0);
+
+    return {
+      current: Math.min(highScoreQuizzes, 10),
+      total: 10,
+      percentage: Math.round((Math.min(highScoreQuizzes, 10) / 10) * 100),
+      label: 'yüksek skorlu quiz'
+    };
+  }
+
+  // Flashcard pro - quiz bazlı değerlendirme yapalım
+  if (badgeId === 'flashcard_pro') {
+    const totalQuizzes = progress.reduce((count, p) => {
+      return count + p.quizScores.length;
+    }, 0);
+
+    return {
+      current: Math.min(totalQuizzes, 50),
+      total: 50,
+      percentage: Math.round((Math.min(totalQuizzes, 50) / 50) * 100),
+      label: 'quiz'
+    };
+  }
+
+  // Explorer
+  if (badgeId === 'explorer') {
+    const categories = new Set(
+      progress
+        .filter(p => p.status !== 'not_started')
+        .map(p => allTopics.find(t => t.id === p.topicId)?.category)
+        .filter(Boolean)
+    );
+
+    return {
+      current: Math.min(categories.size, 3),
+      total: 3,
+      percentage: Math.round((Math.min(categories.size, 3) / 3) * 100),
+      label: 'kategori'
+    };
+  }
+
+  // Perfectionist
+  if (badgeId === 'perfectionist') {
+    const perfectTopics = allTopics.filter(topic => {
+      const prog = progress.find(p => p.topicId === topic.id);
+      return prog?.status === 'completed' && prog.completedLevels.length === 5;
+    });
+
+    return {
+      current: perfectTopics.length,
+      total: allTopics.length,
+      percentage: allTopics.length > 0
+        ? Math.round((perfectTopics.length / allTopics.length) * 100)
+        : 0,
+      label: '%100 tamamlanmış konu'
+    };
+  }
+
+  // Streak badges ve time-based badges için null döndür (progress yok)
+  return null;
 }
