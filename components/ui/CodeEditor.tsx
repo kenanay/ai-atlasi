@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import { useState, useEffect, useRef } from 'react';
+import Editor, { OnMount, BeforeMount } from '@monaco-editor/react';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { Play, Copy, Check, RotateCcw, Loader2, Maximize2, Minimize2, X } from 'lucide-react';
 
@@ -29,6 +29,20 @@ export function CodeEditor({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { resolvedTheme } = useTheme();
+
+  // Monaco Editor loader konfigürasyonu (CDN uyarılarını önler)
+  const handleEditorWillMount: BeforeMount = (monaco) => {
+    // Monaco'nun internal source map yüklemelerini devre dışı bırak
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+    });
+    
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+    });
+  };
 
   // Fullscreen ESC key handler
   useEffect(() => {
@@ -289,6 +303,7 @@ export function CodeEditor({
               value={code}
               onChange={(value) => setCode(value || '')}
               theme="vs-dark"
+              beforeMount={handleEditorWillMount}
               options={{
                 readOnly,
                 minimap: { enabled: true },
@@ -400,6 +415,7 @@ export function CodeEditor({
         value={code}
         onChange={(value) => setCode(value || '')}
         theme={monacoTheme}
+        beforeMount={handleEditorWillMount}
         options={{
           readOnly,
           minimap: { enabled: false },

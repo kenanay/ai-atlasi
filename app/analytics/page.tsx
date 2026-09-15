@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useProgress } from '@/lib/use-progress';
 import { getAllTopics } from '@/lib/topics';
 import { getProgressStats } from '@/lib/progress';
@@ -26,6 +27,28 @@ export default function AnalyticsPage() {
   const allProgress = useProgress();
   const allTopics = getAllTopics();
   const stats = getProgressStats(allProgress);
+  const [last7Days, setLast7Days] = useState<Array<{ date: string; topics: number; minutes: number }>>([]);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+
+  // Client-side only data generation (hidrasyon uyumsuzluğunu önler)
+  useEffect(() => {
+    // Son 7 gün aktivite (simulated - gerçek implementasyonda tarih bazlı olacak)
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return {
+        date: date.toLocaleDateString('tr-TR', { weekday: 'short' }),
+        topics: Math.floor(Math.random() * 3), // Simulated
+        minutes: Math.floor(Math.random() * 120) // Simulated
+      };
+    });
+    setLast7Days(days);
+
+    // Streak hesaplama (simulated)
+    setCurrentStreak(7);
+    setLongestStreak(12);
+  }, []);
 
   // Kategori analizi
   const categoryStats = allTopics.reduce((acc, topic) => {
@@ -57,25 +80,10 @@ export default function AnalyticsPage() {
     };
   });
 
-  // Son 7 gün aktivite (simulated - gerçek implementasyonda tarih bazlı olacak)
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    return {
-      date: date.toLocaleDateString('tr-TR', { weekday: 'short' }),
-      topics: Math.floor(Math.random() * 3), // Simulated
-      minutes: Math.floor(Math.random() * 120) // Simulated
-    };
-  });
-
   // En çok çalışılan kategoriler (top 3)
   const topCategories = Object.entries(categoryStats)
     .sort((a, b) => b[1].timeSpent - a[1].timeSpent)
     .slice(0, 3);
-
-  // Streak hesaplama (simulated)
-  const currentStreak = 7; // Simulated
-  const longestStreak = 12; // Simulated
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -264,31 +272,37 @@ export default function AnalyticsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {last7Days.map((day, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 w-12">
-                        {day.date}
-                      </span>
-                      <div className="flex-1 mx-3">
-                        <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all"
-                            style={{ width: `${Math.min((day.minutes / 120) * 100, 100)}%` }}
-                          />
+                {last7Days.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-slate-500 dark:text-slate-400">
+                    Yükleniyor...
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {last7Days.map((day, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 w-12">
+                          {day.date}
+                        </span>
+                        <div className="flex-1 mx-3">
+                          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all"
+                              style={{ width: `${Math.min((day.minutes / 120) * 100, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                            {day.minutes}dk
+                          </p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                            {day.topics} konu
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                          {day.minutes}dk
-                        </p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                          {day.topics} konu
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

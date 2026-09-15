@@ -24,6 +24,7 @@ interface LearningMapGraphProps {
   fullscreen?: boolean;
 }
 
+// NodeTypes component dışında tanımlanır (React Flow performans önerisi)
 const nodeTypes: NodeTypes = {
   topicNode: TopicNode,
 };

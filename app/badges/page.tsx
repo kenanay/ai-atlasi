@@ -17,8 +17,12 @@ export default function BadgesPage() {
   const [unlockedBadges, setUnlockedBadges] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState(getBadgeStats());
   const [userProgress, setUserProgress] = useState(loadProgress());
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // Client-side mount kontrolü (hidrasyon uyumsuzluğunu önler)
+    setIsMounted(true);
+    
     const unlocked = getUnlockedBadges();
     setUnlockedBadges(new Set(unlocked.map(b => b.badgeId)));
     setStats(getBadgeStats());
@@ -218,24 +222,35 @@ export default function BadgesPage() {
 
         {/* Badges Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {sortedBadges.map((badge) => {
-            const userBadge = unlockedList.find(ub => ub.badgeId === badge.id);
-            const badgeProgress = !unlockedBadges.has(badge.id) 
-              ? getBadgeProgress(badge.id, userProgress)
-              : null;
-            
-            return (
-              <BadgeDisplay
-                key={badge.id}
-                badge={badge}
-                unlocked={unlockedBadges.has(badge.id)}
-                unlockedAt={userBadge?.unlockedAt}
-                progress={badgeProgress}
-                size="md"
-                showDetails
-              />
-            );
-          })}
+          {!isMounted ? (
+            // SSR placeholder - hidrasyon uyumsuzluğunu önler
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="w-24 h-24 mx-auto bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+                <div className="mt-2 h-4 bg-slate-200 dark:bg-slate-800 rounded mx-auto w-20" />
+                <div className="mt-1 h-3 bg-slate-200 dark:bg-slate-800 rounded mx-auto w-16" />
+              </div>
+            ))
+          ) : (
+            sortedBadges.map((badge) => {
+              const userBadge = unlockedList.find(ub => ub.badgeId === badge.id);
+              const badgeProgress = !unlockedBadges.has(badge.id) 
+                ? getBadgeProgress(badge.id, userProgress)
+                : null;
+              
+              return (
+                <BadgeDisplay
+                  key={badge.id}
+                  badge={badge}
+                  unlocked={unlockedBadges.has(badge.id)}
+                  unlockedAt={userBadge?.unlockedAt}
+                  progress={badgeProgress}
+                  size="md"
+                  showDetails
+                />
+              );
+            })
+          )}
         </div>
 
         {/* Empty State */}

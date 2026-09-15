@@ -51,7 +51,7 @@ export default function RootLayout({
           }}
         />
         <Script
-          src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"
+          src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"
           strategy="lazyOnload"
         />
       </head>

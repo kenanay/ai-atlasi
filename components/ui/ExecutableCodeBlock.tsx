@@ -35,7 +35,7 @@ export function ExecutableCodeBlock({ code, language }: ExecutableCodeBlockProps
         if (typeof window !== 'undefined' && window.loadPyodide) {
           // @ts-ignore
           const pyodide = await window.loadPyodide({
-            indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/',
+            indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/',
           });
           
           if (mounted) {

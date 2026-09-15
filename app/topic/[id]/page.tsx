@@ -44,16 +44,40 @@ function TopicSession({ id }: { id: string }) {
   usePyodidePreload(currentLevel >= 2);
 
   // Panel collapse state with localStorage persistence
-  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  // Mobilde (<1024px) varsayılan kapalı, masaüstünde açık
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
 
-  // Load panel states from localStorage on mount
+  // Responsive check ve panel state yükleme
   useEffect(() => {
-    const leftOpen = localStorage.getItem('topic-left-panel-open');
-    const rightOpen = localStorage.getItem('topic-right-panel-open');
+    // Ekran boyutu kontrolü
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      
+      // localStorage'dan yükleme
+      const leftOpen = localStorage.getItem('topic-left-panel-open');
+      const rightOpen = localStorage.getItem('topic-right-panel-open');
+      
+      if (leftOpen !== null) {
+        setIsLeftPanelOpen(leftOpen === 'true');
+      } else {
+        // Varsayılan: masaüstünde açık, mobilde kapalı
+        setIsLeftPanelOpen(!mobile);
+      }
+      
+      if (rightOpen !== null) {
+        setIsRightPanelOpen(rightOpen === 'true');
+      } else {
+        // Varsayılan: masaüstünde açık, mobilde kapalı
+        setIsRightPanelOpen(!mobile);
+      }
+    };
     
-    if (leftOpen !== null) setIsLeftPanelOpen(leftOpen === 'true');
-    if (rightOpen !== null) setIsRightPanelOpen(rightOpen === 'true');
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Keyboard shortcuts for panel toggle
@@ -189,9 +213,25 @@ function TopicSession({ id }: { id: string }) {
   const canGoToNextLevel = currentLevel < 4;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
+      {/* Mobile Overlay - paneller açıkken içeriği karartır */}
+      {isMobile && (isLeftPanelOpen || isRightPanelOpen) && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => {
+            setIsLeftPanelOpen(false);
+            setIsRightPanelOpen(false);
+          }}
+          aria-label="Panelleri kapat"
+        />
+      )}
+
       {/* Left Sidebar with Collapse */}
-      <div className={`relative transition-all duration-300 ease-in-out ${isLeftPanelOpen ? 'w-80' : 'w-0'} overflow-hidden`}>
+      <div className={`
+        relative transition-all duration-300 ease-in-out overflow-hidden
+        ${isLeftPanelOpen ? 'w-80' : 'w-0'}
+        lg:relative ${isMobile && isLeftPanelOpen ? 'fixed left-0 top-0 bottom-0 z-40 shadow-2xl' : ''}
+      `}>
         <ErrorBoundary componentName="Sol Panel (Konu Ağacı)">
           <TopicSidebar
             topic={topic}
@@ -206,8 +246,14 @@ function TopicSession({ id }: { id: string }) {
       {/* Left Panel Toggle Button */}
       <button
         onClick={toggleLeftPanel}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-r-lg shadow-lg hover:shadow-xl transition-all duration-200 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 group"
-        style={{ left: isLeftPanelOpen ? '320px' : '0px' }}
+        className={`
+          absolute top-1/2 -translate-y-1/2 z-50 
+          bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 
+          rounded-r-lg shadow-lg hover:shadow-xl transition-all duration-200 p-2 
+          hover:bg-slate-50 dark:hover:bg-slate-800 group
+          ${isMobile ? 'left-0' : ''}
+        `}
+        style={{ left: isMobile ? '0px' : (isLeftPanelOpen ? '320px' : '0px') }}
         title={isLeftPanelOpen ? 'Sol Paneli Gizle (Ctrl+B)' : 'Sol Paneli Aç (Ctrl+B)'}
       >
         {isLeftPanelOpen ? (
@@ -269,8 +315,14 @@ function TopicSession({ id }: { id: string }) {
       {/* Right Panel Toggle Button */}
       <button
         onClick={toggleRightPanel}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-l-lg shadow-lg hover:shadow-xl transition-all duration-200 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 group"
-        style={{ right: isRightPanelOpen ? '384px' : '0px' }}
+        className={`
+          absolute top-1/2 -translate-y-1/2 z-50 
+          bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 
+          rounded-l-lg shadow-lg hover:shadow-xl transition-all duration-200 p-2 
+          hover:bg-slate-50 dark:hover:bg-slate-800 group
+          ${isMobile ? 'right-0' : ''}
+        `}
+        style={{ right: isMobile ? '0px' : (isRightPanelOpen ? '384px' : '0px') }}
         title={isRightPanelOpen ? 'Sağ Paneli Gizle (Ctrl+J)' : 'Sağ Paneli Aç (Ctrl+J)'}
       >
         {isRightPanelOpen ? (
@@ -281,7 +333,11 @@ function TopicSession({ id }: { id: string }) {
       </button>
 
       {/* Right Panel with Collapse */}
-      <div className={`relative transition-all duration-300 ease-in-out ${isRightPanelOpen ? 'w-96' : 'w-0'} overflow-hidden`}>
+      <div className={`
+        relative transition-all duration-300 ease-in-out overflow-hidden
+        ${isRightPanelOpen ? 'w-96' : 'w-0'}
+        lg:relative ${isMobile && isRightPanelOpen ? 'fixed right-0 top-0 bottom-0 z-40 shadow-2xl' : ''}
+      `}>
         <ErrorBoundary componentName="Sağ Panel (Quiz & Kod Editörü)">
           <TopicRightPanel topic={topic} level={currentLevel} />
         </ErrorBoundary>
